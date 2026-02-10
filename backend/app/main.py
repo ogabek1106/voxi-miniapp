@@ -19,9 +19,30 @@ class CreateUserIn(BaseModel):
 
 
 @app.post("/users")
-def create_user(payload: CreateUserIn, db: Session = Depends(get_db)):
+def create_or_update_user(payload: CreateUserIn, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.telegram_id == payload.telegram_id).first()
+
+    if user:
+        user.name = payload.name
+        db.commit()
+        db.refresh(user)
+        return {
+            "status": "updated",
+            "message": "Your name updated!",
+            "id": user.id,
+            "telegram_id": user.telegram_id,
+            "name": user.name,
+        }
+
     user = User(telegram_id=payload.telegram_id, name=payload.name)
     db.add(user)
     db.commit()
     db.refresh(user)
-    return {"id": user.id, "telegram_id": user.telegram_id, "name": user.name}
+
+    return {
+        "status": "created",
+        "message": "Your name saved!",
+        "id": user.id,
+        "telegram_id": user.telegram_id,
+        "name": user.name,
+    }
