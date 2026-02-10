@@ -1,13 +1,14 @@
 #frontend/Dockerfile
 FROM nginx:alpine
 
-# Remove default nginx html
-RUN rm -rf /usr/share/nginx/html/*
+# Remove default nginx site config and html
+RUN rm -rf /usr/share/nginx/html/* \
+    && rm -f /etc/nginx/conf.d/default.conf
 
-# Copy ONLY frontend files (from repo root)
-COPY frontend/ /usr/share/nginx/html/
+# Copy your index.html explicitly
+COPY frontend/index.html /usr/share/nginx/html/index.html
 
-# Make nginx listen on Railway's port (8080)
-RUN sed -i "s/listen       80;/listen       8080;/g" /etc/nginx/conf.d/default.conf
+# Create nginx config that listens on 8080
+RUN printf "server {\n  listen 8080;\n  server_name _;\n  root /usr/share/nginx/html;\n  index index.html;\n  location / { try_files \$uri \$uri/ =404; }\n}\n" > /etc/nginx/conf.d/site.conf
 
 EXPOSE 8080
