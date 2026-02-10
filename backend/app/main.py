@@ -1,11 +1,22 @@
 #backend/app/main.py
 from fastapi import FastAPI, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from app.db import engine
 from app.models import Base, User
 from app.deps import get_db
 from pydantic import BaseModel
+
 app = FastAPI(title="Voxi Mini App API")
+
+# ✅ CORS FIX (required for Telegram Mini App)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],   # lock down later
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 Base.metadata.create_all(bind=engine)
 
