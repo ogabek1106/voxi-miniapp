@@ -1,0 +1,47 @@
+#frontend/index.html
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Voxi Mini App</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+  <h3>Enter your name</h3>
+
+  <input id="name" placeholder="Your name" />
+  <button id="saveBtn">Save</button>
+
+  <p id="status"></p>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    document.getElementById("saveBtn").onclick = async () => {
+      const name = document.getElementById("name").value;
+      const telegramId = tg.initDataUnsafe?.user?.id;
+
+      if (!telegramId) {
+        document.getElementById("status").innerText = "Telegram user not found";
+        return;
+      }
+
+      const res = await fetch("https://voxi-miniapp-production.up.railway.app/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          telegram_id: String(telegramId),
+          name: name
+        })
+      });
+
+      if (res.ok) {
+        document.getElementById("status").innerText = "Saved!";
+      } else {
+        document.getElementById("status").innerText = "Error saving name";
+      }
+    };
+  </script>
+</body>
+</html>
