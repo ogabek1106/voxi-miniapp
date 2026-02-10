@@ -25,7 +25,7 @@ async def root():
     return {"status": "ok", "service": "voxi-miniapp-backend"}
 
 class CreateUserIn(BaseModel):
-    telegram_id: str
+    telegram_id: int
     name: str
 
 
