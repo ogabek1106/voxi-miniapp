@@ -6,7 +6,6 @@ from app.db import engine
 from app.models import Base, User
 from app.deps import get_db
 from pydantic import BaseModel
-from sqlalchemy import text
 app = FastAPI(title="Voxi Mini App API")
 
 # ✅ CORS FIX (required for Telegram Mini App)
@@ -58,10 +57,6 @@ def create_or_update_user(payload: CreateUserIn, db: Session = Depends(get_db)):
         "name": user.name,
     }
 
-@app.get("/__admin/drop-users-table")
-def drop_users_table(db: Session = Depends(get_db)):
-    db.execute(text("DROP TABLE IF EXISTS users;"))
-    db.commit()
-    return {"status": "ok", "message": "users table dropped"}
+
 
 
