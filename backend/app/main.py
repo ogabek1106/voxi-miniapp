@@ -58,7 +58,7 @@ def create_or_update_user(payload: CreateUserIn, db: Session = Depends(get_db)):
         "name": user.name,
     }
 
-@app.post("/__admin/drop-users-table")
+@app.get("/__admin/drop-users-table")
 def drop_users_table(db: Session = Depends(get_db)):
     db.execute("DROP TABLE IF EXISTS users;")
     db.commit()
