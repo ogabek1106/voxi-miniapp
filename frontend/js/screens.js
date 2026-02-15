@@ -1,13 +1,25 @@
-const screenName = document.getElementById("screen-name");
-const screenMocks = document.getElementById("screen-mocks");
+let screenName;
+let screenMocks;
+
+document.addEventListener("DOMContentLoaded", () => {
+  screenName = document.getElementById("screen-name");
+  screenMocks = document.getElementById("screen-mocks");
+});
 
 window.showMocksScreen = function () {
+  if (!screenName || !screenMocks) {
+    console.error("Screens not initialized yet, retrying...");
+    setTimeout(showMocksScreen, 50);
+    return;
+  }
+
   screenName.style.display = "none";
   screenMocks.style.display = "block";
   renderMocks();
 };
 
 function render(html) {
+  if (!screenMocks) return;
   screenMocks.innerHTML = html;
 }
 
