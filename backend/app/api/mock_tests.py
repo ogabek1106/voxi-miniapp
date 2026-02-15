@@ -1,5 +1,5 @@
 #backend/app/api/mock_tests.py
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List
 
@@ -40,7 +40,7 @@ async def list_mock_tests():
 @router.get("/{mock_id}/info", response_model=MockInfo)
 async def get_mock_info(mock_id: int):
     if mock_id != 1:
-        return {"title": "Not found", "attention": "", "duration_hours": 0, "buttons": []}
+        raise HTTPException(status_code=404, detail="Mock test not found")
 
     return {
         "title": "Mock 1",
@@ -59,7 +59,7 @@ async def get_mock_info(mock_id: int):
 @router.get("/{mock_id}/start", response_model=ReadingTest)
 async def start_mock_test(mock_id: int):
     if mock_id != 1:
-        return {"passage": "", "questions": []}
+        raise HTTPException(status_code=404, detail="Mock test not found")
 
     return {
         "passage": (
