@@ -35,7 +35,8 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const res = await apiPost("/users", { telegram_id: telegramId, name });
       status.innerText = "Saved!";
-      showMocksScreen();
+      document.getElementById("screen-name").style.display = "none";
+      document.getElementById("screen-home").style.display = "block";
     } catch (e) {
       status.innerText = "Network error";
       console.error(e);
