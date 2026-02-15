@@ -1,30 +1,40 @@
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-document.getElementById("saveBtn").onclick = async () => {
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById("saveBtn");
   const status = document.getElementById("status");
-  const name = document.getElementById("name").value.trim();
 
-  if (!name) {
-    status.innerText = "Please enter your name";
+  if (!btn) {
+    alert("saveBtn not found");
     return;
   }
 
-  status.innerText = "Saving...";
+  btn.onclick = async () => {
+    alert("Save clicked");  // 🔴 debug signal
 
-  const telegramId = tg.initDataUnsafe?.user?.id;
-  if (!telegramId) {
-    status.innerText = "Open this mini app inside Telegram";
-    return;
-  }
+    const name = document.getElementById("name").value.trim();
+    if (!name) {
+      status.innerText = "Please enter your name";
+      return;
+    }
 
-  try {
-    await apiPost("/users", { telegram_id: telegramId, name });
-    status.innerText = "Saved!";
-    showMocksScreen();
-  } catch (e) {
-    status.innerText = "Network error";
-    console.error(e);
-  }
-};
+    status.innerText = "Saving...";
 
+    const telegramId = tg.initDataUnsafe?.user?.id;
+    if (!telegramId) {
+      status.innerText = "Open this mini app inside Telegram";
+      return;
+    }
+
+    try {
+      const res = await apiPost("/users", { telegram_id: telegramId, name });
+      status.innerText = "Saved!";
+      showMocksScreen();
+    } catch (e) {
+      status.innerText = "Network error";
+      console.error(e);
+      alert("API error: " + e.message);
+    }
+  };
+});
