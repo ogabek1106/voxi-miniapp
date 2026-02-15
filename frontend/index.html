@@ -92,6 +92,8 @@
 
   display: flex;
   align-items: center;
+  justify-content: center;  
+  text-align: center;
 }
 
 .content {
@@ -134,6 +136,11 @@
   height: 60%;
   background: #2a2a36;
 }
+.form {
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;   /* center horizontally */
+}
   
 </style>
 
@@ -157,14 +164,17 @@
 
       <!-- Name screen -->
       <div class="container" id="screen-name">
-        <h3>Enter your name</h3>
-        <input id="name" placeholder="Your name" />
-        <button id="saveBtn">Save</button>
-        <p id="status"></p>
+        <div class="form"> 
+          <h3>Enter your name</h3>
+          <input id="name" placeholder="Your name" />
+          <button id="saveBtn">Save</button>
+          <p id="status"></p>
+        </div>
       </div>
 
       <!-- Home screen -->
       <div class="container" id="screen-home" style="display:none;">
+
         <button class="primary-btn" onclick="openMockHome()">🧠 IELTS Mock Test</button>
       </div>
 
