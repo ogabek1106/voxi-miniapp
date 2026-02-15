@@ -1,17 +1,22 @@
-const tg = window.Telegram.WebApp;
-tg.expand();
+const tg = window.Telegram?.WebApp;
+
+if (tg) {
+  tg.ready();
+  tg.expand();
+}
 
 document.addEventListener("DOMContentLoaded", () => {
   const btn = document.getElementById("saveBtn");
   const status = document.getElementById("status");
 
   if (!btn) {
-    alert("saveBtn not found");
+    console.error("saveBtn not found");
     return;
   }
 
   btn.onclick = async () => {
-    alert("Save clicked");  // 🔴 debug signal
+    // 🔴 Remove this after testing
+    // alert("Save clicked");
 
     const name = document.getElementById("name").value.trim();
     if (!name) {
@@ -21,7 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     status.innerText = "Saving...";
 
-    const telegramId = tg.initDataUnsafe?.user?.id;
+    const telegramId = tg?.initDataUnsafe?.user?.id;
     if (!telegramId) {
       status.innerText = "Open this mini app inside Telegram";
       return;
