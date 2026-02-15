@@ -2,57 +2,66 @@
 <html>
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>Voxi Mini App</title>
   
   <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-    }
+  html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overscroll-behavior: none;   /* prevent rubber banding */
+    touch-action: manipulation; /* disable double-tap zoom */
+  }
 
-    body {
-      display: flex;
-      align-items: flex-start;       /* vertical center */
-      justify-content: center;   /* horizontal center */
-      font-family: system-ui, -apple-system, sans-serif;
-      background: #0f0f14;       /* dark, Voxi vibe */
-      color: white;
-    }
+  body {
+    display: flex;
+    align-items: flex-start;     /* top aligned */
+    justify-content: center;     /* centered horizontally */
+    font-family: system-ui, -apple-system, sans-serif;
+    background: #0f0f14;         /* dark, Voxi vibe */
+    color: white;
+    overflow: hidden;           /* lock page scroll */
+  }
 
-    .container {
-      width: 100%;
-      max-width: 320px;
-      text-align: center;
-    }
+  .container {
+    width: 100%;
+    max-width: 320px;
+    height: 100%;               /* take full height */
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+  }
 
-    input {
-      width: 100%;
-      padding: 12px;
-      font-size: 16px;
-      border-radius: 8px;
-      border: none;
-      outline: none;
-      margin-top: 10px;
-    }
+  input {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: none;
+    outline: none;
+    margin-top: 10px;
+  }
 
-    button {
-      width: 100%;
-      margin-top: 12px;
-      padding: 12px;
-      font-size: 16px;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      background: #4f46e5;
-      color: white;
-    }
+  button {
+    width: 100%;
+    margin-top: 12px;
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    background: #4f46e5;
+    color: white;
+  }
 
-    #status {
-      margin-top: 12px;
-      font-size: 14px;
-      opacity: 0.85;
-    }
-  </style>
+  #status {
+    margin-top: 12px;
+    font-size: 14px;
+    opacity: 0.85;
+  }
+</style>
+
 </head>
 <body>
 
