@@ -6,9 +6,11 @@ RUN rm -rf /usr/share/nginx/html/* \
 
 COPY frontend/ /usr/share/nginx/html/
 
+ENV PORT=8080
+
 RUN cat > /etc/nginx/conf.d/site.conf <<'EOF'
 server {
-  listen 8080;
+  listen ${PORT};
   server_name _;
 
   root /usr/share/nginx/html;
