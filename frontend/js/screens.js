@@ -7,8 +7,15 @@ document.addEventListener("DOMContentLoaded", () => {
   screenName = document.getElementById("screen-name");
   screenHome = document.getElementById("screen-home");
   screenMocks = document.getElementById("screen-mocks");
-  screenProfile = document.getElementById("screen-profile"); // if exists
+  screenProfile = document.getElementById("screen-profile");
+
+  const btnHome = document.getElementById("btn-home");
+  const btnProfile = document.getElementById("btn-profile");
+
+  if (btnHome) btnHome.addEventListener("click", goHome);
+  if (btnProfile) btnProfile.addEventListener("click", goProfile);
 });
+
 
 function hideAllScreens() {
   if (screenName) screenName.style.display = "none";
@@ -18,16 +25,19 @@ function hideAllScreens() {
 }
 
 window.goHome = function () {
+  if (!screenHome) return console.error("screenHome not ready");
   hideAllScreens();
   screenHome.style.display = "block";
   setActiveNav(0);
 };
 
 window.goProfile = function () {
+  if (!screenProfile) return console.error("screenProfile not ready");
   hideAllScreens();
   screenProfile.style.display = "block";
   setActiveNav(1);
 };
+
 
 function setActiveNav(index) {
   const buttons = document.querySelectorAll(".nav-btn");
