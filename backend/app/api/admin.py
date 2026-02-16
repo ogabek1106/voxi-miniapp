@@ -22,3 +22,26 @@ def get_db_stats(telegram_id: int, db: Session = Depends(get_db)):
             "users": users_count
         }
     }
+@router.get("/users")
+def list_users(telegram_id: int, db: Session = Depends(get_db)):
+    # 🔐 Admin only
+    if telegram_id not in ADMIN_IDS:
+        raise HTTPException(status_code=403, detail="Admin only")
+
+    users = (
+        db.query(User)
+        .order_by(User.id.desc())   # newest → oldest
+        .all()
+    )
+
+    return {
+        "total": len(users),
+        "users": [
+            {
+                "id": u.id,
+                "telegram_id": u.telegram_id,
+                "name": u.name,
+            }
+            for u in users
+        ]
+    }
