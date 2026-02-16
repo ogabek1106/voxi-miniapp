@@ -144,6 +144,17 @@
 input, button {
   box-sizing: border-box;
 }
+.nav-icon {
+  width: 22px;
+  height: 22px;
+  opacity: 0.7;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.nav-btn.active .nav-icon {
+  opacity: 1;
+  transform: scale(1.1);
+}
     
 </style>
 
@@ -193,9 +204,13 @@ input, button {
 
     <!-- Bottom Nav -->
     <div class="bottom-nav">
-      <button class="nav-btn active" id="btn-home">🏠</button>
+      <button class="nav-btn active" id="btn-home">
+        <img src="./assets/home.png" alt="Home" class="nav-icon" />
+      </button>
       <div class="divider"></div>
-      <button class="nav-btn" id="btn-profile">👤</button>
+      <button class="nav-btn" id="btn-profile">
+        <img src="./assets/profile.png" alt="Profile" class="nav-icon" />
+      </button>
 
     </div>
 
@@ -205,7 +220,6 @@ input, button {
   <script src="./js/api.js"></script>
   <script src="./js/screens.js"></script>
   <script src="./js/app.js"></script>
-  <script src="./js/ui.js"></script>
 
 </body>
 
