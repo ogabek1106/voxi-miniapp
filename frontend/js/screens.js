@@ -168,3 +168,38 @@ window.confirmMockStart = async function (id) {
   }
 };
 
+window.showAdminPanel = function () {
+  hideAllScreens();
+  hideAnnouncement();
+
+  if (!screenMocks) return;
+
+  screenMocks.style.display = "block";
+  screenMocks.innerHTML = `
+    <h3>🛠 Admin Panel</h3>
+    <button onclick="showDbStats()">📊 Database Stats</button>
+    <button onclick="goHome()">⬅ Back</button>
+  `;
+};
+
+window.showDbStats = async function () {
+  const telegramId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+  if (!telegramId) return alert("Open inside Telegram");
+
+  hideAllScreens();
+  hideAnnouncement();
+
+  try {
+    const stats = await apiGet(`/__admin/db-stats?telegram_id=${telegramId}`);
+
+    screenMocks.style.display = "block";
+    screenMocks.innerHTML = `
+      <h3>📊 Database Stats</h3>
+      <p>👤 Users: <b>${stats.users}</b></p>
+      <button onclick="showAdminPanel()">⬅ Back</button>
+    `;
+  } catch (e) {
+    console.error(e);
+    alert("Access denied or failed to load stats");
+  }
+};
