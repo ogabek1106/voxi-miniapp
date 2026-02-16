@@ -50,7 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const res = await apiPost("/users", { telegram_id: telegramId, name });
       status.innerText = "Saved!";
       document.getElementById("screen-name").style.display = "none";
-      confirmMockStart(lastMockId);   
+      goHome();
       loadMe();
 
     } catch (e) {
