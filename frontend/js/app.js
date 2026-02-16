@@ -50,7 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const res = await apiPost("/users", { telegram_id: telegramId, name });
       status.innerText = "Saved!";
       document.getElementById("screen-name").style.display = "none";
-      document.getElementById("screen-home").style.display = "block";
+      goHome();        
       loadMe();
 
     } catch (e) {
