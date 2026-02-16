@@ -5,10 +5,15 @@ from sqlalchemy.orm import Session
 from app.db import engine
 from app.models import Base, User
 from app.deps import get_db
-from app.api.mock_tests import router as mock_tests_router
 from pydantic import BaseModel
+from app.api.mock_tests import router as mock_tests_router
+from app.api.me import router as me_router
+
 app = FastAPI(title="Voxi Mini App API")
+
 app.include_router(mock_tests_router)
+app.include_router(me_router)
+
 
 # ✅ CORS FIX (required for Telegram Mini App)
 app.add_middleware(
