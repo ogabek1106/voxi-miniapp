@@ -37,6 +37,8 @@ document.addEventListener("DOMContentLoaded", () => {
       status.innerText = "Saved!";
       document.getElementById("screen-name").style.display = "none";
       document.getElementById("screen-home").style.display = "block";
+      loadMe();
+
     } catch (e) {
       status.innerText = "Network error";
       console.error(e);
@@ -44,3 +46,20 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 });
+
+async function loadMe() {
+  const telegramId = tg?.initDataUnsafe?.user?.id;
+  if (!telegramId) return;
+
+  try {
+    const me = await apiGet(`/me?telegram_id=${telegramId}`);
+
+    if (me.is_admin) {
+      const adminBtn = document.getElementById("adminBtn");
+      if (adminBtn) adminBtn.style.display = "block";
+    }
+  } catch (e) {
+    console.error("Failed to load /me", e);
+  }
+}
+
