@@ -1,8 +1,22 @@
 const tg = window.Telegram?.WebApp;
+function applyTelegramTheme() {
+  if (!tg) return;
+
+  const theme = tg.themeParams || {};
+
+  document.documentElement.style.setProperty("--bg-color", theme.bg_color || "#ffffff");
+  document.documentElement.style.setProperty("--text-color", theme.text_color || "#000000");
+  document.documentElement.style.setProperty("--card-bg", theme.secondary_bg_color || "#f4f4f6");
+  document.documentElement.style.setProperty("--border-color", theme.hint_color || "#e5e5ea");
+  document.documentElement.style.setProperty("--primary", theme.button_color || "#4f46e5");
+}
+
 
 if (tg) {
   tg.ready();
   tg.expand();
+  applyTelegramTheme();                 // 👈 ADD
+  tg.onEvent("themeChanged", applyTelegramTheme); // 👈 ADD
 }
 
 document.addEventListener("DOMContentLoaded", () => {
