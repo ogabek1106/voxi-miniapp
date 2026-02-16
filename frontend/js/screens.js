@@ -190,16 +190,42 @@ window.showDbStats = async function () {
   hideAnnouncement();
 
   try {
-    const stats = await apiGet(`/__admin/db-stats?telegram_id=${telegramId}`);
+    const data = await apiGet(`/__admin/users?telegram_id=${telegramId}`);
+
+    const rows = data.users.map(u => `
+      <div style="
+        padding: 10px 8px;
+        border-bottom: 1px solid #e5e5ea;
+        text-align: left;
+        font-size: 14px;
+      ">
+        <b>#${u.id}</b> — ${u.name}
+      </div>
+    `).join("");
 
     screenMocks.style.display = "block";
     screenMocks.innerHTML = `
-      <h3>📊 Database Stats</h3>
-      <p>👤 Users: <b>${stats.users}</b></p>
-      <button onclick="showAdminPanel()">⬅ Back</button>
+      <div style="display:flex; flex-direction:column; height:100%;">
+        <h3 style="margin-bottom:6px;">📊 Database Stats</h3>
+        <p style="margin:0 0 8px 0;">Users: <b>${data.total}</b></p>
+        <div style="height:1px; background:#e5e5ea; margin:8px 0;"></div>
+
+        <!-- Inner scrollable list -->
+        <div style="
+          flex:1;
+          overflow-y:auto;
+          border:1px solid #e5e5ea;
+          border-radius:8px;
+        ">
+          ${rows || "<p style='padding:12px;'>No users yet</p>"}
+        </div>
+
+        <button style="margin-top:12px;" onclick="showAdminPanel()">⬅ Back</button>
+      </div>
     `;
   } catch (e) {
     console.error(e);
-    alert("Access denied or failed to load stats");
+    alert("Failed to load database stats");
   }
 };
+
