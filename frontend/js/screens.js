@@ -26,12 +26,14 @@ function hideAllScreens() {
 
 window.goHome = function () {
   hideAllScreens();
+  showAnnouncement();            
   if (screenHome) screenHome.style.display = "block";
   setActiveNav(0);
 };
 
 window.goProfile = function () {
   hideAllScreens();
+  hideAnnouncement();
   if (screenProfile) screenProfile.style.display = "block";
   setActiveNav(1);
 };
@@ -45,6 +47,7 @@ function setActiveNav(index) {
 
 window.showMocksScreen = function () {
   hideAllScreens();
+  hideAnnouncement();
   screenMocks.style.display = "block";
   renderMocks();
 };
@@ -127,3 +130,14 @@ window.startMock = async function (id) {
     `);
   };
 };
+
+function showAnnouncement() {
+  const el = document.getElementById("announcement");
+  if (el) el.style.display = "flex";
+}
+
+function hideAnnouncement() {
+  const el = document.getElementById("announcement");
+  if (el) el.style.display = "none";
+}
+
