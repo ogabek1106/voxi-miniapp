@@ -25,19 +25,16 @@ function hideAllScreens() {
 }
 
 window.goHome = function () {
-  alert("goHome clicked");
   hideAllScreens();
-  screenHome.style.display = "block";
+  if (screenHome) screenHome.style.display = "block";
   setActiveNav(0);
 };
 
 window.goProfile = function () {
-  alert("goProfile clicked");
   hideAllScreens();
-  screenProfile.style.display = "block";
+  if (screenProfile) screenProfile.style.display = "block";
   setActiveNav(1);
 };
-
 
 function setActiveNav(index) {
   const buttons = document.querySelectorAll(".nav-btn");
