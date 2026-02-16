@@ -1,19 +1,43 @@
 let screenName;
+let screenHome;
 let screenMocks;
+let screenProfile;
 
 document.addEventListener("DOMContentLoaded", () => {
   screenName = document.getElementById("screen-name");
+  screenHome = document.getElementById("screen-home");
   screenMocks = document.getElementById("screen-mocks");
+  screenProfile = document.getElementById("screen-profile"); // if exists
 });
 
-window.showMocksScreen = function () {
-  if (!screenName || !screenMocks) {
-    console.error("Screens not initialized yet, retrying...");
-    setTimeout(showMocksScreen, 50);
-    return;
-  }
+function hideAllScreens() {
+  if (screenName) screenName.style.display = "none";
+  if (screenHome) screenHome.style.display = "none";
+  if (screenMocks) screenMocks.style.display = "none";
+  if (screenProfile) screenProfile.style.display = "none";
+}
 
-  screenName.style.display = "none";
+window.goHome = function () {
+  hideAllScreens();
+  screenHome.style.display = "block";
+  setActiveNav(0);
+};
+
+window.goProfile = function () {
+  hideAllScreens();
+  screenProfile.style.display = "block";
+  setActiveNav(1);
+};
+
+function setActiveNav(index) {
+  const buttons = document.querySelectorAll(".nav-btn");
+  buttons.forEach((btn, i) => {
+    btn.classList.toggle("active", i === index);
+  });
+}
+
+window.showMocksScreen = function () {
+  hideAllScreens();
   screenMocks.style.display = "block";
   renderMocks();
 };
@@ -96,4 +120,3 @@ window.startMock = async function (id) {
     `);
   };
 };
-
