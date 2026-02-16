@@ -20,6 +20,8 @@ if (tg) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  goHome();
+  loadMe();
   const btn = document.getElementById("saveBtn");
   const status = document.getElementById("status");
 
@@ -76,4 +78,3 @@ async function loadMe() {
     console.error("Failed to load /me", e);
   }
 }
-
