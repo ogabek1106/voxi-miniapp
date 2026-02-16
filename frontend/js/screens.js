@@ -75,7 +75,7 @@ window.openMock = async function (id) {
   render(`
     <h3>${data.title}</h3>
     <pre style="white-space: pre-wrap">${data.attention}</pre>
-    <button onclick="startMock(${id})">Start</button>
+    <button onclick="confirmMockStart(${id})">Start</button>
     <button onclick="renderMocks()">Cancel</button>
   `);
 };
@@ -140,4 +140,31 @@ function hideAnnouncement() {
   const el = document.getElementById("announcement");
   if (el) el.style.display = "none";
 }
+window.confirmMockStart = async function (id) {
+  const telegramId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+
+  if (!telegramId) {
+    alert("Open this inside Telegram");
+    return;
+  }
+
+  try {
+    const me = await apiGet(`/me?telegram_id=${telegramId}`);
+
+    // ❌ no name → go to name screen
+    if (!me.name) {
+      hideAllScreens();
+      hideAnnouncement();
+      screenName.style.display = "block";
+      return;
+    }
+
+    // ✅ has name → start mock
+    startMock(id);
+
+  } catch (e) {
+    console.error(e);
+    alert("Network error");
+  }
+};
 
