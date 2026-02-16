@@ -25,14 +25,14 @@ function hideAllScreens() {
 }
 
 window.goHome = function () {
-  if (!screenHome) return console.error("screenHome not ready");
+  alert("goHome clicked");
   hideAllScreens();
   screenHome.style.display = "block";
   setActiveNav(0);
 };
 
 window.goProfile = function () {
-  if (!screenProfile) return console.error("screenProfile not ready");
+  alert("goProfile clicked");
   hideAllScreens();
   screenProfile.style.display = "block";
   setActiveNav(1);
