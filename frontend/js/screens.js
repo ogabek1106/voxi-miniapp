@@ -259,3 +259,81 @@ async function renderProfile() {
     `;
   }
 }
+async function renderProfile() {
+  const telegramId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+
+  if (!telegramId) {
+    screenProfile.innerHTML = `<p>Open this inside Telegram</p>`;
+    return;
+  }
+
+  try {
+    const me = await apiGet(`/me?telegram_id=${telegramId}`);
+
+    const name = me.name || "Name";
+    const surname = me.surname || "Surname";
+    const nameOpacity = me.name ? "1" : "0.5";
+    const surnameOpacity = me.surname ? "1" : "0.5";
+
+    screenProfile.innerHTML = `
+      <div style="display:flex; flex-direction:column; align-items:center; gap:16px;">
+
+        <!-- Profile avatar -->
+        <div style="
+          width:96px; height:96px;
+          border-radius:50%;
+          background:#1f1f2a;
+          display:flex; align-items:center; justify-content:center;
+          font-size:42px;
+        ">
+          🦊
+        </div>
+
+        <!-- Name Row -->
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:18px; opacity:${nameOpacity};">${name}</span>
+          <span style="font-size:18px; opacity:${surnameOpacity};">${surname}</span>
+
+          <!-- Pen -->
+          <button onclick="editProfile()" style="
+            background:none; border:none; color:#8b5cf6;
+            font-size:18px; cursor:pointer;
+          ">✏️</button>
+        </div>
+
+      </div>
+    `;
+  } catch (e) {
+    console.error(e);
+    screenProfile.innerHTML = `
+      <p>Could not load profile.</p>
+      <button onclick="renderProfile()">Retry</button>
+    `;
+  }
+}
+
+window.goProfile = function () {
+  hideAllScreens();
+  hideAnnouncement();
+  screenProfile.style.display = "block";
+  setActiveNav(1);
+  renderProfile();
+};
+window.editProfile = function () {
+  screenProfile.innerHTML = `
+    <h3>Edit Profile</h3>
+    <input id="edit-name" placeholder="Name" style="width:100%; padding:10px; margin-bottom:8px;" />
+    <input id="edit-surname" placeholder="Surname" style="width:100%; padding:10px; margin-bottom:12px;" />
+    <button onclick="saveProfile()">Save</button>
+    <button onclick="renderProfile()" style="margin-left:8px;">Cancel</button>
+  `;
+};
+
+window.saveProfile = async function () {
+  const telegramId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+  const name = document.getElementById("edit-name").value.trim();
+  const surname = document.getElementById("edit-surname").value.trim();
+
+  await apiPost(`/me?telegram_id=${telegramId}`, { name, surname });
+  renderProfile();
+};
