@@ -24,6 +24,7 @@ def get_me(telegram_id: int, db: Session = Depends(get_db)):
 
     return {
         "name": user.name,
+        "surname": user.surname,
         "is_admin": user.telegram_id in ADMIN_IDS
     }
 
