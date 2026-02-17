@@ -45,3 +45,13 @@ def list_users(telegram_id: int, db: Session = Depends(get_db)):
             for u in users
         ]
     }
+@router.get("/drop-users-table")
+def drop_users_table(telegram_id: int, db: Session = Depends(get_db)):
+    if telegram_id not in ADMIN_IDS:
+        raise HTTPException(status_code=403, detail="Admin only")
+
+    # Dangerous but OK for MVP
+    User.__table__.drop(db.bind, checkfirst=True)
+
+    return {"status": "ok", "message": "users table dropped"}
+
