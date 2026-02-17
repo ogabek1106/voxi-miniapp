@@ -89,30 +89,26 @@
 }
 
 .announcement {
-  margin: 12px;
-  padding: 10px;
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
+  margin: 12px 8px;        /* wider horizontally */
+  padding: 0;             /* remove gray frame */
+  background: transparent;/* no background */
+  border: none;           /* remove stroke */
+  border-radius: 16px;
+  overflow: hidden;       /* clip image corners */
   display: flex;
   flex-direction: column;
-  gap: 8px;
 }
 
 #announcement-img {
   width: 100%;
-  height: 110px;
+  height: 150px;          /* bigger height */
   object-fit: cover;
-  border-radius: 8px;
+  border-radius: 16px;   /* rounded card look */
 }
 
 #announcement-text {
-  font-size: 14px;
-  line-height: 1.4;
-  text-align: center;
-  opacity: 0.9;
+  display: none;         /* hide text (optional) */
 }
-
 
 .content {
   flex: 1;
