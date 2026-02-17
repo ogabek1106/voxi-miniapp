@@ -274,7 +274,7 @@ async function renderProfile() {
           ">
 
             <!-- Name field -->
-            <div style="margin-bottom:16px;">
+            <div style="margin-bottom:16px; text-align:center;">
               <div style="font-size:18px; font-weight:600;">
                 ${name || "&nbsp;"}
               </div>
@@ -288,7 +288,7 @@ async function renderProfile() {
 
 
             <!-- Surname field -->
-            <div>
+            <div style="text-align:center;">
               <div style="font-size:18px; font-weight:600;">
                 ${surname || "&nbsp;"}
               </div>
