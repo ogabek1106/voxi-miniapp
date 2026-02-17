@@ -261,10 +261,11 @@ async function renderProfile() {
         </div>
 
         <!-- Card wrapper -->
-        <div style="width:100%; display:flex; justify-content:center;">
+        <div style="width:100%; margin: 0 auto;">
           <div style="
             width:100%;
             max-width: 300px; 
+            margin: 0 auto; 
             box-sizing: border-box;
             background: var(--card-bg);
             border: none;
