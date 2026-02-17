@@ -9,3 +9,4 @@ class User(Base):
     telegram_id = Column(BigInteger, unique=True, index=True, nullable=False)
     name = Column(String, nullable=True)      # allow empty
     surname = Column(String, nullable=True)   # NEW
+    surname = Column(String, nullable=True)
