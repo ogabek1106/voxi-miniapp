@@ -15,17 +15,18 @@ class ProfileUpdate(BaseModel):
 @router.get("/me")
 def get_me(telegram_id: int, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.telegram_id == telegram_id).first()
+
     if not user:
-        user = User(telegram_id=telegram_id, name=None, surname=None)
+        user = User(telegram_id=telegram_id, name=None)
         db.add(user)
         db.commit()
         db.refresh(user)
 
     return {
         "name": user.name,
-        "surname": user.surname,
         "is_admin": user.telegram_id in ADMIN_IDS
     }
+
 
 @router.post("/me")
 def update_me(telegram_id: int, data: ProfileUpdate, db: Session = Depends(get_db)):
