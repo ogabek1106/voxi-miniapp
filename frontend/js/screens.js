@@ -264,7 +264,8 @@ async function renderProfile() {
         <div style="
           width:100%;
           background: var(--card-bg);
-          border: 1px solid var(--border-color);
+          border: none;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.12);
           border-radius:16px;
           padding:16px 14px;
           text-align:left;
