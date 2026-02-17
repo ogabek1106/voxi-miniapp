@@ -34,7 +34,10 @@ window.goHome = function () {
 window.goProfile = function () {
   hideAllScreens();
   hideAnnouncement();
-  if (screenProfile) screenProfile.style.display = "block";
+  if (screenProfile) {
+    screenProfile.style.display = "block";
+    renderProfile();   // 👈 load name here
+  }
   setActiveNav(1);
 };
 
@@ -229,3 +232,30 @@ window.showDbStats = async function () {
   }
 };
 
+async function renderProfile() {
+  const telegramId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+
+  if (!telegramId) {
+    screenProfile.innerHTML = `<p>Open this inside Telegram</p>`;
+    return;
+  }
+
+  try {
+    const me = await apiGet(`/me?telegram_id=${telegramId}`);
+
+    screenProfile.innerHTML = `
+      <h3>👤 Profile</h3>
+      <div style="margin-top:12px; text-align:left;">
+        <p><b>Name:</b> ${me.name}</p>
+        <p><b>Telegram ID:</b> ${me.telegram_id}</p>
+        ${me.is_admin ? `<p style="color:#8b5cf6;">Admin</p>` : ``}
+      </div>
+    `;
+  } catch (e) {
+    console.error(e);
+    screenProfile.innerHTML = `
+      <p>Could not load profile.</p>
+      <button onclick="renderProfile()">Retry</button>
+    `;
+  }
+}
