@@ -278,21 +278,26 @@ async function renderProfile() {
               <div style="font-size:18px; font-weight:600;">
                 ${name || "&nbsp;"}
               </div>
-              <div style="font-size:12px; opacity:0.5; margin-top:2px;">
+
+              <div style="height:1px; background:var(--border-color); opacity:0.6; margin-top:6px;"></div>
+
+              <div style="font-size:10px; opacity:0.45; margin-top:4px;">
                 Your name
               </div>
-              <div style="height:1px; background:var(--border-color); opacity:0.6; margin-top:6px;"></div>
             </div>
+
 
             <!-- Surname field -->
             <div>
               <div style="font-size:18px; font-weight:600;">
                 ${surname || "&nbsp;"}
               </div>
-              <div style="font-size:12px; opacity:0.5; margin-top:2px;">
+              <div style="height:1px; background:var(--border-color); opacity:0.6; margin-top:6px;"></div>
+
+              <div style="font-size:10px; opacity:0.45; margin-top:4px;">
                 Your surname
               </div>
-              <div style="height:1px; background:var(--border-color); opacity:0.6; margin-top:6px;"></div>
+
             </div>
 
           </div>
