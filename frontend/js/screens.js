@@ -279,38 +279,47 @@ async function renderProfile() {
               </div>
               <div style="font-size:12px; opacity:0.5; margin-top:2px;">
                 Your name
+              </div>
+              <div style="height:1px; background:var(--border-color); opacity:0.6; margin-top:6px;"></div>
+            </div>
+
+            <!-- Surname field -->
+            <div>
+              <div style="font-size:18px; font-weight:600;">
+                ${surname || "&nbsp;"}
+              </div>
+              <div style="font-size:12px; opacity:0.5; margin-top:2px;">
+                Your surname
+              </div>
+              <div style="height:1px; background:var(--border-color); opacity:0.6; margin-top:6px;"></div>
+            </div>
+
           </div>
-          <div style="height:1px; background:var(--border-color); opacity:0.6; margin-top:6px;"></div>
         </div>
 
-        <!-- Surname field -->
-        <div>
-          <div style="font-size:18px; font-weight:600;">
-            ${surname || "&nbsp;"}
-          </div>
-          <div style="font-size:12px; opacity:0.5; margin-top:2px;">
-            Your surname
-          </div>
-          <div style="height:1px; background:var(--border-color); opacity:0.6; margin-top:6px;"></div>
-        </div>
+        <!-- Edit link -->
+        <button onclick="editProfile()" style="
+          background:none;
+          border:none;
+          color: var(--primary);
+          font-size:14px;
+          padding:0;
+          cursor:pointer;
+        ">
+          Edit profile
+        </button>
 
       </div>
-    </div>
+    `;
+  } catch (e) {
+    console.error(e);
+    screenProfile.innerHTML = `
+      <p>Could not load profile.</p>
+      <button onclick="renderProfile()">Retry</button>
+    `;
+  }
+}
 
-    <!-- Edit link -->
-    <button onclick="editProfile()" style="
-      background:none;
-      border:none;
-      color: var(--primary);
-      font-size:14px;
-      padding:0;
-      cursor:pointer;
-    ">
-      Edit profile
-    </button>
-
-  </div>
-`;
 
 
 window.editProfile = function () {
