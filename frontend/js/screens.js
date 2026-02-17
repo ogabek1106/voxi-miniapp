@@ -261,9 +261,10 @@ async function renderProfile() {
         </div>
 
         <!-- Card wrapper -->
-        <div style="width:100%; padding: 0 6px;">
+        <div style="width:100%; padding: 0 8px; box-sizing:border-box;">
           <div style="
             width:100%;
+            box-sizing: border-box;
             background: var(--card-bg);
             border: none;
             box-shadow: 0 2px 8px rgba(0,0,0,0.12);
