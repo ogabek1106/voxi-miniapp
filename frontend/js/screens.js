@@ -260,16 +260,20 @@ async function renderProfile() {
           🦊
         </div>
 
-        <!-- Card -->
-        <div style="
-          width:100%;
-          background: var(--card-bg);
-          border: none;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-          border-radius:16px;
-          padding:16px 14px;
-          text-align:left;
-        ">
+        <!-- Card wrapper -->
+        <div style="width:100%; padding: 0 6px;">
+          <div style="
+            width:100%;
+            background: var(--card-bg);
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+            border-radius:16px;
+            padding:16px 14px;
+            text-align:left;
+          ">
+            <!-- ... card content here ... -->
+          </div>
+        </div>
 
           <!-- Name field -->
           <div style="margin-bottom:16px;">
