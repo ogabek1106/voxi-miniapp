@@ -243,63 +243,67 @@ async function renderProfile() {
   try {
     const me = await apiGet(`/me?telegram_id=${telegramId}`);
 
-    screenProfile.innerHTML = `
-      <h3>👤 Profile</h3>
-      <div style="margin-top:12px; text-align:left;">
-        <p><b>Name:</b> ${me.name}</p>
-        <p><b>Telegram ID:</b> ${me.telegram_id}</p>
-        ${me.is_admin ? `<p style="color:#8b5cf6;">Admin</p>` : ``}
-      </div>
-    `;
-  } catch (e) {
-    console.error(e);
-    screenProfile.innerHTML = `
-      <p>Could not load profile.</p>
-      <button onclick="renderProfile()">Retry</button>
-    `;
-  }
-}
-async function renderProfile() {
-  const telegramId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
-
-  if (!telegramId) {
-    screenProfile.innerHTML = `<p>Open this inside Telegram</p>`;
-    return;
-  }
-
-  try {
-    const me = await apiGet(`/me?telegram_id=${telegramId}`);
-
-    const name = me.name || "Name";
-    const surname = me.surname || "Surname";
-    const nameOpacity = me.name ? "1" : "0.5";
-    const surnameOpacity = me.surname ? "1" : "0.5";
+    const name = me.name || "";
+    const surname = me.surname || "";
 
     screenProfile.innerHTML = `
       <div style="display:flex; flex-direction:column; align-items:center; gap:16px;">
 
-        <!-- Profile avatar -->
+        <!-- Avatar -->
         <div style="
           width:96px; height:96px;
           border-radius:50%;
           background:#1f1f2a;
           display:flex; align-items:center; justify-content:center;
-          font-size:42px;
+          font-size:40px;
         ">
           🦊
         </div>
 
-        <!-- Name Row -->
-        <div style="display:flex; align-items:center; gap:10px;">
-          <span style="font-size:18px; opacity:${nameOpacity};">${name}</span>
-          <span style="font-size:18px; opacity:${surnameOpacity};">${surname}</span>
+        <!-- Card -->
+        <div style="
+          width:100%;
+          background: var(--card-bg);
+          border: 1px solid var(--border-color);
+          border-radius:16px;
+          padding:16px 14px;
+          text-align:left;
+        ">
 
-          <!-- Pen -->
-          <button onclick="editProfile()" style="
-            background:none; border:none; color:#8b5cf6;
-            font-size:18px; cursor:pointer;
-          ">✏️</button>
+          <!-- Name field -->
+          <div style="margin-bottom:16px;">
+            <div style="font-size:18px; font-weight:600;">
+              ${name || "&nbsp;"}
+            </div>
+            <div style="font-size:12px; opacity:0.5; margin-top:2px;">
+              Your name
+            </div>
+            <div style="height:1px; background:var(--border-color); opacity:0.6; margin-top:6px;"></div>
+          </div>
+
+          <!-- Surname field -->
+          <div>
+            <div style="font-size:18px; font-weight:600;">
+              ${surname || "&nbsp;"}
+            </div>
+            <div style="font-size:12px; opacity:0.5; margin-top:2px;">
+              Your surname
+            </div>
+            <div style="height:1px; background:var(--border-color); opacity:0.6; margin-top:6px;"></div>
+          </div>
         </div>
+
+        <!-- Edit link -->
+        <button onclick="editProfile()" style="
+          background:none;
+          border:none;
+          color: var(--primary);
+          font-size:14px;
+          padding:0;
+          cursor:pointer;
+        ">
+          Edit profile
+        </button>
 
       </div>
     `;
@@ -312,20 +316,13 @@ async function renderProfile() {
   }
 }
 
-window.goProfile = function () {
-  hideAllScreens();
-  hideAnnouncement();
-  screenProfile.style.display = "block";
-  setActiveNav(1);
-  renderProfile();
-};
 window.editProfile = function () {
   screenProfile.innerHTML = `
-    <h3>Edit Profile</h3>
-    <input id="edit-name" placeholder="Name" style="width:100%; padding:10px; margin-bottom:8px;" />
-    <input id="edit-surname" placeholder="Surname" style="width:100%; padding:10px; margin-bottom:12px;" />
+    <h3>Edit profile</h3>
+    <input id="edit-name" placeholder="Name" style="width:100%; padding:12px; margin-bottom:8px;" />
+    <input id="edit-surname" placeholder="Surname" style="width:100%; padding:12px; margin-bottom:12px;" />
     <button onclick="saveProfile()">Save</button>
-    <button onclick="renderProfile()" style="margin-left:8px;">Cancel</button>
+    <button onclick="renderProfile()" style="margin-top:8px; background:#ddd; color:#000;">Cancel</button>
   `;
 };
 
@@ -337,3 +334,4 @@ window.saveProfile = async function () {
   await apiPost(`/me?telegram_id=${telegramId}`, { name, surname });
   renderProfile();
 };
+
