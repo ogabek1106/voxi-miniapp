@@ -3,7 +3,8 @@ from sqlalchemy import Column, Integer, String, BigInteger, Text, ForeignKey, JS
 from sqlalchemy.orm import relationship
 import enum
 from .db import Base
-
+from sqlalchemy import DateTime
+from datetime import datetime
 
 class User(Base):
     __tablename__ = "users"
@@ -58,3 +59,14 @@ class ReadingQuestion(Base):
     word_limit = Column(Integer, nullable=True)
 
     passage = relationship("ReadingPassage", back_populates="questions")
+
+
+class ReadingProgress(Base):
+    __tablename__ = "reading_progress"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
+    test_id = Column(Integer, ForeignKey("reading_tests.id", ondelete="CASCADE"))
+
+    answers = Column(JSON, nullable=False, default={})
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
