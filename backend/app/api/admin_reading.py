@@ -7,7 +7,8 @@ from app.db import SessionLocal
 from app.deps import get_db
 from app.models import ReadingTest, ReadingTestStatus
 from app.models import ReadingPassage
-
+from app.models import ReadingQuestion
+from typing import List, Any
 router = APIRouter(prefix="/admin/reading", tags=["admin-reading"])
 
 
@@ -50,3 +51,34 @@ def add_passage(test_id: int, payload: PassageCreate, db: Session = Depends(get_
     db.commit()
     db.refresh(passage)
     return passage
+
+from typing import List, Any
+
+class QuestionCreate(BaseModel):
+    text: str
+    type: str
+    options: Optional[List[str]] = None
+    correct_answer: Optional[Any] = None
+    word_limit: Optional[int] = None
+    order_index: int
+
+
+@router.post("/passages/{passage_id}/questions")
+def add_question(passage_id: int, payload: QuestionCreate, db: Session = Depends(get_db)):
+    passage = db.query(ReadingPassage).filter(ReadingPassage.id == passage_id).first()
+    if not passage:
+        raise HTTPException(status_code=404, detail="Passage not found")
+
+    q = ReadingQuestion(
+        passage_id=passage_id,
+        text=payload.text,
+        type=payload.type,
+        options=payload.options,
+        correct_answer=payload.correct_answer,
+        word_limit=payload.word_limit,
+        order_index=payload.order_index
+    )
+    db.add(q)
+    db.commit()
+    db.refresh(q)
+    return q
