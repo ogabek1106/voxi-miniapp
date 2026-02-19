@@ -2,12 +2,14 @@ let screenName;
 let screenHome;
 let screenMocks;
 let screenProfile;
+let screenReading;
 
 document.addEventListener("DOMContentLoaded", () => {
   screenName = document.getElementById("screen-name");
   screenHome = document.getElementById("screen-home");
   screenMocks = document.getElementById("screen-mocks");
   screenProfile = document.getElementById("screen-profile");
+  screenReading = document.getElementById("screen-reading");
 
   const btnHome = document.getElementById("btn-home");
   const btnProfile = document.getElementById("btn-profile");
