@@ -24,6 +24,7 @@ function hideAllScreens() {
   if (screenHome) screenHome.style.display = "none";
   if (screenMocks) screenMocks.style.display = "none";
   if (screenProfile) screenProfile.style.display = "none";
+    if (screenReading) screenReading.style.display = "none";
 }
 
 window.goHome = function () {
@@ -349,5 +350,15 @@ window.saveProfile = async function () {
 
   await apiPost(`/me?telegram_id=${telegramId}`, { name, surname });
   renderProfile();
+};
+
+
+window.showReadingScreen = function () {
+  hideAllScreens();
+  hideAnnouncement();
+  if (screenReading) {
+    screenReading.style.display = "block";
+    screenReading.innerHTML = `<h3>📖 Reading screen loaded</h3><p>UI coming next…</p>`;
+  }
 };
 
