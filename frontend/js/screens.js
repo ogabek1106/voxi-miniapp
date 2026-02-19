@@ -92,7 +92,7 @@ window.startMock = async function (id) {
 
   if (screenReading) {
     screenReading.style.display = "block";
-    screenReading.innerHTML = `<h3>📖 Loading Reading…</h3>`;
+    screenReading.innerHTML = `<h3>🚨 NEW FRONTEND CODE RUNNING</h3><p>Calling /reading/start</p>`;
   }
 
   const data = await apiGet(`/mock-tests/${id}/reading/start`);
