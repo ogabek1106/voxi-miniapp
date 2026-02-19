@@ -9,9 +9,9 @@ from pydantic import BaseModel
 from app.api.mock_tests import router as mock_tests_router
 from app.api.me import router as me_router
 from app.api.admin import router as admin_router
-
+from app.api.admin_reading import router as admin_reading_router
 app = FastAPI(title="Voxi Mini App API")
-
+app.include_router(admin_reading_router)
 app.include_router(mock_tests_router)
 app.include_router(me_router)
 app.include_router(admin_router)
