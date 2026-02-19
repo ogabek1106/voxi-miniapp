@@ -87,26 +87,38 @@ window.openMock = async function (id) {
 };
 
 window.startMock = async function (id) {
-  const data = await apiGet(`/mock-tests/${id}/start`);
+  hideAllScreens();
+  hideAnnouncement();
 
-  render(`
-    <h3>Reading</h3>
-    <p>${data.passage}</p>
-    <form id="answersForm">
-      ${data.questions.map(q => `
-        <div style="margin-bottom: 12px;">
-          <p><b>${q.text}</b></p>
-          ${q.options.map((opt, idx) => `
-            <label style="display:block;">
-              <input type="radio" name="q_${q.id}" value="${idx}" />
-              ${opt}
-            </label>
-          `).join("")}
-        </div>
-      `).join("")}
-      <button type="submit">Submit</button>
-    </form>
-  `);
+  if (screenReading) {
+    screenReading.style.display = "block";
+    screenReading.innerHTML = `<h3>📖 Loading Reading…</h3>`;
+  }
+
+  const data = await apiGet(`/mock-tests/${id}/reading/start`);
+
+
+    if (screenReading) {
+    screenReading.innerHTML = `
+      <h3>Reading</h3>
+      <p>${data.passage}</p>
+      <form id="answersForm">
+        ${data.questions.map(q => `
+          <div style="margin-bottom: 12px;">
+            <p><b>${q.text}</b></p>
+            ${q.options.map((opt, idx) => `
+              <label style="display:block;">
+                <input type="radio" name="q_${q.id}" value="${idx}" />
+                ${opt}
+              </label>
+            `).join("")}
+          </div>
+        `).join("")}
+        <button type="submit">Submit</button>
+      </form>
+    `;
+  }
+
 
   document.getElementById("answersForm").onsubmit = async (e) => {
     e.preventDefault();
@@ -124,16 +136,19 @@ window.startMock = async function (id) {
 
     const result = await apiPost(`/mock-tests/${id}/submit`, { answers });
 
-    render(`
-      <h3>Score</h3>
-      <p>${result.score} / ${result.total}</p>
-      <ul>
-        ${result.details.map(d => `
-          <li>Question ${d.question_id}: ${d.correct ? "✅ Correct" : "❌ Wrong"}</li>
-        `).join("")}
-      </ul>
-      <button onclick="renderMocks()">Back to Mock Tests</button>
-    `);
+    if (screenReading) {
+      screenReading.innerHTML = `
+        <h3>Score</h3>
+        <p>${result.score} / ${result.total}</p>
+        <ul>
+          ${result.details.map(d => `
+            <li>Question ${d.question_id}: ${d.correct ? "✅ Correct" : "❌ Wrong"}</li>
+          `).join("")}
+        </ul>
+        <button onclick="showMocksScreen()">Back to Mock Tests</button>
+      `;
+    }
+
   };
 };
 
