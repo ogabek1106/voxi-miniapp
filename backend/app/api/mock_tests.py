@@ -3,6 +3,11 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List
 from typing import Dict
+from sqlalchemy.orm import Session
+from fastapi import Depends
+from app.deps import get_db
+from app.models import ReadingTest, ReadingPassage, ReadingQuestion, ReadingTestStatus
+
 
 router = APIRouter(prefix="/mock-tests", tags=["mock-tests"])
 
@@ -139,5 +144,55 @@ async def submit_mock_test(mock_id: int, payload: SubmitAnswersIn):
         "score": score,
         "total": len(correct_answers),
         "details": details
+    }
+
+
+@router.get("/{mock_id}/reading/start")
+def start_reading_test(mock_id: int, db: Session = Depends(get_db)):
+    test = (
+        db.query(ReadingTest)
+        .filter(ReadingTest.id == mock_id, ReadingTest.status == ReadingTestStatus.published)
+        .first()
+    )
+    if not test:
+        raise HTTPException(status_code=404, detail="Reading test not found or not published")
+
+    passages = (
+        db.query(ReadingPassage)
+        .filter(ReadingPassage.test_id == test.id)
+        .order_by(ReadingPassage.order_index.asc())
+        .all()
+    )
+
+    result = []
+    for p in passages:
+        questions = (
+            db.query(ReadingQuestion)
+            .filter(ReadingQuestion.passage_id == p.id)
+            .order_by(ReadingQuestion.order_index.asc())
+            .all()
+        )
+
+        result.append({
+            "id": p.id,
+            "title": p.title,
+            "text": p.text,
+            "questions": [
+                {
+                    "id": q.id,
+                    "type": q.type,
+                    "text": q.text,
+                    "options": q.options,
+                    "word_limit": q.word_limit
+                }
+                for q in questions
+            ]
+        })
+
+    return {
+        "test_id": test.id,
+        "title": test.title,
+        "time_limit_minutes": test.time_limit_minutes,
+        "passages": result
     }
 
