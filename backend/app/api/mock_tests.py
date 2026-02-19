@@ -287,3 +287,25 @@ def save_reading_progress(mock_id: int, payload: ReadingSaveIn, db: Session = De
 
     db.commit()
     return {"status": "saved"}
+
+@router.get("/{mock_id}/reading/resume")
+def resume_reading_progress(mock_id: int, db: Session = Depends(get_db), user_id: int = 1):
+    """
+    TEMP: user_id is hardcoded to 1.
+    Later you will extract user_id from Telegram auth.
+    """
+
+    progress = (
+        db.query(ReadingProgress)
+        .filter(ReadingProgress.user_id == user_id, ReadingProgress.test_id == mock_id)
+        .first()
+    )
+
+    if not progress:
+        return {"answers": {}}
+
+    return {
+        "answers": progress.answers,
+        "updated_at": progress.updated_at
+    }
+
