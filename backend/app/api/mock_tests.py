@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from fastapi import Depends
 from app.deps import get_db
 from app.models import ReadingTest, ReadingPassage, ReadingQuestion, ReadingTestStatus
-
+from typing import Dict, List
 
 router = APIRouter(prefix="/mock-tests", tags=["mock-tests"])
 
@@ -193,5 +193,68 @@ def start_reading_test(mock_id: int, db: Session = Depends(get_db)):
         "title": test.title,
         "time_limit_minutes": test.time_limit_minutes,
         "passages": result
+    }
+
+class ReadingSubmitIn(BaseModel):
+    answers: Dict[int, str | int]  # question_id -> user answer (string or index)
+
+
+class ReadingSubmitItem(BaseModel):
+    question_id: int
+    correct: bool
+
+
+class ReadingSubmitOut(BaseModel):
+    score: int
+    total: int
+    details: List[ReadingSubmitItem]
+
+
+@router.post("/{mock_id}/reading/submit", response_model=ReadingSubmitOut)
+def submit_reading_test(mock_id: int, payload: ReadingSubmitIn, db: Session = Depends(get_db)):
+    test = (
+        db.query(ReadingTest)
+        .filter(ReadingTest.id == mock_id, ReadingTest.status == ReadingTestStatus.published)
+        .first()
+    )
+    if not test:
+        raise HTTPException(status_code=404, detail="Reading test not found or not published")
+
+    # get all questions for this test
+    questions = (
+        db.query(ReadingQuestion)
+        .join(ReadingPassage, ReadingQuestion.passage_id == ReadingPassage.id)
+        .filter(ReadingPassage.test_id == test.id)
+        .all()
+    )
+
+    correct_map = {q.id: q.correct_answer for q in questions}
+
+    score = 0
+    details = []
+
+    for q_id, user_answer in payload.answers.items():
+        correct_answer = correct_map.get(q_id)
+
+        is_correct = False
+        if correct_answer is not None:
+            # normalize both sides for string answers
+            if isinstance(correct_answer, str):
+                is_correct = str(user_answer).strip().lower() == correct_answer.strip().lower()
+            else:
+                is_correct = user_answer == correct_answer
+
+        if is_correct:
+            score += 1
+
+        details.append({
+            "question_id": q_id,
+            "correct": is_correct
+        })
+
+    return {
+        "score": score,
+        "total": len(correct_map),
+        "details": details
     }
 
