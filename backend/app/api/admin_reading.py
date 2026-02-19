@@ -82,3 +82,14 @@ def add_question(passage_id: int, payload: QuestionCreate, db: Session = Depends
     db.commit()
     db.refresh(q)
     return q
+
+@router.post("/tests/{test_id}/publish")
+def publish_test(test_id: int, db: Session = Depends(get_db)):
+    test = db.query(ReadingTest).filter(ReadingTest.id == test_id).first()
+    if not test:
+        raise HTTPException(status_code=404, detail="Test not found")
+
+    test.status = ReadingTestStatus.published
+    db.commit()
+    db.refresh(test)
+    return {"status": "published", "id": test.id}
