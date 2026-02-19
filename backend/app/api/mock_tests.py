@@ -8,7 +8,7 @@ from fastapi import Depends
 from app.deps import get_db
 from app.models import ReadingTest, ReadingPassage, ReadingQuestion, ReadingTestStatus
 from typing import Dict, List
-
+from app.models import ReadingProgress, User
 router = APIRouter(prefix="/mock-tests", tags=["mock-tests"])
 
 
@@ -258,3 +258,32 @@ def submit_reading_test(mock_id: int, payload: ReadingSubmitIn, db: Session = De
         "details": details
     }
 
+class ReadingSaveIn(BaseModel):
+    answers: Dict[int, str | int]
+
+
+@router.post("/{mock_id}/reading/save")
+def save_reading_progress(mock_id: int, payload: ReadingSaveIn, db: Session = Depends(get_db), user_id: int = 1):
+    """
+    TEMP: user_id is hardcoded to 1.
+    Later you will extract user_id from Telegram auth.
+    """
+
+    progress = (
+        db.query(ReadingProgress)
+        .filter(ReadingProgress.user_id == user_id, ReadingProgress.test_id == mock_id)
+        .first()
+    )
+
+    if progress:
+        progress.answers = payload.answers
+    else:
+        progress = ReadingProgress(
+            user_id=user_id,
+            test_id=mock_id,
+            answers=payload.answers
+        )
+        db.add(progress)
+
+    db.commit()
+    return {"status": "saved"}
