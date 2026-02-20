@@ -149,7 +149,7 @@ async def submit_mock_test(mock_id: int, payload: SubmitAnswersIn):
 
 
 @router.get("/{mock_id}/reading/start")
-def start_reading_test(mock_id: int, db: Session = Depends(get_db)):
+def start_reading_test(mock_id: int, telegram_id: int, db: Session = Depends(get_db)):
     test = (
         db.query(ReadingTest)
         .filter(ReadingTest.id == mock_id, ReadingTest.status == ReadingTestStatus.published)
@@ -158,8 +158,11 @@ def start_reading_test(mock_id: int, db: Session = Depends(get_db)):
     if not test:
         raise HTTPException(status_code=404, detail="Reading test not found or not published")
 
-    # TEMP user_id (later from Telegram auth)
-    user_id = 1
+    user = db.query(User).filter(User.telegram_id == telegram_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user_id = user.id
 
     progress = (
         db.query(ReadingProgress)
@@ -296,7 +299,12 @@ class ReadingSaveIn(BaseModel):
 
 
 @router.post("/{mock_id}/reading/save")
-def save_reading_progress(mock_id: int, payload: ReadingSaveIn, db: Session = Depends(get_db), user_id: int = 1):
+def save_reading_progress(mock_id: int, payload: ReadingSaveIn, telegram_id: int, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.telegram_id == telegram_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user_id = user.id
     """
     TEMP: user_id is hardcoded to 1.
     Later you will extract user_id from Telegram auth.
@@ -322,7 +330,12 @@ def save_reading_progress(mock_id: int, payload: ReadingSaveIn, db: Session = De
     return {"status": "saved"}
 
 @router.get("/{mock_id}/reading/resume")
-def resume_reading_progress(mock_id: int, db: Session = Depends(get_db), user_id: int = 1):
+def resume_reading_progress(mock_id: int, telegram_id: int, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.telegram_id == telegram_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user_id = user.id
     """
     TEMP: user_id is hardcoded to 1.
     Later you will extract user_id from Telegram auth.
