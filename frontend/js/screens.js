@@ -132,17 +132,19 @@ window.startMock = async function (id) {
         if (ratio < 0.66) color = "#facc15"; // yellow
         if (ratio < 0.33) color = "#ef4444"; // red
 
-        el.style.color = color;
+        el.style.color = "#000000";
+        el.style.webkitTextStroke = "0.5px #ffffff";
+        el.style.textShadow = "0 0 1px rgba(255,255,255,0.6)";
 
-        // 💧 water drain background
+        // bar drains from right -> left (from user's view)
         el.style.background = `
           linear-gradient(
-            to left,
-            ${color} ${Math.floor(ratio * 100)}%,
-            transparent 0%
+            to right,
+            transparent ${Math.floor((1 - ratio) * 100)}%,
+            ${color} 0%
           )
         `;
-        el.style.padding = "0 4px";
+        el.style.padding = "2px 6px";
         el.style.borderRadius = "4px";
 
         if (leftSec <= 0) {
