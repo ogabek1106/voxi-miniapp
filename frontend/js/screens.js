@@ -51,6 +51,8 @@ function setActiveNav(index) {
 }
 
 window.showMocksScreen = function () {
+  const content = document.getElementById("content");
+  if (content) content.style.padding = "12px 16px";
   hideAllScreens();
   hideAnnouncement();
   screenMocks.style.display = "block";
@@ -88,6 +90,9 @@ window.openMock = async function (id) {
 window.startMock = async function (id) {
   hideAllScreens();
   hideAnnouncement();
+
+  const content = document.getElementById("content");
+  if (content) content.style.padding = "2px";
 
   if (screenReading) {
     screenReading.style.display = "block";
