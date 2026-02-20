@@ -118,20 +118,21 @@ ${JSON.stringify(data, null, 2)}
         position: sticky;
         top: 0;
         z-index: 50;
-        display: flex;
+        display: grid;
+        grid-template-columns: 1fr 1px 1fr 1px 1fr;
         align-items: center;
-        justify-content: space-between;
         height: 14px;
-        padding: 4px 6px;
+        padding: 4px 0;
         background: #ffffff;
         font-size: 10px;
         font-weight: 600;
       ">
-        <div id="rt-timer">60:00</div>
-        <div id="rt-passage">Passage 1</div>
-        <div id="rt-progress">0/40</div>
+        <div id="rt-timer" style="text-align:center;">60:00</div>
+        <div style="width:1px; height:100%; background:#e5e5ea;"></div>
+        <div id="rt-passage" style="text-align:center;">Passage 1</div>
+        <div style="width:1px; height:100%; background:#e5e5ea;"></div>
+        <div id="rt-progress" style="text-align:center;">0/40</div>
       </div>
-
       <div style="height:1px; background:#e5e5ea; margin-bottom:6px;"></div>
 
       <h3 style="margin-top:6px;">📖 Reading Test</h3>
