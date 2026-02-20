@@ -8,6 +8,7 @@ from fastapi import Depends
 from app.deps import get_db
 from app.models import ReadingTest, ReadingPassage, ReadingQuestion, ReadingTestStatus
 from typing import Dict, List
+from datetime import datetime, timedelta
 from app.models import ReadingProgress, User
 router = APIRouter(prefix="/mock-tests", tags=["mock-tests"])
 
@@ -157,6 +158,34 @@ def start_reading_test(mock_id: int, db: Session = Depends(get_db)):
     if not test:
         raise HTTPException(status_code=404, detail="Reading test not found or not published")
 
+    # TEMP user_id (later from Telegram auth)
+    user_id = 1
+
+    progress = (
+        db.query(ReadingProgress)
+        .filter(ReadingProgress.user_id == user_id, ReadingProgress.test_id == test.id)
+        .first()
+    )
+
+    now = datetime.utcnow()
+
+    if not progress:
+        progress = ReadingProgress(
+            user_id=user_id,
+            test_id=test.id,
+            answers={}
+        )
+        db.add(progress)
+        db.commit()
+        db.refresh(progress)
+
+    if progress.started_at is None:
+        progress.started_at = now
+        progress.ends_at = now + timedelta(minutes=test.time_limit_minutes)
+        db.add(progress)
+        db.commit()
+        db.refresh(progress)
+    
     passages = (
         db.query(ReadingPassage)
         .filter(ReadingPassage.test_id == test.id)
@@ -193,9 +222,12 @@ def start_reading_test(mock_id: int, db: Session = Depends(get_db)):
         "test_id": test.id,
         "title": test.title,
         "time_limit_minutes": test.time_limit_minutes,
+        "timer": {
+            "started_at": progress.started_at.isoformat() if progress.started_at else None,
+            "ends_at": progress.ends_at.isoformat() if progress.ends_at else None,
+        },
         "passages": result
     }
-
 class ReadingSubmitIn(BaseModel):
     answers: Dict[int, str | int]  # question_id -> user answer (string or index)
 
