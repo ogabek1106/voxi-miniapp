@@ -69,4 +69,6 @@ class ReadingProgress(Base):
     test_id = Column(Integer, ForeignKey("reading_tests.id", ondelete="CASCADE"))
 
     answers = Column(JSON, nullable=False, default={})
+    started_at = Column(DateTime(timezone=True), nullable=True)   # ⏱ when test started
+    ends_at = Column(DateTime(timezone=True), nullable=True)      # ⏱ absolute end time
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
