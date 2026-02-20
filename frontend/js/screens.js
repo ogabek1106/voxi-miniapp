@@ -102,6 +102,29 @@ window.startMock = async function (id) {
 
   try {
     const data = await apiGet(`/mock-tests/${id}/reading/start`);
+    // ===== Server-based timer (authoritative) =====
+    if (data.timer && data.timer.ends_at) {
+      const endsAt = new Date(data.timer.ends_at).getTime();
+
+      if (readingTimerInterval) clearInterval(readingTimerInterval);
+
+      readingTimerInterval = setInterval(() => {
+        const leftMs = Math.max(0, endsAt - Date.now());
+        const leftSec = Math.ceil(leftMs / 1000);
+
+        const min = Math.floor(leftSec / 60).toString().padStart(2, "0");
+        const sec = (leftSec % 60).toString().padStart(2, "0");
+
+        const el = document.getElementById("rt-timer");
+        if (el) el.textContent = `${min}:${sec}`;
+
+        if (leftSec <= 0) {
+          clearInterval(readingTimerInterval);
+          if (el) el.textContent = "00:00";
+          // later: auto-submit
+        }
+      }, 1000);
+    }
 
     if (!data || !data.passages) {
       screenReading.innerHTML = `
