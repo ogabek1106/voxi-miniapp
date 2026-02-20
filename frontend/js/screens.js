@@ -123,7 +123,7 @@ window.startMock = async function (id) {
         if (!el) return;
 
         el.textContent = `${min}:${sec}`;
-        el.style.fontWeight = "700";
+        el.style.fontWeight = "1000";
         el.style.backgroundColor = "#ffffff";
 
         const ratio = leftMs / totalMs; // 1 → 0
