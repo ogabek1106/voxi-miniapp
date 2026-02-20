@@ -94,9 +94,19 @@ window.startMock = async function (id) {
     screenReading.innerHTML = `<h3>📖 Loading Reading…</h3>`;
   }
 
-  const data = await apiGet(`/mock-tests/${id}/reading/start`);
+  try {
+    const data = await apiGet(`/mock-tests/${id}/reading/start`);
 
-  if (screenReading) {
+    if (!data || !data.passages) {
+      screenReading.innerHTML = `
+        <h3>❌ Invalid API response</h3>
+        <pre style="text-align:left; white-space:pre-wrap; font-size:12px;">
+${JSON.stringify(data, null, 2)}
+        </pre>
+      `;
+      return;
+    }
+
     screenReading.innerHTML = `
       <h3>📖 Reading Test</h3>
 
@@ -120,6 +130,15 @@ window.startMock = async function (id) {
         </div>
       `).join("")}
     `;
+
+  } catch (e) {
+    screenReading.innerHTML = `
+      <h3>❌ Reading load failed</h3>
+      <pre style="text-align:left; white-space:pre-wrap; font-size:12px;">
+${e.message}
+      </pre>
+    `;
+    console.error(e);
   }
 };
 
