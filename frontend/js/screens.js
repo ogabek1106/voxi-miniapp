@@ -92,10 +92,11 @@ window.startMock = async function (id) {
   hideAnnouncement();
 
   const content = document.getElementById("content");
-  if (content) content.style.padding = "2px";
+  if (content) content.style.padding = "2px 2px";
 
   if (screenReading) {
     screenReading.style.display = "block";
+    screenReading.style.width = "100%";
     screenReading.innerHTML = `<h3>📖 Loading Reading…</h3>`;
   }
 
