@@ -364,3 +364,44 @@ window.showReadingScreen = function () {
     screenReading.innerHTML = `<h3>📖 Reading screen loaded</h3><p>UI coming next…</p>`;
   }
 };
+// ===== Reading Timer (60 min, never pauses, water drain) =====
+let readingTimerInterval = null;
+let readingEndAt = null;
+
+function startReadingTimer(totalSeconds = 60 * 60) {
+  const totalMs = totalSeconds * 1000;
+  readingEndAt = Date.now() + totalMs;
+
+  if (readingTimerInterval) clearInterval(readingTimerInterval);
+
+  readingTimerInterval = setInterval(() => {
+    const now = Date.now();
+    const leftMs = Math.max(0, readingEndAt - now);
+    const leftSec = Math.ceil(leftMs / 1000);
+
+    const min = Math.floor(leftSec / 60).toString().padStart(2, "0");
+    const sec = (leftSec % 60).toString().padStart(2, "0");
+
+    const el = document.getElementById("rt-timer");
+    if (!el) return;
+
+    el.textContent = `${min}:${sec}`;
+
+    const ratio = leftMs / totalMs; // 1 → 0
+
+    // color: green -> yellow -> red
+    let color = "#22c55e"; // green
+    if (ratio < 0.66) color = "#facc15"; // yellow
+    if (ratio < 0.33) color = "#ef4444"; // red
+
+    el.style.color = color;
+    el.style.background = `linear-gradient(to top, ${color} ${Math.floor(ratio * 100)}%, transparent 0%)`;
+
+    if (leftSec <= 0) {
+      clearInterval(readingTimerInterval);
+      el.textContent = "00:00";
+      el.style.color = "#ef4444";
+      // later: auto-submit
+    }
+  }, 1000);
+}
