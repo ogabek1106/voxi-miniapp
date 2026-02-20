@@ -182,12 +182,12 @@ def start_reading_test(mock_id: int, telegram_id: int, db: Session = Depends(get
         db.commit()
         db.refresh(progress)
 
-    if progress.started_at is None:
-        progress.started_at = now
-        progress.ends_at = now + timedelta(minutes=1)
-        db.add(progress)
-        db.commit()
-        db.refresh(progress)
+    # Always restart timer on open (DEV / simple mode)
+    progress.started_at = now
+    progress.ends_at = now + timedelta(minutes=1)  # still 1 minute test mode
+    db.add(progress)
+    db.commit()
+    db.refresh(progress)
     
     passages = (
         db.query(ReadingPassage)
