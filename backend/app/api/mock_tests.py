@@ -181,7 +181,7 @@ def start_reading_test(mock_id: int, db: Session = Depends(get_db)):
 
     if progress.started_at is None:
         progress.started_at = now
-        progress.ends_at = now + timedelta(minutes=test.time_limit_minutes)
+        progress.ends_at = now + timedelta(minutes=1)
         db.add(progress)
         db.commit()
         db.refresh(progress)
