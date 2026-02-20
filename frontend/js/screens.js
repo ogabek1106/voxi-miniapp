@@ -150,7 +150,7 @@ ${JSON.stringify(data, null, 2)}
         font-size: 10px;
         font-weight: 600;
       ">
-        <div id="rt-timer" style="text-align:center;">60:00</div>
+        <div id="rt-timer" style="text-align:center;">--:--</div>
         <div style="width:1px; height:100%; background:#e5e5ea;"></div>
         <div id="rt-passage" style="text-align:center;">Passage 1</div>
         <div style="width:1px; height:100%; background:#e5e5ea;"></div>
