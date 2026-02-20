@@ -91,8 +91,29 @@ window.startMock = async function (id) {
   hideAnnouncement();
 
   if (screenReading) {
-    screenReading.style.display = "block";
-    screenReading.innerHTML = `<h3>📖 Loading Reading…</h3>`;
+    screenReading.innerHTML = `
+      <h3>📖 Reading Test</h3>
+
+      ${data.passages.map((p, pi) => `
+        <div style="margin-bottom:24px; text-align:left;">
+          <h4>Passage ${pi + 1}</h4>
+          <p style="white-space:pre-wrap; line-height:1.5;">${p.text}</p>
+
+          ${p.questions.map((q, qi) => `
+            <div style="margin:12px 0; padding:12px; border:1px solid #e5e5ea; border-radius:8px;">
+              <div style="font-weight:600; margin-bottom:6px;">
+                Q${q.id}. ${q.text}
+              </div>
+              <input 
+                data-qid="${q.id}" 
+                placeholder="Type your answer…" 
+                style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc;"
+              />
+            </div>
+          `).join("")}
+        </div>
+      `).join("")}
+    `;
   }
 
   const data = await apiGet(`/mock-tests/${id}/reading/start`);
