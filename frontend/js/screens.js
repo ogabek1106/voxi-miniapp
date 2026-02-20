@@ -18,18 +18,17 @@ document.addEventListener("DOMContentLoaded", () => {
   if (btnProfile) btnProfile.addEventListener("click", goProfile);
 });
 
-
 function hideAllScreens() {
   if (screenName) screenName.style.display = "none";
   if (screenHome) screenHome.style.display = "none";
   if (screenMocks) screenMocks.style.display = "none";
   if (screenProfile) screenProfile.style.display = "none";
-    if (screenReading) screenReading.style.display = "none";
+  if (screenReading) screenReading.style.display = "none";
 }
 
 window.goHome = function () {
   hideAllScreens();
-  showAnnouncement();            
+  showAnnouncement();
   if (screenHome) screenHome.style.display = "block";
   setActiveNav(0);
 };
@@ -39,7 +38,7 @@ window.goProfile = function () {
   hideAnnouncement();
   if (screenProfile) {
     screenProfile.style.display = "block";
-    renderProfile();   // 👈 load name here
+    renderProfile();
   }
   setActiveNav(1);
 };
@@ -91,6 +90,13 @@ window.startMock = async function (id) {
   hideAnnouncement();
 
   if (screenReading) {
+    screenReading.style.display = "block";
+    screenReading.innerHTML = `<h3>📖 Loading Reading…</h3>`;
+  }
+
+  const data = await apiGet(`/mock-tests/${id}/reading/start`);
+
+  if (screenReading) {
     screenReading.innerHTML = `
       <h3>📖 Reading Test</h3>
 
@@ -99,7 +105,7 @@ window.startMock = async function (id) {
           <h4>Passage ${pi + 1}</h4>
           <p style="white-space:pre-wrap; line-height:1.5;">${p.text}</p>
 
-          ${p.questions.map((q, qi) => `
+          ${p.questions.map(q => `
             <div style="margin:12px 0; padding:12px; border:1px solid #e5e5ea; border-radius:8px;">
               <div style="font-weight:600; margin-bottom:6px;">
                 Q${q.id}. ${q.text}
@@ -115,62 +121,6 @@ window.startMock = async function (id) {
       `).join("")}
     `;
   }
-
-  const data = await apiGet(`/mock-tests/${id}/reading/start`);
-
-
-    if (screenReading) {
-    screenReading.innerHTML = `
-      <h3>Reading</h3>
-      <p>${data.passage}</p>
-      <form id="answersForm">
-        ${data.questions.map(q => `
-          <div style="margin-bottom: 12px;">
-            <p><b>${q.text}</b></p>
-            ${q.options.map((opt, idx) => `
-              <label style="display:block;">
-                <input type="radio" name="q_${q.id}" value="${idx}" />
-                ${opt}
-              </label>
-            `).join("")}
-          </div>
-        `).join("")}
-        <button type="submit">Submit</button>
-      </form>
-    `;
-  }
-
-
-  document.getElementById("answersForm").onsubmit = async (e) => {
-    e.preventDefault();
-
-    const formData = new FormData(e.target);
-    const answers = {};
-    for (const [key, value] of formData.entries()) {
-      answers[Number(key.replace("q_", ""))] = Number(value);
-    }
-
-    if (Object.keys(answers).length !== data.questions.length) {
-      alert("Please answer all questions");
-      return;
-    }
-
-    const result = await apiPost(`/mock-tests/${id}/submit`, { answers });
-
-    if (screenReading) {
-      screenReading.innerHTML = `
-        <h3>Score</h3>
-        <p>${result.score} / ${result.total}</p>
-        <ul>
-          ${result.details.map(d => `
-            <li>Question ${d.question_id}: ${d.correct ? "✅ Correct" : "❌ Wrong"}</li>
-          `).join("")}
-        </ul>
-        <button onclick="showMocksScreen()">Back to Mock Tests</button>
-      `;
-    }
-
-  };
 };
 
 function showAnnouncement() {
@@ -182,6 +132,7 @@ function hideAnnouncement() {
   const el = document.getElementById("announcement");
   if (el) el.style.display = "none";
 }
+
 window.confirmMockStart = async function (id) {
   const telegramId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
 
@@ -193,7 +144,6 @@ window.confirmMockStart = async function (id) {
   try {
     const me = await apiGet(`/me?telegram_id=${telegramId}`);
 
-    // ❌ no name → go to name screen
     if (!me.name) {
       hideAllScreens();
       hideAnnouncement();
@@ -201,7 +151,6 @@ window.confirmMockStart = async function (id) {
       return;
     }
 
-    // ✅ has name → start mock
     startMock(id);
 
   } catch (e) {
@@ -252,7 +201,6 @@ window.showDbStats = async function () {
         <p style="margin:0 0 8px 0;">Users: <b>${data.total}</b></p>
         <div style="height:1px; background:#e5e5ea; margin:8px 0;"></div>
 
-        <!-- Inner scrollable list -->
         <div style="
           flex:1;
           overflow-y:auto;
@@ -287,8 +235,6 @@ async function renderProfile() {
 
     screenProfile.innerHTML = `
       <div style="display:flex; flex-direction:column; align-items:center; gap:16px;">
-
-        <!-- Avatar -->
         <div style="
           width:96px; height:96px;
           border-radius:50%;
@@ -299,7 +245,6 @@ async function renderProfile() {
           🦊
         </div>
 
-        <!-- Card wrapper -->
         <div style="width:100%; margin: 0 auto;">
           <div style="
             width:100%;
@@ -313,38 +258,20 @@ async function renderProfile() {
             padding:16px 14px;
             text-align:left;
           ">
-
-            <!-- Name field -->
             <div style="margin-bottom:16px; text-align:center;">
-              <div style="font-size:18px; font-weight:600;">
-                ${name || "&nbsp;"}
-              </div>
-
+              <div style="font-size:18px; font-weight:600;">${name || "&nbsp;"}</div>
               <div style="height:1px; background:var(--border-color); opacity:0.6; margin-top:6px;"></div>
-
-              <div style="font-size:10px; opacity:0.45; margin-top:4px;">
-                Your name
-              </div>
+              <div style="font-size:10px; opacity:0.45; margin-top:4px;">Your name</div>
             </div>
 
-
-            <!-- Surname field -->
             <div style="text-align:center;">
-              <div style="font-size:18px; font-weight:600;">
-                ${surname || "&nbsp;"}
-              </div>
+              <div style="font-size:18px; font-weight:600;">${surname || "&nbsp;"}</div>
               <div style="height:1px; background:var(--border-color); opacity:0.6; margin-top:6px;"></div>
-
-              <div style="font-size:10px; opacity:0.45; margin-top:4px;">
-                Your surname
-              </div>
-
+              <div style="font-size:10px; opacity:0.45; margin-top:4px;">Your surname</div>
             </div>
-
           </div>
         </div>
 
-        <!-- Edit link -->
         <button onclick="editProfile()" style="
           background:none;
           border:none;
@@ -352,10 +279,7 @@ async function renderProfile() {
           font-size:14px;
           padding:0;
           cursor:pointer;
-        ">
-          Edit profile
-        </button>
-
+        ">Edit profile</button>
       </div>
     `;
   } catch (e) {
@@ -366,8 +290,6 @@ async function renderProfile() {
     `;
   }
 }
-
-
 
 window.editProfile = function () {
   screenProfile.innerHTML = `
@@ -388,7 +310,6 @@ window.saveProfile = async function () {
   renderProfile();
 };
 
-
 window.showReadingScreen = function () {
   hideAllScreens();
   hideAnnouncement();
@@ -397,4 +318,3 @@ window.showReadingScreen = function () {
     screenReading.innerHTML = `<h3>📖 Reading screen loaded</h3><p>UI coming next…</p>`;
   }
 };
-
