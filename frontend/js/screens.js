@@ -114,7 +114,27 @@ ${JSON.stringify(data, null, 2)}
     }
 
     screenReading.innerHTML = `
-      <h3>📖 Reading Test</h3>
+      <div id="reading-topbar" style="
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 14px;
+        padding: 4px 6px;
+        background: #ffffff;
+        font-size: 10px;
+        font-weight: 600;
+      ">
+        <div id="rt-timer">60:00</div>
+        <div id="rt-passage">Passage 1</div>
+        <div id="rt-progress">0/40</div>
+      </div>
+
+      <div style="height:1px; background:#e5e5ea; margin-bottom:6px;"></div>
+
+      <h3 style="margin-top:6px;">📖 Reading Test</h3>
 
       ${data.passages.map((p, pi) => `
         <div style="margin-bottom:24px; text-align:left;">
