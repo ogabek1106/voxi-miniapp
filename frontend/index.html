@@ -197,6 +197,25 @@ input, button {
   padding-right: 2px;
   box-sizing: border-box;
 }
+/* ✨ Premium look: remove strokes / borders globally */
+.header,
+.bottom-nav,
+.divider,
+.announcement,
+.primary-btn,
+button {
+  border: none !important;
+}
+
+/* soften any leftover hairlines */
+* {
+  outline: none;
+}
+
+/* optional: make cards feel softer */
+.primary-btn {
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08) !important;
+}
 </style>
 
 </head>
