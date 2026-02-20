@@ -101,7 +101,8 @@ window.startMock = async function (id) {
   }
 
   try {
-    const data = await apiGet(`/mock-tests/${id}/reading/start`);
+    const telegramId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+    const data = await apiGet(`/mock-tests/${id}/reading/start?telegram_id=${telegramId}`);
     // ===== Server-based timer (authoritative) =====
     if (data.timer && data.timer.ends_at) {
       const endsAt = new Date(data.timer.ends_at).getTime();
