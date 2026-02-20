@@ -123,6 +123,7 @@ window.startMock = async function (id) {
         if (!el) return;
 
         el.textContent = `${min}:${sec}`;
+        el.style.backgroundColor = "#ffffff";
 
         const ratio = leftMs / totalMs; // 1 → 0
 
@@ -134,7 +135,15 @@ window.startMock = async function (id) {
         el.style.color = color;
 
         // 💧 water drain background
-        el.style.background = `linear-gradient(to top, ${color} ${Math.floor(ratio * 100)}%, transparent 0%)`;
+        el.style.background = `
+          linear-gradient(
+            to left,
+            ${color} ${Math.floor(ratio * 100)}%,
+            transparent 0%
+          )
+        `;
+        el.style.padding = "0 4px";
+        el.style.borderRadius = "4px";
 
         if (leftSec <= 0) {
           clearInterval(readingTimerInterval);
