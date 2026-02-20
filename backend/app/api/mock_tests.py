@@ -77,6 +77,7 @@ async def get_mock_info(mock_id: int):
 
 @router.get("/{mock_id}/start", response_model=OldReadingTestResponse)
 async def start_mock_test(mock_id: int):
+    raise HTTPException(status_code=410, detail="OLD ENDPOINT CALLED")
     if mock_id != 1:
         raise HTTPException(status_code=404, detail="Mock test not found")
 
