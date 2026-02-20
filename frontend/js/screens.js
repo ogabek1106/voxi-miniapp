@@ -104,25 +104,42 @@ window.startMock = async function (id) {
     const telegramId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
     const data = await apiGet(`/mock-tests/${id}/reading/start?telegram_id=${telegramId}`);
     // ===== Server-based timer (authoritative) =====
-    if (data.timer && data.timer.ends_at) {
+    if (data.timer && data.timer.ends_at && data.timer.started_at) {
       const endsAt = new Date(data.timer.ends_at).getTime();
+      const startedAt = new Date(data.timer.started_at).getTime();
+      const totalMs = endsAt - startedAt;
 
       if (readingTimerInterval) clearInterval(readingTimerInterval);
 
       readingTimerInterval = setInterval(() => {
-        const leftMs = Math.max(0, endsAt - Date.now());
+        const now = Date.now();
+        const leftMs = Math.max(0, endsAt - now);
         const leftSec = Math.ceil(leftMs / 1000);
 
         const min = Math.floor(leftSec / 60).toString().padStart(2, "0");
         const sec = (leftSec % 60).toString().padStart(2, "0");
 
         const el = document.getElementById("rt-timer");
-        if (el) el.textContent = `${min}:${sec}`;
+        if (!el) return;
+
+        el.textContent = `${min}:${sec}`;
+
+        const ratio = leftMs / totalMs; // 1 → 0
+
+        // 🎨 green → yellow → red
+        let color = "#22c55e"; // green
+        if (ratio < 0.66) color = "#facc15"; // yellow
+        if (ratio < 0.33) color = "#ef4444"; // red
+
+        el.style.color = color;
+
+        // 💧 water drain background
+        el.style.background = `linear-gradient(to top, ${color} ${Math.floor(ratio * 100)}%, transparent 0%)`;
 
         if (leftSec <= 0) {
           clearInterval(readingTimerInterval);
-          if (el) el.textContent = "00:00";
-          // later: auto-submit
+          el.textContent = "00:00";
+          el.style.color = "#ef4444";
         }
       }, 1000);
     }
