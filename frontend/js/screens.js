@@ -123,7 +123,6 @@ window.startMock = async function (id) {
         if (!el) return;
 
         el.textContent = `${min}:${sec}`;
-        el.style.fontWeight = "1000";
         el.style.backgroundColor = "rgba(255,255,255,0.85)";
 
         const ratio = leftMs / totalMs; // 1 → 0
@@ -136,7 +135,7 @@ window.startMock = async function (id) {
         el.style.color = "#0f172a";
         el.style.webkitTextStroke = "0.4px rgba(255,255,255,0.8)";
         el.style.textShadow = "0 1px 1px rgba(0,0,0,0.15)";
-        el.style.fontWeight = "800";
+        el.style.fontWeight = "900";
 
         // bar drains from right -> left (from user's view)
         el.style.background = `
