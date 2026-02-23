@@ -214,14 +214,21 @@ window.saveReadingDraft = async function () {
     let testId;
 
     if (window.__currentEditingTestId) {
-
       await apiPut(`/admin/reading/tests/${window.__currentEditingTestId}`, {
         title,
         time_limit_minutes: time
       });
 
-      // const old = await apiGet(`/admin/reading/tests/${window.__currentEditingTestId}`);
-      
+      const old = await apiGet(`/admin/reading/tests/${window.__currentEditingTestId}`);
+
+      for (const p of old.passages || []) {
+        try {
+          await apiDelete(`/admin/reading/passages/${p.id}`);
+        } catch (e) {
+          console.warn("Skip delete passage", p.id, e);
+        }
+      }
+
       testId = window.__currentEditingTestId;
     } else {
       const test = await apiPost("/admin/reading/tests", {
