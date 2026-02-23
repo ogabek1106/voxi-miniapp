@@ -167,3 +167,169 @@ window.addQuestion = function (btn) {
 
   questionsWrap.insertBefore(block, btn);
 };
+
+window.collectReadingFormData = function () {
+  const title = document.getElementById("reading-title")?.value?.trim();
+  const time = parseInt(document.getElementById("reading-time")?.value || "60", 10);
+
+  const passages = [];
+  document.querySelectorAll(".passage-block").forEach((p, pi) => {
+    const passageTitle = p.querySelector(".passage-title")?.value || null;
+    const passageText = p.querySelector(".passage-text")?.value || "";
+
+    const questions = [];
+    p.querySelectorAll(".question-block").forEach((q, qi) => {
+      questions.push({
+        type: q.querySelector(".q-type")?.value,
+        text: q.querySelector(".q-text")?.value,
+        correct_answer: q.querySelector(".q-answer")?.value,
+        order_index: qi + 1,
+      });
+    });
+
+    passages.push({
+      title: passageTitle,
+      text: passageText,
+      order_index: pi + 1,
+      questions,
+    });
+  });
+
+  return { title, time_limit_minutes: time, passages };
+};
+
+window.saveReadingDraft = async function () {
+  const title = document.getElementById("reading-title")?.value?.trim();
+  const time = parseInt(document.getElementById("reading-time")?.value || "60", 10);
+
+  if (!title) {
+    alert("Reading name is required");
+    return;
+  }
+
+  try {
+    // 1) Create Reading Test (draft)
+    const test = await apiPost("/admin/reading/tests", {
+      title: title,
+      time_limit_minutes: time
+    });
+
+    const testId = test.id;
+
+    // 2) Create passages
+    const passageBlocks = document.querySelectorAll(".passage-block");
+
+    for (let pi = 0; pi < passageBlocks.length; pi++) {
+      const p = passageBlocks[pi];
+
+      const passageTitle = p.querySelector(".passage-title")?.value || null;
+      const passageText = p.querySelector(".passage-text")?.value || "";
+
+      if (!passageText.trim()) {
+        alert(`Passage ${pi + 1} text is empty`);
+        return;
+      }
+
+      const passage = await apiPost(`/admin/reading/tests/${testId}/passages`, {
+        title: passageTitle,
+        text: passageText,
+        order_index: pi + 1
+      });
+
+      const passageId = passage.id;
+
+      // 3) Create questions for this passage
+      const questions = p.querySelectorAll(".question-block");
+
+      for (let qi = 0; qi < questions.length; qi++) {
+        const q = questions[qi];
+
+        const type = q.querySelector(".q-type")?.value;
+        const text = q.querySelector(".q-text")?.value;
+        const correctAnswer = q.querySelector(".q-answer")?.value;
+
+        if (!text?.trim()) {
+          alert(`Question ${qi + 1} in Passage ${pi + 1} is empty`);
+          return;
+        }
+
+        await apiPost(`/admin/reading/passages/${passageId}/questions`, {
+          text: text,
+          type: type,
+          options: null,
+          correct_answer: correctAnswer,
+          word_limit: null,
+          order_index: qi + 1
+        });
+      }
+    }
+
+    alert("✅ Reading test saved as draft");
+    showAdminPanel();
+
+  } catch (e) {
+    console.error(e);
+    alert("❌ Failed to save reading test");
+  }
+};
+
+window.publishReading = async function () {
+  const title = document.getElementById("reading-title")?.value?.trim();
+  const time = parseInt(document.getElementById("reading-time")?.value || "60", 10);
+
+  if (!title) {
+    alert("Reading name is required");
+    return;
+  }
+
+  try {
+    // Save draft first (reuse logic)
+    const test = await apiPost("/admin/reading/tests", {
+      title: title,
+      time_limit_minutes: time
+    });
+
+    const testId = test.id;
+
+    const passageBlocks = document.querySelectorAll(".passage-block");
+
+    for (let pi = 0; pi < passageBlocks.length; pi++) {
+      const p = passageBlocks[pi];
+
+      const passageTitle = p.querySelector(".passage-title")?.value || null;
+      const passageText = p.querySelector(".passage-text")?.value || "";
+
+      const passage = await apiPost(`/admin/reading/tests/${testId}/passages`, {
+        title: passageTitle,
+        text: passageText,
+        order_index: pi + 1
+      });
+
+      const passageId = passage.id;
+
+      const questions = p.querySelectorAll(".question-block");
+      for (let qi = 0; qi < questions.length; qi++) {
+        const q = questions[qi];
+
+        await apiPost(`/admin/reading/passages/${passageId}/questions`, {
+          text: q.querySelector(".q-text")?.value,
+          type: q.querySelector(".q-type")?.value,
+          options: null,
+          correct_answer: q.querySelector(".q-answer")?.value,
+          word_limit: null,
+          order_index: qi + 1
+        });
+      }
+    }
+
+    // 🚀 Publish
+    await apiPost(`/admin/reading/tests/${testId}/publish`);
+
+    alert("🚀 Reading test published");
+    showAdminPanel();
+
+  } catch (e) {
+    console.error(e);
+    alert("❌ Failed to publish reading test");
+  }
+};
