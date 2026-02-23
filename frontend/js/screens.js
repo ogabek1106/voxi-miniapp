@@ -268,6 +268,7 @@ window.showAdminPanel = function () {
   screenMocks.innerHTML = `
     <h3>🛠 Admin Panel</h3>
     <button onclick="showDbStats()">📊 Database Stats</button>
+    <button onclick="showCreateReading()">➕ Create Reading Test</button>
     <button onclick="goHome()">⬅ Back</button>
   `;
 };
