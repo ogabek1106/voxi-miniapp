@@ -1,3 +1,4 @@
+// frontend/js/admin_reading.js
 window.showCreateReading = function () {
   hideAllScreens();
   hideAnnouncement();
