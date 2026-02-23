@@ -147,3 +147,25 @@ def get_reading_test(test_id: int, db: Session = Depends(get_db)):
             for p in sorted(test.passages, key=lambda x: x.order_index)
         ]
     }
+
+@router.put("/tests/{test_id}")
+def update_reading_test(test_id: int, payload: ReadingTestCreate, db: Session = Depends(get_db)):
+    test = db.query(ReadingTest).filter(ReadingTest.id == test_id).first()
+    if not test:
+        raise HTTPException(status_code=404, detail="Reading test not found")
+
+    test.title = payload.title
+    test.time_limit_minutes = payload.time_limit_minutes
+    db.commit()
+    db.refresh(test)
+    return test
+
+@router.delete("/passages/{passage_id}")
+def delete_passage(passage_id: int, db: Session = Depends(get_db)):
+    passage = db.query(ReadingPassage).filter(ReadingPassage.id == passage_id).first()
+    if not passage:
+        raise HTTPException(status_code=404, detail="Passage not found")
+
+    db.delete(passage)
+    db.commit()
+    return {"status": "deleted", "id": passage_id}
