@@ -219,8 +219,7 @@ window.saveReadingDraft = async function () {
         time_limit_minutes: time
       });
 
-      await apiDelete(`/admin/reading/tests/${window.__currentEditingTestId}/passages`);
-
+      await apiDelete(`/admin/reading/tests/${window.__currentEditingTestId}`);
       testId = window.__currentEditingTestId;
     } else {
       const test = await apiPost("/admin/reading/tests", {
@@ -305,7 +304,7 @@ window.publishReading = async function () {
         time_limit_minutes: time
       });
 
-      await apiDelete(`/admin/reading/tests/${window.__currentEditingTestId}/passages`);
+      await apiDelete(`/admin/reading/tests/${window.__currentEditingTestId}`);
 
       testId = window.__currentEditingTestId;
     } else {
