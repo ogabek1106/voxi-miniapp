@@ -63,7 +63,7 @@ window.showCreateReading = function () {
 
     <button onclick="saveReadingDraft()">💾 Save Draft</button>
     <button style="margin-top:8px;" onclick="publishReading()">🚀 Publish</button>
-    <button style="margin-top:8px;" onclick="showAdminPanel()">⬅ Back</button>
+    <button style="margin-top:8px;" onclick="showAdminReadingList()">⬅ Back</button>
   `;
 };
 
