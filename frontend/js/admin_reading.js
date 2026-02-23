@@ -1,5 +1,7 @@
 // frontend/js/admin_reading.js
+window.__globalQuestionCounter = 1;
 window.showCreateReading = function () {
+  window.__globalQuestionCounter = 1;
   hideAllScreens();
   hideAnnouncement();
 
@@ -34,7 +36,8 @@ window.showCreateReading = function () {
         <div class="questions-wrap" style="margin-top:12px;">
           <h5>Questions</h5>
 
-          <div class="question-block" data-q="1" style="padding:8px; border:1px solid #e5e5ea; border-radius:8px; margin-bottom:8px;">
+          <div class="question-block" data-global-q="1" style="padding:8px; border:1px solid #e5e5ea; border-radius:8px; margin-bottom:8px;">
+            <div style="font-weight:700; margin-bottom:6px;">Q1</div>
             <label>Question type</label>
             <select class="q-type" style="width:100%; padding:8px; border-radius:6px;">
               <option value="mcq">MCQ</option>
@@ -86,6 +89,9 @@ window.addPassage = function () {
   const count = wrap.querySelectorAll(".passage-block").length;
   const nextIndex = count + 1;
 
+  // 🔢 Global question number
+  const qNum = ++window.__globalQuestionCounter;
+
   const block = document.createElement("div");
   block.className = "passage-block";
   block.dataset.index = nextIndex;
@@ -104,7 +110,9 @@ window.addPassage = function () {
     <div class="questions-wrap" style="margin-top:12px;">
       <h5>Questions</h5>
 
-      <div class="question-block" data-q="1" style="padding:8px; border:1px solid #e5e5ea; border-radius:8px; margin-bottom:8px;">
+      <div class="question-block" data-global-q="${qNum}" style="padding:8px; border:1px solid #e5e5ea; border-radius:8px; margin-bottom:8px;">
+        <div style="font-weight:700; margin-bottom:6px;">Q${qNum}</div>
+
         <label>Question type</label>
         <select class="q-type" style="width:100%; padding:8px; border-radius:6px;">
           <option value="mcq">MCQ</option>
@@ -130,18 +138,19 @@ window.addQuestion = function (btn) {
   const questionsWrap = btn.closest(".questions-wrap");
   if (!questionsWrap) return;
 
-  const count = questionsWrap.querySelectorAll(".question-block").length;
-  const nextQ = count + 1;
+  const qNum = ++window.__globalQuestionCounter;
 
   const block = document.createElement("div");
   block.className = "question-block";
-  block.dataset.q = nextQ;
+  block.dataset.globalQ = qNum;
   block.style.padding = "8px";
   block.style.border = "1px solid #e5e5ea";
   block.style.borderRadius = "8px";
   block.style.marginBottom = "8px";
 
   block.innerHTML = `
+    <div style="font-weight:700; margin-bottom:6px;">Q${qNum}</div>
+
     <label>Question type</label>
     <select class="q-type" style="width:100%; padding:8px; border-radius:6px;">
       <option value="mcq">MCQ</option>
