@@ -214,12 +214,15 @@ window.saveReadingDraft = async function () {
     let testId;
 
     if (window.__currentEditingTestId) {
+
+      const old = await apiGet(`/admin/reading/tests/${window.__currentEditingTestId}`);
+
       await apiPut(`/admin/reading/tests/${window.__currentEditingTestId}`, {
         title,
         time_limit_minutes: time
       });
 
-      const old = await apiGet(`/admin/reading/tests/${window.__currentEditingTestId}`);
+      // const old = await apiGet(`/admin/reading/tests/${window.__currentEditingTestId}`);
 
       for (const p of old.passages) {
         await apiDelete(`/admin/reading/passages/${p.id}`);
@@ -304,12 +307,13 @@ window.publishReading = async function () {
     let testId;
 
     if (window.__currentEditingTestId) {
+      const old = await apiGet(`/admin/reading/tests/${window.__currentEditingTestId}`);
       await apiPut(`/admin/reading/tests/${window.__currentEditingTestId}`, {
         title,
         time_limit_minutes: time
       });
 
-      const old = await apiGet(`/admin/reading/tests/${window.__currentEditingTestId}`);
+      // const old = await apiGet(`/admin/reading/tests/${window.__currentEditingTestId}`);
 
       for (const p of old.passages) {
         await apiDelete(`/admin/reading/passages/${p.id}`);
