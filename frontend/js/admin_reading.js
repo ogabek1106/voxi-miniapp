@@ -212,7 +212,7 @@ window.saveReadingDraft = async function () {
   try {
    
     let testId;
-
+    console.log("🧪 Save draft started");
     if (window.__currentEditingTestId) {
       await apiPut(`/admin/reading/tests/${window.__currentEditingTestId}`, {
         title,
@@ -251,7 +251,7 @@ window.saveReadingDraft = async function () {
         alert(`Passage ${pi + 1} text is empty`);
         return;
       }
-
+      console.log("🧪 Creating passage", pi + 1);
       const passage = await apiPost(`/admin/reading/tests/${testId}/passages`, {
         title: passageTitle,
         text: passageText,
@@ -274,7 +274,7 @@ window.saveReadingDraft = async function () {
           alert(`Question ${qi + 1} in Passage ${pi + 1} is empty`);
           return;
         }
-
+        console.log("🧪 Creating question", qi + 1, "for passage", pi + 1);
         await apiPost(`/admin/reading/passages/${passageId}/questions`, {
           text: text,
           type: type,
@@ -290,8 +290,20 @@ window.saveReadingDraft = async function () {
     showAdminReadingList();
 
   } catch (e) {
-    console.error(e);
-    alert("❌ Failed to save reading test");
+    console.error("❌ SAVE DRAFT ERROR FULL:", e);
+
+    if (e?.response) {
+      console.error("Status:", e.response.status);
+      console.error("Data:", e.response.data);
+
+      alert(
+        "❌ Failed to save reading test\n" +
+        "Status: " + e.response.status + "\n" +
+        JSON.stringify(e.response.data, null, 2)
+      );
+    } else {
+      alert("❌ Failed to save reading test\n" + e.message);
+    }
   }
 };
 
@@ -306,6 +318,7 @@ window.publishReading = async function () {
 
   try {
     let testId;
+    console.log("🧪 Save draft started");
 
     if (window.__currentEditingTestId) {
 
