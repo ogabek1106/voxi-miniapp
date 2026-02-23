@@ -358,4 +358,52 @@ window.showAdminReadingList = function () {
 
     <button style="margin-top:12px;" onclick="showAdminMock()">⬅ Back</button>
   `;
+  setTimeout(loadAdminReadingList, 0);
+};
+
+@router.get("/tests")
+def list_reading_tests(db: Session = Depends(get_db)):
+    tests = (
+        db.query(ReadingTest)
+        .order_by(ReadingTest.id.desc())
+        .all()
+    )
+    return [
+        {
+            "id": t.id,
+            "title": t.title,
+            "status": t.status.value if hasattr(t.status, "value") else str(t.status),
+            "time_limit_minutes": t.time_limit_minutes,
+        }
+        for t in tests
+    ]
+
+window.loadAdminReadingList = async function () {
+  try {
+    const tests = await apiGet("/admin/reading/tests");
+
+    const publishedWrap = document.getElementById("admin-reading-published");
+    const draftsWrap = document.getElementById("admin-reading-drafts");
+
+    if (!publishedWrap || !draftsWrap) return;
+
+    const published = tests.filter(t => t.status === "published");
+    const drafts = tests.filter(t => t.status === "draft");
+
+    publishedWrap.innerHTML = published.length
+      ? published.map(t => `
+          <button onclick="openAdminReading(${t.id})">#${t.id} — ${t.title}</button>
+        `).join("")
+      : `<p style="opacity:0.6;">No published tests yet</p>`;
+
+    draftsWrap.innerHTML = drafts.length
+      ? drafts.map(t => `
+          <button onclick="openAdminReading(${t.id})">#${t.id} — ${t.title}</button>
+        `).join("")
+      : `<p style="opacity:0.6;">No drafts yet</p>`;
+
+  } catch (e) {
+    console.error(e);
+    alert("Failed to load reading tests");
+  }
 };
