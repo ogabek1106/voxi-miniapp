@@ -279,7 +279,7 @@ window.saveReadingDraft = async function () {
     }
 
     alert("✅ Reading test saved as draft");
-    showAdminPanel();
+    showAdminReadingList();
 
   } catch (e) {
     console.error(e);
@@ -352,8 +352,7 @@ window.publishReading = async function () {
     await apiPost(`/admin/reading/tests/${testId}/publish`);
 
     alert("🚀 Reading test published");
-    showAdminPanel();
-
+    showAdminReadingList();
   } catch (e) {
     console.error(e);
     alert("❌ Failed to publish reading test");
@@ -424,8 +423,9 @@ window.openAdminReading = async function (testId) {
 
   if (!screenMocks) return;
 
-  // open editor UI
-  showCreateReading();
+  // open editor UI (do NOT reset edit mode)
+  window.showCreateReading();
+  window.__currentEditingTestId = testId;
 
   try {
     const data = await apiGet(`/admin/reading/tests/${testId}`);
