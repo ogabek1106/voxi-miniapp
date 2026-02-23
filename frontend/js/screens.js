@@ -459,3 +459,16 @@ function startReadingTimer(totalSeconds = 60 * 60) {
     }
   }, 1000);
 }
+window.showCreateReading = function () {
+  hideAllScreens();
+  hideAnnouncement();
+
+  if (!screenMocks) return;
+
+  screenMocks.style.display = "block";
+  screenMocks.innerHTML = `
+    <h3>➕ Create Reading Test</h3>
+    <p>Form UI coming next…</p>
+    <button onclick="showAdminPanel()">⬅ Back</button>
+  `;
+};
