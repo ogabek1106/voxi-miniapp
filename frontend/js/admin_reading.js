@@ -78,3 +78,50 @@ window.showAddPassage = function () {
     <button onclick="showCreateReading()">⬅ Back</button>
   `;
 };
+
+window.addPassage = function () {
+  const wrap = document.getElementById("passages-wrap");
+  if (!wrap) return;
+
+  const count = wrap.querySelectorAll(".passage-block").length;
+  const nextIndex = count + 1;
+
+  const block = document.createElement("div");
+  block.className = "passage-block";
+  block.dataset.index = nextIndex;
+  block.style.textAlign = "left";
+  block.style.marginTop = "16px";
+
+  block.innerHTML = `
+    <h4>Passage ${nextIndex}</h4>
+
+    <label>Passage title</label>
+    <input class="passage-title" placeholder="Optional title" />
+
+    <label style="margin-top:8px; display:block;">Passage text</label>
+    <textarea class="passage-text" rows="6" style="width:100%; padding:10px; border-radius:8px;"></textarea>
+
+    <div class="questions-wrap" style="margin-top:12px;">
+      <h5>Questions</h5>
+
+      <div class="question-block" data-q="1" style="padding:8px; border:1px solid #e5e5ea; border-radius:8px; margin-bottom:8px;">
+        <label>Question type</label>
+        <select class="q-type" style="width:100%; padding:8px; border-radius:6px;">
+          <option value="mcq">MCQ</option>
+          <option value="gap">Gap-fill</option>
+          <option value="tfng">TF / NG</option>
+        </select>
+
+        <label style="margin-top:6px; display:block;">Question text</label>
+        <input class="q-text" placeholder="Enter question text" />
+
+        <label style="margin-top:6px; display:block;">Correct answer</label>
+        <input class="q-answer" placeholder="Correct answer (index or text)" />
+      </div>
+
+      <button onclick="addQuestion(this)">➕ Add Question</button>
+    </div>
+  `;
+
+  wrap.appendChild(block);
+};
