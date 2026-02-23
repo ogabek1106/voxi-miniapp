@@ -125,3 +125,36 @@ window.addPassage = function () {
 
   wrap.appendChild(block);
 };
+
+window.addQuestion = function (btn) {
+  const questionsWrap = btn.closest(".questions-wrap");
+  if (!questionsWrap) return;
+
+  const count = questionsWrap.querySelectorAll(".question-block").length;
+  const nextQ = count + 1;
+
+  const block = document.createElement("div");
+  block.className = "question-block";
+  block.dataset.q = nextQ;
+  block.style.padding = "8px";
+  block.style.border = "1px solid #e5e5ea";
+  block.style.borderRadius = "8px";
+  block.style.marginBottom = "8px";
+
+  block.innerHTML = `
+    <label>Question type</label>
+    <select class="q-type" style="width:100%; padding:8px; border-radius:6px;">
+      <option value="mcq">MCQ</option>
+      <option value="gap">Gap-fill</option>
+      <option value="tfng">TF / NG</option>
+    </select>
+
+    <label style="margin-top:6px; display:block;">Question text</label>
+    <input class="q-text" placeholder="Enter question text" />
+
+    <label style="margin-top:6px; display:block;">Correct answer</label>
+    <input class="q-answer" placeholder="Correct answer (index or text)" />
+  `;
+
+  questionsWrap.insertBefore(block, btn);
+};
