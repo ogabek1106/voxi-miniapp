@@ -24,3 +24,28 @@ window.showCreateReading = function () {
   `;
 };
 
+// ===============================
+// Admin Reading – Create Test API
+// ===============================
+window.createReadingTestNext = async function () {
+  const title = document.getElementById("reading-title")?.value?.trim();
+  if (!title) {
+    alert("Enter reading name");
+    return;
+  }
+
+  try {
+    const test = await apiPost("/admin/reading/tests", {
+      title: title,
+      time_limit_minutes: 60
+    });
+
+    // store current test id globally for next steps
+    window.__currentReadingTestId = test.id;
+
+    showAddPassage(); // next screen (we add it next)
+  } catch (e) {
+    console.error(e);
+    alert("Failed to create reading test");
+  }
+};
