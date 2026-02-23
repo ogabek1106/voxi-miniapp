@@ -9,6 +9,7 @@ from app.models import ReadingTest, ReadingTestStatus
 from app.models import ReadingPassage
 from app.models import ReadingQuestion
 from typing import List, Any
+import traceback
 router = APIRouter(prefix="/admin/reading", tags=["admin-reading"])
 
 
@@ -37,20 +38,26 @@ class PassageCreate(BaseModel):
 
 @router.post("/tests/{test_id}/passages")
 def add_passage(test_id: int, payload: PassageCreate, db: Session = Depends(get_db)):
-    test = db.query(ReadingTest).filter(ReadingTest.id == test_id).first()
-    if not test:
-        raise HTTPException(status_code=404, detail="Reading test not found")
+    try:
+        test = db.query(ReadingTest).filter(ReadingTest.id == test_id).first()
+        if not test:
+            raise HTTPException(status_code=404, detail="Reading test not found")
 
-    passage = ReadingPassage(
-        test_id=test_id,
-        title=payload.title,
-        text=payload.text,
-        order_index=payload.order_index
-    )
-    db.add(passage)
-    db.commit()
-    db.refresh(passage)
-    return passage
+        passage = ReadingPassage(
+            test_id=test_id,
+            title=payload.title,
+            text=payload.text,
+            order_index=payload.order_index
+        )
+        db.add(passage)
+        db.commit()
+        db.refresh(passage)
+        return passage
+
+    except Exception as e:
+        print("❌ ERROR in add_passage:", str(e))
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
 
 from typing import List, Any
 
@@ -65,23 +72,29 @@ class QuestionCreate(BaseModel):
 
 @router.post("/passages/{passage_id}/questions")
 def add_question(passage_id: int, payload: QuestionCreate, db: Session = Depends(get_db)):
-    passage = db.query(ReadingPassage).filter(ReadingPassage.id == passage_id).first()
-    if not passage:
-        raise HTTPException(status_code=404, detail="Passage not found")
+    try:
+        passage = db.query(ReadingPassage).filter(ReadingPassage.id == passage_id).first()
+        if not passage:
+            raise HTTPException(status_code=404, detail="Passage not found")
 
-    q = ReadingQuestion(
-        passage_id=passage_id,
-        text=payload.text,
-        type=payload.type,
-        options=payload.options,
-        correct_answer=payload.correct_answer,
-        word_limit=payload.word_limit,
-        order_index=payload.order_index
-    )
-    db.add(q)
-    db.commit()
-    db.refresh(q)
-    return q
+        q = ReadingQuestion(
+            passage_id=passage_id,
+            text=payload.text,
+            type=payload.type,
+            options=payload.options,
+            correct_answer=payload.correct_answer,
+            word_limit=payload.word_limit,
+            order_index=payload.order_index
+        )
+        db.add(q)
+        db.commit()
+        db.refresh(q)
+        return q
+
+    except Exception as e:
+        print("❌ ERROR in add_question:", str(e))
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/tests/{test_id}/publish")
 def publish_test(test_id: int, db: Session = Depends(get_db)):
