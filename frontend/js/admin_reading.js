@@ -63,7 +63,7 @@ window.showCreateReading = function (reset = true) {
 
     <hr style="margin:16px 0;" />
 
-    <button onclick="saveReadingDraft()">💾 Save Draft</button>
+    <button id="btn-save-draft" onclick="saveReadingDraft()">💾 Save Draft</button>
     <button style="margin-top:8px;" onclick="publishReading()">🚀 Publish</button>
     <button style="margin-top:8px;" onclick="showAdminReadingList()">⬅ Back</button>
   `;
@@ -201,14 +201,23 @@ window.collectReadingFormData = function () {
 };
 
 window.saveReadingDraft = async function () {
+  const btn = document.getElementById("btn-save-draft");
+  if (btn) {
+    if (btn.disabled) return;         // prevent double click
+    btn.disabled = true;
+    btn.innerText = "⏳ Saving...";
+  }
   const title = document.getElementById("reading-title")?.value?.trim();
   const time = parseInt(document.getElementById("reading-time")?.value || "60", 10);
 
   if (!title) {
     alert("Reading name is required");
+    if (btn) {
+      btn.disabled = false;
+      btn.innerText = "💾 Save Draft";
+    }
     return;
   }
-
   try {
    
     let testId;
@@ -249,6 +258,10 @@ window.saveReadingDraft = async function () {
 
       if (!passageText.trim()) {
         alert(`Passage ${pi + 1} text is empty`);
+        if (btn) {
+          btn.disabled = false;
+          btn.innerText = "💾 Save Draft";
+        }
         return;
       }
       console.log("🧪 Creating passage", pi + 1);
@@ -272,6 +285,10 @@ window.saveReadingDraft = async function () {
 
         if (!text?.trim()) {
           alert(`Question ${qi + 1} in Passage ${pi + 1} is empty`);
+          if (btn) {
+            btn.disabled = false;
+            btn.innerText = "💾 Save Draft";
+          }  
           return;
         }
         console.log("🧪 Creating question", qi + 1, "for passage", pi + 1);
@@ -288,6 +305,10 @@ window.saveReadingDraft = async function () {
 
     alert("✅ Reading test saved as draft");
     showAdminReadingList();
+    if (btn) {
+      btn.disabled = false;
+      btn.innerText = "💾 Save Draft";
+    }
 
   } catch (e) {
     console.error("❌ SAVE DRAFT ERROR FULL:", e);
@@ -303,6 +324,10 @@ window.saveReadingDraft = async function () {
       );
     } else {
       alert("❌ Failed to save reading test\n" + e.message);
+    }
+    if (btn) {
+      btn.disabled = false;
+      btn.innerText = "💾 Save Draft";
     }
   }
 };
