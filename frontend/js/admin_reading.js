@@ -219,7 +219,12 @@ window.saveReadingDraft = async function () {
         time_limit_minutes: time
       });
 
-      await apiDelete(`/admin/reading/tests/${window.__currentEditingTestId}`);
+      const old = await apiGet(`/admin/reading/tests/${window.__currentEditingTestId}`);
+
+      for (const p of old.passages) {
+        await apiDelete(`/admin/reading/passages/${p.id}`);
+      }
+      
       testId = window.__currentEditingTestId;
     } else {
       const test = await apiPost("/admin/reading/tests", {
@@ -304,7 +309,11 @@ window.publishReading = async function () {
         time_limit_minutes: time
       });
 
-      await apiDelete(`/admin/reading/tests/${window.__currentEditingTestId}`);
+      const old = await apiGet(`/admin/reading/tests/${window.__currentEditingTestId}`);
+
+      for (const p of old.passages) {
+        await apiDelete(`/admin/reading/passages/${p.id}`);
+      }
 
       testId = window.__currentEditingTestId;
     } else {
