@@ -9,46 +9,61 @@ window.showCreateReading = function () {
   screenMocks.innerHTML = `
     <h3>➕ Create Reading Test</h3>
 
-    <label style="display:block; text-align:left; margin-top:12px;">
-      Reading name
-    </label>
-    <input id="reading-title" placeholder="e.g. Cambridge 19 – Test 1" />
+    <!-- Reading meta -->
+    <div style="margin-top:12px; text-align:left;">
+      <label>Reading name</label>
+      <input id="reading-title" placeholder="e.g. Cambridge 19 – Test 1" />
 
-    <button style="margin-top:16px;" onclick="createReadingTestNext()">
-      Next: Add Passage
-    </button>
+      <label style="margin-top:8px; display:block;">Time limit (minutes)</label>
+      <input id="reading-time" type="number" value="60" />
+    </div>
 
-    <button style="margin-top:12px;" onclick="showAdminPanel()">
-      ⬅ Back
-    </button>
+    <hr style="margin:16px 0;" />
+
+    <!-- Passage 1 -->
+    <div id="passages-wrap">
+      <div class="passage-block" data-index="1" style="text-align:left;">
+        <h4>Passage 1</h4>
+
+        <label>Passage title</label>
+        <input class="passage-title" placeholder="Optional title" />
+
+        <label style="margin-top:8px; display:block;">Passage text</label>
+        <textarea class="passage-text" rows="6" style="width:100%; padding:10px; border-radius:8px;"></textarea>
+
+        <div class="questions-wrap" style="margin-top:12px;">
+          <h5>Questions</h5>
+
+          <div class="question-block" data-q="1" style="padding:8px; border:1px solid #e5e5ea; border-radius:8px; margin-bottom:8px;">
+            <label>Question type</label>
+            <select class="q-type" style="width:100%; padding:8px; border-radius:6px;">
+              <option value="mcq">MCQ</option>
+              <option value="gap">Gap-fill</option>
+              <option value="tfng">TF / NG</option>
+            </select>
+
+            <label style="margin-top:6px; display:block;">Question text</label>
+            <input class="q-text" placeholder="Enter question text" />
+
+            <label style="margin-top:6px; display:block;">Correct answer</label>
+            <input class="q-answer" placeholder="Correct answer (index or text)" />
+          </div>
+
+          <button onclick="addQuestion(this)">➕ Add Question</button>
+        </div>
+      </div>
+    </div>
+
+    <button style="margin-top:16px;" onclick="addPassage()">➕ Add Passage</button>
+
+    <hr style="margin:16px 0;" />
+
+    <button onclick="saveReadingDraft()">💾 Save Draft</button>
+    <button style="margin-top:8px;" onclick="publishReading()">🚀 Publish</button>
+    <button style="margin-top:8px;" onclick="showAdminPanel()">⬅ Back</button>
   `;
 };
 
-// ===============================
-// Admin Reading – Create Test API
-// ===============================
-window.createReadingTestNext = async function () {
-  const title = document.getElementById("reading-title")?.value?.trim();
-  if (!title) {
-    alert("Enter reading name");
-    return;
-  }
-
-  try {
-    const test = await apiPost("/admin/reading/tests", {
-      title: title,
-      time_limit_minutes: 60
-    });
-
-    // store current test id globally for next steps
-    window.__currentReadingTestId = test.id;
-
-    showAddPassage(); // next screen (we add it next)
-  } catch (e) {
-    console.error(e);
-    alert("Failed to create reading test");
-  }
-};
 // TEMP: placeholder until we build Passage UI
 window.showAddPassage = function () {
   hideAllScreens();
