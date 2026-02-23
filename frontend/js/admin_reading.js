@@ -397,15 +397,77 @@ window.openAdminReading = async function (testId) {
 
   if (!screenMocks) return;
 
-  // Open editor UI first
+  // open editor UI
   showCreateReading();
 
-  // Store current editing test id
-  window.__editingReadingTestId = testId;
+  try {
+    const data = await apiGet(`/admin/reading/tests/${testId}`);
 
-  // TEMP: show which test is opened (we load data next)
-  const titleInput = document.getElementById("reading-title");
-  if (titleInput) {
-    titleInput.value = `Editing test #${testId}`;
+    // fill meta
+    document.getElementById("reading-title").value = data.title || "";
+    document.getElementById("reading-time").value = data.time_limit_minutes || 60;
+
+    // reset global counter
+    window.__globalQuestionCounter = 0;
+
+    const wrap = document.getElementById("passages-wrap");
+    wrap.innerHTML = "";
+
+    data.passages.forEach((p, pi) => {
+      const passageIndex = pi + 1;
+
+      const passageBlock = document.createElement("div");
+      passageBlock.className = "passage-block";
+      passageBlock.dataset.index = passageIndex;
+      passageBlock.style.textAlign = "left";
+      passageBlock.style.marginTop = "16px";
+
+      let questionsHtml = "";
+
+      p.questions.forEach((q) => {
+        window.__globalQuestionCounter++;
+
+        questionsHtml += `
+          <div class="question-block" data-global-q="${window.__globalQuestionCounter}" style="padding:8px; border:1px solid #e5e5ea; border-radius:8px; margin-bottom:8px;">
+            <div style="font-weight:700; margin-bottom:6px;">Q${window.__globalQuestionCounter}</div>
+
+            <label>Question type</label>
+            <select class="q-type" style="width:100%; padding:8px; border-radius:6px;">
+              <option value="mcq" ${q.type === "mcq" ? "selected" : ""}>MCQ</option>
+              <option value="gap" ${q.type === "gap" ? "selected" : ""}>Gap-fill</option>
+              <option value="tfng" ${q.type === "tfng" ? "selected" : ""}>TF / NG</option>
+            </select>
+
+            <label style="margin-top:6px; display:block;">Question text</label>
+            <input class="q-text" value="${(q.text || "").replace(/"/g, "&quot;")}" />
+
+            <label style="margin-top:6px; display:block;">Correct answer</label>
+            <input class="q-answer" value="${(q.correct_answer || "").toString().replace(/"/g, "&quot;")}" />
+          </div>
+        `;
+      });
+
+      passageBlock.innerHTML = `
+        <h4>Passage ${passageIndex}</h4>
+
+        <label>Passage title</label>
+        <input class="passage-title" value="${(p.title || "").replace(/"/g, "&quot;")}" />
+
+        <label style="margin-top:8px; display:block;">Passage text</label>
+        <textarea class="passage-text" rows="6" style="width:100%; padding:10px; border-radius:8px;">${p.text || ""}</textarea>
+
+        <div class="questions-wrap" style="margin-top:12px;">
+          <h5>Questions</h5>
+          ${questionsHtml}
+          <button onclick="addQuestion(this)">➕ Add Question</button>
+        </div>
+      `;
+
+      wrap.appendChild(passageBlock);
+    });
+
+  } catch (e) {
+    console.error(e);
+    alert("Failed to load reading test");
   }
 };
