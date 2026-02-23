@@ -1,3 +1,4 @@
+// frontend/js/api.js
 window.API = "https://voxi-miniapp-production.up.railway.app";
 
 window.apiGet = async function (path) {
