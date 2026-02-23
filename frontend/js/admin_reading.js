@@ -390,3 +390,22 @@ window.loadAdminReadingList = async function () {
     alert("Failed to load reading tests");
   }
 };
+
+window.openAdminReading = async function (testId) {
+  hideAllScreens();
+  hideAnnouncement();
+
+  if (!screenMocks) return;
+
+  // Open editor UI first
+  showCreateReading();
+
+  // Store current editing test id
+  window.__editingReadingTestId = testId;
+
+  // TEMP: show which test is opened (we load data next)
+  const titleInput = document.getElementById("reading-title");
+  if (titleInput) {
+    titleInput.value = `Editing test #${testId}`;
+  }
+};
