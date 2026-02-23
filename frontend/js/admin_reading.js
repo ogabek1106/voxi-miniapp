@@ -49,3 +49,17 @@ window.createReadingTestNext = async function () {
     alert("Failed to create reading test");
   }
 };
+// TEMP: placeholder until we build Passage UI
+window.showAddPassage = function () {
+  hideAllScreens();
+  hideAnnouncement();
+
+  if (!screenMocks) return;
+
+  screenMocks.style.display = "block";
+  screenMocks.innerHTML = `
+    <h3>➕ Add Passage</h3>
+    <p>Passage form coming next…</p>
+    <button onclick="showCreateReading()">⬅ Back</button>
+  `;
+};
