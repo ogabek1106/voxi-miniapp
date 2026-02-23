@@ -1,7 +1,9 @@
 // frontend/js/admin_reading.js
 window.__globalQuestionCounter = 1;
+window.__currentEditingTestId = null;
 window.showCreateReading = function () {
   window.__globalQuestionCounter = 1;
+  window.__currentEditingTestId = null;
   hideAllScreens();
   hideAnnouncement();
 
@@ -208,13 +210,25 @@ window.saveReadingDraft = async function () {
   }
 
   try {
-    // 1) Create Reading Test (draft)
-    const test = await apiPost("/admin/reading/tests", {
-      title: title,
-      time_limit_minutes: time
-    });
+   
+    let testId;
 
-    const testId = test.id;
+    if (window.__currentEditingTestId) {
+      await apiPut(`/admin/reading/tests/${window.__currentEditingTestId}`, {
+        title,
+        time_limit_minutes: time
+      });
+
+      await apiDelete(`/admin/reading/tests/${window.__currentEditingTestId}/passages`);
+
+      testId = window.__currentEditingTestId;
+    } else {
+      const test = await apiPost("/admin/reading/tests", {
+        title,
+        time_limit_minutes: time
+      });
+      testId = test.id;
+    }
 
     // 2) Create passages
     const passageBlocks = document.querySelectorAll(".passage-block");
@@ -283,13 +297,25 @@ window.publishReading = async function () {
   }
 
   try {
-    // Save draft first (reuse logic)
-    const test = await apiPost("/admin/reading/tests", {
-      title: title,
-      time_limit_minutes: time
-    });
+    let testId;
 
-    const testId = test.id;
+    if (window.__currentEditingTestId) {
+      await apiPut(`/admin/reading/tests/${window.__currentEditingTestId}`, {
+        title,
+        time_limit_minutes: time
+      });
+
+      await apiDelete(`/admin/reading/tests/${window.__currentEditingTestId}/passages`);
+
+      testId = window.__currentEditingTestId;
+    } else {
+      const test = await apiPost("/admin/reading/tests", {
+        title,
+        time_limit_minutes: time
+      });
+
+      testId = test.id;
+    }
 
     const passageBlocks = document.querySelectorAll(".passage-block");
 
@@ -392,6 +418,7 @@ window.loadAdminReadingList = async function () {
 };
 
 window.openAdminReading = async function (testId) {
+  window.__currentEditingTestId = testId;
   hideAllScreens();
   hideAnnouncement();
 
@@ -465,6 +492,9 @@ window.openAdminReading = async function (testId) {
 
       wrap.appendChild(passageBlock);
     });
+
+    // sync counter with rendered questions
+    window.__globalQuestionCounter = document.querySelectorAll(".question-block").length;
 
   } catch (e) {
     console.error(e);
