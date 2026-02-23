@@ -1,9 +1,9 @@
 // frontend/js/admin_reading.js
 window.__globalQuestionCounter = 1;
 window.__currentEditingTestId = null;
-window.showCreateReading = function () {
+window.showCreateReading = function (reset = true) {
   window.__globalQuestionCounter = 1;
-  window.__currentEditingTestId = null;
+  if (reset) window.__currentEditingTestId = null;
   hideAllScreens();
   hideAnnouncement();
 
@@ -215,18 +215,12 @@ window.saveReadingDraft = async function () {
 
     if (window.__currentEditingTestId) {
 
-      const old = await apiGet(`/admin/reading/tests/${window.__currentEditingTestId}`);
-
       await apiPut(`/admin/reading/tests/${window.__currentEditingTestId}`, {
         title,
         time_limit_minutes: time
       });
 
       // const old = await apiGet(`/admin/reading/tests/${window.__currentEditingTestId}`);
-
-      for (const p of old.passages) {
-        await apiDelete(`/admin/reading/passages/${p.id}`);
-      }
       
       testId = window.__currentEditingTestId;
     } else {
@@ -307,16 +301,20 @@ window.publishReading = async function () {
     let testId;
 
     if (window.__currentEditingTestId) {
-      const old = await apiGet(`/admin/reading/tests/${window.__currentEditingTestId}`);
+
       await apiPut(`/admin/reading/tests/${window.__currentEditingTestId}`, {
         title,
         time_limit_minutes: time
       });
 
-      // const old = await apiGet(`/admin/reading/tests/${window.__currentEditingTestId}`);
+      const old = await apiGet(`/admin/reading/tests/${window.__currentEditingTestId}`);
 
-      for (const p of old.passages) {
-        await apiDelete(`/admin/reading/passages/${p.id}`);
+      for (const p of old.passages || []) {
+        try {
+          await apiDelete(`/admin/reading/passages/${p.id}`);
+        } catch (e) {
+          console.warn("Skip delete passage", p.id, e);
+        }
       }
 
       testId = window.__currentEditingTestId;
@@ -436,7 +434,7 @@ window.openAdminReading = async function (testId) {
   if (!screenMocks) return;
 
   // open editor UI (do NOT reset edit mode)
-  window.showCreateReading();
+  window.showCreateReading(false);
   window.__currentEditingTestId = testId;
 
   try {
