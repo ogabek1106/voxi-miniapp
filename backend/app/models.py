@@ -28,7 +28,12 @@ class ReadingTest(Base):
     time_limit_minutes = Column(Integer, default=60)
     status = Column(Enum(ReadingTestStatus), default=ReadingTestStatus.draft)
 
-    passages = relationship("ReadingPassage", back_populates="test", cascade="all, delete-orphan")
+    passages = relationship(
+        "ReadingPassage",
+        back_populates="test",
+        cascade="all, delete-orphan",
+        passive_deletes=True
+    )
 
 
 class ReadingPassage(Base):
@@ -41,7 +46,12 @@ class ReadingPassage(Base):
     text = Column(Text, nullable=False)
 
     test = relationship("ReadingTest", back_populates="passages")
-    questions = relationship("ReadingQuestion", back_populates="passage", cascade="all, delete-orphan")
+    questions = relationship(
+        "ReadingQuestion",
+        back_populates="passage",
+        cascade="all, delete-orphan",
+        passive_deletes=True
+    )
 
 
 class ReadingQuestion(Base):
