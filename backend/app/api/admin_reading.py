@@ -110,3 +110,40 @@ def list_reading_tests(db: Session = Depends(get_db)):
         }
         for t in tests
     ]
+@router.get("/tests/{test_id}")
+def get_reading_test(test_id: int, db: Session = Depends(get_db)):
+    test = (
+        db.query(ReadingTest)
+        .filter(ReadingTest.id == test_id)
+        .first()
+    )
+    if not test:
+        raise HTTPException(status_code=404, detail="Test not found")
+
+    return {
+        "id": test.id,
+        "title": test.title,
+        "time_limit_minutes": test.time_limit_minutes,
+        "status": test.status.value if hasattr(test.status, "value") else str(test.status),
+        "passages": [
+            {
+                "id": p.id,
+                "order_index": p.order_index,
+                "title": p.title,
+                "text": p.text,
+                "questions": [
+                    {
+                        "id": q.id,
+                        "order_index": q.order_index,
+                        "type": q.type,
+                        "text": q.text,
+                        "correct_answer": q.correct_answer,
+                        "options": q.options,
+                        "word_limit": q.word_limit,
+                    }
+                    for q in sorted(p.questions, key=lambda x: x.order_index)
+                ]
+            }
+            for p in sorted(test.passages, key=lambda x: x.order_index)
+        ]
+    }
