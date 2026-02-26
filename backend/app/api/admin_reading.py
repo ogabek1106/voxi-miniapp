@@ -212,3 +212,14 @@ def delete_reading_test(test_id: int, db: Session = Depends(get_db)):
     db.commit()
 
     return {"status": "deleted", "id": test_id}
+
+@router.post("/tests/{test_id}/unpublish")
+def unpublish_test(test_id: int, db: Session = Depends(get_db)):
+    test = db.query(ReadingTest).filter(ReadingTest.id == test_id).first()
+    if not test:
+        raise HTTPException(status_code=404, detail="Test not found")
+
+    test.status = ReadingTestStatus.draft
+    db.commit()
+    db.refresh(test)
+    return {"status": "draft", "id": test.id}
