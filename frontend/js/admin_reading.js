@@ -459,7 +459,19 @@ window.loadAdminReadingList = async function () {
             <button onclick="openAdminReading(${t.id})">
               📖 #${t.id} — ${t.title}
             </button>
-            <button onclick="deleteReadingTest(${t.id})" style="background:#fee2e2; color:#b91c1c;">
+            <button
+              onclick="deleteReadingTest(${t.id})"
+              style="
+                background:#fee2e2;
+                color:#b91c1c;
+                padding:6px 8px;
+                font-size:12px;
+                border-radius:6px;
+                min-width:32px;
+                height:auto;
+                line-height:1;
+              "
+            >
               🗑 Delete
             </button>
           </div>
@@ -477,11 +489,11 @@ window.loadAdminReadingList = async function () {
               style="
                 background:#fee2e2;
                 color:#b91c1c;
-                padding:4px 8px;
+                padding:6px 8px;
                 font-size:12px;
                 border-radius:6px;
-                min-width:auto;
-                height:28px;
+                min-width:32px;
+                height:auto;
                 line-height:1;
               "
             >
