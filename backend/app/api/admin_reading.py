@@ -182,3 +182,13 @@ def delete_passage(passage_id: int, db: Session = Depends(get_db)):
     db.delete(passage)
     db.commit()
     return {"status": "deleted", "id": passage_id}
+
+@router.delete("/tests/{test_id}")
+def delete_reading_test(test_id: int, db: Session = Depends(get_db)):
+    test = db.query(ReadingTest).filter(ReadingTest.id == test_id).first()
+    if not test:
+        raise HTTPException(status_code=404, detail="Test not found")
+
+    db.delete(test)
+    db.commit()
+    return {"status": "deleted", "id": test_id}
