@@ -189,19 +189,26 @@ def delete_reading_test(test_id: int, db: Session = Depends(get_db)):
     if not test:
         raise HTTPException(status_code=404, detail="Test not found")
 
-    # 1) delete questions
-    db.query(ReadingQuestion)\
-      .join(ReadingPassage)\
-      .filter(ReadingPassage.test_id == test_id)\
-      .delete(synchronize_session=False)
+    # 1) get passage ids
+    passage_ids = [
+        p.id for p in db.query(ReadingPassage.id)
+        .filter(ReadingPassage.test_id == test_id)
+        .all()
+    ]
 
-    # 2) delete passages
-    db.query(ReadingPassage)\
-      .filter(ReadingPassage.test_id == test_id)\
-      .delete(synchronize_session=False)
+    if passage_ids:
+        # 2) delete questions by passage_ids
+        db.query(ReadingQuestion)\
+          .filter(ReadingQuestion.passage_id.in_(passage_ids))\
+          .delete(synchronize_session=False)
 
-    # 3) delete test
+        # 3) delete passages
+        db.query(ReadingPassage)\
+          .filter(ReadingPassage.id.in_(passage_ids))\
+          .delete(synchronize_session=False)
+
+    # 4) delete test
     db.delete(test)
-
     db.commit()
+
     return {"status": "deleted", "id": test_id}
