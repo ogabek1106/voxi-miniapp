@@ -152,7 +152,10 @@ async def submit_mock_test(mock_id: int, payload: SubmitAnswersIn):
 def start_reading_test(mock_id: int, telegram_id: int, db: Session = Depends(get_db)):
     test = (
         db.query(ReadingTest)
-        .filter(ReadingTest.id == mock_id, ReadingTest.status == ReadingTestStatus.published)
+        .filter(
+            ReadingTest.id == mock_id,
+            ReadingTest.status == ReadingTestStatus.published.value
+        )
         .first()
     )
     if not test:
@@ -250,7 +253,10 @@ class ReadingSubmitOut(BaseModel):
 def submit_reading_test(mock_id: int, payload: ReadingSubmitIn, db: Session = Depends(get_db)):
     test = (
         db.query(ReadingTest)
-        .filter(ReadingTest.id == mock_id, ReadingTest.status == ReadingTestStatus.published)
+        .filter(
+            ReadingTest.id == mock_id,
+            ReadingTest.status == ReadingTestStatus.published.value
+        )
         .first()
     )
     if not test:
