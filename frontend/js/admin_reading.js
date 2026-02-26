@@ -464,15 +464,18 @@ window.loadAdminReadingList = async function () {
               style="
                 background:#fee2e2;
                 color:#b91c1c;
-                padding:6px 8px;
-                font-size:12px;
-                border-radius:6px;
-                min-width:32px;
-                height:auto;
-                line-height:1;
+                width:36px;            /* slim width */
+                height:36px;           /* same height as main buttons */
+                min-width:36px;
+                border-radius:8px;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                flex:0 0 auto;         /* never stretch */
               "
+              title="Delete"
             >
-              🗑 Delete
+              🗑
             </button>
           </div>
         `).join("")
@@ -489,15 +492,18 @@ window.loadAdminReadingList = async function () {
               style="
                 background:#fee2e2;
                 color:#b91c1c;
-                padding:6px 8px;
-                font-size:12px;
-                border-radius:6px;
-                min-width:32px;
-                height:auto;
-                line-height:1;
+                width:36px;            /* slim width */
+                height:36px;           /* same height as main buttons */
+                min-width:36px;
+                border-radius:8px;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                flex:0 0 auto;         /* never stretch */
               "
+              title="Delete"
             >
-              🗑 Delete
+              🗑
             </button>
           </div>
         `).join("")
