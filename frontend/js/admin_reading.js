@@ -64,7 +64,7 @@ window.showCreateReading = function (reset = true) {
     <hr style="margin:16px 0;" />
 
     <button id="btn-save-draft" onclick="saveReadingDraft()">💾 Save Draft</button>
-    <button style="margin-top:8px;" onclick="publishReading()">🚀 Publish</button>
+    <div id="publish-wrap" style="margin-top:8px;"></div>
     <button style="margin-top:8px;" onclick="showAdminReadingList()">⬅ Back</button>
   `;
 };
@@ -370,6 +370,7 @@ window.publishReading = async function () {
       });
 
       testId = test.id;
+      window.__currentEditingTestId = testId; // 🔒 ensure id is set after first publish
     }
 
     const passageBlocks = document.querySelectorAll(".passage-block");
@@ -594,6 +595,20 @@ window.openAdminReading = async function (testId) {
 
     // sync counter with rendered questions
     window.__globalQuestionCounter = document.querySelectorAll(".question-block").length;
+
+    // 🔁 Toggle Publish / Unpublish button (ONLY UI logic added)
+    const publishWrap = document.getElementById("publish-wrap");
+    if (publishWrap) {
+      if (data.status === "published") {
+        publishWrap.innerHTML = `
+          <button onclick="unpublishReading(${testId})">↩️ Unpublish</button>
+        `;
+      } else {
+        publishWrap.innerHTML = `
+          <button onclick="publishReading()">🚀 Publish</button>
+        `;
+      }
+    }
 
   } catch (e) {
     console.error(e);
