@@ -10,8 +10,12 @@
     height: 100%;
     margin: 0;
     padding: 0;
-    overscroll-behavior: none;   /* prevent rubber banding */
-    touch-action: manipulation; /* disable double-tap zoom */
+    overscroll-behavior: none;
+  }
+
+  /* apply touch-action ONLY for mobile UI elements, not global */
+  .app {
+    touch-action: manipulation;
   }
 
   :root {
