@@ -455,13 +455,27 @@ window.loadAdminReadingList = async function () {
 
     publishedWrap.innerHTML = published.length
       ? published.map(t => `
-          <button onclick="openAdminReading(${t.id})">#${t.id} — ${t.title}</button>
+          <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
+            <button onclick="openAdminReading(${t.id})">
+              📖 #${t.id} — ${t.title}
+            </button>
+            <button onclick="deleteReadingTest(${t.id})" style="background:#fee2e2; color:#b91c1c;">
+              🗑 Delete
+            </button>
+          </div>
         `).join("")
       : `<p style="opacity:0.6;">No published tests yet</p>`;
 
     draftsWrap.innerHTML = drafts.length
       ? drafts.map(t => `
-          <button onclick="openAdminReading(${t.id})">#${t.id} — ${t.title}</button>
+          <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
+            <button onclick="openAdminReading(${t.id})">
+              ✏️ #${t.id} — ${t.title}
+            </button>
+            <button onclick="deleteReadingTest(${t.id})" style="background:#fee2e2; color:#b91c1c;">
+              🗑 Delete
+            </button>
+          </div>
         `).join("")
       : `<p style="opacity:0.6;">No drafts yet</p>`;
 
@@ -554,5 +568,19 @@ window.openAdminReading = async function (testId) {
   } catch (e) {
     console.error(e);
     alert("Failed to load reading test");
+  }
+};
+
+window.deleteReadingTest = async function (testId) {
+  const ok = confirm("❌ Are you sure you want to DELETE this reading test?\nThis cannot be undone.");
+  if (!ok) return;
+
+  try {
+    await apiDelete(`/admin/reading/tests/${testId}`);
+    alert("🗑 Reading test deleted");
+    loadAdminReadingList();
+  } catch (e) {
+    console.error("❌ DELETE TEST ERROR:", e);
+    alert("❌ Failed to delete reading test\n" + (e.message || ""));
   }
 };
