@@ -597,7 +597,7 @@ window.openAdminReading = async function (testId) {
         <input class="passage-title" value="${(p.title || "").replace(/"/g, "&quot;")}" />
 
         <label style="margin-top:8px; display:block;">Passage text</label>
-        <textarea class="passage-text" rows="6" style="width:100%; padding:10px; border-radius:8px;">${p.text || ""}</textarea>
+        <textarea class="passage-text" rows="6" style="width:100%; padding:10px; border-radius:8px;"></textarea>
 
         <div class="questions-wrap" style="margin-top:12px;">
           <h5>Questions</h5>
@@ -606,7 +606,10 @@ window.openAdminReading = async function (testId) {
         </div>
       `;
 
-      wrap.appendChild(passageBlock);
+      const textarea = passageBlock.querySelector(".passage-text");
+      if (textarea) {
+        textarea.value = p.text || "";
+      }
     });
 
     // sync counter with rendered questions
