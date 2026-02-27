@@ -664,4 +664,3 @@ window.showPackReading = async function (packId) {
   window.__currentEditingTestId = null;
   window.showCreateReading(true);
 };
-};
