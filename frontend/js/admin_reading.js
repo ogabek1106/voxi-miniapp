@@ -65,8 +65,7 @@ window.showCreateReading = function (reset = true) {
     <hr style="margin:16px 0;" />
 
     <button id="btn-save-draft" onclick="saveReadingDraft()">💾 Save Draft</button>
-    <div id="publish-wrap" style="margin-top:8px;"></div>
-    <button style="margin-top:8px;" onclick="showAdminReadingList()">⬅ Back</button>
+    <button style="margin-top:8px;" onclick="openMockPack(window.__currentPackId)">⬅ Back</button>
   `;
 };
 
@@ -243,7 +242,8 @@ window.saveReadingDraft = async function () {
     } else {
       const test = await apiPost("/admin/reading/tests", {
         title,
-        time_limit_minutes: time
+        time_limit_minutes: time,
+        mock_pack_id: window.__currentPackId
       });
       testId = test.id;
     }
@@ -304,8 +304,8 @@ window.saveReadingDraft = async function () {
       }
     }
 
-    alert("✅ Reading test saved as draft");
-    showAdminReadingList();
+    alert("✅ Reading saved for this Mock Pack");
+    openMockPack(window.__currentPackId);
     if (btn) {
       btn.disabled = false;
       btn.innerText = "💾 Save Draft";
@@ -367,7 +367,8 @@ window.publishReading = async function () {
     } else {
       const test = await apiPost("/admin/reading/tests", {
         title,
-        time_limit_minutes: time
+        time_limit_minutes: time,
+        mock_pack_id: window.__currentPackId
       });
 
       testId = test.id;
@@ -647,10 +648,20 @@ window.deleteReadingTest = async function (testId) {
 
 window.showPackReading = async function (packId) {
   window.__currentPackId = packId;
+
+  try {
+    // try to load reading for this pack
+    const test = await apiGet(`/admin/mock-packs/${packId}/reading`);
+
+    if (test && test.id) {
+      window.__currentEditingTestId = test.id;
+      openAdminReading(test.id);
+      return;
+    }
+  } catch (e) {
+    // no reading yet → create new
+  }
+
   window.__currentEditingTestId = null;
-
-  // Open editor directly
   window.showCreateReading(true);
-
-  // Later backend will load reading by packId
 };
