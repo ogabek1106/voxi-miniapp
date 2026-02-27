@@ -56,28 +56,3 @@ def drop_users_table(telegram_id: int, db: Session = Depends(get_db)):
     return {"status": "ok", "message": "users table dropped"}
 
 
-
-from sqlalchemy import text
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
-from app.deps import get_db
-
-router = APIRouter()
-
-@router.get("/admin/debug-fk/{table_name}")
-def check_fk(table_name: str, db: Session = Depends(get_db)):
-    result = db.execute(text(f"""
-        SELECT
-            tc.table_name,
-            kcu.column_name,
-            rc.delete_rule
-        FROM information_schema.table_constraints tc
-        JOIN information_schema.key_column_usage kcu
-            ON tc.constraint_name = kcu.constraint_name
-        JOIN information_schema.referential_constraints rc
-            ON tc.constraint_name = rc.constraint_name
-        WHERE tc.constraint_type = 'FOREIGN KEY'
-        AND tc.table_name = :table
-    """), {"table": table_name})
-
-    return result.fetchall()
