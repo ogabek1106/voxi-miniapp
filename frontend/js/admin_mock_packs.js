@@ -22,22 +22,23 @@ window.showAdminMockPacks = function () {
 
 
 window.loadMockPacks = async function () {
+  const wrap = document.getElementById("mock-pack-list");
+
   try {
-    const packs = await apiGet("/admin/mock-packs"); // we build backend later
+    const packs = await apiGet("/admin/mock-packs");
 
-    const wrap = document.getElementById("mock-pack-list");
+    console.log("GET /admin/mock-packs result:", packs);
+    console.log("Type of packs:", typeof packs);
+    console.log("Is array?", Array.isArray(packs));
 
-    wrap.innerHTML = packs.length
-      ? packs.map(p => `
-          <button onclick="openMockPack(${p.id})">
-            📦 ${p.title}
-          </button>
-        `).join("")
-      : `<p style="opacity:0.6;">No packs yet</p>`;
+    // TEMP: show raw response on screen
+    wrap.innerHTML = `<pre style="text-align:left; font-size:12px;">
+${JSON.stringify(packs, null, 2)}
+</pre>`;
 
   } catch (e) {
-    console.error(e);
-    alert("Failed to load packs");
+    console.error("Load packs error:", e);
+    wrap.innerHTML = `<p style="color:red;">${e.message}</p>`;
   }
 };
 
@@ -67,9 +68,12 @@ window.createMockPack = async function () {
   if (!title) return;
 
   try {
-    await apiPost("/admin/mock-packs", { title });
-    loadMockPacks();
+    const created = await apiPost("/admin/mock-packs", { title });
+    console.log("POST result:", created);
+
+    await loadMockPacks();
   } catch (e) {
-    alert("Failed to create pack");
+    console.error("Create error:", e);
+    alert("Failed to create pack: " + e.message);
   }
 };
