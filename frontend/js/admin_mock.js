@@ -1,3 +1,4 @@
+// frontend/js/admin_mock.js
 window.showAdminMock = function () {
   hideAllScreens();
   hideAnnouncement();
