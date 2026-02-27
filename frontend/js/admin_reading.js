@@ -605,7 +605,7 @@ window.openAdminReading = async function (testId) {
           <button onclick="addQuestion(this)">➕ Add Question</button>
         </div>
       `;
-
+      wrap.appendChild(passageBlock);
       const textarea = passageBlock.querySelector(".passage-text");
       if (textarea) {
         textarea.value = p.text || "";
