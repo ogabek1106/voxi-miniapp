@@ -17,6 +17,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (btnHome) btnHome.addEventListener("click", goHome);
   if (btnProfile) btnProfile.addEventListener("click", goProfile);
+  const btnMockPacks = document.getElementById("btn-mock-packs");
+  if (btnMockPacks) btnMockPacks.addEventListener("click", showAdminMockPacks);
 });
 
 function hideAllScreens() {
