@@ -65,13 +65,17 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 async function loadMe() {
-  const telegramId = tg?.initDataUnsafe?.user?.id;
-  if (!telegramId) return;
+  let telegramId = tg?.initDataUnsafe?.user?.id;
+
+  // 🔥 TEMP: allow manual admin in browser
+  if (!telegramId) {
+    telegramId = 1150875355; // your admin ID
+  }
 
   try {
     const me = await apiGet(`/me?telegram_id=${telegramId}`);
 
-    if (me.is_admin) {
+    if (me.is_admin || telegramId === 1150875355) {
       const adminBtn = document.getElementById("adminBtn");
       if (adminBtn) adminBtn.style.display = "block";
     }
