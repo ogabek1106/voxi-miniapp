@@ -34,7 +34,7 @@ class ReadingTest(Base):
         cascade="all, delete-orphan",
         passive_deletes=True
     )
-    mock_pack = relationship("MockPack", back_populates="reading", uselist=False)
+    #mock_pack = relationship("MockPack", back_populates="reading", uselist=False)
 
 class ReadingPassage(Base):
     __tablename__ = "reading_passages"
