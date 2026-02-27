@@ -644,3 +644,13 @@ window.deleteReadingTest = async function (testId) {
     alert("❌ Failed to delete reading test\n" + (e.message || ""));
   }
 };
+
+window.showPackReading = async function (packId) {
+  window.__currentPackId = packId;
+  window.__currentEditingTestId = null;
+
+  // Open editor directly
+  window.showCreateReading(true);
+
+  // Later backend will load reading by packId
+};
