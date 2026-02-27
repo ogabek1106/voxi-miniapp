@@ -1,4 +1,5 @@
 // frontend/js/admin_reading.js
+window.__currentPackId = null;
 window.__globalQuestionCounter = 1;
 window.__currentEditingTestId = null;
 window.showCreateReading = function (reset = true) {
