@@ -28,13 +28,18 @@ class ReadingTest(Base):
     time_limit_minutes = Column(Integer, default=60)
     status = Column(Enum(ReadingTestStatus), default=ReadingTestStatus.draft)
 
+    mock_pack_id = Column(
+        Integer,
+        ForeignKey("mock_packs.id", ondelete="CASCADE"),
+        nullable=True
+    )
+
     passages = relationship(
         "ReadingPassage",
         back_populates="test",
         cascade="all, delete-orphan",
         passive_deletes=True
     )
-    #mock_pack = relationship("MockPack", back_populates="reading", uselist=False)
 
 class ReadingPassage(Base):
     __tablename__ = "reading_passages"
@@ -93,10 +98,11 @@ class MockPack(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False)
-
     status = Column(Enum(MockPackStatus), default=MockPackStatus.draft)
-
-    # relationships
-    reading_id = Column(Integer, ForeignKey("reading_tests.id", ondelete="SET NULL"), nullable=True)
-
     created_at = Column(DateTime, default=datetime.utcnow)
+
+    readings = relationship(
+        "ReadingTest",
+        backref="mock_pack",
+        cascade="all, delete-orphan"
+    )
