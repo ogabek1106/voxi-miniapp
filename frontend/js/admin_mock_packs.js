@@ -27,21 +27,19 @@ window.loadMockPacks = async function () {
   try {
     const packs = await apiGet("/admin/mock-packs");
 
-    console.log("GET /admin/mock-packs result:", packs);
-    console.log("Type of packs:", typeof packs);
-    console.log("Is array?", Array.isArray(packs));
-
-    // TEMP: show raw response on screen
-    wrap.innerHTML = `<pre style="text-align:left; font-size:12px;">
-${JSON.stringify(packs, null, 2)}
-</pre>`;
+    wrap.innerHTML = packs.length
+      ? packs.map(p => `
+          <button onclick="openMockPack(${p.id})">
+            📦 ${p.title}
+          </button>
+        `).join("")
+      : `<p style="opacity:0.6;">No packs yet</p>`;
 
   } catch (e) {
     console.error("Load packs error:", e);
-    wrap.innerHTML = `<p style="color:red;">${e.message}</p>`;
+    wrap.innerHTML = `<p style="color:red;">Failed to load packs</p>`;
   }
 };
-
 
 window.openMockPack = function (packId) {
   hideAllScreens();
@@ -68,9 +66,7 @@ window.createMockPack = async function () {
   if (!title) return;
 
   try {
-    const created = await apiPost("/admin/mock-packs", { title });
-    console.log("POST result:", created);
-
+    await apiPost("/admin/mock-packs", { title });
     await loadMockPacks();
   } catch (e) {
     console.error("Create error:", e);
