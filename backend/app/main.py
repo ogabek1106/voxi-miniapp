@@ -11,12 +11,14 @@ from app.api.me import router as me_router
 from app.api.admin import router as admin_router
 from app.api.admin_reading import router as admin_reading_router
 from .db import ensure_reading_progress_columns
+from app.api import admin_mock_packs
 ensure_reading_progress_columns()
 app = FastAPI(title="Voxi Mini App API")
 app.include_router(admin_reading_router)
 app.include_router(mock_tests_router)
 app.include_router(me_router)
 app.include_router(admin_router)
+app.include_router(admin_mock_packs.router)
 
 # ✅ CORS FIX (required for Telegram Mini App)
 app.add_middleware(
