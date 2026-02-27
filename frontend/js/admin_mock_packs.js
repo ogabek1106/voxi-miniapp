@@ -97,7 +97,7 @@ window.deleteMockPack = async function (packId) {
   if (!confirmed) return;
 
   try {
-    await apiDelete(`/admin/reading/mock-packs/${packId}`);
+    await apiDelete(`/admin/mock-packs/${packId}`);
     await loadMockPacks();
   } catch (e) {
     console.error("Delete error:", e);
