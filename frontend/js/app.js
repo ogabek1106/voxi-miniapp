@@ -1,3 +1,4 @@
+// frontend/js/app/js
 const tg = window.Telegram?.WebApp;
 function applyTelegramTheme() {
   if (!tg) return;
