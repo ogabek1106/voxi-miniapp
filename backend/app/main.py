@@ -10,7 +10,7 @@ from app.api.mock_tests import router as mock_tests_router
 from app.api.me import router as me_router
 from app.api.admin import router as admin_router
 from app.api.admin_reading import router as admin_reading_router
-from .db import ensure_reading_progress_columns
+from .db import ensure_reading_progress_columns, ensure_mock_pack_column
 from app.api import admin_mock_packs
 ensure_reading_progress_columns()
 ensure_mock_pack_column()
