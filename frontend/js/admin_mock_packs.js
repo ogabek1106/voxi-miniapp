@@ -29,9 +29,27 @@ window.loadMockPacks = async function () {
 
     wrap.innerHTML = packs.length
       ? packs.map(p => `
-          <button onclick="openMockPack(${p.id})">
-            📦 ${p.title}
-          </button>
+          <div style="display:flex; gap:6px; margin-bottom:8px;">
+        
+            <button 
+              style="flex:1;"
+              onclick="openMockPack(${p.id})">
+              📦 ${p.title}
+            </button>
+
+            <button 
+              onclick="deleteMockPack(${p.id})"
+              style="
+                width:42px;
+                padding:0;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+              ">
+              🗑
+            </button>
+
+          </div>
         `).join("")
       : `<p style="opacity:0.6;">No packs yet</p>`;
 
@@ -71,5 +89,18 @@ window.createMockPack = async function () {
   } catch (e) {
     console.error("Create error:", e);
     alert("Failed to create pack: " + e.message);
+  }
+};
+
+window.deleteMockPack = async function (packId) {
+  const confirmed = confirm("Delete this Mock Pack and ALL its content?");
+  if (!confirmed) return;
+
+  try {
+    await apiDelete(`/admin/reading/mock-packs/${packId}`);
+    await loadMockPacks();
+  } catch (e) {
+    console.error("Delete error:", e);
+    alert("Failed to delete pack: " + e.message);
   }
 };
