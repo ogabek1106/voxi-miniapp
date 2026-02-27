@@ -650,7 +650,6 @@ window.showPackReading = async function (packId) {
   window.__currentPackId = packId;
 
   try {
-    // try to load reading for this pack
     const test = await apiGet(`/admin/mock-packs/${packId}/reading`);
 
     if (test && test.id) {
@@ -659,9 +658,10 @@ window.showPackReading = async function (packId) {
       return;
     }
   } catch (e) {
-    // no reading yet → create new
+    // no reading exists yet
   }
 
   window.__currentEditingTestId = null;
   window.showCreateReading(true);
+};
 };
