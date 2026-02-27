@@ -16,6 +16,7 @@ router = APIRouter(prefix="/admin/reading", tags=["admin-reading"])
 class ReadingTestCreate(BaseModel):
     title: str
     time_limit_minutes: int = 60
+    mock_pack_id: int
 
 
 @router.post("/tests")
@@ -23,7 +24,8 @@ def create_reading_test(payload: ReadingTestCreate, db: Session = Depends(get_db
     test = ReadingTest(
         title=payload.title,
         time_limit_minutes=payload.time_limit_minutes,
-        status=ReadingTestStatus.draft
+        status=ReadingTestStatus.draft,
+        mock_pack_id=payload.mock_pack_id
     )
     db.add(test)
     db.commit()
