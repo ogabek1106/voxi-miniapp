@@ -270,7 +270,7 @@ window.showAdminPanel = function () {
   screenMocks.style.display = "block";
   screenMocks.innerHTML = `
     <h3>🛠 Admin Panel</h3>
-    <button onclick="showAdminMock()">🧠 IELTS Mock</button>
+    <button onclick="showAdminMockPacks()">📦 MOCK Packs</button>
     <button onclick="showDbStats()">📊 Database Stats</button>
     <button onclick="goHome()">⬅ Back</button>
   `;
