@@ -164,7 +164,7 @@ def get_reading_test(test_id: int, db: Session = Depends(get_db)):
     }
 
 @router.put("/tests/{test_id}")
-def update_reading_test(test_id: int, payload: ReadingTestCreate, db: Session = Depends(get_db)):
+def update_reading_test(test_id: int, payload: ReadingTestUpdate, db: Session = Depends(get_db)):
     test = db.query(ReadingTest).filter(ReadingTest.id == test_id).first()
     if not test:
         raise HTTPException(status_code=404, detail="Reading test not found")
