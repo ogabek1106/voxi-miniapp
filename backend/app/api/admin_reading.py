@@ -17,7 +17,9 @@ class ReadingTestCreate(BaseModel):
     title: str
     time_limit_minutes: int = 60
     mock_pack_id: int
-
+class ReadingTestUpdate(BaseModel):
+    title: str
+    time_limit_minutes: int = 60
 
 @router.post("/tests")
 def create_reading_test(payload: ReadingTestCreate, db: Session = Depends(get_db)):
