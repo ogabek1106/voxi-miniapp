@@ -1,3 +1,4 @@
+// frontend/js/screens.js
 let screenName;
 let screenHome;
 let screenMocks;
