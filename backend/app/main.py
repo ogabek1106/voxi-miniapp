@@ -1,6 +1,5 @@
 #backend/app/main.py
 from fastapi import FastAPI, Depends
-from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from app.db import engine
 from app.models import Base, User
@@ -21,14 +20,7 @@ os.makedirs("media", exist_ok=True)
 ensure_reading_progress_columns()
 ensure_mock_pack_column()
 app = FastAPI(title="Voxi Mini App API")
-app.add_middleware(
-    allow_origins=[
-        "https://cooperative-endurance-production.up.railway.app"
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+
 app.include_router(admin_upload_router)
 app.include_router(admin_reading_router)
 app.include_router(mock_tests_router)
