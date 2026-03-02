@@ -5,7 +5,7 @@ from sqlalchemy import pool
 from alembic import context
 import os
 
-from app.models import Base
+from models import Base
 
 config = context.config
 fileConfig(config.config_file_name)
