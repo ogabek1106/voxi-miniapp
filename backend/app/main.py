@@ -76,3 +76,14 @@ def create_or_update_user(payload: CreateUserIn, db: Session = Depends(get_db)):
         "telegram_id": user.telegram_id,
         "name": user.name,
     }
+
+from sqlalchemy import text
+
+@app.get("/fix-reading-questions-content")
+def fix_schema(db: Session = Depends(get_db)):
+    db.execute(text("""
+        ALTER TABLE reading_questions
+        ADD COLUMN IF NOT EXISTS content TEXT;
+    """))
+    db.commit()
+    return {"status": "content column added"}
