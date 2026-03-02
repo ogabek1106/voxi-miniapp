@@ -67,14 +67,14 @@ class ReadingQuestion(Base):
     order_index = Column(Integer, nullable=False)
 
     type = Column(String, nullable=False)
-    text = Column(Text, nullable=False)
-
-    options = Column(JSON, nullable=True)
     correct_answer = Column(JSON, nullable=True)
-    word_limit = Column(Integer, nullable=True)
-
+    instruction = Column(Text, nullable=True)
+    content = Column(JSON, nullable=False)
+    meta = Column(JSON, nullable=True)
+    explanation = Column(Text, nullable=True)
+    points = Column(Integer, default=1)
     passage = relationship("ReadingPassage", back_populates="questions")
-
+    
 
 class ReadingProgress(Base):
     __tablename__ = "reading_progress"
