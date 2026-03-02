@@ -63,7 +63,15 @@ window.showCreateReading = function (reset = true) {
 
         <label style="margin-top:8px; display:block;">Passage text</label>
         <textarea class="passage-text" rows="6" style="width:100%; padding:10px; border-radius:8px;"></textarea>
+        <hr style="margin:10px 0; border:0; border-top:1px solid #eee;" />
 
+        <div class="image-attach-wrap" style="text-align:right;">
+          <button type="button" class="attach-image-btn" onclick="attachImage(this)">
+            🖼 Add Image
+          </button>
+          <input type="file" accept="image/*" class="hidden-image-input" style="display:none;" />
+          <div class="image-preview" style="margin-top:8px;"></div>
+        </div>
         <div class="questions-wrap" style="margin-top:12px;">
           <h5>Questions</h5>
 
@@ -141,7 +149,15 @@ window.addPassage = function () {
 
     <label style="margin-top:8px; display:block;">Passage text</label>
     <textarea class="passage-text" rows="6" style="width:100%; padding:10px; border-radius:8px;"></textarea>
+    <hr style="margin:10px 0; border:0; border-top:1px solid #eee;" />
 
+    <div class="image-attach-wrap" style="text-align:right;">
+      <button type="button" class="attach-image-btn" onclick="attachImage(this)">
+        🖼 Add Image
+      </button>
+      <input type="file" accept="image/*" class="hidden-image-input" style="display:none;" />
+      <div class="image-preview" style="margin-top:8px;"></div>
+    </div>
     <div class="questions-wrap" style="margin-top:12px;">
       <h5>Questions</h5>
 
@@ -208,6 +224,15 @@ window.addQuestion = function (btn) {
 
     <label style="margin-top:6px; display:block;">Correct answer</label>
     <input class="q-answer" placeholder="Correct answer (index or text)" />
+    <hr style="margin:10px 0; border:0; border-top:1px solid #eee;" />
+
+    <div class="image-attach-wrap" style="text-align:right;">
+      <button type="button" class="attach-image-btn" onclick="attachImage(this)">
+        🖼 Add Image
+      </button>
+      <input type="file" accept="image/*" class="hidden-image-input" style="display:none;" />
+      <div class="image-preview" style="margin-top:8px;"></div>
+    </div>
   `;
 
   questionsWrap.insertBefore(block, btn);
@@ -309,12 +334,15 @@ window.saveReadingDraft = async function () {
         return;
       }
       console.log("🧪 Creating passage", pi + 1);
+      const imageWrap = p.querySelector(".image-attach-wrap");
+      const imageUrl = imageWrap?.dataset.imageUrl || null;
+
       const passage = await apiPost(`/admin/reading/tests/${testId}/passages`, {
         title: passageTitle,
         text: passageText,
+        image_url: imageUrl,
         order_index: pi + 1
       });
-
       const passageId = passage.id;
 
       // 3) Create questions for this passage
@@ -347,12 +375,16 @@ window.saveReadingDraft = async function () {
             allow_numbers: !!allowNumbers
           };
         }
+        const imageWrap = q.querySelector(".image-attach-wrap");
+        const imageUrl = imageWrap?.dataset.imageUrl || null;
+
         await apiPost(`/admin/reading/passages/${passageId}/questions`, {
           type: mapType(type),
           order_index: qi + 1,
           instruction: null,
           content: { text: text },
           correct_answer: { value: correctAnswer },
+          image_url: imageUrl,
           meta: meta,
           explanation: null,
           points: 1
@@ -439,9 +471,13 @@ window.publishReading = async function () {
       const passageTitle = p.querySelector(".passage-title")?.value || null;
       const passageText = p.querySelector(".passage-text")?.value || "";
 
+      const imageWrap = p.querySelector(".image-attach-wrap");
+      const imageUrl = imageWrap?.dataset.imageUrl || null;
+
       const passage = await apiPost(`/admin/reading/tests/${testId}/passages`, {
         title: passageTitle,
         text: passageText,
+        image_url: imageUrl,
         order_index: pi + 1
       });
 
@@ -465,12 +501,15 @@ window.publishReading = async function () {
             allow_numbers: !!allowNumbers
           };
         }
+        const imageWrap = q.querySelector(".image-attach-wrap");
+        const imageUrl = imageWrap?.dataset.imageUrl || null;
         await apiPost(`/admin/reading/passages/${passageId}/questions`, {
           type: mapType(type),
           order_index: qi + 1,
           instruction: null,
           content: { text: text },
           correct_answer: { value: correctAnswer },
+          image_url: imageUrl,
           meta: meta,
           explanation: null,
           points: 1
@@ -675,6 +714,15 @@ window.openAdminReading = async function (testId) {
 
             <label style="margin-top:6px; display:block;">Correct answer</label>
             <input class="q-answer" value="${answerValue.replace(/"/g, "&quot;")}" />
+            <hr style="margin:10px 0; border:0; border-top:1px solid #eee;" />
+
+            <div class="image-attach-wrap" style="text-align:right;">
+              <button type="button" class="attach-image-btn" onclick="attachImage(this)">
+                🖼 Add Image
+              </button>
+              <input type="file" accept="image/*" class="hidden-image-input" style="display:none;" />
+              <div class="image-preview" style="margin-top:8px;"></div>
+            </div>
           </div>
         `;
       });
@@ -687,7 +735,15 @@ window.openAdminReading = async function (testId) {
 
         <label style="margin-top:8px; display:block;">Passage text</label>
         <textarea class="passage-text" rows="6" style="width:100%; padding:10px; border-radius:8px;"></textarea>
+        <hr style="margin:10px 0; border:0; border-top:1px solid #eee;" />
 
+        <div class="image-attach-wrap" style="text-align:right;">
+          <button type="button" class="attach-image-btn" onclick="attachImage(this)">
+            🖼 Add Image
+          </button>
+          <input type="file" accept="image/*" class="hidden-image-input" style="display:none;" />
+          <div class="image-preview" style="margin-top:8px;"></div>
+        </div>
         <div class="questions-wrap" style="margin-top:12px;">
           <h5>Questions</h5>
           ${questionsHtml}
@@ -696,6 +752,17 @@ window.openAdminReading = async function (testId) {
       `;
 
       wrap.appendChild(passageBlock);
+      // Restore passage image
+      if (p.image_url) {
+        const imageWrap = passageBlock.querySelector(".image-attach-wrap");
+        imageWrap.dataset.imageUrl = p.image_url;
+
+        const preview = imageWrap.querySelector(".image-preview");
+        preview.innerHTML = `
+          <img src="${p.image_url}" style="max-width:200px; border-radius:8px; display:block; margin-top:6px;" />
+          <button type="button" onclick="removeImage(this)" style="margin-top:4px;">❌ Remove</button>
+        `;
+      }
 
       const textarea = passageBlock.querySelector(".passage-text");
       if (textarea) {
@@ -708,9 +775,20 @@ window.openAdminReading = async function (testId) {
           handleQuestionTypeChange(sel);
 
           const questionData = p.questions[index];
-          if (!questionData?.meta) return;
+          if (!questionData) return;
+          // Restore question image
+          if (questionData.image_url) {
+            const imageWrap = block.querySelector(".image-attach-wrap");
+            imageWrap.dataset.imageUrl = questionData.image_url;
 
-          if (sel.value === "gap") {
+            const preview = imageWrap.querySelector(".image-preview");
+            preview.innerHTML = `
+              <img src="${questionData.image_url}" style="max-width:200px; border-radius:8px; display:block; margin-top:6px;" />
+              <button type="button" onclick="removeImage(this)" style="margin-top:4px;">❌ Remove</button>
+            `;
+          }
+          // Restore meta only if exists
+          if (questionData.meta && sel.value === "gap") {
             block.querySelector(".q-max-words").value = questionData.meta.max_words || "";
             block.querySelector(".q-allow-numbers").checked = questionData.meta.allow_numbers || false;
           }
@@ -773,4 +851,49 @@ window.showPackReading = async function (packId) {
 
   window.__currentEditingTestId = null;
   window.showCreateReading(true);
+};
+
+window.attachImage = function(btn) {
+  const wrap = btn.closest(".image-attach-wrap");
+  const input = wrap.querySelector(".hidden-image-input");
+
+  input.click();
+
+  input.onchange = async function() {
+    const file = input.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/admin/upload-image", {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await res.json();
+      const imageUrl = data.url;
+
+      // store url in dataset
+      wrap.dataset.imageUrl = imageUrl;
+
+      // preview
+      const preview = wrap.querySelector(".image-preview");
+      preview.innerHTML = `
+        <img src="${imageUrl}" style="max-width:200px; border-radius:8px; display:block; margin-top:6px;" />
+        <button type="button" onclick="removeImage(this)" style="margin-top:4px;">❌ Remove</button>
+      `;
+
+    } catch (err) {
+      alert("Upload failed");
+      console.error(err);
+    }
+  };
+};
+
+window.removeImage = function(btn) {
+  const wrap = btn.closest(".image-attach-wrap");
+  wrap.dataset.imageUrl = "";
+  wrap.querySelector(".image-preview").innerHTML = "";
 };
