@@ -66,12 +66,16 @@ def add_passage(test_id: int, payload: PassageCreate, db: Session = Depends(get_
 from typing import List, Any
 
 class QuestionCreate(BaseModel):
-    text: str
     type: str
-    options: Optional[List[str]] = None
-    correct_answer: Optional[Any] = None
-    word_limit: Optional[int] = None
     order_index: int
+
+    instruction: Optional[str] = None
+    content: dict
+    correct_answer: dict
+
+    meta: Optional[dict] = None
+    explanation: Optional[str] = None
+    points: Optional[int] = 1
 
 
 @router.post("/passages/{passage_id}/questions")
@@ -81,15 +85,23 @@ def add_question(passage_id: int, payload: QuestionCreate, db: Session = Depends
         if not passage:
             raise HTTPException(status_code=404, detail="Passage not found")
 
+        if not payload.content:
+            raise HTTPException(status_code=400, detail="content is required")
+
+        if not payload.correct_answer:
+            raise HTTPException(status_code=400, detail="correct_answer is required")
+        
         q = ReadingQuestion(
             passage_id=passage_id,
-            text=payload.text,
             type=payload.type,
-            options=payload.options,
+            order_index=payload.order_index,
+            instruction=payload.instruction,
+            content=payload.content,
             correct_answer=payload.correct_answer,
-            word_limit=payload.word_limit,
-            order_index=payload.order_index
-        )
+            meta=payload.meta,
+            explanation=payload.explanation,
+            points=payload.points,
+        )        
         db.add(q)
         db.commit()
         db.refresh(q)
@@ -153,10 +165,12 @@ def get_reading_test(test_id: int, db: Session = Depends(get_db)):
                         "id": q.id,
                         "order_index": q.order_index,
                         "type": q.type,
-                        "text": q.text,
+                        "instruction": q.instruction,
+                        "content": q.content,
                         "correct_answer": q.correct_answer,
-                        "options": q.options,
-                        "word_limit": q.word_limit,
+                        "meta": q.meta,
+                        "explanation": q.explanation,
+                        "points": q.points,
                     }
                     for q in sorted(p.questions, key=lambda x: x.order_index)
                 ]
