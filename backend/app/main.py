@@ -13,6 +13,7 @@ from app.api.me import router as me_router
 from app.api.admin import router as admin_router
 from app.api.admin_reading import router as admin_reading_router
 from .db import ensure_reading_progress_columns, ensure_mock_pack_column
+from app.api.admin_upload import router as admin_upload_router
 from app.api import admin_mock_packs
 import os
 
@@ -21,7 +22,6 @@ ensure_reading_progress_columns()
 ensure_mock_pack_column()
 app = FastAPI(title="Voxi Mini App API")
 app.add_middleware(
-    CORSMiddleware,
     allow_origins=[
         "https://cooperative-endurance-production.up.railway.app"
     ],
@@ -29,6 +29,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.include_router(admin_upload_router)
 app.include_router(admin_reading_router)
 app.include_router(mock_tests_router)
 app.include_router(me_router)
