@@ -885,7 +885,7 @@ window.attachImage = function(btn) {
     formData.append("file", file);
 
     try {
-      const res = await fetch("/admin/upload-image", {
+      const res = await fetch(`${window.API}/admin/upload-image`, {
         method: "POST",
         body: formData
       });
