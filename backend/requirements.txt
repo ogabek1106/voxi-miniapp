@@ -5,3 +5,4 @@ SQLAlchemy==2.0.46
 psycopg2-binary==2.9.11
 python-dotenv==1.0.1
 python-multipart==0.0.9
+alembic==1.13.1
