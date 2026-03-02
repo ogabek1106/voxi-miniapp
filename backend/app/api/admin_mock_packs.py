@@ -52,22 +52,26 @@ def get_mock_pack_reading(pack_id: int, db: Session = Depends(get_db)):
         "id": test.id,
         "title": test.title,
         "time_limit_minutes": test.time_limit_minutes,
-        "status": test.status.value,
+        "status": test.status.value if hasattr(test.status, "value") else str(test.status),
         "passages": [
             {
                 "id": p.id,
                 "order_index": p.order_index,
                 "title": p.title,
                 "text": p.text,
+                "image_url": p.image_url,
                 "questions": [
                     {
                         "id": q.id,
                         "order_index": q.order_index,
-                        "type": q.type,
-                        "text": q.text,
+                        "type": q.type.value if hasattr(q.type, "value") else str(q.type),
+                        "instruction": q.instruction,
+                        "content": q.content,
                         "correct_answer": q.correct_answer,
-                        "options": q.options,
-                        "word_limit": q.word_limit,
+                        "image_url": q.image_url,
+                        "meta": q.meta,
+                        "explanation": q.explanation,
+                        "points": q.points,
                     }
                     for q in sorted(p.questions, key=lambda x: x.order_index)
                 ]
