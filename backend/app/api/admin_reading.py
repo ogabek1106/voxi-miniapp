@@ -9,7 +9,9 @@ from app.models import ReadingTest, ReadingTestStatus
 from app.models import ReadingPassage
 from app.models import ReadingQuestion
 from typing import List, Any
+from app.models import ReadingQuestionType
 import traceback
+
 router = APIRouter(prefix="/admin/reading", tags=["admin-reading"])
 
 
@@ -66,7 +68,7 @@ def add_passage(test_id: int, payload: PassageCreate, db: Session = Depends(get_
 from typing import List, Any
 
 class QuestionCreate(BaseModel):
-    type: str
+    type: ReadingQuestionType
     order_index: int
 
     instruction: Optional[str] = None
@@ -164,7 +166,7 @@ def get_reading_test(test_id: int, db: Session = Depends(get_db)):
                     {
                         "id": q.id,
                         "order_index": q.order_index,
-                        "type": q.type,
+                        "type": q.type.value if hasattr(q.type, "value") else str(q.type),
                         "instruction": q.instruction,
                         "content": q.content,
                         "correct_answer": q.correct_answer,
