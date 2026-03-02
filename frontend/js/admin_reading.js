@@ -1,4 +1,10 @@
 // frontend/js/admin_reading.js
+function mapType(old) {
+  if (old === "mcq") return "SINGLE_CHOICE";
+  if (old === "gap") return "TEXT_INPUT";
+  if (old === "tfng") return "TFNG";
+  return "TEXT_INPUT";
+}
 window.__currentPackId = null;
 window.__globalQuestionCounter = 1;
 window.__currentEditingTestId = null;
@@ -294,12 +300,14 @@ window.saveReadingDraft = async function () {
         }
         console.log("🧪 Creating question", qi + 1, "for passage", pi + 1);
         await apiPost(`/admin/reading/passages/${passageId}/questions`, {
-          text: text,
-          type: type,
-          options: null,
-          correct_answer: correctAnswer,
-          word_limit: null,
-          order_index: qi + 1
+          type: mapType(type),
+          order_index: qi + 1,
+          instruction: null,
+          content: { text: text },
+          correct_answer: { value: correctAnswer },
+          meta: null,
+          explanation: null,
+          points: 1
         });
       }
     }
@@ -395,13 +403,19 @@ window.publishReading = async function () {
       for (let qi = 0; qi < questions.length; qi++) {
         const q = questions[qi];
 
+        const type = q.querySelector(".q-type")?.value;
+        const text = q.querySelector(".q-text")?.value;
+        const correctAnswer = q.querySelector(".q-answer")?.value;
+
         await apiPost(`/admin/reading/passages/${passageId}/questions`, {
-          text: q.querySelector(".q-text")?.value,
-          type: q.querySelector(".q-type")?.value,
-          options: null,
-          correct_answer: q.querySelector(".q-answer")?.value,
-          word_limit: null,
-          order_index: qi + 1
+          type: mapType(type),
+          order_index: qi + 1,
+          instruction: null,
+          content: { text: text },
+          correct_answer: { value: correctAnswer },
+          meta: null,
+          explanation: null,
+          points: 1
         });
       }
     }
@@ -570,22 +584,32 @@ window.openAdminReading = async function (testId) {
       p.questions.forEach((q) => {
         window.__globalQuestionCounter++;
 
+        // 🔁 map backend ENUM → UI values
+        const uiType =
+          q.type === "SINGLE_CHOICE" ? "mcq" :
+          q.type === "TEXT_INPUT" ? "gap" :
+          q.type === "TFNG" ? "tfng" :
+          "gap";
+
+        const textValue = q.content?.text || "";
+        const answerValue = q.correct_answer?.value || "";
+
         questionsHtml += `
           <div class="question-block" data-global-q="${window.__globalQuestionCounter}" style="padding:8px; border:1px solid #e5e5ea; border-radius:8px; margin-bottom:8px;">
             <div style="font-weight:700; margin-bottom:6px;">Q${window.__globalQuestionCounter}</div>
 
             <label>Question type</label>
             <select class="q-type" style="width:100%; padding:8px; border-radius:6px;">
-              <option value="mcq" ${q.type === "mcq" ? "selected" : ""}>MCQ</option>
-              <option value="gap" ${q.type === "gap" ? "selected" : ""}>Gap-fill</option>
-              <option value="tfng" ${q.type === "tfng" ? "selected" : ""}>TF / NG</option>
+              <option value="mcq" ${uiType === "mcq" ? "selected" : ""}>MCQ</option>
+              <option value="gap" ${uiType === "gap" ? "selected" : ""}>Gap-fill</option>
+              <option value="tfng" ${uiType === "tfng" ? "selected" : ""}>TF / NG</option>
             </select>
 
             <label style="margin-top:6px; display:block;">Question text</label>
-            <input class="q-text" value="${(q.text || "").replace(/"/g, "&quot;")}" />
+            <input class="q-text" value="${textValue.replace(/"/g, "&quot;")}" />
 
             <label style="margin-top:6px; display:block;">Correct answer</label>
-            <input class="q-answer" value="${(q.correct_answer || "").toString().replace(/"/g, "&quot;")}" />
+            <input class="q-answer" value="${answerValue.replace(/"/g, "&quot;")}" />
           </div>
         `;
       });
@@ -605,17 +629,20 @@ window.openAdminReading = async function (testId) {
           <button onclick="addQuestion(this)">➕ Add Question</button>
         </div>
       `;
+
       wrap.appendChild(passageBlock);
+
       const textarea = passageBlock.querySelector(".passage-text");
       if (textarea) {
         textarea.value = p.text || "";
       }
     });
 
-    // sync counter with rendered questions
-    window.__globalQuestionCounter = document.querySelectorAll(".question-block").length;
+    // sync counter
+    window.__globalQuestionCounter =
+      document.querySelectorAll(".question-block").length;
 
-    // 🔁 Toggle Publish / Unpublish button (ONLY UI logic added)
+    // publish/unpublish button
     const publishWrap = document.getElementById("publish-wrap");
     if (publishWrap) {
       if (data.status === "published") {
