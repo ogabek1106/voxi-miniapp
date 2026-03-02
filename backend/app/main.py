@@ -76,14 +76,3 @@ def create_or_update_user(payload: CreateUserIn, db: Session = Depends(get_db)):
         "telegram_id": user.telegram_id,
         "name": user.name,
     }
-
-from sqlalchemy import text
-
-@app.get("/fix-question-type-values")
-def fix_question_types(db: Session = Depends(get_db)):
-    db.execute(text("""
-        UPDATE reading_questions
-        SET type = UPPER(type);
-    """))
-    db.commit()
-    return {"status": "question types normalized"}
