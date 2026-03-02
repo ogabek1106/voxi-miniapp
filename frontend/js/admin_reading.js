@@ -1,8 +1,11 @@
 // frontend/js/admin_reading.js
 function mapType(old) {
   if (old === "mcq") return "SINGLE_CHOICE";
+  if (old === "multi") return "MULTI_CHOICE";
   if (old === "gap") return "TEXT_INPUT";
   if (old === "tfng") return "TFNG";
+  if (old === "yesno") return "YES_NO_NG";
+  if (old === "matching") return "MATCHING";
   return "TEXT_INPUT";
 }
 window.__currentPackId = null;
@@ -49,9 +52,12 @@ window.showCreateReading = function (reset = true) {
             <div style="font-weight:700; margin-bottom:6px;">Q1</div>
             <label>Question type</label>
             <select class="q-type" style="width:100%; padding:8px; border-radius:6px;">
-              <option value="mcq">MCQ</option>
-              <option value="gap">Gap-fill</option>
-              <option value="tfng">TF / NG</option>
+              <option value="mcq">Single Choice</option>
+              <option value="multi">Multi Choice</option>
+              <option value="gap">Text Input</option>
+              <option value="tfng">True / False / Not Given</option>
+              <option value="yesno">Yes / No / Not Given</option>
+              <option value="matching">Matching</option>
             </select>
 
             <label style="margin-top:6px; display:block;">Question text</label>
@@ -123,10 +129,13 @@ window.addPassage = function () {
 
         <label>Question type</label>
         <select class="q-type" style="width:100%; padding:8px; border-radius:6px;">
-          <option value="mcq">MCQ</option>
-          <option value="gap">Gap-fill</option>
-          <option value="tfng">TF / NG</option>
-        </select>
+              <option value="mcq">Single Choice</option>
+              <option value="multi">Multi Choice</option>
+              <option value="gap">Text Input</option>
+              <option value="tfng">True / False / Not Given</option>
+              <option value="yesno">Yes / No / Not Given</option>
+              <option value="matching">Matching</option>
+            </select>
 
         <label style="margin-top:6px; display:block;">Question text</label>
         <input class="q-text" placeholder="Enter question text" />
@@ -161,9 +170,12 @@ window.addQuestion = function (btn) {
 
     <label>Question type</label>
     <select class="q-type" style="width:100%; padding:8px; border-radius:6px;">
-      <option value="mcq">MCQ</option>
-      <option value="gap">Gap-fill</option>
-      <option value="tfng">TF / NG</option>
+      <option value="mcq">Single Choice</option>
+      <option value="multi">Multi Choice</option>
+      <option value="gap">Text Input</option>
+      <option value="tfng">True / False / Not Given</option>
+      <option value="yesno">Yes / No / Not Given</option>
+      <option value="matching">Matching</option>
     </select>
 
     <label style="margin-top:6px; display:block;">Question text</label>
@@ -584,11 +596,13 @@ window.openAdminReading = async function (testId) {
       p.questions.forEach((q) => {
         window.__globalQuestionCounter++;
 
-        // 🔁 map backend ENUM → UI values
         const uiType =
           q.type === "SINGLE_CHOICE" ? "mcq" :
+          q.type === "MULTI_CHOICE" ? "multi" :
           q.type === "TEXT_INPUT" ? "gap" :
           q.type === "TFNG" ? "tfng" :
+          q.type === "YES_NO_NG" ? "yesno" :
+          q.type === "MATCHING" ? "matching" :
           "gap";
 
         const textValue = q.content?.text || "";
@@ -600,9 +614,12 @@ window.openAdminReading = async function (testId) {
 
             <label>Question type</label>
             <select class="q-type" style="width:100%; padding:8px; border-radius:6px;">
-              <option value="mcq" ${uiType === "mcq" ? "selected" : ""}>MCQ</option>
-              <option value="gap" ${uiType === "gap" ? "selected" : ""}>Gap-fill</option>
-              <option value="tfng" ${uiType === "tfng" ? "selected" : ""}>TF / NG</option>
+              <option value="mcq" ${uiType === "mcq" ? "selected" : ""}>Single Choice</option>
+              <option value="multi" ${uiType === "multi" ? "selected" : ""}>Multi Choice</option>
+              <option value="gap" ${uiType === "gap" ? "selected" : ""}>Text Input</option>
+              <option value="tfng" ${uiType === "tfng" ? "selected" : ""}>True / False / Not Given</option>
+              <option value="yesno" ${uiType === "yesno" ? "selected" : ""}>Yes / No / Not Given</option>
+              <option value="matching" ${uiType === "matching" ? "selected" : ""}>Matching</option>
             </select>
 
             <label style="margin-top:6px; display:block;">Question text</label>
