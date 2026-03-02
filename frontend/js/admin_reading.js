@@ -190,6 +190,15 @@ window.addPassage = function () {
 
         <label style="margin-top:6px; display:block;">Correct answer</label>
         <input class="q-answer" placeholder="Correct answer (index or text)" />
+        <hr style="margin:10px 0; border:0; border-top:1px solid #eee;" />
+
+        <div class="image-attach-wrap" style="text-align:right;">
+          <button type="button" class="attach-image-btn" onclick="attachImage(this)">
+            🖼 Add Image
+          </button>
+          <input type="file" accept="image/*" class="hidden-image-input" style="display:none;" />
+          <div class="image-preview" style="margin-top:8px;"></div>
+        </div>
       </div>
 
       <button onclick="addQuestion(this)">➕ Add Question</button>
