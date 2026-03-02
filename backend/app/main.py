@@ -6,6 +6,7 @@ from app.db import engine
 from app.models import Base, User
 from app.deps import get_db
 from pydantic import BaseModel
+from fastapi.staticfiles import StaticFiles
 from app.api.mock_tests import router as mock_tests_router
 from app.api.me import router as me_router
 from app.api.admin import router as admin_router
@@ -20,7 +21,7 @@ app.include_router(mock_tests_router)
 app.include_router(me_router)
 app.include_router(admin_router)
 app.include_router(admin_mock_packs.router)
-
+app.mount("/media", StaticFiles(directory="media"), name="media")
 # ✅ CORS FIX (required for Telegram Mini App)
 app.add_middleware(
     CORSMiddleware,
