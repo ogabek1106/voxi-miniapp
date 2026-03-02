@@ -49,7 +49,7 @@ class ReadingPassage(Base):
     order_index = Column(Integer, nullable=False)
     title = Column(String, nullable=True)
     text = Column(Text, nullable=False)
-
+    image_url = Column(String, nullable=True)
     test = relationship("ReadingTest", back_populates="passages")
     questions = relationship(
         "ReadingQuestion",
@@ -79,6 +79,7 @@ class ReadingQuestion(Base):
     meta = Column(JSON, nullable=True)
     explanation = Column(Text, nullable=True)
     points = Column(Integer, default=1)
+    image_url = Column(String, nullable=True)
     passage = relationship("ReadingPassage", back_populates="questions")
     
 
