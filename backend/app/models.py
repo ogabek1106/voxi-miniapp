@@ -57,7 +57,13 @@ class ReadingPassage(Base):
         cascade="all, delete-orphan",
         passive_deletes=True
     )
-
+class ReadingQuestionType(enum.Enum):
+    TFNG = "TFNG"
+    YES_NO_NG = "YES_NO_NG"
+    SINGLE_CHOICE = "SINGLE_CHOICE"
+    MULTI_CHOICE = "MULTI_CHOICE"
+    MATCHING = "MATCHING"
+    TEXT_INPUT = "TEXT_INPUT"
 
 class ReadingQuestion(Base):
     __tablename__ = "reading_questions"
@@ -66,7 +72,7 @@ class ReadingQuestion(Base):
     passage_id = Column(Integer, ForeignKey("reading_passages.id", ondelete="CASCADE"))
     order_index = Column(Integer, nullable=False)
 
-    type = Column(String, nullable=False)
+    type = Column(Enum(ReadingQuestionType), nullable=False)
     correct_answer = Column(JSON, nullable=True)
     instruction = Column(Text, nullable=True)
     content = Column(JSON, nullable=False)
