@@ -40,6 +40,7 @@ class PassageCreate(BaseModel):
     title: Optional[str] = None
     text: str
     order_index: int
+    image_url: Optional[str] = None
 
 
 @router.post("/tests/{test_id}/passages")
@@ -53,6 +54,7 @@ def add_passage(test_id: int, payload: PassageCreate, db: Session = Depends(get_
             test_id=test_id,
             title=payload.title,
             text=payload.text,
+            image_url=payload.image_url,
             order_index=payload.order_index
         )
         db.add(passage)
@@ -74,7 +76,7 @@ class QuestionCreate(BaseModel):
     instruction: Optional[str] = None
     content: dict
     correct_answer: dict
-
+    image_url: Optional[str] = None
     meta: Optional[dict] = None
     explanation: Optional[str] = None
     points: Optional[int] = 1
@@ -100,6 +102,7 @@ def add_question(passage_id: int, payload: QuestionCreate, db: Session = Depends
             instruction=payload.instruction,
             content=payload.content,
             correct_answer=payload.correct_answer,
+            image_url=payload.image_url,
             meta=payload.meta,
             explanation=payload.explanation,
             points=payload.points,
@@ -162,6 +165,7 @@ def get_reading_test(test_id: int, db: Session = Depends(get_db)):
                 "order_index": p.order_index,
                 "title": p.title,
                 "text": p.text,
+                "image_url": p.image_url,
                 "questions": [
                     {
                         "id": q.id,
@@ -170,6 +174,7 @@ def get_reading_test(test_id: int, db: Session = Depends(get_db)):
                         "instruction": q.instruction,
                         "content": q.content,
                         "correct_answer": q.correct_answer,
+                        "image_url": q.image_url,
                         "meta": q.meta,
                         "explanation": q.explanation,
                         "points": q.points,
