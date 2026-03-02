@@ -8,6 +8,25 @@ function mapType(old) {
   if (old === "matching") return "MATCHING";
   return "TEXT_INPUT";
 }
+window.handleQuestionTypeChange = function(selectEl) {
+  const block = selectEl.closest(".question-block");
+  const wrap = block.querySelector(".q-meta-wrap");
+  if (!wrap) return;
+
+  wrap.innerHTML = "";
+
+  if (selectEl.value === "gap") {
+    wrap.innerHTML = `
+      <label>Max words</label>
+      <input class="q-max-words" type="number" min="1" />
+
+      <label style="display:block; margin-top:4px;">
+        <input type="checkbox" class="q-allow-numbers" />
+        Allow numbers
+      </label>
+    `;
+  }
+};
 window.__currentPackId = null;
 window.__globalQuestionCounter = 1;
 window.__currentEditingTestId = null;
@@ -51,7 +70,9 @@ window.showCreateReading = function (reset = true) {
           <div class="question-block" data-global-q="1" style="padding:8px; border:1px solid #e5e5ea; border-radius:8px; margin-bottom:8px;">
             <div style="font-weight:700; margin-bottom:6px;">Q1</div>
             <label>Question type</label>
-            <select class="q-type" style="width:100%; padding:8px; border-radius:6px;">
+            <select class="q-type"
+                    onchange="handleQuestionTypeChange(this)"
+                    style="width:100%; padding:8px; border-radius:6px;">
               <option value="mcq">Single Choice</option>
               <option value="multi">Multi Choice</option>
               <option value="gap">Text Input</option>
@@ -59,7 +80,7 @@ window.showCreateReading = function (reset = true) {
               <option value="yesno">Yes / No / Not Given</option>
               <option value="matching">Matching</option>
             </select>
-
+            <div class="q-meta-wrap" style="margin-top:6px;"></div>
             <label style="margin-top:6px; display:block;">Question text</label>
             <input class="q-text" placeholder="Enter question text" />
 
@@ -128,7 +149,9 @@ window.addPassage = function () {
         <div style="font-weight:700; margin-bottom:6px;">Q${qNum}</div>
 
         <label>Question type</label>
-        <select class="q-type" style="width:100%; padding:8px; border-radius:6px;">
+        <select class="q-type"
+                onchange="handleQuestionTypeChange(this)"
+                style="width:100%; padding:8px; border-radius:6px;">
               <option value="mcq">Single Choice</option>
               <option value="multi">Multi Choice</option>
               <option value="gap">Text Input</option>
@@ -136,7 +159,7 @@ window.addPassage = function () {
               <option value="yesno">Yes / No / Not Given</option>
               <option value="matching">Matching</option>
             </select>
-
+        <div class="q-meta-wrap" style="margin-top:6px;"></div>
         <label style="margin-top:6px; display:block;">Question text</label>
         <input class="q-text" placeholder="Enter question text" />
 
@@ -169,7 +192,9 @@ window.addQuestion = function (btn) {
     <div style="font-weight:700; margin-bottom:6px;">Q${qNum}</div>
 
     <label>Question type</label>
-    <select class="q-type" style="width:100%; padding:8px; border-radius:6px;">
+    <select class="q-type"
+            onchange="handleQuestionTypeChange(this)"
+            style="width:100%; padding:8px; border-radius:6px;">
       <option value="mcq">Single Choice</option>
       <option value="multi">Multi Choice</option>
       <option value="gap">Text Input</option>
@@ -177,7 +202,7 @@ window.addQuestion = function (btn) {
       <option value="yesno">Yes / No / Not Given</option>
       <option value="matching">Matching</option>
     </select>
-
+    <div class="q-meta-wrap" style="margin-top:6px;"></div>
     <label style="margin-top:6px; display:block;">Question text</label>
     <input class="q-text" placeholder="Enter question text" />
 
@@ -311,13 +336,24 @@ window.saveReadingDraft = async function () {
           return;
         }
         console.log("🧪 Creating question", qi + 1, "for passage", pi + 1);
+        let meta = null;
+
+        if (type === "gap") {
+          const maxWords = q.querySelector(".q-max-words")?.value;
+          const allowNumbers = q.querySelector(".q-allow-numbers")?.checked;
+
+          meta = {
+            max_words: maxWords ? parseInt(maxWords) : null,
+            allow_numbers: !!allowNumbers
+          };
+        }
         await apiPost(`/admin/reading/passages/${passageId}/questions`, {
           type: mapType(type),
           order_index: qi + 1,
           instruction: null,
           content: { text: text },
           correct_answer: { value: correctAnswer },
-          meta: null,
+          meta: meta,
           explanation: null,
           points: 1
         });
@@ -418,14 +454,24 @@ window.publishReading = async function () {
         const type = q.querySelector(".q-type")?.value;
         const text = q.querySelector(".q-text")?.value;
         const correctAnswer = q.querySelector(".q-answer")?.value;
+        let meta = null;
 
+        if (type === "gap") {
+          const maxWords = q.querySelector(".q-max-words")?.value;
+          const allowNumbers = q.querySelector(".q-allow-numbers")?.checked;
+
+          meta = {
+            max_words: maxWords ? parseInt(maxWords) : null,
+            allow_numbers: !!allowNumbers
+          };
+        }
         await apiPost(`/admin/reading/passages/${passageId}/questions`, {
           type: mapType(type),
           order_index: qi + 1,
           instruction: null,
           content: { text: text },
           correct_answer: { value: correctAnswer },
-          meta: null,
+          meta: meta,
           explanation: null,
           points: 1
         });
@@ -613,7 +659,9 @@ window.openAdminReading = async function (testId) {
             <div style="font-weight:700; margin-bottom:6px;">Q${window.__globalQuestionCounter}</div>
 
             <label>Question type</label>
-            <select class="q-type" style="width:100%; padding:8px; border-radius:6px;">
+            <select class="q-type"
+                    onchange="handleQuestionTypeChange(this)"
+                    style="width:100%; padding:8px; border-radius:6px;">
               <option value="mcq" ${uiType === "mcq" ? "selected" : ""}>Single Choice</option>
               <option value="multi" ${uiType === "multi" ? "selected" : ""}>Multi Choice</option>
               <option value="gap" ${uiType === "gap" ? "selected" : ""}>Text Input</option>
@@ -621,7 +669,7 @@ window.openAdminReading = async function (testId) {
               <option value="yesno" ${uiType === "yesno" ? "selected" : ""}>Yes / No / Not Given</option>
               <option value="matching" ${uiType === "matching" ? "selected" : ""}>Matching</option>
             </select>
-
+            <div class="q-meta-wrap" style="margin-top:6px;"></div>
             <label style="margin-top:6px; display:block;">Question text</label>
             <input class="q-text" value="${textValue.replace(/"/g, "&quot;")}" />
 
@@ -653,6 +701,21 @@ window.openAdminReading = async function (testId) {
       if (textarea) {
         textarea.value = p.text || "";
       }
+      // 🔹 Load meta for existing questions
+      setTimeout(() => {
+        passageBlock.querySelectorAll(".question-block").forEach((block, index) => {
+          const sel = block.querySelector(".q-type");
+          handleQuestionTypeChange(sel);
+
+          const questionData = p.questions[index];
+          if (!questionData?.meta) return;
+
+          if (sel.value === "gap") {
+            block.querySelector(".q-max-words").value = questionData.meta.max_words || "";
+            block.querySelector(".q-allow-numbers").checked = questionData.meta.allow_numbers || false;
+          }
+        });
+      }, 0);
     });
 
     // sync counter
@@ -710,4 +773,3 @@ window.showPackReading = async function (packId) {
 
   window.__currentEditingTestId = null;
   window.showCreateReading(true);
-};
