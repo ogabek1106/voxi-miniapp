@@ -7,6 +7,7 @@ from app.models import Base, User
 from app.deps import get_db
 from pydantic import BaseModel
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from app.api.mock_tests import router as mock_tests_router
 from app.api.me import router as me_router
 from app.api.admin import router as admin_router
@@ -19,6 +20,15 @@ os.makedirs("media", exist_ok=True)
 ensure_reading_progress_columns()
 ensure_mock_pack_column()
 app = FastAPI(title="Voxi Mini App API")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://cooperative-endurance-production.up.railway.app"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.include_router(admin_reading_router)
 app.include_router(mock_tests_router)
 app.include_router(me_router)
