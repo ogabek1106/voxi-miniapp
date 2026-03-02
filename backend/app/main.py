@@ -76,27 +76,3 @@ def create_or_update_user(payload: CreateUserIn, db: Session = Depends(get_db)):
         "telegram_id": user.telegram_id,
         "name": user.name,
     }
-
-from sqlalchemy import text
-
-@app.get("/fix-reading-questions-schema")
-def fix_schema(db: Session = Depends(get_db)):
-    db.execute(text("""
-        ALTER TABLE reading_questions
-        ADD COLUMN IF NOT EXISTS image_url TEXT,
-        ADD COLUMN IF NOT EXISTS instruction TEXT,
-        ADD COLUMN IF NOT EXISTS meta JSON,
-        ADD COLUMN IF NOT EXISTS explanation TEXT,
-        ADD COLUMN IF NOT EXISTS points INTEGER;
-    """))
-
-    db.execute(text("""
-        ALTER TABLE reading_passages
-        ADD COLUMN IF NOT EXISTS image_url TEXT;
-    """))
-
-    db.commit()
-
-    return {"status": "schema updated"}
-
-
