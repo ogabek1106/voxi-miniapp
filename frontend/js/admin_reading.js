@@ -374,11 +374,9 @@ window.saveReadingDraft = async function () {
         const correctAnswer = q.querySelector(".q-answer")?.value;
 
         if (!text?.trim()) {
-          alert(`Question ${qi + 1} in Passage ${pi + 1} is empty`);
-          if (btn) {
-            btn.disabled = false;
-            btn.innerText = "💾 Save Draft";
-          }  
+          console.warn(`Skipping empty question ${qi + 1}`);
+          continue; // skip empty questions
+        }
           return;
         }
         console.log("🧪 Creating question", qi + 1, "for passage", pi + 1);
