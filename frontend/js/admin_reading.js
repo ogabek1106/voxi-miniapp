@@ -774,8 +774,18 @@ window.openAdminReading = async function (testId) {
 
         const preview = imageWrap.querySelector(".image-preview");
         preview.innerHTML = `
-          <img src="${window.API + p.image_url}" style="max-width:200px; border-radius:8px; display:block; margin-top:6px;" />
-          <button type="button" onclick="removeImage(this)" style="margin-top:4px;">❌ Remove</button>
+          <img src="${window.API + p.image_url}" 
+               style="
+                 width:100%;
+                 max-width:100%;
+                 height:auto;
+                 display:block;
+                 margin:8px auto 0 auto;
+                 border-radius:12px;
+               " />
+          <button type="button" onclick="removeImage(this)" style="margin-top:8px;">
+            ❌ Remove
+          </button>
         `;
       }
 
@@ -798,8 +808,18 @@ window.openAdminReading = async function (testId) {
 
             const preview = imageWrap.querySelector(".image-preview");
             preview.innerHTML = `
-              <img src="${window.API + questionData.image_url}" style="max-width:200px; border-radius:8px; display:block; margin-top:6px;" />
-              <button type="button" onclick="removeImage(this)" style="margin-top:4px;">❌ Remove</button>
+              <img src="${window.API + questionData.image_url}" 
+                   style="
+                     width:100%;
+                     max-width:100%;
+                     height:auto;
+                     display:block;
+                     margin:8px auto 0 auto;
+                     border-radius:12px;
+                   " />
+              <button type="button" onclick="removeImage(this)" style="margin-top:8px;">
+                ❌ Remove
+              </button>
             `;
           }
           // Restore meta only if exists
@@ -896,8 +916,18 @@ window.attachImage = function(btn) {
       // preview with full URL
       const preview = wrap.querySelector(".image-preview");
       preview.innerHTML = `
-        <img src="${fullUrl}" style="max-width:200px; border-radius:8px; display:block; margin-top:6px;" />
-        <button type="button" onclick="removeImage(this)" style="margin-top:4px;">❌ Remove</button>
+        <img src="${fullUrl}" 
+             style="
+               width:100%;
+               max-width:100%;
+               height:auto;
+               display:block;
+               margin:8px auto 0 auto;
+               border-radius:12px;
+             " />
+        <button type="button" onclick="removeImage(this)" style="margin-top:8px;">
+          ❌ Remove
+        </button>
       `;
 
     } catch (err) {
