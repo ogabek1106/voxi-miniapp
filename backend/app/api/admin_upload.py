@@ -5,7 +5,7 @@ import os
 
 router = APIRouter(prefix="/admin", tags=["admin-upload"])
 
-UPLOAD_DIR = "media"
+UPLOAD_DIR = "/data/media"
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
