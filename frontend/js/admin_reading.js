@@ -891,15 +891,15 @@ window.attachImage = function(btn) {
       });
 
       const data = await res.json();
-      const imageUrl = window.API + data.url;
+      const fullUrl = window.API + data.url;
 
-      // store url in dataset
-      wrap.dataset.imageUrl = imageUrl;
+      // store relative path in DB
+      wrap.dataset.imageUrl = data.url;
 
-      // preview
+      // preview with full URL
       const preview = wrap.querySelector(".image-preview");
       preview.innerHTML = `
-        <img src="${imageUrl}" style="max-width:200px; border-radius:8px; display:block; margin-top:6px;" />
+        <img src="${fullUrl}" style="max-width:200px; border-radius:8px; display:block; margin-top:6px;" />
         <button type="button" onclick="removeImage(this)" style="margin-top:4px;">❌ Remove</button>
       `;
 
