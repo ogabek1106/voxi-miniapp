@@ -777,7 +777,7 @@ window.openAdminReading = async function (testId) {
 
         const preview = imageWrap.querySelector(".image-preview");
         preview.innerHTML = `
-          <img src="${p.image_url}" style="max-width:200px; border-radius:8px; display:block; margin-top:6px;" />
+          <img src="${window.API + p.image_url}" style="max-width:200px; border-radius:8px; display:block; margin-top:6px;" />
           <button type="button" onclick="removeImage(this)" style="margin-top:4px;">❌ Remove</button>
         `;
       }
@@ -801,7 +801,7 @@ window.openAdminReading = async function (testId) {
 
             const preview = imageWrap.querySelector(".image-preview");
             preview.innerHTML = `
-              <img src="${questionData.image_url}" style="max-width:200px; border-radius:8px; display:block; margin-top:6px;" />
+              <img src="${window.API + questionData.image_url}" style="max-width:200px; border-radius:8px; display:block; margin-top:6px;" />
               <button type="button" onclick="removeImage(this)" style="margin-top:4px;">❌ Remove</button>
             `;
           }
@@ -891,7 +891,7 @@ window.attachImage = function(btn) {
       });
 
       const data = await res.json();
-      const imageUrl = data.url;
+      const imageUrl = window.API + data.url;
 
       // store url in dataset
       wrap.dataset.imageUrl = imageUrl;
