@@ -377,8 +377,7 @@ window.saveReadingDraft = async function () {
           console.warn(`Skipping empty question ${qi + 1}`);
           continue; // skip empty questions
         }
-          return;
-        }
+         
         console.log("🧪 Creating question", qi + 1, "for passage", pi + 1);
         let meta = null;
 
