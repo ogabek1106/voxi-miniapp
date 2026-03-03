@@ -27,7 +27,7 @@ app.include_router(mock_tests_router)
 app.include_router(me_router)
 app.include_router(admin_router)
 app.include_router(admin_mock_packs.router)
-app.mount("/media", StaticFiles(directory="media"), name="media")
+app.mount("/media", StaticFiles(directory="/data/media"), name="media")
 # ✅ CORS FIX (required for Telegram Mini App)
 app.add_middleware(
     CORSMiddleware,
