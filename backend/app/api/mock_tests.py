@@ -32,14 +32,11 @@ class SubmitResultOut(BaseModel):
 def start_reading_test(mock_id: int, telegram_id: int, db: Session = Depends(get_db)):
     test = (
         db.query(ReadingTest)
-        .filter(
-            ReadingTest.id == mock_id,
-            ReadingTest.status == ReadingTestStatus.published.value
-        )
+        .filter(ReadingTest.mock_pack_id == mock_id)
         .first()
     )
     if not test:
-        raise HTTPException(status_code=404, detail="Reading test not found or not published")
+        raise HTTPException(status_code=404, detail="Reading test not found for this mock")
 
     user = db.query(User).filter(User.telegram_id == telegram_id).first()
     if not user:
@@ -140,7 +137,7 @@ def submit_reading_test(mock_id: int, payload: ReadingSubmitIn, db: Session = De
         .first()
     )
     if not test:
-        raise HTTPException(status_code=404, detail="Reading test not found or not published")
+        raise HTTPException(status_code=404, detail="Reading test not found for this mock")
 
     # get all questions for this test
     questions = (
