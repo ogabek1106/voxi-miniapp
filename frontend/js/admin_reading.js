@@ -667,12 +667,12 @@ window.openAdminReading = async function (testId) {
   if (!screenMocks) return;
 
   // open editor UI (do NOT reset edit mode)
-  window.showCreateReading(false);
+  // window.showCreateReading(false);
   window.__currentEditingTestId = testId;
 
   try {
     const data = await apiGet(`/admin/reading/tests/${testId}`);
-
+    showCreateReading(false);
     // fill meta
     document.getElementById("reading-title").value = data.title || "";
     document.getElementById("reading-time").value = data.time_limit_minutes || 60;
