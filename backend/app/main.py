@@ -77,3 +77,14 @@ def create_or_update_user(payload: CreateUserIn, db: Session = Depends(get_db)):
         "telegram_id": user.telegram_id,
         "name": user.name,
     }
+
+from sqlalchemy import text
+from app.db import engine
+@app.on_event("startup")
+def fix_old_schema():
+    with engine.connect() as conn:
+        conn.execute(text("""
+            ALTER TABLE reading_questions
+            DROP COLUMN IF EXISTS text;
+        """))
+        conn.commit()
