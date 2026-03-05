@@ -726,10 +726,10 @@ window.openAdminReading = async function (testId) {
             </select>
             <div class="q-meta-wrap" style="margin-top:6px;"></div>
             <label style="margin-top:6px; display:block;">Question text</label>
-            <input class="q-text" />
+            <input class="q-text" value="${textValue.replace(/"/g,'&quot;')}" />
 
             <label style="margin-top:6px; display:block;">Correct answer</label>
-            <input class="q-answer" />
+            <input class="q-answer" value="${answerValue.replace(/"/g,'&quot;')}" />
             <hr style="margin:10px 0; border:0; border-top:1px solid #eee;" />
 
             <div class="image-attach-wrap" style="text-align:right;">
