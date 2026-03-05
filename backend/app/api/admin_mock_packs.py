@@ -6,7 +6,7 @@ from app.deps import get_db
 from app.models import MockPack
 from app.models import ReadingTest
 from fastapi import HTTPException
-
+from app.models import MockPackStatus
 
 router = APIRouter(prefix="/admin/mock-packs", tags=["admin-mock-packs"])
 
@@ -90,3 +90,23 @@ def delete_mock_pack(pack_id: int, db: Session = Depends(get_db)):
     db.commit()
 
     return {"status": "deleted", "id": pack_id}
+    
+@router.post("/{pack_id}/toggle")
+def toggle_mock_pack(pack_id: int, db: Session = Depends(get_db)):
+    pack = db.query(MockPack).filter(MockPack.id == pack_id).first()
+
+    if not pack:
+        raise HTTPException(status_code=404, detail="Mock pack not found")
+
+    if pack.status == MockPackStatus.published:
+        pack.status = MockPackStatus.draft
+    else:
+        pack.status = MockPackStatus.published
+
+    db.commit()
+    db.refresh(pack)
+
+    return {
+        "id": pack.id,
+        "status": pack.status.value
+    }
