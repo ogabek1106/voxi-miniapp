@@ -408,8 +408,8 @@ window.saveReadingDraft = async function () {
       }
     }
 
-    alert("✅ Reading saved for this Mock Pack");
-    openMockPack(window.__currentPackId);
+    alert("✅ Reading saved");
+    openAdminReading(testId);
     if (btn) {
       btn.disabled = false;
       btn.innerText = "💾 Save Draft";
