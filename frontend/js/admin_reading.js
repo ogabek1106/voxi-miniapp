@@ -332,6 +332,7 @@ window.saveReadingDraft = async function () {
         mock_pack_id: window.__currentPackId
       });
       testId = test.id;
+      window.__currentEditingTestId = testId;
     }
 
     // 2) Create passages
