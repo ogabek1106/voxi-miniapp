@@ -30,7 +30,7 @@ window.handleQuestionTypeChange = function(selectEl) {
 window.__currentPackId = null;
 window.__globalQuestionCounter = 1;
 window.__currentEditingTestId = null;
-window.showCreateReading = function (reset = true) {
+window.showCreateReading = function (reset = false) {
   window.__globalQuestionCounter = 1;
   if (reset) window.__currentEditingTestId = null;
   hideAllScreens();
