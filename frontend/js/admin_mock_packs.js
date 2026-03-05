@@ -29,12 +29,20 @@ window.loadMockPacks = async function () {
 
     wrap.innerHTML = packs.length
       ? packs.map(p => `
+
           <div style="display:flex; gap:6px; margin-bottom:8px;">
-        
+
             <button 
               style="flex:1;"
               onclick="openMockPack(${p.id})">
-              📦 ${p.title}
+              📦 ${p.title} 
+              ${p.status === "published" ? "🟢" : "⚪"}
+            </button>
+
+            <button
+              onclick="toggleMockPack(${p.id})"
+              style="width:70px;">
+              ${p.status === "published" ? "Unpub" : "Publish"}
             </button>
 
             <button 
@@ -50,6 +58,7 @@ window.loadMockPacks = async function () {
             </button>
 
           </div>
+
         `).join("")
       : `<p style="opacity:0.6;">No packs yet</p>`;
 
@@ -102,5 +111,15 @@ window.deleteMockPack = async function (packId) {
   } catch (e) {
     console.error("Delete error:", e);
     alert("Failed to delete pack: " + e.message);
+  }
+};
+
+window.toggleMockPack = async function (packId) {
+  try {
+    await apiPost(`/admin/mock-packs/${packId}/toggle`);
+    await loadMockPacks();
+  } catch (e) {
+    console.error("Toggle error:", e);
+    alert("Failed to change publish state");
   }
 };
