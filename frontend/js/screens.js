@@ -59,171 +59,13 @@ window.showMocksScreen = function () {
   hideAllScreens();
   hideAnnouncement();
   screenMocks.style.display = "block";
-  renderMocks();
+  showMockList();
 };
 
 function render(html) {
   if (!screenMocks) return;
   screenMocks.innerHTML = html;
 }
-
-async function renderMocks() {
-  const mocks = await apiGet("/mock-tests");
-
-  render(`
-    <h3>IELTS Mock</h3>
-    <h4>Available Mock Tests</h4>
-    ${mocks.map(m => `
-      <button onclick="openMock(${m.id})">${m.title}</button>
-    `).join("")}
-  `);
-}
-
-window.openMock = async function (id) {
-  const data = await apiGet(`/mock-tests/${id}/info`);
-
-  render(`
-    <h3>${data.title}</h3>
-    <pre style="white-space: pre-wrap">${data.attention}</pre>
-    <button onclick="confirmMockStart(${id})">Start</button>
-    <button onclick="renderMocks()">Cancel</button>
-  `);
-};
-
-window.startMock = async function (id) {
-  hideAllScreens();
-  hideAnnouncement();
-
-  const content = document.getElementById("content");
-  if (content) content.style.padding = "2px 2px";
-
-  if (screenReading) {
-    screenReading.style.display = "block";
-    screenReading.style.width = "100%";
-    screenReading.innerHTML = `<h3>📖 Loading Reading…</h3>`;
-  }
-
-  try {
-    const telegramId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
-    const data = await apiGet(`/mock-tests/${id}/reading/start?telegram_id=${telegramId}`);
-    // ===== Server-based timer (authoritative) =====
-    if (data.timer && data.timer.ends_at && data.timer.started_at) {
-      const endsAt = new Date(data.timer.ends_at).getTime();
-      const startedAt = new Date(data.timer.started_at).getTime();
-      const totalMs = endsAt - startedAt;
-
-      if (readingTimerInterval) clearInterval(readingTimerInterval);
-
-      readingTimerInterval = setInterval(() => {
-        const now = Date.now();
-        const leftMs = Math.max(0, endsAt - now);
-        const leftSec = Math.ceil(leftMs / 1000);
-
-        const min = Math.floor(leftSec / 60).toString().padStart(2, "0");
-        const sec = (leftSec % 60).toString().padStart(2, "0");
-
-        const el = document.getElementById("rt-timer");
-        if (!el) return;
-
-        el.textContent = `${min}:${sec}`;
-        el.style.backgroundColor = "rgba(255,255,255,0.85)";
-
-        const ratio = leftMs / totalMs; // 1 → 0
-
-        // 🎨 green → yellow → red
-        let color = "#22c55e"; // green
-        if (ratio < 0.66) color = "#facc15"; // yellow
-        if (ratio < 0.33) color = "#ef4444"; // red
-
-        el.style.color = "#0f172a";
-        el.style.webkitTextStroke = "0.4px rgba(255,255,255,0.8)";
-        el.style.textShadow = "0 1px 1px rgba(0,0,0,0.15)";
-        el.style.fontWeight = "900";
-
-        // bar drains from right -> left (from user's view)
-        el.style.background = `
-          linear-gradient(
-            to right,
-            transparent ${Math.floor((1 - ratio) * 100)}%,
-            ${color} 0%
-          )
-        `;
-        el.style.padding = "2px 6px";
-        el.style.borderRadius = "4px";
-
-        if (leftSec <= 0) {
-          clearInterval(readingTimerInterval);
-          el.textContent = "00:00";
-          el.style.color = "#ef4444";
-        }
-      }, 1000);
-    }
-
-    if (!data || !data.passages) {
-      screenReading.innerHTML = `
-        <h3>❌ Invalid API response</h3>
-        <pre style="text-align:left; white-space:pre-wrap; font-size:12px;">
-${JSON.stringify(data, null, 2)}
-        </pre>
-      `;
-      return;
-    }
-
-    screenReading.innerHTML = `
-      <div id="reading-topbar" style="
-        position: sticky;
-        top: 0;
-        z-index: 50;
-        display: grid;
-        grid-template-columns: 1fr 1px 1fr 1px 1fr;
-        align-items: center;
-        height: 14px;
-        padding: 4px 0;
-        background: #ffffff;
-        font-size: 10px;
-        font-weight: 600;
-      ">
-        <div id="rt-timer" style="text-align:center;">--:--</div>
-        <div style="width:1px; height:100%; background:#e5e5ea;"></div>
-        <div id="rt-passage" style="text-align:center;">Passage 1</div>
-        <div style="width:1px; height:100%; background:#e5e5ea;"></div>
-        <div id="rt-progress" style="text-align:center;">0/40</div>
-      </div>
-      <div style="height:1px; background:#e5e5ea; margin-bottom:6px;"></div>
-
-      <h3 style="margin-top:6px;">📖 Reading Test</h3>
-
-      ${data.passages.map((p, pi) => `
-        <div style="margin-bottom:24px; text-align:left;">
-          <h4>Passage ${pi + 1}</h4>
-          <p style="white-space:pre-wrap; line-height:1.5;">${p.text}</p>
-
-          ${p.questions.map(q => `
-            <div style="margin:12px 0; padding:12px; border:1px solid #e5e5ea; border-radius:8px;">
-              <div style="font-weight:600; margin-bottom:6px;">
-                Q${q.id}. ${q.text}
-              </div>
-              <input 
-                data-qid="${q.id}" 
-                placeholder="Type your answer…" 
-                style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc;"
-              />
-            </div>
-          `).join("")}
-        </div>
-      `).join("")}
-    `;
-
-  } catch (e) {
-    screenReading.innerHTML = `
-      <h3>❌ Reading load failed</h3>
-      <pre style="text-align:left; white-space:pre-wrap; font-size:12px;">
-${e.message}
-      </pre>
-    `;
-    console.error(e);
-  }
-};
 
 function showAnnouncement() {
   const el = document.getElementById("announcement");
@@ -234,32 +76,6 @@ function hideAnnouncement() {
   const el = document.getElementById("announcement");
   if (el) el.style.display = "none";
 }
-
-window.confirmMockStart = async function (id) {
-  const telegramId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
-
-  if (!telegramId) {
-    alert("Open this inside Telegram");
-    return;
-  }
-
-  try {
-    const me = await apiGet(`/me?telegram_id=${telegramId}`);
-
-    if (!me.name) {
-      hideAllScreens();
-      hideAnnouncement();
-      screenName.style.display = "block";
-      return;
-    }
-
-    startMock(id);
-
-  } catch (e) {
-    console.error(e);
-    alert("Network error");
-  }
-};
 
 window.showAdminPanel = function () {
   hideAllScreens();
