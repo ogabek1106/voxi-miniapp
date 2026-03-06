@@ -718,6 +718,11 @@ window.openAdminReading = async function (testId) {
           "gap";
 
         const textValue = q.content?.text || "";
+        console.log("EDITOR LOAD", {
+          question_id: q.id,
+          raw_content: q.content,
+          extracted_text: q.content?.text
+        });
         const answerValue = q.correct_answer?.value || "";
 
         questionsHtml += `
