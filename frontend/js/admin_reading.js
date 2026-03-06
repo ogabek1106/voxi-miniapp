@@ -370,9 +370,22 @@ window.saveReadingDraft = async function () {
       for (let qi = 0; qi < questions.length; qi++) {
         const q = questions[qi];
 
-        const type = q.querySelector(".q-type")?.value;
-        const text = q.querySelector(".q-text")?.value;
-        const correctAnswer = q.querySelector(".q-answer")?.value;
+        console.log("---- QUESTION BLOCK ----");
+        console.log(q);
+
+        const typeEl = q.querySelector(".q-type");
+        const textEl = q.querySelector(".q-text");
+        const answerEl = q.querySelector(".q-answer");
+
+        console.log("typeEl:", typeEl);
+        console.log("textEl:", textEl);
+        console.log("answerEl:", answerEl);
+
+        const type = typeEl?.value;
+        const text = textEl?.value;
+        const correctAnswer = answerEl?.value;
+
+        console.log("READ VALUES:", { type, text, correctAnswer });
 
         if (!text?.trim()) {
           console.warn(`Skipping empty question ${qi + 1}`);
