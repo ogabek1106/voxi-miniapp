@@ -365,7 +365,7 @@ window.saveReadingDraft = async function () {
       const passageId = passage.id;
 
       // 3) Create questions for this passage
-      const questions = p.querySelectorAll(".question-block");
+      const questions = p.querySelector(".questions-wrap").querySelectorAll(".question-block");
 
       for (let qi = 0; qi < questions.length; qi++) {
         const q = questions[qi];
@@ -499,7 +499,7 @@ window.publishReading = async function () {
 
       const passageId = passage.id;
 
-      const questions = p.querySelectorAll(".question-block");
+      const questions = p.querySelector(".questions-wrap").querySelectorAll(".question-block");
       for (let qi = 0; qi < questions.length; qi++) {
         const q = questions[qi];
 
