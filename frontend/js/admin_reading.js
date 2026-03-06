@@ -721,7 +721,7 @@ window.openAdminReading = async function (testId) {
         const answerValue = q.correct_answer?.value || "";
 
         questionsHtml += `
-          <div class="question-block" data-global-q="${window.__globalQuestionCounter}" style="padding:8px; border:1px solid #e5e5ea; border-radius:8px; margin-bottom:8px;">
+          <div class="question-block" data-global-q="${window.__globalQuestionCounter}" data-question-id="${q.id}" style="padding:8px; border:1px solid #e5e5ea; border-radius:8px; margin-bottom:8px;">
             <div style="font-weight:700; margin-bottom:6px;">Q${window.__globalQuestionCounter}</div>
 
             <label>Question type</label>
@@ -807,11 +807,12 @@ window.openAdminReading = async function (testId) {
       }
       // 🔹 Load meta for existing questions
       setTimeout(() => {
-        passageBlock.querySelectorAll(".question-block").forEach((block, index) => {
+        passageBlock.querySelectorAll(".question-block").forEach((block) => {
           const sel = block.querySelector(".q-type");
           handleQuestionTypeChange(sel);
 
-          const questionData = p.questions[index];
+          const qid = block.dataset.questionId;
+          const questionData = p.questions.find(q => String(q.id) === String(qid));
           if (!questionData) return;
           block.querySelector(".q-text").value = questionData.content?.text || "";
           block.querySelector(".q-answer").value = questionData.correct_answer?.value || "";
