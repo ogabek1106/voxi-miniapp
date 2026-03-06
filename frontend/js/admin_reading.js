@@ -75,7 +75,7 @@ window.showCreateReading = function (reset = false) {
         <div class="questions-wrap" style="margin-top:12px;">
           <h5>Questions</h5>
 
-          <div class="question-block" data-global-q="1" style="padding:8px; border:1px solid #e5e5ea; border-radius:8px; margin-bottom:8px;">
+          <div class="question-block" data-global-q="1" data-question-id="temp_1" style="padding:8px; border:1px solid #e5e5ea; border-radius:8px; margin-bottom:8px;">
             <div style="font-weight:700; margin-bottom:6px;">Q1</div>
             <label>Question type</label>
             <select class="q-type"
@@ -170,7 +170,7 @@ window.addPassage = function () {
     <div class="questions-wrap" style="margin-top:12px;">
       <h5>Questions</h5>
 
-      <div class="question-block" data-global-q="${qNum}" style="padding:8px; border:1px solid #e5e5ea; border-radius:8px; margin-bottom:8px;">
+      <div class="question-block" data-global-q="${qNum}" data-question-id="temp_${qNum}" style="padding:8px; border:1px solid #e5e5ea; border-radius:8px; margin-bottom:8px;">
         <div style="font-weight:700; margin-bottom:6px;">Q${qNum}</div>
 
         <label>Question type</label>
@@ -217,6 +217,7 @@ window.addQuestion = function (btn) {
   const block = document.createElement("div");
   block.className = "question-block";
   block.dataset.globalQ = qNum;
+  block.dataset.questionId = "temp_" + qNum;
   block.style.padding = "8px";
   block.style.border = "1px solid #e5e5ea";
   block.style.borderRadius = "8px";
