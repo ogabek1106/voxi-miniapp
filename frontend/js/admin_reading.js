@@ -817,7 +817,16 @@ window.openAdminReading = async function (testId) {
           handleQuestionTypeChange(sel);
 
           const qid = block.dataset.questionId;
-          const questionData = p.questions.find(q => String(q.id) === String(qid));
+
+          const questionData = p.questions.find(
+            q => String(q.id) === String(qid)
+          );
+
+          console.log("PATCH DEBUG", {
+            block_id: qid,
+            questionData: questionData,
+            allQuestions: p.questions
+          });
           if (!questionData) return;
           block.querySelector(".q-text").value = questionData.content?.text || "";
           block.querySelector(".q-answer").value = questionData.correct_answer?.value || "";
