@@ -316,13 +316,11 @@ window.saveReadingDraft = async function () {
 
       const old = await apiGet(`/admin/reading/tests/${window.__currentEditingTestId}`);
 
-      for (const p of old.passages || []) {
-        try {
-          await apiDelete(`/admin/reading/passages/${p.id}`);
-        } catch (e) {
-          console.warn("Skip delete passage", p.id, e);
-        }
-      }
+      const deletions = (old.passages || []).map(p =>
+        apiDelete(`/admin/reading/passages/${p.id}`)
+      );
+
+      await Promise.all(deletions);
 
       testId = window.__currentEditingTestId;
     } else {
