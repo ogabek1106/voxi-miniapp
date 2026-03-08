@@ -39,7 +39,7 @@ window.addOption = function(btn) {
 
 <div style="
   display:flex;
-  align-items:center;
+  align-items:stretch;
   width:100%;
   border:1px solid #ddd;
   border-radius:6px;
@@ -67,8 +67,6 @@ window.addOption = function(btn) {
     border:none;
     outline:none;
     padding:0 10px;
-    height:100%;
-    line-height:34px;
     font-size:14px;
   "
 />
