@@ -39,11 +39,11 @@ window.addOption = function(btn) {
 
 <div class="opt-letter" style="
   width:24px;
-  height:32px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  height:34px;
+  line-height:34px;
+  text-align:center;
   font-weight:700;
+  font-size:14px;
 ">
   A
 </div>
@@ -54,7 +54,7 @@ window.addOption = function(btn) {
   style="
     flex:1;
     padding:6px 8px;
-    height:32px;
+    height:34px;
     box-sizing:border-box;
     border-radius:6px;
     border:1px solid #ddd;
