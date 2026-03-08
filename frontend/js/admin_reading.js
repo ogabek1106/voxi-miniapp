@@ -31,9 +31,44 @@ window.addOption = function(btn) {
   option.style.marginTop = "4px";
 
   option.innerHTML = `
-    <div class="opt-letter" style="width:20px; font-weight:700;">A</div>
-    <input class="opt-text" placeholder="Option text" style="flex:1;" />
-    <button type="button" onclick="removeOption(this)">✖</button>
+    <div class="q-option" style="display:flex; gap:8px; align-items:center; margin-top:4px;">
+  
+  <div class="opt-letter" style="width:22px; font-weight:700;">A</div>
+
+  <input 
+    class="opt-text"
+    placeholder="Option text"
+    style="
+      flex:1;
+      padding:6px 8px;
+      border-radius:6px;
+      border:1px solid #ddd;
+    "
+  />
+
+  <button
+    type="button"
+    onclick="removeOption(this)"
+    style="
+      width:26px;
+      height:26px;
+      min-width:26px;
+      border-radius:50%;
+      border:none;
+      background:#fee2e2;
+      color:#b91c1c;
+      font-weight:700;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex:0 0 auto;
+    "
+  >
+    ×
+  </button>
+
+</div>
   `;
 
   list.appendChild(option);
@@ -75,7 +110,44 @@ window.handleQuestionTypeChange = function(selectEl) {
       <div class="q-options-wrap">
 
         <div class="q-options-list">
-          <div class="q-option" style="display:flex; gap:6px;">
+          <div class="q-option" style="display:flex; gap:8px; align-items:center; margin-top:4px;">
+  
+            <div class="opt-letter" style="width:22px; font-weight:700;">A</div>
+
+            <input 
+              class="opt-text"
+              placeholder="Option text"
+              style="
+                flex:1;
+                padding:6px 8px;
+                border-radius:6px;
+                border:1px solid #ddd;
+              "
+            />
+
+            <button
+              type="button"
+              onclick="removeOption(this)"
+              style="
+                width:26px;
+                height:26px;
+                min-width:26px;
+                border-radius:50%;
+                border:none;
+                background:#fee2e2;
+                color:#b91c1c;
+                font-weight:700;
+                cursor:pointer;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                flex:0 0 auto;
+              "
+            >
+              ×
+            </button>
+
+          </div>
             <div class="opt-letter" style="width:20px; font-weight:700;">A</div>
             <input class="opt-text" placeholder="Option text" style="flex:1;" />
             <button type="button" onclick="removeOption(this)">✖</button>
