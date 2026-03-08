@@ -60,17 +60,18 @@ window.addOption = function(btn) {
   </div>
 
   <input
-    class="opt-text"
-    placeholder="Option text"
-    style="
-      flex:1;
-      border:none;
-      outline:none;
-      padding:0 10px;
-      height:100%;
-      font-size:14px;
-    "
-  />
+  class="opt-text"
+  placeholder="Option text"
+  style="
+    flex:1;
+    border:none;
+    outline:none;
+    padding:0 10px;
+    height:100%;
+    line-height:34px;
+    font-size:14px;
+  "
+/>
 
 </div>
 
