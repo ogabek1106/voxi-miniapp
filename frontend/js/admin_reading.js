@@ -23,7 +23,15 @@ function renderOptions(block) {
   });
 
 }
+window.debugTypeChange = function(sel) {
+  console.log("TYPE CHANGE START", sel.value, sel);
 
+  setTimeout(() => {
+    console.log("TYPE AFTER 50ms", sel.value, sel);
+  }, 50);
+
+  handleQuestionTypeChange(sel);
+};
 window.addOption = function(btn) {
   const wrap = btn.closest(".q-options-wrap");
   const list = wrap.querySelector(".q-options-list");
@@ -119,7 +127,11 @@ window.removeOption = function(btn) {
 
 };
 window.generateMatching = function(input) {
-
+  console.log("generateMatching called", input);
+  if (!input) {
+    console.error("generateMatching received NULL input");
+    return;
+  }
   const block = input.closest(".question-block");
   const wrap = block.querySelector(".matching-editor");
 
@@ -203,6 +215,7 @@ window.generateMatching = function(input) {
 };
 
 window.handleQuestionTypeChange = function(selectEl) {
+  console.log("handleQuestionTypeChange()", selectEl.value);
   const block = selectEl.closest(".question-block");
   const wrap = block.querySelector(".q-meta-wrap");
   if (!wrap) return;
@@ -216,6 +229,7 @@ window.handleQuestionTypeChange = function(selectEl) {
     if (textWrap) textWrap.style.display = "";
     if (answerWrap) answerWrap.style.display = "";
   }
+  console.log("Clearing meta wrap");
   wrap.innerHTML = "";
 
   // TEXT INPUT SETTINGS
@@ -320,7 +334,7 @@ window.showCreateReading = function (reset = false) {
             <div style="font-weight:700; margin-bottom:6px;">Q1</div>
             <label>Question type</label>
             <select class="q-type"
-                    onchange="handleQuestionTypeChange(this)"
+                    onchange="debugTypeChange(this)"
                     style="width:100%; padding:8px; border-radius:6px;">
               <option value="mcq">Single Choice</option>
               <option value="multi">Multi Choice</option>
@@ -416,7 +430,7 @@ window.addPassage = function () {
 
         <label>Question type</label>
         <select class="q-type"
-                onchange="handleQuestionTypeChange(this)"
+                onchange="debugTypeChange(this)"
                 style="width:100%; padding:8px; border-radius:6px;">
               <option value="mcq">Single Choice</option>
               <option value="multi">Multi Choice</option>
@@ -469,7 +483,7 @@ window.addQuestion = function (btn) {
 
     <label>Question type</label>
     <select class="q-type"
-            onchange="handleQuestionTypeChange(this)"
+            onchange="debugTypeChange(this)"
             style="width:100%; padding:8px; border-radius:6px;">
       <option value="mcq">Single Choice</option>
       <option value="multi">Multi Choice</option>
@@ -1043,7 +1057,7 @@ window.openAdminReading = async function (testId) {
 
             <label>Question type</label>
             <select class="q-type"
-                    onchange="handleQuestionTypeChange(this)"
+                    onchange="debugTypeChange(this)"
                     style="width:100%; padding:8px; border-radius:6px;">
               <option value="mcq" ${uiType === "mcq" ? "selected" : ""}>Single Choice</option>
               <option value="multi" ${uiType === "multi" ? "selected" : ""}>Multi Choice</option>
