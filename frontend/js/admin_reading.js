@@ -37,29 +37,42 @@ window.addOption = function(btn) {
 
   option.innerHTML = `
 
-<div class="opt-letter" style="
-  width:24px;
+<div style="
   display:flex;
   align-items:center;
-  justify-content:center;
-  font-weight:700;
+  width:100%;
+  border:1px solid #ddd;
+  border-radius:6px;
+  overflow:hidden;
+  height:34px;
 ">
-  A
-</div>
 
-<input
-  class="opt-text"
-  placeholder="Option text"
-  style="
-    flex:1;
-    padding:0 8px;
-    height:34px;
-    line-height:34px;
-    box-sizing:border-box;
-    border-radius:6px;
-    border:1px solid #ddd;
-  "
-/>
+  <div class="opt-letter" style="
+    width:36px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:700;
+    background:#f8f8f8;
+    border-right:1px solid rgba(0,0,0,0.4);
+  ">
+    A
+  </div>
+
+  <input
+    class="opt-text"
+    placeholder="Option text"
+    style="
+      flex:1;
+      border:none;
+      outline:none;
+      padding:0 10px;
+      height:100%;
+      font-size:14px;
+    "
+  />
+
+</div>
 
 <button
   type="button"
