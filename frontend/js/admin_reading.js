@@ -163,7 +163,7 @@ window.generateMatching = function(input) {
 
   for (let i = 0; i < qCount; i++) {
 
-    const qNum = parseInt(block.dataset.globalQ) + i;
+    const qNum = (parseInt(block.dataset.globalQ) || 0) + i;
 
     html += `
       <div style="display:flex; gap:8px; margin-bottom:6px;">
