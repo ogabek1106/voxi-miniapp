@@ -70,7 +70,7 @@ window.addOption = function(btn) {
     font-size:14px;
     height:100%;
     box-sizing:border-box;
-    transform:translateY(-3px);
+    transform:translateY(-10px);
   "
 />
 
