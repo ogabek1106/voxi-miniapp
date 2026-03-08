@@ -1069,7 +1069,7 @@ window.openAdminReading = async function (testId) {
             </div>
           </div>
         `;
-      });
+      }
 
       passageBlock.innerHTML = `
         <h4>Passage ${passageIndex}</h4>
