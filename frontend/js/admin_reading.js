@@ -1138,9 +1138,14 @@ window.openAdminReading = async function (testId) {
       }
       // 🔹 Load meta for existing questions
       setTimeout(() => {
-        passageBlock.querySelectorAll(".question-block").forEach((block) => {
-          const sel = block.querySelector(".q-type");
-          handleQuestionTypeChange(sel);
+      passageBlock.querySelectorAll(".question-block").forEach((block) => {
+
+        if (block.dataset.initialized) return;
+
+        const sel = block.querySelector(".q-type");
+        handleQuestionTypeChange(sel);
+
+        block.dataset.initialized = "1";
 
           const qid = block.dataset.questionId;
 
