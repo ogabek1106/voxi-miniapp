@@ -1158,10 +1158,8 @@ window.openAdminReading = async function (testId) {
           // rebuild MATCHING editor from DB
           if (sel.value === "matching") {
 
-            const wrap = block.querySelector(".matching-editor");
-            if (!wrap) return;
-
             const options = questionData.meta?.options || [];
+
             const questions = [];
             let start = p.questions.findIndex(x => x.id === questionData.id);
 
@@ -1176,10 +1174,16 @@ window.openAdminReading = async function (testId) {
             const qCountInput = block.querySelector(".match-q-count");
             const oCountInput = block.querySelector(".match-opt-count");
 
-            if (qCountInput) qCountInput.value = questions.length;
-            if (oCountInput) oCountInput.value = options.length;
+            if (!qCountInput || !oCountInput) return;
+
+            qCountInput.value = questions.length;
+            oCountInput.value = options.length;
 
             generateMatching(qCountInput);
+
+            const wrap = block.querySelector(".matching-editor");
+
+            if (!wrap) return;
 
             wrap.querySelectorAll(".match-option").forEach((opt, i) => {
               if (options[i]) opt.value = options[i];
