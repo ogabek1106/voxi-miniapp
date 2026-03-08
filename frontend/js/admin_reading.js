@@ -24,7 +24,15 @@ function renderOptions(block) {
 
 }
 window.debugTypeChange = function(sel) {
-  console.log("TYPE CHANGE START", sel.value, sel);
+
+  const value = sel.value;
+
+  // force DOM selected option sync
+  Array.from(sel.options).forEach(opt => {
+    opt.selected = (opt.value === value);
+  });
+
+  console.log("TYPE CHANGE START", value, sel);
 
   setTimeout(() => {
     console.log("TYPE AFTER 50ms", sel.value, sel);
