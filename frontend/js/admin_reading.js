@@ -66,10 +66,11 @@ window.addOption = function(btn) {
     flex:1;
     border:none;
     outline:none;
-    padding:15px 10px 0 10px;
+    padding:0 10px;
     font-size:14px;
     height:100%;
     box-sizing:border-box;
+    transform:translateY(-3px);
   "
 />
 
