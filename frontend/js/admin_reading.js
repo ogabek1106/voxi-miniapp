@@ -80,9 +80,9 @@ window.addOption = function(btn) {
   type="button"
   onclick="removeOption(this)"
   style="
-    width:26px;
-    height:26px;
-    min-width:26px;
+    width:34px;
+    height:34px;
+    min-width:34px;
     border-radius:50%;
     border:none;
     background:#fee2e2;
