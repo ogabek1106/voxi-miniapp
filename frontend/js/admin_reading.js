@@ -118,11 +118,104 @@ window.removeOption = function(btn) {
   });
 
 };
+window.generateMatching = function(input) {
+
+  const block = input.closest(".question-block");
+  const wrap = block.querySelector(".matching-editor");
+
+  const qCount = parseInt(block.querySelector(".match-q-count")?.value || 0);
+  let oCount = parseInt(block.querySelector(".match-opt-count")?.value || 0);
+  if (oCount < 2) oCount = 2;
+  if (!wrap) return;
+
+  let html = "";
+
+  // OPTIONS
+  html += `<div style="margin-bottom:10px;"><strong>Options</strong></div>`;
+
+  for (let i = 0; i < oCount; i++) {
+    const letter = String.fromCharCode(65 + i);
+
+    html += `
+      <div style="display:flex; gap:8px; margin-bottom:6px;">
+        <div style="
+          width:34px;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          font-weight:700;
+          background:#f8f8f8;
+          border:1px solid #ddd;
+          border-radius:6px;
+        ">
+          ${letter}
+        </div>
+
+        <input class="match-option"
+               data-letter="${letter}"
+               placeholder="Option ${letter}"
+               style="flex:1; padding:6px; border-radius:6px; border:1px solid #ddd;" />
+      </div>
+    `;
+  }
+
+  html += `<div style="margin-top:12px;"><strong>Questions</strong></div>`;
+
+  for (let i = 0; i < qCount; i++) {
+
+    const qNum = parseInt(block.dataset.globalQ) + i;
+
+    html += `
+      <div style="display:flex; gap:8px; margin-bottom:6px;">
+
+        <div style="
+          width:40px;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          font-weight:700;
+        ">
+          Q${qNum}
+        </div>
+
+        <input class="match-question"
+               placeholder="Question text"
+               style="flex:1; padding:6px; border-radius:6px; border:1px solid #ddd;" />
+
+        <select class="match-answer"
+                style="width:60px; border-radius:6px;">
+          ${Array.from({length:oCount},(_,k)=>`<option value="${String.fromCharCode(65+k)}">${String.fromCharCode(65+k)}</option>`).join("")}
+        </select>
+
+      </div>
+    `;
+  }
+
+  wrap.innerHTML = html;
+
+  // ensure answers stay valid
+  wrap.querySelectorAll(".match-answer").forEach(sel => {
+    const max = oCount - 1;
+    if (sel.selectedIndex > max) {
+      sel.selectedIndex = 0;
+    }
+  });
+};
+
 window.handleQuestionTypeChange = function(selectEl) {
   const block = selectEl.closest(".question-block");
   const wrap = block.querySelector(".q-meta-wrap");
   if (!wrap) return;
+  const textWrap = block.querySelector(".q-text")?.parentElement;
+  const answerWrap = block.querySelector(".q-answer")?.parentElement;
 
+  if (selectEl.value === "matching") {
+    if (textWrap) textWrap.style.display = "none";
+    if (answerWrap) answerWrap.style.display = "none";
+  } else {
+    if (textWrap) textWrap.style.display = "";
+    if (answerWrap) answerWrap.style.display = "";
+  }
   wrap.innerHTML = "";
 
   // TEXT INPUT SETTINGS
@@ -157,6 +250,23 @@ window.handleQuestionTypeChange = function(selectEl) {
     `;
     addOption(wrap.querySelector("button"));
   }
+  // MATCHING
+if (selectEl.value === "matching") {
+  wrap.innerHTML = `
+
+<label>How many questions</label>
+<input class="match-q-count" type="number" min="1" value="3"
+       oninput="generateMatching(this)" />
+
+<label style="margin-top:6px; display:block;">How many options</label>
+<input class="match-opt-count" type="number" min="1" value="5"
+       oninput="generateMatching(this)" />
+
+<div class="matching-editor" style="margin-top:10px;"></div>
+
+`;
+  generateMatching(wrap.querySelector(".match-q-count"));
+}
 };
 window.__currentPackId = null;
 window.__globalQuestionCounter = 1;
@@ -496,7 +606,7 @@ window.saveReadingDraft = async function () {
 
       // 3) Create questions for this passage
       const questions = p.querySelector(".questions-wrap").querySelectorAll(".question-block");
-
+      let orderCursor = 1;
       for (let qi = 0; qi < questions.length; qi++) {
         const q = questions[qi];
 
@@ -512,6 +622,35 @@ window.saveReadingDraft = async function () {
         console.log("answerEl:", answerEl);
 
         const type = typeEl?.value;
+        if (type === "matching") {
+
+          const options = Array.from(q.querySelectorAll(".match-option"))
+            .map(o => o.value.trim())
+            .filter(Boolean);
+
+          const matchQuestions = q.querySelectorAll(".match-question");
+
+          for (let i = 0; i < matchQuestions.length; i++) {
+
+            const qText = matchQuestions[i].value?.trim();
+            if (!qText) continue;
+
+            const answer = q.querySelectorAll(".match-answer")[i].value;
+
+            await apiPost(`/admin/reading/passages/${passageId}/questions`, {
+              type: "MATCHING",
+              order_index: orderCursor++,
+              instruction: null,
+              content: { text: qText },
+              correct_answer: { value: answer },
+              meta: { options: options },
+              points: 1
+            });
+
+          }
+
+          continue;
+        }
         const text = textEl?.value;
         const correctAnswer = answerEl?.value;
 
@@ -539,7 +678,7 @@ window.saveReadingDraft = async function () {
 
         await apiPost(`/admin/reading/passages/${passageId}/questions`, {
           type: mapType(type),
-          order_index: qi + 1,
+          order_index: orderCursor++,
           instruction: null,
           content: { text: text },
           correct_answer: { value: correctAnswer },
@@ -643,10 +782,39 @@ window.publishReading = async function () {
       const passageId = passage.id;
 
       const questions = p.querySelector(".questions-wrap").querySelectorAll(".question-block");
+      let orderCursor = 1;
       for (let qi = 0; qi < questions.length; qi++) {
         const q = questions[qi];
 
         const type = q.querySelector(".q-type")?.value;
+        if (type === "matching") {
+
+          const options = Array.from(q.querySelectorAll(".match-option"))
+            .map(o => o.value.trim())
+            .filter(Boolean);
+
+          const matchQuestions = q.querySelectorAll(".match-question");
+
+          for (let i = 0; i < matchQuestions.length; i++) {
+
+            const qText = matchQuestions[i].value?.trim();
+            if (!qText) continue;
+            const answer = q.querySelectorAll(".match-answer")[i].value;
+
+            await apiPost(`/admin/reading/passages/${passageId}/questions`, {
+              type: "MATCHING",
+              order_index: orderCursor++,
+              instruction: null,
+              content: { text: qText },
+              correct_answer: { value: answer },
+              meta: { options: options },
+              points: 1
+            });
+
+          }
+
+          continue;
+        }
         const text = q.querySelector(".q-text")?.value;
         const correctAnswer = q.querySelector(".q-answer")?.value;
         let meta = null;
@@ -664,7 +832,7 @@ window.publishReading = async function () {
         const imageUrl = imageWrap?.dataset.imageUrl || null;
         await apiPost(`/admin/reading/passages/${passageId}/questions`, {
           type: mapType(type),
-          order_index: qi + 1,
+          order_index: orderCursor++,
           instruction: null,
           content: { text: text },
           correct_answer: { value: correctAnswer },
@@ -837,7 +1005,19 @@ window.openAdminReading = async function (testId) {
 
       let questionsHtml = "";
 
-      p.questions.forEach((q) => {
+      for (let qi = 0; qi < p.questions.length; qi++) {
+
+        const q = p.questions[qi];
+
+        // prevent duplicate MATCHING blocks
+        if (
+          q.type === "MATCHING" &&
+          qi > 0 &&
+          p.questions[qi - 1].type === "MATCHING"
+        ) {
+          continue;
+        }  
+
         window.__globalQuestionCounter++;
 
         const uiType =
@@ -874,10 +1054,10 @@ window.openAdminReading = async function (testId) {
             </select>
             <div class="q-meta-wrap" style="margin-top:6px;"></div>
             <label style="margin-top:6px; display:block;">Question text</label>
-            <input class="q-text" />
+            <input class="q-text" value="${textValue}" />
 
             <label style="margin-top:6px; display:block;">Correct answer</label>
-            <input class="q-answer" />
+            <input class="q-answer" value="${answerValue}" />
             <hr style="margin:10px 0; border:0; border-top:1px solid #eee;" />
 
             <div class="image-attach-wrap" style="text-align:right;">
@@ -954,6 +1134,48 @@ window.openAdminReading = async function (testId) {
             q => String(q.id) === String(qid)
           );
 
+          if (!questionData) return;
+
+          // rebuild MATCHING editor from DB
+          if (sel.value === "matching") {
+
+            const wrap = block.querySelector(".matching-editor");
+            if (!wrap) return;
+
+            const options = questionData.meta?.options || [];
+            const questions = [];
+            let start = p.questions.findIndex(x => x.id === questionData.id);
+
+            for (let i = start; i < p.questions.length; i++) {
+              const item = p.questions[i];
+              if (item.type !== "MATCHING") break;
+              questions.push(item);
+            }
+
+            questions.sort((a, b) => a.order_index - b.order_index);
+
+            const qCountInput = block.querySelector(".match-q-count");
+            const oCountInput = block.querySelector(".match-opt-count");
+
+            if (qCountInput) qCountInput.value = questions.length;
+            if (oCountInput) oCountInput.value = options.length;
+
+            generateMatching(qCountInput);
+
+            wrap.querySelectorAll(".match-option").forEach((opt, i) => {
+              if (options[i]) opt.value = options[i];
+            });
+
+            wrap.querySelectorAll(".match-question").forEach((inp, i) => {
+              if (questions[i]) inp.value = questions[i].content?.text || "";
+            });
+
+            wrap.querySelectorAll(".match-answer").forEach((sel, i) => {
+              if (questions[i]) sel.value = questions[i].correct_answer?.value || "A";
+            });
+
+          }
+          
           console.log("PATCH DEBUG", {
             block_id: qid,
             questionData: questionData,
@@ -992,9 +1214,11 @@ window.openAdminReading = async function (testId) {
       }, 0);
     });
 
-    // sync counter
-    window.__globalQuestionCounter =
-      document.querySelectorAll(".question-block").length;
+    // sync counter safely
+    const nums = Array.from(document.querySelectorAll(".question-block"))
+      .map(b => parseInt(b.dataset.globalQ) || 0);
+
+    window.__globalQuestionCounter = nums.length ? Math.max(...nums) : 0;
 
     // publish/unpublish button
     const publishWrap = document.getElementById("publish-wrap");
