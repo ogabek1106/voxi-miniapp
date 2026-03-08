@@ -36,7 +36,14 @@ window.addOption = function(btn) {
   option.style.marginTop = "6px";
 
   option.innerHTML = `
-  <div class="opt-letter" style="width:24px; font-weight:700; text-align:center;">A</div>
+  <div class="opt-letter" style="
+    width:24px;
+    height:32px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:700;
+  ">
 
   <input
     class="opt-text"
@@ -44,6 +51,8 @@ window.addOption = function(btn) {
     style="
       flex:1;
       padding:6px 8px;
+      height:32px;
+      box-sizing:border-box;
       border-radius:6px;
       border:1px solid #ddd;
     "
