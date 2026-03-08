@@ -31,11 +31,9 @@ window.addOption = function(btn) {
   option.style.marginTop = "4px";
 
   option.innerHTML = `
-    <div class="q-option" style="display:flex; gap:8px; align-items:center; margin-top:4px;">
-  
   <div class="opt-letter" style="width:22px; font-weight:700;">A</div>
 
-  <input 
+  <input
     class="opt-text"
     placeholder="Option text"
     style="
@@ -67,10 +65,7 @@ window.addOption = function(btn) {
   >
     ×
   </button>
-
-</div>
-  `;
-
+`;
   list.appendChild(option);
 
   const block = btn.closest(".question-block");
@@ -109,57 +104,19 @@ window.handleQuestionTypeChange = function(selectEl) {
     wrap.innerHTML = `
       <div class="q-options-wrap">
 
-        <div class="q-options-list">
-          <div class="q-option" style="display:flex; gap:8px; align-items:center; margin-top:4px;">
-  
-            <div class="opt-letter" style="width:22px; font-weight:700;">A</div>
+        <div class="q-options-list"></div>
 
-            <input 
-              class="opt-text"
-              placeholder="Option text"
-              style="
-                flex:1;
-                padding:6px 8px;
-                border-radius:6px;
-                border:1px solid #ddd;
-              "
-            />
-
-            <button
-              type="button"
-              onclick="removeOption(this)"
-              style="
-                width:26px;
-                height:26px;
-                min-width:26px;
-                border-radius:50%;
-                border:none;
-                background:#fee2e2;
-                color:#b91c1c;
-                font-weight:700;
-                cursor:pointer;
-                display:flex;
-                align-items:center;
-                justify-content:center;
-                flex:0 0 auto;
-              "
-            >
-              ×
-            </button>
-
-          </div>
-            <div class="opt-letter" style="width:20px; font-weight:700;">A</div>
-            <input class="opt-text" placeholder="Option text" style="flex:1;" />
-            <button type="button" onclick="removeOption(this)">✖</button>
-          </div>
-        </div>
-
-        <button type="button" onclick="addOption(this)" style="margin-top:6px;">
+        <button
+          type="button"
+          onclick="addOption(this)"
+          style="margin-top:6px;"
+        >
           + Add option
         </button>
 
       </div>
     `;
+    addOption(wrap.querySelector("button"));
   }
 };
 window.__currentPackId = null;
