@@ -8,6 +8,47 @@ function mapType(old) {
   if (old === "matching") return "MATCHING";
   return "TEXT_INPUT";
 }
+function renderOptions(block) {
+  const wrap = block.querySelector(".q-options-wrap");
+  if (!wrap) return;
+
+  const options = wrap.querySelectorAll(".q-option");
+
+  options.forEach((opt, index) => {
+    const letter = String.fromCharCode(65 + index);
+    opt.querySelector(".opt-letter").innerText = letter;
+  });
+}
+
+window.addOption = function(btn) {
+  const wrap = btn.closest(".q-options-wrap");
+  const list = wrap.querySelector(".q-options-list");
+
+  const option = document.createElement("div");
+  option.className = "q-option";
+  option.style.display = "flex";
+  option.style.gap = "6px";
+  option.style.marginTop = "4px";
+
+  option.innerHTML = `
+    <div class="opt-letter" style="width:20px; font-weight:700;">A</div>
+    <input class="opt-text" placeholder="Option text" style="flex:1;" />
+    <button type="button" onclick="removeOption(this)">✖</button>
+  `;
+
+  list.appendChild(option);
+
+  const block = btn.closest(".question-block");
+  renderOptions(block);
+};
+
+window.removeOption = function(btn) {
+  const option = btn.closest(".q-option");
+  option.remove();
+
+  const block = btn.closest(".question-block");
+  renderOptions(block);
+};
 window.handleQuestionTypeChange = function(selectEl) {
   const block = selectEl.closest(".question-block");
   const wrap = block.querySelector(".q-meta-wrap");
@@ -15,6 +56,7 @@ window.handleQuestionTypeChange = function(selectEl) {
 
   wrap.innerHTML = "";
 
+  // TEXT INPUT SETTINGS
   if (selectEl.value === "gap") {
     wrap.innerHTML = `
       <label>Max words</label>
@@ -24,6 +66,27 @@ window.handleQuestionTypeChange = function(selectEl) {
         <input type="checkbox" class="q-allow-numbers" />
         Allow numbers
       </label>
+    `;
+  }
+
+  // SINGLE / MULTI CHOICE OPTIONS
+  if (selectEl.value === "mcq" || selectEl.value === "multi") {
+    wrap.innerHTML = `
+      <div class="q-options-wrap">
+
+        <div class="q-options-list">
+          <div class="q-option" style="display:flex; gap:6px;">
+            <div class="opt-letter" style="width:20px; font-weight:700;">A</div>
+            <input class="opt-text" placeholder="Option text" style="flex:1;" />
+            <button type="button" onclick="removeOption(this)">✖</button>
+          </div>
+        </div>
+
+        <button type="button" onclick="addOption(this)" style="margin-top:6px;">
+          + Add option
+        </button>
+
+      </div>
     `;
   }
 };
