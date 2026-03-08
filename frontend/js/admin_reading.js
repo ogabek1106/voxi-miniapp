@@ -93,7 +93,7 @@ window.addOption = function(btn) {
     align-items:center;
     justify-content:center;
     flex:0 0 auto;
-    transform:translateY(-15px);
+    transform:translateY(-10px);
   "
 >
   ×
