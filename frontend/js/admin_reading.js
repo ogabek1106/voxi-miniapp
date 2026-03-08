@@ -31,7 +31,7 @@ window.addOption = function(btn) {
   const option = document.createElement("div");
   option.className = "q-option";
   option.style.display = "flex";
-  option.style.alignItems = "center";
+
   option.style.gap = "8px";
   option.style.marginTop = "6px";
 
@@ -39,13 +39,10 @@ window.addOption = function(btn) {
 
 <div class="opt-letter" style="
   width:24px;
-  height:34px;
   display:flex;
   align-items:center;
   justify-content:center;
-  text-align:center;
   font-weight:700;
-  font-size:14px;
 ">
   A
 </div>
