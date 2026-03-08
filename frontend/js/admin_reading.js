@@ -36,49 +36,53 @@ window.addOption = function(btn) {
   option.style.marginTop = "6px";
 
   option.innerHTML = `
-  <div class="opt-letter" style="
-    width:24px;
+
+<div class="opt-letter" style="
+  width:24px;
+  height:32px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:700;
+">
+  A
+</div>
+
+<input
+  class="opt-text"
+  placeholder="Option text"
+  style="
+    flex:1;
+    padding:6px 8px;
     height:32px;
+    box-sizing:border-box;
+    border-radius:6px;
+    border:1px solid #ddd;
+  "
+/>
+
+<button
+  type="button"
+  onclick="removeOption(this)"
+  style="
+    width:26px;
+    height:26px;
+    min-width:26px;
+    border-radius:50%;
+    border:none;
+    background:#fee2e2;
+    color:#b91c1c;
+    font-weight:700;
+    cursor:pointer;
     display:flex;
     align-items:center;
     justify-content:center;
-    font-weight:700;
-  ">
+    flex:0 0 auto;
+  "
+>
+  ×
+</button>
 
-  <input
-    class="opt-text"
-    placeholder="Option text"
-    style="
-      flex:1;
-      padding:6px 8px;
-      height:32px;
-      box-sizing:border-box;
-      border-radius:6px;
-      border:1px solid #ddd;
-    "
-  />
-
-  <button
-    type="button"
-    onclick="removeOption(this)"
-    style="
-      width:26px;
-      height:26px;
-      min-width:26px;
-      border-radius:50%;
-      border:none;
-      background:#fee2e2;
-      color:#b91c1c;
-      font-weight:700;
-      cursor:pointer;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      flex:0 0 auto;
-    "
-  >
-    ×
-  </button>
 `;
   list.appendChild(option);
 
