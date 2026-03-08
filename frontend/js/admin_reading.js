@@ -68,6 +68,8 @@ window.addOption = function(btn) {
     outline:none;
     padding:0 10px;
     font-size:14px;
+    height:100%;
+    box-sizing:border-box;
   "
 />
 
