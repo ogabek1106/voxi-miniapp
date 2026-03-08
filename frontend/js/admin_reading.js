@@ -31,11 +31,12 @@ window.addOption = function(btn) {
   const option = document.createElement("div");
   option.className = "q-option";
   option.style.display = "flex";
-  option.style.gap = "6px";
-  option.style.marginTop = "4px";
+  option.style.alignItems = "center";
+  option.style.gap = "8px";
+  option.style.marginTop = "6px";
 
   option.innerHTML = `
-  <div class="opt-letter" style="width:22px; font-weight:700;">A</div>
+  <div class="opt-letter" style="width:24px; font-weight:700; text-align:center;">A</div>
 
   <input
     class="opt-text"
@@ -77,11 +78,16 @@ window.addOption = function(btn) {
 };
 
 window.removeOption = function(btn) {
+
   const option = btn.closest(".q-option");
+  const block = btn.closest(".question-block");
+
   option.remove();
 
-  const block = btn.closest(".question-block");
-  renderOptions(block);
+  requestAnimationFrame(() => {
+    renderOptions(block);
+  });
+
 };
 window.handleQuestionTypeChange = function(selectEl) {
   const block = selectEl.closest(".question-block");
