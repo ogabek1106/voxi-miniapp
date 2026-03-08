@@ -9,15 +9,19 @@ function mapType(old) {
   return "TEXT_INPUT";
 }
 function renderOptions(block) {
-  const wrap = block.querySelector(".q-options-wrap");
-  if (!wrap) return;
 
-  const options = wrap.querySelectorAll(".q-option");
+  const list = block.querySelector(".q-options-list");
+  if (!list) return;
+
+  const options = Array.from(list.children);
 
   options.forEach((opt, index) => {
     const letter = String.fromCharCode(65 + index);
-    opt.querySelector(".opt-letter").innerText = letter;
+    const label = opt.querySelector(".opt-letter");
+
+    if (label) label.innerText = letter;
   });
+
 }
 
 window.addOption = function(btn) {
