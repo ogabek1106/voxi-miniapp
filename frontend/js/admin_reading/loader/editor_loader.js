@@ -151,8 +151,6 @@ window.openAdminReading = async function (testId) {
 
         window.__globalQuestionCounter++;
 
-        const uiType = "matching";
-
         const textValue = q.content?.text || "";
         console.log("EDITOR LOAD", {
           question_id: q.id,
@@ -239,46 +237,23 @@ window.openAdminReading = async function (testId) {
         textarea.value = p.text || "";
       }
       // 🔹 Load meta for existing questions
-      setTimeout(() => {
       passageBlock.querySelectorAll(".question-block").forEach((block) => {
 
         if (block.dataset.initialized) return;
         block.dataset.initialized = "1";
-        const sel = block.querySelector(".q-type");
         const qid = block.dataset.questionId;
 
         const questionData = p.questions.find(
           q => String(q.id) === String(qid)
         );
 
-        if (questionData) {
-          const dbType = 
-            questionData.type === "SINGLE_CHOICE" ? "mcq" :
-            questionData.type === "MULTI_CHOICE" ? "multi" :
-            questionData.type === "TEXT_INPUT" ? "gap" :
-            questionData.type === "TFNG" ? "tfng" :
-            questionData.type === "YES_NO_NG" ? "yesno" :
-            questionData.type === "MATCHING" ? "matching" :
-            "gap";
-  
-          if (sel.value === dbType) {
-            const meta = block.querySelector(".q-meta-wrap");
-            AdminReading.loadQuestionUI("matching", meta);
-          }
-        } else {
-          const meta = block.querySelector(".q-meta-wrap");
-          AdminReading.loadQuestionUI("matching", meta);
-        }
-          //const qid = block.dataset.questionId;
-
-          //const questionData = p.questions.find(
-          //  q => String(q.id) === String(qid)
-          //);
+        const meta = block.querySelector(".q-meta-wrap");
+        AdminReading.loadQuestionUI("matching", meta);
+         
 
           if (!questionData) return;
 
-          // rebuild MATCHING editor from DB
-          if (sel.value === "matching") {
+          {
 
             const options = questionData.meta?.options || [];
 
@@ -293,34 +268,35 @@ window.openAdminReading = async function (testId) {
 
             questions.sort((a, b) => a.order_index - b.order_index);
 
-            const qCountInput = block.querySelector(".match-q-count");
-            const oCountInput = block.querySelector(".match-opt-count");
+            setTimeout(() => {
 
-            if (!qCountInput || !oCountInput) return;
+              const qCountInput = block.querySelector(".match-q-count");
+              const oCountInput = block.querySelector(".match-opt-count");
 
-            qCountInput.value = questions.length;
-            oCountInput.value = options.length;
+              if (!qCountInput || !oCountInput) return;
 
-            AdminReading.generateMatching(qCountInput);
+              qCountInput.value = questions.length;
+              oCountInput.value = options.length;
 
-            const wrap = block.querySelector(".matching-editor");
+              AdminReading.generateMatching(qCountInput);
 
-            if (!wrap) return;
+              const wrap = block.querySelector(".matching-editor");
+              if (!wrap) return;
 
-            wrap.querySelectorAll(".match-option").forEach((opt, i) => {
-              if (options[i]) opt.value = options[i];
-            });
+              wrap.querySelectorAll(".match-option").forEach((opt, i) => {
+                if (options[i]) opt.value = options[i];
+              });
 
-            wrap.querySelectorAll(".match-question").forEach((inp, i) => {
-              if (questions[i]) inp.value = questions[i].content?.text || "";
-            });
+              wrap.querySelectorAll(".match-question").forEach((inp, i) => {
+                if (questions[i]) inp.value = questions[i].content?.text || "";
+              });
 
-            wrap.querySelectorAll(".match-answer").forEach((sel, i) => {
-              if (questions[i]) sel.value = questions[i].correct_answer?.value || "A";
-            });
+              wrap.querySelectorAll(".match-answer").forEach((sel, i) => {
+                if (questions[i]) sel.value = questions[i].correct_answer?.value || "A";
+              });
 
+            }, 0);
           }
-          
           console.log("PATCH DEBUG", {
             block_id: qid,
             questionData: questionData,
@@ -349,15 +325,11 @@ window.openAdminReading = async function (testId) {
                 ❌ Remove
               </button>
             `;
-          }
-          // Restore meta only if exists
-          if (questionData.meta && sel.value === "gap") {
-            block.querySelector(".q-max-words").value = questionData.meta.max_words || "";
-            block.querySelector(".q-allow-numbers").checked = questionData.meta.allow_numbers || false;
-          }
-        });
-      }, 0);
-    });
+            }
+      
+            });
+        
+            });
 
     // sync counter safely
     const nums = Array.from(document.querySelectorAll(".question-block"))
