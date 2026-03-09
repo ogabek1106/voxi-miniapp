@@ -33,6 +33,7 @@ AdminReading.utils = {
 };
 
 window.handleQuestionTypeChange = function(selectEl) {
+console.log("STEP 1: handleQuestionTypeChange called", selectEl.value);
 
 const block = selectEl.closest(".question-block");
 const wrap = block.querySelector(".q-meta-wrap");
@@ -89,9 +90,9 @@ addOption(wrap.querySelector("button"));
 /* MATCHING */
 if (selectEl.value === "matching") {
 
+  console.log("STEP 2: entering matching branch", wrap);
 
-AdminReading.renderMatchingMeta(wrap);
-
+  AdminReading.renderMatchingMeta(wrap);
 
 }
 
