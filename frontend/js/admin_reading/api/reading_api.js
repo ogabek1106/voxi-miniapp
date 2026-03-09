@@ -220,3 +220,139 @@ window.saveReadingDraft = async function () {
     }
   }
 };
+
+window.publishReading = async function () {
+  const title = document.getElementById("reading-title")?.value?.trim();
+  const time = parseInt(document.getElementById("reading-time")?.value || "60", 10);
+
+  if (!title) {
+    alert("Reading name is required");
+    return;
+  }
+
+  try {
+    let testId;
+    console.log("🧪 Save draft started");
+
+    if (window.__currentEditingTestId) {
+
+      await apiPut(`/admin/reading/tests/${window.__currentEditingTestId}`, {
+        title,
+        time_limit_minutes: time
+      });
+
+      const old = await apiGet(`/admin/reading/tests/${window.__currentEditingTestId}`);
+
+      for (const p of old.passages || []) {
+        try {
+          await apiDelete(`/admin/reading/passages/${p.id}`);
+        } catch (e) {
+          console.warn("Skip delete passage", p.id, e);
+        }
+      }
+
+      testId = window.__currentEditingTestId;
+    } else {
+      const test = await apiPost("/admin/reading/tests", {
+        title,
+        time_limit_minutes: time,
+        mock_pack_id: window.__currentPackId
+      });
+
+      testId = test.id;
+      window.__currentEditingTestId = testId; // 🔒 ensure id is set after first publish
+    }
+
+    const passageBlocks = document.querySelectorAll(".passage-block");
+
+    for (let pi = 0; pi < passageBlocks.length; pi++) {
+      const p = passageBlocks[pi];
+
+      const passageTitle = p.querySelector(".passage-title")?.value || null;
+      const passageText = p.querySelector(".passage-text")?.value || "";
+
+      const imageWrap = p.querySelector(".image-attach-wrap");
+      const imageUrl = imageWrap?.dataset.imageUrl || null;
+
+      const passage = await apiPost(`/admin/reading/tests/${testId}/passages`, {
+        title: passageTitle,
+        text: passageText,
+        image_url: imageUrl,
+        order_index: pi + 1
+      });
+
+      const passageId = passage.id;
+
+      const questions = p.querySelector(".questions-wrap").querySelectorAll(".question-block");
+      let orderCursor = 1;
+      for (let qi = 0; qi < questions.length; qi++) {
+        const q = questions[qi];
+
+        const type = q.querySelector(".q-type")?.value;
+        if (type === "matching") {
+
+          const options = Array.from(q.querySelectorAll(".match-option"))
+            .map(o => o.value.trim())
+            .filter(Boolean);
+
+          const matchQuestions = q.querySelectorAll(".match-question");
+
+          for (let i = 0; i < matchQuestions.length; i++) {
+
+            const qText = matchQuestions[i].value?.trim();
+            if (!qText) continue;
+            const answer = q.querySelectorAll(".match-answer")[i].value;
+
+            await apiPost(`/admin/reading/passages/${passageId}/questions`, {
+              type: "MATCHING",
+              order_index: orderCursor++,
+              instruction: null,
+              content: { text: qText },
+              correct_answer: { value: answer },
+              meta: { options: options },
+              points: 1
+            });
+
+          }
+
+          continue;
+        }
+        const text = q.querySelector(".q-text")?.value;
+        const correctAnswer = q.querySelector(".q-answer")?.value;
+        let meta = null;
+
+        if (type === "gap") {
+          const maxWords = q.querySelector(".q-max-words")?.value;
+          const allowNumbers = q.querySelector(".q-allow-numbers")?.checked;
+
+          meta = {
+            max_words: maxWords ? parseInt(maxWords) : null,
+            allow_numbers: !!allowNumbers
+          };
+        }
+        const imageWrap = q.querySelector(".image-attach-wrap");
+        const imageUrl = imageWrap?.dataset.imageUrl || null;
+        await apiPost(`/admin/reading/passages/${passageId}/questions`, {
+          type: mapType(type),
+          order_index: orderCursor++,
+          instruction: null,
+          content: { text: text },
+          correct_answer: { value: correctAnswer },
+          image_url: imageUrl,
+          meta: meta,
+          explanation: null,
+          points: 1
+        });
+      }
+    }
+
+    // 🚀 Publish
+    await apiPost(`/admin/reading/tests/${testId}/publish`);
+
+    alert("🚀 Reading test published");
+    showAdminReadingList();
+  } catch (e) {
+    console.error(e);
+    alert("❌ Failed to publish reading test");
+  }
+};
