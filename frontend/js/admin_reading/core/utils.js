@@ -70,7 +70,6 @@ if (selectEl.value === "gap") {
 /* MCQ / MULTI */
 if (selectEl.value === "mcq" || selectEl.value === "multi") {
 
-```
 wrap.innerHTML = `
   <div class="q-options-wrap">
     <div class="q-options-list"></div>
@@ -84,16 +83,15 @@ wrap.innerHTML = `
 `;
 
 addOption(wrap.querySelector("button"));
-```
 
 }
 
 /* MATCHING */
 if (selectEl.value === "matching") {
 
-```
+
 AdminReading.renderMatchingMeta(wrap);
-```
+
 
 }
 
