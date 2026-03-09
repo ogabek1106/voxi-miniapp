@@ -1,4 +1,5 @@
 // frontend/js/admin_reading/ui/editor.js
+window.AdminReading = window.AdminReading || {};
 window.showCreateReading = function (reset = false) {
   window.__globalQuestionCounter = 1;
   if (reset) window.__currentEditingTestId = null;
