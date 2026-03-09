@@ -174,7 +174,7 @@ window.openAdminReading = async function (testId) {
 
             <label>Question type</label>
             <select class="q-type"
-                    onchange="debugTypeChange(this)"
+                    onchange="handleQuestionTypeChange(this)"
                     style="width:100%; padding:8px; border-radius:6px;">
               <option value="mcq" ${uiType === "mcq" ? "selected" : ""}>Single Choice</option>
               <option value="multi" ${uiType === "multi" ? "selected" : ""}>Multi Choice</option>
