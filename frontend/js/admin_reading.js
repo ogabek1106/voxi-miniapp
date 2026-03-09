@@ -136,19 +136,25 @@ window.removeOption = function(btn) {
 };
 window.generateMatching = function(input) {
   console.log("generateMatching called", input);
-  if (!input) {
-    console.error("generateMatching received NULL input");
-    return;
-  }
-  const block = input.closest(".question-block");
-  if (!block) {
-    console.error("Matching block not found");
-    return;
-  }
-  const wrap = block.querySelector(".matching-editor");
+  if (!input) return;
 
-  const qCount = parseInt(block.querySelector(".match-q-count")?.value || 0);
-  let oCount = parseInt(block.querySelector(".match-opt-count")?.value || 0);
+  const meta = input.closest(".q-meta-wrap");
+  if (!meta) {
+    console.error("q-meta-wrap not found");
+    return;
+  }
+
+  const wrap = meta.querySelector(".matching-editor");
+  if (!wrap) {
+    console.error("matching-editor not found");
+    return;
+  }
+
+  const qCount = parseInt(meta.querySelector(".match-q-count")?.value || 0);
+  let oCount = parseInt(meta.querySelector(".match-opt-count")?.value || 0);
+  if (oCount < 2) oCount = 2;
+
+  const block = meta.closest(".question-block");
   if (oCount < 2) oCount = 2;
   if (!wrap) return;
 
@@ -298,7 +304,7 @@ if (selectEl.value === "matching") {
   qInput.addEventListener("input", () => generateMatching(qInput));
   oInput.addEventListener("input", () => generateMatching(qInput));
 
-  generateMatching(qInput);
+  requestAnimationFrame(() => generateMatching(qInput));
 }
 }
 window.__currentPackId = null;
