@@ -21,25 +21,6 @@ window.__currentPackId = null;
 window.__globalQuestionCounter = 1;
 window.__currentEditingTestId = null;
 
-window.showPackReading = async function (packId) {
-  window.__currentPackId = packId;
-
-  try {
-    const test = await apiGet(`/admin/mock-packs/${packId}/reading`);
-
-    if (test && test.id) {
-      window.__currentEditingTestId = test.id;
-      openAdminReading(test.id);
-      return;
-    }
-  } catch (e) {
-    // no reading exists yet
-  }
-
-  window.__currentEditingTestId = null;
-  window.showCreateReading(true);
-};
-
 window.attachImage = function(btn) {
   const wrap = btn.closest(".image-attach-wrap");
   const input = wrap.querySelector(".hidden-image-input");
