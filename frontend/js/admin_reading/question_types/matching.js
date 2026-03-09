@@ -1,4 +1,5 @@
 // frontend/js/admin_reading/question_types/matching.js
+window.AdminReading = window.AdminReading || {};
 window.generateMatching = function(input) {
   console.log("generateMatching called", input);
   if (!input) return;
