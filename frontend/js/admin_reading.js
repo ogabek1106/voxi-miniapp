@@ -20,23 +20,6 @@ window.debugTypeChange = function(sel) {
 window.__currentPackId = null;
 window.__globalQuestionCounter = 1;
 window.__currentEditingTestId = null;
-
-
-// TEMP: placeholder until we build Passage UI
-window.showAddPassage = function () {
-  hideAllScreens();
-  hideAnnouncement();
-
-  if (!screenMocks) return;
-
-  screenMocks.style.display = "block";
-  screenMocks.innerHTML = `
-    <h3>➕ Add Passage</h3>
-    <p>Passage form coming next…</p>
-    <button onclick="showCreateReading()">⬅ Back</button>
-  `;
-};
-
 window.addPassage = function () {
   const wrap = document.getElementById("passages-wrap");
   if (!wrap) return;
