@@ -308,7 +308,6 @@ if (selectEl.value === "matching") {
   oInput.addEventListener("input", () => generateMatching(qInput));
 
   generateMatching(qInput);
-}
 };
 window.__currentPackId = null;
 window.__globalQuestionCounter = 1;
