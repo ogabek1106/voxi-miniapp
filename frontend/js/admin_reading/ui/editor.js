@@ -88,3 +88,17 @@ window.showCreateReading = function (reset = false) {
     <button style="margin-top:8px;" onclick="openMockPack(window.__currentPackId)">⬅ Back</button>
   `;
 };
+
+window.showAddPassage = function () {
+  hideAllScreens();
+  hideAnnouncement();
+
+  if (!screenMocks) return;
+
+  screenMocks.style.display = "block";
+  screenMocks.innerHTML = `
+    <h3>➕ Add Passage</h3>
+    <p>Passage form coming next…</p>
+    <button onclick="showCreateReading()">⬅ Back</button>
+  `;
+};
