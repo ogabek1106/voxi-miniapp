@@ -21,7 +21,7 @@ const qCount = parseInt(meta.querySelector(".match-q-count")?.value || 0);
 let oCount = parseInt(meta.querySelector(".match-opt-count")?.value || 0);
 if (oCount < 2) oCount = 2;
 
-const block = meta.closest(".question-block");
+const block = meta.closest(".question-block") || meta.parentElement;
 if (!wrap) return;
 
 let html = "";
@@ -61,7 +61,8 @@ html += `<div style="margin-top:12px;"><strong>Questions</strong></div>`;
 for (let i = 0; i < qCount; i++) {
 
 
-const qNum = (parseInt(block.dataset.globalQ) || 0) + i;
+const baseQ = parseInt(block?.dataset?.globalQ || 0);
+const qNum = baseQ + i;
 
 html += `
   <div style="display:flex; gap:8px; margin-bottom:6px;">
