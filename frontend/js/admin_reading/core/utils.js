@@ -55,8 +55,7 @@ wrap.replaceChildren();
 /* GAP */
 if (selectEl.value === "gap") {
 
-```
-wrap.innerHTML = `
+  wrap.innerHTML = `
   <label>Max words</label>
   <input class="q-max-words" type="number" min="1" />
 
@@ -64,8 +63,7 @@ wrap.innerHTML = `
     <input type="checkbox" class="q-allow-numbers" />
     Allow numbers
   </label>
-`;
-```
+  `;
 
 }
 
