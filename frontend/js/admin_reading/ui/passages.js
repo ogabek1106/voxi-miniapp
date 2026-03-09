@@ -39,17 +39,9 @@ window.addPassage = function () {
       <div class="question-block" data-global-q="${qNum}" data-question-id="temp_${qNum}" style="padding:8px; border:1px solid #e5e5ea; border-radius:8px; margin-bottom:8px;">
         <div style="font-weight:700; margin-bottom:6px;">Q${qNum}</div>
 
-        <label>Question type</label>
-        <select class="q-type"
-                onchange="handleQuestionTypeChange(this)"
-                style="width:100%; padding:8px; border-radius:6px;">
-              <option value="mcq">Single Choice</option>
-              <option value="multi">Multi Choice</option>
-              <option value="gap">Text Input</option>
-              <option value="tfng">True / False / Not Given</option>
-              <option value="yesno">Yes / No / Not Given</option>
-              <option value="matching">Matching</option>
-            </select>
+        <div class="q-type-label" style="font-weight:600; margin-bottom:6px;">
+  Question type: Matching
+</div>
         <div class="q-meta-wrap" style="margin-top:6px;"></div>
         <hr style="margin:10px 0; border:0; border-top:1px solid #eee;" />
 
@@ -87,17 +79,9 @@ window.addQuestion = function (btn) {
   block.innerHTML = `
     <div style="font-weight:700; margin-bottom:6px;">Q${qNum}</div>
 
-    <label>Question type</label>
-    <select class="q-type"
-            onchange="handleQuestionTypeChange(this)"
-            style="width:100%; padding:8px; border-radius:6px;">
-      <option value="mcq">Single Choice</option>
-      <option value="multi">Multi Choice</option>
-      <option value="gap">Text Input</option>
-      <option value="tfng">True / False / Not Given</option>
-      <option value="yesno">Yes / No / Not Given</option>
-      <option value="matching">Matching</option>
-    </select>
+    <div class="q-type-label" style="font-weight:600; margin-bottom:6px;">
+  Question type: Matching
+</div>
     <div class="q-meta-wrap" style="margin-top:6px;"></div>
     <hr style="margin:10px 0; border:0; border-top:1px solid #eee;" />
 
