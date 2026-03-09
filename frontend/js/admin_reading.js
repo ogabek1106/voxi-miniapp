@@ -1157,7 +1157,28 @@ window.openAdminReading = async function (testId) {
         if (block.dataset.initialized) return;
 
         const sel = block.querySelector(".q-type");
-        handleQuestionTypeChange(sel);
+        const qid = block.dataset.questionId;
+
+        const questionData = p.questions.find(
+          q => String(q.id) === String(qid)
+        );
+
+        if (questionData) {
+          const dbType = 
+            questionData.type === "SINGLE_CHOICE" ? "mcq" :
+            questionData.type === "MULTI_CHOICE" ? "multi" :
+            questionData.type === "TEXT_INPUT" ? "gap" :
+            questionData.type === "TFNG" ? "tfng" :
+            questionData.type === "YES_NO_NG" ? "yesno" :
+            questionData.type === "MATCHING" ? "matching" :
+            "gap";
+  
+          if (sel.value === dbType) {
+            handleQuestionTypeChange(sel);
+          }
+        } else {
+          handleQuestionTypeChange(sel);
+        }
 
         block.dataset.initialized = "1";
 
