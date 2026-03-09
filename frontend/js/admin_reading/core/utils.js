@@ -51,7 +51,7 @@ if (textWrap) textWrap.style.display = "";
 if (answerWrap) answerWrap.style.display = "";
 }
 
-wrap.replaceChildren();
+wrap.innerHTML = "";
 
 /* GAP */
 if (selectEl.value === "gap") {
