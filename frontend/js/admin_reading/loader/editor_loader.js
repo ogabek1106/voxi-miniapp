@@ -314,7 +314,7 @@ window.openAdminReading = async function (testId) {
             qCountInput.value = questions.length;
             oCountInput.value = options.length;
 
-            generateMatching(qCountInput);
+            AdminReading.generateMatching(qCountInput);
 
             const wrap = block.querySelector(".matching-editor");
 
