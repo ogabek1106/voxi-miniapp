@@ -3,6 +3,8 @@ window.AdminReading = window.AdminReading || {};
 
 AdminReading.renderMatchingMeta = function(wrap) {
 
+  console.log("STEP 3: renderMatchingMeta called", wrap);
+
   wrap.innerHTML = `
 
 <label>How many questions</label>
@@ -14,6 +16,10 @@ AdminReading.renderMatchingMeta = function(wrap) {
 <div class="matching-editor" style="margin-top:10px;"></div>
 
 `;
+
+  console.log("STEP 4: matching meta UI inserted");
+
+  console.log("STEP 5: calling matchingInit");
 
   AdminReading.matchingInit(wrap);
 
