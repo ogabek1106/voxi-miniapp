@@ -21,23 +21,6 @@ window.__currentPackId = null;
 window.__globalQuestionCounter = 1;
 window.__currentEditingTestId = null;
 
-
-
-
-window.unpublishReading = async function (testId) {
-  const ok = confirm("Are you sure you want to unpublish this test?\nIt will move back to Drafts.");
-  if (!ok) return;
-
-  try {
-    await apiPost(`/admin/reading/tests/${testId}/unpublish`);
-    alert("↩️ Reading test unpublished");
-    showAdminReadingList();
-  } catch (e) {
-    console.error("❌ UNPUBLISH ERROR:", e);
-    alert("❌ Failed to unpublish reading test\n" + (e.message || ""));
-  }
-};
-
 window.showAdminReadingList = function () {
   hideAllScreens();
   hideAnnouncement();
