@@ -167,9 +167,9 @@ if (selectEl.value === "matching") {
   const qInput = wrap.querySelector(".match-q-count");
   const oInput = wrap.querySelector(".match-opt-count");
 
-  qInput.addEventListener("input", () => generateMatching(qInput));
-  oInput.addEventListener("input", () => generateMatching(qInput));
+  qInput.addEventListener("input", () => AdminReading.generateMatching(qInput));
+  oInput.addEventListener("input", () => AdminReading.generateMatching(qInput));
 
-  requestAnimationFrame(() => generateMatching(qInput));
+  requestAnimationFrame(() => AdminReading.generateMatching(qInput));
 }
 }
