@@ -1184,9 +1184,9 @@ window.openAdminReading = async function (testId) {
 
           //const qid = block.dataset.questionId;
 
-          const questionData = p.questions.find(
-            q => String(q.id) === String(qid)
-          );
+          //const questionData = p.questions.find(
+          //  q => String(q.id) === String(qid)
+          //);
 
           if (!questionData) return;
 
