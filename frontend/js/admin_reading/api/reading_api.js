@@ -356,3 +356,17 @@ window.publishReading = async function () {
     alert("❌ Failed to publish reading test");
   }
 };
+
+window.unpublishReading = async function (testId) {
+  const ok = confirm("Are you sure you want to unpublish this test?\nIt will move back to Drafts.");
+  if (!ok) return;
+
+  try {
+    await apiPost(`/admin/reading/tests/${testId}/unpublish`);
+    alert("↩️ Reading test unpublished");
+    showAdminReadingList();
+  } catch (e) {
+    console.error("❌ UNPUBLISH ERROR:", e);
+    alert("❌ Failed to unpublish reading test\n" + (e.message || ""));
+  }
+};
