@@ -397,3 +397,22 @@ window.openAdminReading = async function (testId) {
     alert("Failed to load reading test");
   }
 };
+
+window.showPackReading = async function (packId) {
+  window.__currentPackId = packId;
+
+  try {
+    const test = await apiGet(`/admin/mock-packs/${packId}/reading`);
+
+    if (test && test.id) {
+      window.__currentEditingTestId = test.id;
+      openAdminReading(test.id);
+      return;
+    }
+  } catch (e) {
+    // no reading exists yet
+  }
+
+  window.__currentEditingTestId = null;
+  window.showCreateReading(true);
+};
