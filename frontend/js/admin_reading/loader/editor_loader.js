@@ -151,14 +151,7 @@ window.openAdminReading = async function (testId) {
 
         window.__globalQuestionCounter++;
 
-        const uiType =
-          q.type === "SINGLE_CHOICE" ? "mcq" :
-          q.type === "MULTI_CHOICE" ? "multi" :
-          q.type === "TEXT_INPUT" ? "gap" :
-          q.type === "TFNG" ? "tfng" :
-          q.type === "YES_NO_NG" ? "yesno" :
-          q.type === "MATCHING" ? "matching" :
-          "gap";
+        const uiType = "matching";
 
         const textValue = q.content?.text || "";
         console.log("EDITOR LOAD", {
@@ -172,17 +165,9 @@ window.openAdminReading = async function (testId) {
           <div class="question-block" data-global-q="${window.__globalQuestionCounter}" data-question-id="${q.id}" style="padding:8px; border:1px solid #e5e5ea; border-radius:8px; margin-bottom:8px;">
             <div style="font-weight:700; margin-bottom:6px;">Q${window.__globalQuestionCounter}</div>
 
-            <label>Question type</label>
-            <select class="q-type"
-                    onchange="handleQuestionTypeChange(this)"
-                    style="width:100%; padding:8px; border-radius:6px;">
-              <option value="mcq" ${uiType === "mcq" ? "selected" : ""}>Single Choice</option>
-              <option value="multi" ${uiType === "multi" ? "selected" : ""}>Multi Choice</option>
-              <option value="gap" ${uiType === "gap" ? "selected" : ""}>Text Input</option>
-              <option value="tfng" ${uiType === "tfng" ? "selected" : ""}>True / False / Not Given</option>
-              <option value="yesno" ${uiType === "yesno" ? "selected" : ""}>Yes / No / Not Given</option>
-              <option value="matching" ${uiType === "matching" ? "selected" : ""}>Matching</option>
-            </select>
+            <div style="font-weight:600; margin-bottom:6px;">
+  Question type: Matching
+</div>
             <div class="q-meta-wrap" style="margin-top:6px;"></div>
             <label style="margin-top:6px; display:block;">Question text</label>
             <input class="q-text" value="${textValue}" />
@@ -277,10 +262,12 @@ window.openAdminReading = async function (testId) {
             "gap";
   
           if (sel.value === dbType) {
-            handleQuestionTypeChange(sel);
+            const meta = block.querySelector(".q-meta-wrap");
+            AdminReading.loadQuestionUI("matching", meta);
           }
         } else {
-          handleQuestionTypeChange(sel);
+          const meta = block.querySelector(".q-meta-wrap");
+          AdminReading.loadQuestionUI("matching", meta);
         }
           //const qid = block.dataset.questionId;
 
