@@ -1155,7 +1155,7 @@ window.openAdminReading = async function (testId) {
       passageBlock.querySelectorAll(".question-block").forEach((block) => {
 
         if (block.dataset.initialized) return;
-
+        block.dataset.initialized = "1";
         const sel = block.querySelector(".q-type");
         const qid = block.dataset.questionId;
 
@@ -1179,9 +1179,6 @@ window.openAdminReading = async function (testId) {
         } else {
           handleQuestionTypeChange(sel);
         }
-
-        block.dataset.initialized = "1";
-
           //const qid = block.dataset.questionId;
 
           //const questionData = p.questions.find(
