@@ -81,3 +81,16 @@ window.addOption = function(btn) {
   const block = btn.closest(".question-block");
   renderOptions(block);
 };
+
+window.removeOption = function(btn) {
+
+  const option = btn.closest(".q-option");
+  const block = btn.closest(".question-block");
+
+  option.remove();
+
+  requestAnimationFrame(() => {
+    renderOptions(block);
+  });
+
+};
