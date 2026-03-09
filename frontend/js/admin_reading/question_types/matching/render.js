@@ -31,7 +31,7 @@ html += `<div style="margin-bottom:10px;"><strong>Options</strong></div>`;
 for (let i = 0; i < oCount; i++) {
 const letter = String.fromCharCode(65 + i);
 
-```
+
 html += `
   <div style="display:flex; gap:8px; margin-bottom:6px;">
     <div style="
@@ -53,7 +53,6 @@ html += `
            style="flex:1; padding:6px; border-radius:6px; border:1px solid #ddd;" />
   </div>
 `;
-```
 
 }
 
@@ -61,7 +60,7 @@ html += `<div style="margin-top:12px;"><strong>Questions</strong></div>`;
 
 for (let i = 0; i < qCount; i++) {
 
-```
+
 const qNum = (parseInt(block.dataset.globalQ) || 0) + i;
 
 html += `
@@ -88,7 +87,7 @@ html += `
 
   </div>
 `;
-```
+
 
 }
 
