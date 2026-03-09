@@ -3,7 +3,6 @@ window.debugTypeChange = function(sel) {
 
   const value = sel.value;
 
-  // force DOM selected option sync
   Array.from(sel.options).forEach(opt => {
     opt.selected = (opt.value === value);
   });
@@ -16,7 +15,3 @@ window.debugTypeChange = function(sel) {
 
   handleQuestionTypeChange(sel);
 };
-
-window.__currentPackId = null;
-window.__globalQuestionCounter = 1;
-window.__currentEditingTestId = null;
