@@ -300,15 +300,7 @@ if (selectEl.value === "matching") {
 
   generateMatching(qInput);
 }
-
-  const qInput = wrap.querySelector(".match-q-count");
-  const oInput = wrap.querySelector(".match-opt-count");
-
-  qInput.addEventListener("input", () => generateMatching(qInput));
-  oInput.addEventListener("input", () => generateMatching(qInput));
-
-  generateMatching(qInput);
-};
+}
 window.__currentPackId = null;
 window.__globalQuestionCounter = 1;
 window.__currentEditingTestId = null;
