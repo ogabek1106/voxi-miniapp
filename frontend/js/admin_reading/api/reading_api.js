@@ -1,4 +1,5 @@
 // frontend/js/admin_reading/api/reading_api.js
+window.AdminReading = window.AdminReading || {};
 window.collectReadingFormData = function () {
   const title = document.getElementById("reading-title")?.value?.trim();
   const time = parseInt(document.getElementById("reading-time")?.value || "60", 10);
