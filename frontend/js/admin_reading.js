@@ -20,9 +20,3 @@ window.debugTypeChange = function(sel) {
 window.__currentPackId = null;
 window.__globalQuestionCounter = 1;
 window.__currentEditingTestId = null;
-
-window.removeImage = function(btn) {
-  const wrap = btn.closest(".image-attach-wrap");
-  wrap.dataset.imageUrl = "";
-  wrap.querySelector(".image-preview").innerHTML = "";
-};
