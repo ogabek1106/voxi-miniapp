@@ -17,18 +17,7 @@ window.debugTypeChange = function(sel) {
   handleQuestionTypeChange(sel);
 };
 
-window.removeOption = function(btn) {
 
-  const option = btn.closest(".q-option");
-  const block = btn.closest(".question-block");
-
-  option.remove();
-
-  requestAnimationFrame(() => {
-    renderOptions(block);
-  });
-
-};
 window.generateMatching = function(input) {
   console.log("generateMatching called", input);
   if (!input) return;
