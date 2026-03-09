@@ -100,3 +100,300 @@ window.loadAdminReadingList = async function () {
     alert("Failed to load reading tests");
   }
 };
+
+window.openAdminReading = async function (testId) {
+  window.__currentEditingTestId = testId;
+  hideAllScreens();
+  hideAnnouncement();
+
+  if (!screenMocks) return;
+
+  // open editor UI (do NOT reset edit mode)
+  // window.showCreateReading(false);
+  window.__currentEditingTestId = testId;
+
+  try {
+    const data = await apiGet(`/admin/reading/tests/${testId}`);
+    showCreateReading(false);
+    // fill meta
+    document.getElementById("reading-title").value = data.title || "";
+    document.getElementById("reading-time").value = data.time_limit_minutes || 60;
+
+    // reset global counter
+    window.__globalQuestionCounter = 0;
+
+    const wrap = document.getElementById("passages-wrap");
+    wrap.innerHTML = "";
+
+    data.passages.forEach((p, pi) => {
+      const passageIndex = pi + 1;
+
+      const passageBlock = document.createElement("div");
+      passageBlock.className = "passage-block";
+      passageBlock.dataset.index = passageIndex;
+      passageBlock.style.textAlign = "left";
+      passageBlock.style.marginTop = "16px";
+
+      let questionsHtml = "";
+
+      for (let qi = 0; qi < p.questions.length; qi++) {
+
+        const q = p.questions[qi];
+
+        // prevent duplicate MATCHING blocks
+        if (
+          q.type === "MATCHING" &&
+          qi > 0 &&
+          p.questions[qi - 1].type === "MATCHING"
+        ) {
+          continue;
+        }  
+
+        window.__globalQuestionCounter++;
+
+        const uiType =
+          q.type === "SINGLE_CHOICE" ? "mcq" :
+          q.type === "MULTI_CHOICE" ? "multi" :
+          q.type === "TEXT_INPUT" ? "gap" :
+          q.type === "TFNG" ? "tfng" :
+          q.type === "YES_NO_NG" ? "yesno" :
+          q.type === "MATCHING" ? "matching" :
+          "gap";
+
+        const textValue = q.content?.text || "";
+        console.log("EDITOR LOAD", {
+          question_id: q.id,
+          raw_content: q.content,
+          extracted_text: q.content?.text
+        });
+        const answerValue = q.correct_answer?.value || "";
+
+        questionsHtml += `
+          <div class="question-block" data-global-q="${window.__globalQuestionCounter}" data-question-id="${q.id}" style="padding:8px; border:1px solid #e5e5ea; border-radius:8px; margin-bottom:8px;">
+            <div style="font-weight:700; margin-bottom:6px;">Q${window.__globalQuestionCounter}</div>
+
+            <label>Question type</label>
+            <select class="q-type"
+                    onchange="debugTypeChange(this)"
+                    style="width:100%; padding:8px; border-radius:6px;">
+              <option value="mcq" ${uiType === "mcq" ? "selected" : ""}>Single Choice</option>
+              <option value="multi" ${uiType === "multi" ? "selected" : ""}>Multi Choice</option>
+              <option value="gap" ${uiType === "gap" ? "selected" : ""}>Text Input</option>
+              <option value="tfng" ${uiType === "tfng" ? "selected" : ""}>True / False / Not Given</option>
+              <option value="yesno" ${uiType === "yesno" ? "selected" : ""}>Yes / No / Not Given</option>
+              <option value="matching" ${uiType === "matching" ? "selected" : ""}>Matching</option>
+            </select>
+            <div class="q-meta-wrap" style="margin-top:6px;"></div>
+            <label style="margin-top:6px; display:block;">Question text</label>
+            <input class="q-text" value="${textValue}" />
+
+            <label style="margin-top:6px; display:block;">Correct answer</label>
+            <input class="q-answer" value="${answerValue}" />
+            <hr style="margin:10px 0; border:0; border-top:1px solid #eee;" />
+
+            <div class="image-attach-wrap" style="text-align:right;">
+              <button type="button" class="attach-image-btn" onclick="attachImage(this)">
+                🖼 Add Image
+              </button>
+              <input type="file" accept="image/*" class="hidden-image-input" style="display:none;" />
+              <div class="image-preview" style="margin-top:8px;"></div>
+            </div>
+          </div>
+        `;
+      }
+
+      passageBlock.innerHTML = `
+        <h4>Passage ${passageIndex}</h4>
+
+        <label>Passage title</label>
+        <input class="passage-title" value="${(p.title || "").replace(/"/g, "&quot;")}" />
+
+        <label style="margin-top:8px; display:block;">Passage text</label>
+        <textarea class="passage-text" rows="6" style="width:100%; padding:10px; border-radius:8px;"></textarea>
+        <hr style="margin:10px 0; border:0; border-top:1px solid #eee;" />
+
+        <div class="image-attach-wrap" style="text-align:right;">
+          <button type="button" class="attach-image-btn" onclick="attachImage(this)">
+            🖼 Add Image
+          </button>
+          <input type="file" accept="image/*" class="hidden-image-input" style="display:none;" />
+          <div class="image-preview" style="margin-top:8px;"></div>
+        </div>
+        <div class="questions-wrap" style="margin-top:12px;">
+          <h5>Questions</h5>
+          ${questionsHtml}
+          <button onclick="addQuestion(this)">➕ Add Question</button>
+        </div>
+      `;
+
+      wrap.appendChild(passageBlock);
+      // Restore passage image
+      if (p.image_url) {
+        const imageWrap = passageBlock.querySelector(".image-attach-wrap");
+        imageWrap.dataset.imageUrl = p.image_url;
+
+        const preview = imageWrap.querySelector(".image-preview");
+        preview.innerHTML = `
+          <img src="${window.API + p.image_url}" 
+               style="
+                 width:100%;
+                 max-width:100%;
+                 height:auto;
+                 display:block;
+                 margin:8px auto 0 auto;
+                 border-radius:12px;
+               " />
+          <button type="button" onclick="removeImage(this)" style="margin-top:8px;">
+            ❌ Remove
+          </button>
+        `;
+      }
+
+      const textarea = passageBlock.querySelector(".passage-text");
+      if (textarea) {
+        textarea.value = p.text || "";
+      }
+      // 🔹 Load meta for existing questions
+      setTimeout(() => {
+      passageBlock.querySelectorAll(".question-block").forEach((block) => {
+
+        if (block.dataset.initialized) return;
+        block.dataset.initialized = "1";
+        const sel = block.querySelector(".q-type");
+        const qid = block.dataset.questionId;
+
+        const questionData = p.questions.find(
+          q => String(q.id) === String(qid)
+        );
+
+        if (questionData) {
+          const dbType = 
+            questionData.type === "SINGLE_CHOICE" ? "mcq" :
+            questionData.type === "MULTI_CHOICE" ? "multi" :
+            questionData.type === "TEXT_INPUT" ? "gap" :
+            questionData.type === "TFNG" ? "tfng" :
+            questionData.type === "YES_NO_NG" ? "yesno" :
+            questionData.type === "MATCHING" ? "matching" :
+            "gap";
+  
+          if (sel.value === dbType) {
+            handleQuestionTypeChange(sel);
+          }
+        } else {
+          handleQuestionTypeChange(sel);
+        }
+          //const qid = block.dataset.questionId;
+
+          //const questionData = p.questions.find(
+          //  q => String(q.id) === String(qid)
+          //);
+
+          if (!questionData) return;
+
+          // rebuild MATCHING editor from DB
+          if (sel.value === "matching") {
+
+            const options = questionData.meta?.options || [];
+
+            const questions = [];
+            let start = p.questions.findIndex(x => x.id === questionData.id);
+
+            for (let i = start; i < p.questions.length; i++) {
+              const item = p.questions[i];
+              if (item.type !== "MATCHING") break;
+              questions.push(item);
+            }
+
+            questions.sort((a, b) => a.order_index - b.order_index);
+
+            const qCountInput = block.querySelector(".match-q-count");
+            const oCountInput = block.querySelector(".match-opt-count");
+
+            if (!qCountInput || !oCountInput) return;
+
+            qCountInput.value = questions.length;
+            oCountInput.value = options.length;
+
+            generateMatching(qCountInput);
+
+            const wrap = block.querySelector(".matching-editor");
+
+            if (!wrap) return;
+
+            wrap.querySelectorAll(".match-option").forEach((opt, i) => {
+              if (options[i]) opt.value = options[i];
+            });
+
+            wrap.querySelectorAll(".match-question").forEach((inp, i) => {
+              if (questions[i]) inp.value = questions[i].content?.text || "";
+            });
+
+            wrap.querySelectorAll(".match-answer").forEach((sel, i) => {
+              if (questions[i]) sel.value = questions[i].correct_answer?.value || "A";
+            });
+
+          }
+          
+          console.log("PATCH DEBUG", {
+            block_id: qid,
+            questionData: questionData,
+            allQuestions: p.questions
+          });
+          if (!questionData) return;
+          block.querySelector(".q-text").value = questionData.content?.text || "";
+          block.querySelector(".q-answer").value = questionData.correct_answer?.value || "";
+          // Restore question image
+          if (questionData.image_url) {
+            const imageWrap = block.querySelector(".image-attach-wrap");
+            imageWrap.dataset.imageUrl = questionData.image_url;
+
+            const preview = imageWrap.querySelector(".image-preview");
+            preview.innerHTML = `
+              <img src="${window.API + questionData.image_url}" 
+                   style="
+                     width:100%;
+                     max-width:100%;
+                     height:auto;
+                     display:block;
+                     margin:8px auto 0 auto;
+                     border-radius:12px;
+                   " />
+              <button type="button" onclick="removeImage(this)" style="margin-top:8px;">
+                ❌ Remove
+              </button>
+            `;
+          }
+          // Restore meta only if exists
+          if (questionData.meta && sel.value === "gap") {
+            block.querySelector(".q-max-words").value = questionData.meta.max_words || "";
+            block.querySelector(".q-allow-numbers").checked = questionData.meta.allow_numbers || false;
+          }
+        });
+      }, 0);
+    });
+
+    // sync counter safely
+    const nums = Array.from(document.querySelectorAll(".question-block"))
+      .map(b => parseInt(b.dataset.globalQ) || 0);
+
+    window.__globalQuestionCounter = nums.length ? Math.max(...nums) : 0;
+
+    // publish/unpublish button
+    const publishWrap = document.getElementById("publish-wrap");
+    if (publishWrap) {
+      if (data.status === "published") {
+        publishWrap.innerHTML = `
+          <button onclick="unpublishReading(${testId})">↩️ Unpublish</button>
+        `;
+      } else {
+        publishWrap.innerHTML = `
+          <button onclick="publishReading()">🚀 Publish</button>
+        `;
+      }
+    }
+
+  } catch (e) {
+    console.error(e);
+    alert("Failed to load reading test");
+  }
+};
