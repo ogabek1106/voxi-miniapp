@@ -1182,7 +1182,7 @@ window.openAdminReading = async function (testId) {
 
         block.dataset.initialized = "1";
 
-          const qid = block.dataset.questionId;
+          //const qid = block.dataset.questionId;
 
           const questionData = p.questions.find(
             q => String(q.id) === String(qid)
