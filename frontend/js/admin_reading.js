@@ -141,6 +141,10 @@ window.generateMatching = function(input) {
     return;
   }
   const block = input.closest(".question-block");
+  if (!block) {
+    console.error("Matching block not found");
+    return;
+  }
   const wrap = block.querySelector(".matching-editor");
 
   const qCount = parseInt(block.querySelector(".match-q-count")?.value || 0);
@@ -238,7 +242,7 @@ window.handleQuestionTypeChange = function(selectEl) {
     if (answerWrap) answerWrap.style.display = "";
   }
   console.log("Clearing meta wrap");
-  wrap.innerHTML = "";
+  wrap.replaceChildren();
 
   // TEXT INPUT SETTINGS
   if (selectEl.value === "gap") {
@@ -286,6 +290,16 @@ if (selectEl.value === "matching") {
 <div class="matching-editor" style="margin-top:10px;"></div>
 
 `;
+  console.log("MATCH UI CREATED", wrap);
+
+  const qInput = wrap.querySelector(".match-q-count");
+  const oInput = wrap.querySelector(".match-opt-count");
+
+  qInput.addEventListener("input", () => generateMatching(qInput));
+  oInput.addEventListener("input", () => generateMatching(qInput));
+
+  generateMatching(qInput);
+}
 
   const qInput = wrap.querySelector(".match-q-count");
   const oInput = wrap.querySelector(".match-opt-count");
