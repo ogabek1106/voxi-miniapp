@@ -48,3 +48,9 @@ window.attachImage = function(btn) {
     }
   };
 };
+
+window.removeImage = function(btn) {
+  const wrap = btn.closest(".image-attach-wrap");
+  wrap.dataset.imageUrl = "";
+  wrap.querySelector(".image-preview").innerHTML = "";
+};
