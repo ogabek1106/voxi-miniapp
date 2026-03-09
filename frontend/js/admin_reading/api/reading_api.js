@@ -370,3 +370,17 @@ window.unpublishReading = async function (testId) {
     alert("❌ Failed to unpublish reading test\n" + (e.message || ""));
   }
 };
+
+window.deleteReadingTest = async function (testId) {
+  const ok = confirm("❌ Are you sure you want to DELETE this reading test?\nThis cannot be undone.");
+  if (!ok) return;
+
+  try {
+    await apiDelete(`/admin/reading/tests/${testId}`);
+    alert("🗑 Reading test deleted");
+    loadAdminReadingList();
+  } catch (e) {
+    console.error("❌ DELETE TEST ERROR:", e);
+    alert("❌ Failed to delete reading test\n" + (e.message || ""));
+  }
+};
