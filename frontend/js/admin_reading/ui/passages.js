@@ -59,6 +59,8 @@ window.addPassage = function () {
   `;
 
   wrap.appendChild(block);
+  const meta = block.querySelector(".q-meta-wrap");
+  AdminReading.loadQuestionUI("matching", meta);
 };
 
 window.addQuestion = function (btn) {
@@ -95,4 +97,6 @@ window.addQuestion = function (btn) {
   `;
 
   questionsWrap.insertBefore(block, btn);
+  const meta = block.querySelector(".q-meta-wrap");
+  AdminReading.loadQuestionUI("matching", meta);
 };
