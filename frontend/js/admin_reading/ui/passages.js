@@ -41,7 +41,7 @@ window.addPassage = function () {
 
         <label>Question type</label>
         <select class="q-type"
-                onchange="debugTypeChange(this)"
+                onchange="handleQuestionTypeChange(this)"
                 style="width:100%; padding:8px; border-radius:6px;">
               <option value="mcq">Single Choice</option>
               <option value="multi">Multi Choice</option>
@@ -94,7 +94,7 @@ window.addQuestion = function (btn) {
 
     <label>Question type</label>
     <select class="q-type"
-            onchange="debugTypeChange(this)"
+            onchange="handleQuestionTypeChange(this)"
             style="width:100%; padding:8px; border-radius:6px;">
       <option value="mcq">Single Choice</option>
       <option value="multi">Multi Choice</option>
