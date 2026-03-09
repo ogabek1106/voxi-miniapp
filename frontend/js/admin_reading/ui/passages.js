@@ -1,4 +1,5 @@
 // frontend/js/admin_reading/ui/passages.js
+window.AdminReading = window.AdminReading || {};
 window.addPassage = function () {
   const wrap = document.getElementById("passages-wrap");
   if (!wrap) return;
