@@ -61,11 +61,11 @@ html += `
 
 html += `<div style="margin-top:12px;"><strong>Questions</strong></div>`;
 console.log("STEP R6: generating questions");
+const baseQ = parseInt(block?.dataset?.globalQ || 0);
+
 for (let i = 0; i < qCount; i++) {
 
-
-const baseQ = parseInt(block?.dataset?.globalQ || 0);
-const qNum = baseQ + i;
+  const qNum = baseQ + i;
 
 html += `
   <div style="display:flex; gap:8px; margin-bottom:6px;">
