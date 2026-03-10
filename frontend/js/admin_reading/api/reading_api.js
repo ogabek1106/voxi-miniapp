@@ -115,15 +115,15 @@ window.saveReadingDraft = async function () {
         console.log("---- QUESTION BLOCK ----");
         console.log(q);
 
-        const typeEl = q.querySelector(".q-type");
+        const type = q.dataset.type || "matching";
         const textEl = q.querySelector(".q-text");
         const answerEl = q.querySelector(".q-answer");
 
-        console.log("typeEl:", typeEl);
+        console.log("type:", type);
         console.log("textEl:", textEl);
         console.log("answerEl:", answerEl);
 
-        const type = typeEl?.value;
+        // const type = typeEl?.value;
         if (type === "matching") {
 
           const options = Array.from(q.querySelectorAll(".match-option"))
