@@ -244,63 +244,21 @@ window.openAdminReading = async function (testId) {
         );
 
         const meta = block.querySelector(".q-meta-wrap");
-        AdminReading.loadQuestionUI(questionData.type.toLowerCase(), meta);
+        AdminReading.loadQuestionUI(
+          questionData.type.toLowerCase(),
+          meta,
+          questionData
+        );
          
 
           if (!questionData) return;
-
-          {
-
-            const options = questionData.meta?.options || [];
-
-            const questions = [];
-            let start = p.questions.findIndex(x => x.id === questionData.id);
-
-            for (let i = start; i < p.questions.length; i++) {
-              const item = p.questions[i];
-              if (item.type !== "MATCHING") break;
-              questions.push(item);
-            }
-
-            questions.sort((a, b) => a.order_index - b.order_index);
-
-            setTimeout(() => {
-
-              const qCountInput = block.querySelector(".match-q-count");
-              const oCountInput = block.querySelector(".match-opt-count");
-
-              if (!qCountInput || !oCountInput) return;
-
-              qCountInput.value = questions.length;
-              oCountInput.value = options.length;
-
-              AdminReading.generateMatching(qCountInput);
-
-              const wrap = block.querySelector(".matching-editor");
-              if (!wrap) return;
-
-              wrap.querySelectorAll(".match-option").forEach((opt, i) => {
-                if (options[i]) opt.value = options[i];
-              });
-
-              wrap.querySelectorAll(".match-question").forEach((inp, i) => {
-                if (questions[i]) inp.value = questions[i].content?.text || "";
-              });
-
-              wrap.querySelectorAll(".match-answer").forEach((sel, i) => {
-                if (questions[i]) sel.value = questions[i].correct_answer?.value || "A";
-              });
-
-            }, 0);
-          }
           console.log("PATCH DEBUG", {
             block_id: qid,
             questionData: questionData,
             allQuestions: p.questions
           });
           if (!questionData) return;
-          block.querySelector(".q-text").value = questionData.content?.text || "";
-          block.querySelector(".q-answer").value = questionData.correct_answer?.value || "";
+      
           // Restore question image
           if (questionData.image_url) {
             const imageWrap = block.querySelector(".image-attach-wrap");
