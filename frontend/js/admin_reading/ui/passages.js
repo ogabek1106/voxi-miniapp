@@ -36,7 +36,7 @@ window.addPassage = function () {
     <div class="questions-wrap" style="margin-top:12px;">
       <h5>Questions</h5>
 
-      <div class="question-block" data-global-q="${qNum}" data-question-id="temp_${qNum}" style="padding:8px; border:1px solid #e5e5ea; border-radius:8px; margin-bottom:8px;">
+      <div class="question-block" data-type="matching" data-global-q="${qNum}" data-question-id="temp_${qNum}" style="padding:8px; border:1px solid #e5e5ea; border-radius:8px; margin-bottom:8px;">
         <div style="font-weight:700; margin-bottom:6px;">Q${qNum}</div>
 
         <div class="q-type-label" style="font-weight:600; margin-bottom:6px;">
@@ -71,6 +71,7 @@ window.addQuestion = function (btn) {
 
   const block = document.createElement("div");
   block.className = "question-block";
+  block.dataset.type = "matching";
   block.dataset.globalQ = qNum;
   block.dataset.questionId = "temp_" + qNum;
   block.style.padding = "8px";
