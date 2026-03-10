@@ -21,8 +21,4 @@ AdminReading.renderMatchingMeta = function(wrap) {
 
   console.log("STEP 4: matching meta UI inserted");
 
-  console.log("STEP 5: calling matchingInit");
-
-  AdminReading.matchingInit(wrap);
-
 };
