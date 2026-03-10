@@ -242,7 +242,7 @@ window.openAdminReading = async function (testId) {
         const questionData = p.questions.find(
           q => String(q.id) === String(qid)
         );
-
+        if (!questionData) return;
         const meta = block.querySelector(".q-meta-wrap");
         AdminReading.loadQuestionUI(
           questionData.type.toLowerCase(),
@@ -250,8 +250,6 @@ window.openAdminReading = async function (testId) {
           questionData
         );
          
-
-          if (!questionData) return;
           console.log("PATCH DEBUG", {
             block_id: qid,
             questionData: questionData,
