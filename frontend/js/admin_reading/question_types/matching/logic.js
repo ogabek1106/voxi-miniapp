@@ -10,6 +10,23 @@ AdminReading.registerQuestionType("matching", function(container, data = null) {
     return;
   }
 
+  // render UI
   AdminReading.renderMatchingMeta(container);
+
+  // find inputs
+  const qInput = container.querySelector(".match-q-count");
+  const optInput = container.querySelector(".match-opt-count");
+
+  // first render
+  AdminReading.renderMatchingEditor(container, qInput.value, optInput.value);
+
+  // realtime updates
+  qInput.addEventListener("input", () => {
+    AdminReading.renderMatchingEditor(container, qInput.value, optInput.value);
+  });
+
+  optInput.addEventListener("input", () => {
+    AdminReading.renderMatchingEditor(container, qInput.value, optInput.value);
+  });
 
 });
