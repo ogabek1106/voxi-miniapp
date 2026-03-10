@@ -94,7 +94,9 @@ html += `
 
 
 }
-
+if (block) {
+  block.dataset.generatedQuestions = qCount;
+}
 wrap.innerHTML = html;
 console.log("STEP R7: HTML inserted");
 wrap.querySelectorAll(".match-answer").forEach(sel => {
