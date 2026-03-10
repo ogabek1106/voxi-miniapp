@@ -98,6 +98,9 @@ if (block) {
   block.dataset.generatedQuestions = qCount;
 }
 wrap.innerHTML = html;
+if (block) {
+  window.__globalQuestionCounter = baseQ + qCount - 1;
+}
 console.log("STEP R7: HTML inserted");
 wrap.querySelectorAll(".match-answer").forEach(sel => {
 const max = oCount - 1;
