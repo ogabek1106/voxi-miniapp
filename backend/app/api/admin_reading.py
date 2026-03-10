@@ -173,7 +173,7 @@ def get_reading_test(test_id: int, db: Session = Depends(get_db)):
                         "order_index": q.order_index,
                         "type": q.type.value if hasattr(q.type, "value") else str(q.type),
                         "instruction": q.instruction,
-                        "content": json.loads(q.content) if isinstance(q.content, str) else q.content,
+                        "content": q.content,
                         "content_type": str(type(q.content)),
                         "correct_answer": q.correct_answer,
                         "image_url": q.image_url,
