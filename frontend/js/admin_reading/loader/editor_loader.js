@@ -248,7 +248,7 @@ window.openAdminReading = async function (testId) {
         );
 
         const meta = block.querySelector(".q-meta-wrap");
-        AdminReading.loadQuestionUI("matching", meta);
+        AdminReading.loadQuestionUI(questionData.type.toLowerCase(), meta);
          
 
           if (!questionData) return;
