@@ -39,8 +39,12 @@ window.addPassage = function () {
       <div class="question-block" data-type="matching" data-global-q="${qNum}" data-question-id="temp_${qNum}" style="padding:8px; border:1px solid #e5e5ea; border-radius:8px; margin-bottom:8px;">
         <div style="font-weight:700; margin-bottom:6px;">Q${qNum}</div>
 
-        <div class="q-type-label" style="font-weight:600; margin-bottom:6px;">
-  Question type: Matching
+        <div style="margin-bottom:6px;">
+  <label>Question type</label>
+  <select class="q-type">
+    <option value="matching">Matching</option>
+    <option value="single_choice">Single Choice</option>
+  </select>
 </div>
         <div class="q-meta-wrap" style="margin-top:6px;"></div>
         <hr style="margin:10px 0; border:0; border-top:1px solid #eee;" />
@@ -59,8 +63,19 @@ window.addPassage = function () {
   `;
 
   wrap.appendChild(block);
+
   const meta = block.querySelector(".q-meta-wrap");
-  AdminReading.loadQuestionUI("matching", meta);
+  const select = block.querySelector(".q-type");
+
+  // initial load
+  AdminReading.loadQuestionUI(select.value, meta);
+
+  // react when user changes type
+  select.addEventListener("change", () => {
+    meta.innerHTML = "";
+    block.dataset.type = select.value;
+    AdminReading.loadQuestionUI(select.value, meta);
+  });
 };
 
 window.addQuestion = function (btn) {
@@ -82,8 +97,12 @@ window.addQuestion = function (btn) {
   block.innerHTML = `
     <div style="font-weight:700; margin-bottom:6px;">Q${qNum}</div>
 
-    <div class="q-type-label" style="font-weight:600; margin-bottom:6px;">
-  Question type: Matching
+    <div style="margin-bottom:6px;">
+  <label>Question type</label>
+  <select class="q-type">
+    <option value="matching">Matching</option>
+    <option value="single_choice">Single Choice</option>
+  </select>
 </div>
     <div class="q-meta-wrap" style="margin-top:6px;"></div>
     <hr style="margin:10px 0; border:0; border-top:1px solid #eee;" />
@@ -99,5 +118,15 @@ window.addQuestion = function (btn) {
 
   questionsWrap.insertBefore(block, btn);
   const meta = block.querySelector(".q-meta-wrap");
-  AdminReading.loadQuestionUI("matching", meta);
+  const select = block.querySelector(".q-type");
+
+  // initial load
+  AdminReading.loadQuestionUI(select.value, meta);
+
+  // react when type changes
+  select.addEventListener("change", () => {
+    meta.innerHTML = "";
+    block.dataset.type = select.value;
+    AdminReading.loadQuestionUI(select.value, meta);
+  });
 };
