@@ -139,6 +139,14 @@ window.openAdminReading = async function (testId) {
       for (let qi = 0; qi < p.questions.length; qi++) {
 
         const q = p.questions[qi];
+        // prevent duplicate MATCHING blocks using group id
+        if (
+          q.type === "MATCHING" &&
+          qi > 0 &&
+          p.questions[qi - 1].question_group_id === q.question_group_id
+        ) {
+          continue;
+        }
 
         window.__globalQuestionCounter++;
 
