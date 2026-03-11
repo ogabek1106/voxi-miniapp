@@ -1,8 +1,7 @@
 // frontend/js/admin_reading/api/reading_api.js
 window.AdminReading = window.AdminReading || {};
 window.collectReadingFormData = function () {
-  let groupCounter = 1;
-  const groupMap = {};
+  
   const title = document.getElementById("reading-title")?.value?.trim();
   const time = parseInt(document.getElementById("reading-time")?.value || "60", 10);
 
@@ -111,6 +110,7 @@ window.saveReadingDraft = async function () {
       // 3) Create questions for this passage
       const questions = p.querySelector(".questions-wrap").querySelectorAll(".question-block");
       let orderCursor = 1;
+      let groupCounter = 1;
       for (let qi = 0; qi < questions.length; qi++) {
         const q = questions[qi];
 
@@ -125,7 +125,7 @@ window.saveReadingDraft = async function () {
 
         // const type = typeEl?.value;
         if (type === "matching") {
-          const groupId = Date.now() + Math.floor(Math.random()*1000);
+          const groupId = groupCounter++;
           const options = Array.from(q.querySelectorAll(".match-option"))
             .map(o => o.value.trim())
             .filter(Boolean);
@@ -272,12 +272,13 @@ window.publishReading = async function () {
 
       const questions = p.querySelector(".questions-wrap").querySelectorAll(".question-block");
       let orderCursor = 1;
+      let groupCounter = 1;
       for (let qi = 0; qi < questions.length; qi++) {
         const q = questions[qi];
 
         const type = q.querySelector(".q-type-select")?.value;
         if (type === "matching") {
-          const groupId = Date.now() + Math.floor(Math.random()*1000);
+          const groupId = groupCounter++;
           const options = Array.from(q.querySelectorAll(".match-option"))
             .map(o => o.value.trim())
             .filter(Boolean);
