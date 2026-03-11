@@ -41,7 +41,7 @@ window.addPassage = function () {
 
         <div style="margin-bottom:6px;">
   <label>Question type</label>
-  <select class="q-type">
+  <select class="q-type-select">
     <option value="matching">Matching</option>
     <option value="single_choice">Single Choice</option>
   </select>
@@ -99,7 +99,7 @@ window.addQuestion = function (btn) {
 
     <div style="margin-bottom:6px;">
   <label>Question type</label>
-  <select class="q-type">
+  <select class="q-type-select">
     <option value="matching">Matching</option>
     <option value="single_choice">Single Choice</option>
   </select>
