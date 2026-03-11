@@ -12,7 +12,7 @@ from typing import List, Any
 from app.models import ReadingQuestionType
 import traceback
 import json
-
+from sqlalchemy import func
 router = APIRouter(prefix="/admin/reading", tags=["admin-reading"])
 
 
@@ -95,11 +95,17 @@ def add_question(passage_id: int, payload: QuestionCreate, db: Session = Depends
 
         if not payload.correct_answer:
             raise HTTPException(status_code=400, detail="correct_answer is required")
+            group_id = None
+
+            if payload.type == ReadingQuestionType.MATCHING:
+                max_group = db.query(func.max(ReadingQuestion.question_group_id)).scalar()
+                group_id = (max_group or 0) + 1
         
         q = ReadingQuestion(
             passage_id=passage_id,
             type=payload.type,
             order_index=payload.order_index,
+            question_group_id=group_id,
             instruction=payload.instruction,
             content=payload.content,
             correct_answer=payload.correct_answer,
