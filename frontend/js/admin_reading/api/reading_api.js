@@ -1,6 +1,8 @@
 // frontend/js/admin_reading/api/reading_api.js
 window.AdminReading = window.AdminReading || {};
 window.collectReadingFormData = function () {
+  let groupCounter = 1;
+  const groupMap = {};
   const title = document.getElementById("reading-title")?.value?.trim();
   const time = parseInt(document.getElementById("reading-time")?.value || "60", 10);
 
@@ -123,7 +125,7 @@ window.saveReadingDraft = async function () {
 
         // const type = typeEl?.value;
         if (type === "matching") {
-
+          const groupId = Date.now() + Math.floor(Math.random()*1000);
           const options = Array.from(q.querySelectorAll(".match-option"))
             .map(o => o.value.trim())
             .filter(Boolean);
@@ -140,6 +142,7 @@ window.saveReadingDraft = async function () {
             await apiPost(`/admin/reading/passages/${passageId}/questions`, {
               type: "MATCHING",
               order_index: orderCursor++,
+              question_group_id: groupId,
               instruction: null,
               content: { text: qText },
               correct_answer: { value: answer },
@@ -274,7 +277,7 @@ window.publishReading = async function () {
 
         const type = q.querySelector(".q-type-select")?.value;
         if (type === "matching") {
-
+          const groupId = Date.now() + Math.floor(Math.random()*1000);
           const options = Array.from(q.querySelectorAll(".match-option"))
             .map(o => o.value.trim())
             .filter(Boolean);
@@ -290,6 +293,7 @@ window.publishReading = async function () {
             await apiPost(`/admin/reading/passages/${passageId}/questions`, {
               type: "MATCHING",
               order_index: orderCursor++,
+              question_group_id: groupId,
               instruction: null,
               content: { text: qText },
               correct_answer: { value: answer },
