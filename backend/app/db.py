@@ -61,3 +61,10 @@ def ensure_mock_pack_column():
 
         conn.commit()
 
+def ensure_question_group_column():
+    with engine.connect() as conn:
+        conn.execute(text(
+            "ALTER TABLE reading_questions "
+            "ADD COLUMN IF NOT EXISTS question_group_id INTEGER;"
+        ))
+        conn.commit()
