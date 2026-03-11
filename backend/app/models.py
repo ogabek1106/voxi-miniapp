@@ -71,7 +71,7 @@ class ReadingQuestion(Base):
     id = Column(Integer, primary_key=True, index=True)
     passage_id = Column(Integer, ForeignKey("reading_passages.id", ondelete="CASCADE"))
     order_index = Column(Integer, nullable=False)
-
+    question_group_id = Column(Integer, nullable=True)
     type = Column(Enum(ReadingQuestionType), nullable=False)
     correct_answer = Column(JSON, nullable=True)
     instruction = Column(Text, nullable=True)
