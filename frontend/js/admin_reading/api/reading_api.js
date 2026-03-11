@@ -115,13 +115,11 @@ window.saveReadingDraft = async function () {
         console.log("---- QUESTION BLOCK ----");
         console.log(q);
 
-        const type = q.dataset.type || "matching";
-        const textEl = q.querySelector(".q-text");
-        const answerEl = q.querySelector(".q-answer");
+        const type = q.querySelector(".q-type-select")?.value || "matching";
+       
 
         console.log("type:", type);
-        console.log("textEl:", textEl);
-        console.log("answerEl:", answerEl);
+        
 
         // const type = typeEl?.value;
         if (type === "matching") {
@@ -153,42 +151,28 @@ window.saveReadingDraft = async function () {
 
           continue;
         }
-        const text = textEl?.value;
-        const correctAnswer = answerEl?.value;
+        if (type === "single_choice") {
 
-        console.log("READ VALUES:", { type, text, correctAnswer });
+          const options = Array.from(q.querySelectorAll(".sc-option input"))
+            .map(o => o.value.trim())
+            .filter(Boolean);
 
-        if (!text?.trim()) {
-          console.warn(`Skipping empty question ${qi + 1}`);
-          continue; // skip empty questions
-        }
-         
+          const correct = q.querySelector(".sc-option input:checked");
+
+          await apiPost(`/admin/reading/passages/${passageId}/questions`, {
+            type: "SINGLE_CHOICE",
+            order_index: orderCursor++,
+            instruction: null,
+            content: { text: q.querySelector(".sc-question")?.value || "" },
+            correct_answer: { value: correct?.value || "A" },
+            meta: { options },
+            points: 1
+          });
+
+          continue;
+        }        
         console.log("🧪 Creating question", qi + 1, "for passage", pi + 1);
-        let meta = null;
-
-        if (type === "gap") {
-          const maxWords = q.querySelector(".q-max-words")?.value;
-          const allowNumbers = q.querySelector(".q-allow-numbers")?.checked;
-
-          meta = {
-            max_words: maxWords ? parseInt(maxWords) : null,
-            allow_numbers: !!allowNumbers
-          };
-        }
-        const imageWrap = q.querySelector(".image-attach-wrap");
-        const imageUrl = imageWrap?.dataset.imageUrl || null;
-
-        await apiPost(`/admin/reading/passages/${passageId}/questions`, {
-          type: mapType(type),
-          order_index: orderCursor++,
-          instruction: null,
-          content: { text: text },
-          correct_answer: { value: correctAnswer },
-          image_url: imageUrl,
-          meta: meta,
-          explanation: null,
-          points: 1
-        });
+        
       }
     }
 
@@ -288,7 +272,7 @@ window.publishReading = async function () {
       for (let qi = 0; qi < questions.length; qi++) {
         const q = questions[qi];
 
-        const type = q.querySelector(".q-type")?.value;
+        const type = q.querySelector(".q-type-select")?.value;
         if (type === "matching") {
 
           const options = Array.from(q.querySelectorAll(".match-option"))
@@ -314,6 +298,26 @@ window.publishReading = async function () {
             });
 
           }
+
+          continue;
+        }
+        if (type === "single_choice") {
+
+          const options = Array.from(q.querySelectorAll(".sc-option input"))
+            .map(o => o.value.trim())
+            .filter(Boolean);
+
+          const correct = q.querySelector(".sc-option input:checked");
+
+          await apiPost(`/admin/reading/passages/${passageId}/questions`, {
+            type: "SINGLE_CHOICE",
+            order_index: orderCursor++,
+            instruction: null,
+            content: { text: q.querySelector(".sc-question")?.value || "" },
+            correct_answer: { value: correct?.value || "A" },
+            meta: { options },
+            points: 1
+          });
 
           continue;
         }
