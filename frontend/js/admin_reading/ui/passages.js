@@ -65,7 +65,7 @@ window.addPassage = function () {
   wrap.appendChild(block);
 
   const meta = block.querySelector(".q-meta-wrap");
-  const select = block.querySelector(".q-type");
+  const select = block.querySelector(".q-type-select");
 
   // initial load
   AdminReading.loadQuestionUI(select.value, meta);
@@ -118,7 +118,7 @@ window.addQuestion = function (btn) {
 
   questionsWrap.insertBefore(block, btn);
   const meta = block.querySelector(".q-meta-wrap");
-  const select = block.querySelector(".q-type");
+  const select = block.querySelector(".q-type-select");
 
   // initial load
   AdminReading.loadQuestionUI(select.value, meta);
