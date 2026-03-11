@@ -140,15 +140,6 @@ window.openAdminReading = async function (testId) {
 
         const q = p.questions[qi];
 
-        // prevent duplicate MATCHING blocks
-        if (
-          q.type === "MATCHING" &&
-          qi > 0 &&
-          p.questions[qi - 1].type === "MATCHING"
-        ) {
-          continue;
-        }  
-
         window.__globalQuestionCounter++;
 
         const textValue = q.content?.text || "";
