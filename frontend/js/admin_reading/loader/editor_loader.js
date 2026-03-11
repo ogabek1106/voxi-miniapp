@@ -163,8 +163,12 @@ window.openAdminReading = async function (testId) {
           <div class="question-block" data-global-q="${window.__globalQuestionCounter}" data-question-id="${q.id}" style="padding:8px; border:1px solid #e5e5ea; border-radius:8px; margin-bottom:8px;">
             <div style="font-weight:700; margin-bottom:6px;">Q${window.__globalQuestionCounter}</div>
 
-            <div style="font-weight:600; margin-bottom:6px;">
-  Question type: Matching
+            <div style="margin-bottom:6px;">
+  <label style="font-weight:600;">Question type</label>
+  <select class="q-type-select" style="width:100%; margin-top:4px;">
+    <option value="matching">Matching</option>
+    <option value="single_choice">Single Choice</option>
+  </select>
 </div>
             <div class="q-meta-wrap" style="margin-top:6px;"></div>
             
@@ -244,11 +248,36 @@ window.openAdminReading = async function (testId) {
         );
         if (!questionData) return;
         const meta = block.querySelector(".q-meta-wrap");
+        const typeSelect = block.querySelector(".q-type-select");
+
+        if (typeSelect && questionData?.type) {
+          typeSelect.value = questionData.type.toLowerCase();
+        }
+
+        const initialType = typeSelect ? typeSelect.value : questionData.type.toLowerCase();
+
         AdminReading.loadQuestionUI(
-          questionData.type.toLowerCase(),
+          initialType,
           meta,
           questionData
         );
+
+        // 🔁 Gate switch
+        if (typeSelect) {
+          typeSelect.addEventListener("change", () => {
+
+            const newType = typeSelect.value;
+  
+            meta.innerHTML = ""; // clear previous UI
+
+            AdminReading.loadQuestionUI(
+              newType,
+              meta,
+              null
+            );
+  
+          });
+        }
          
           console.log("PATCH DEBUG", {
             block_id: qid,
