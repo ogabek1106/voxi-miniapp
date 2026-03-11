@@ -20,6 +20,7 @@ import os
 os.makedirs("media", exist_ok=True)
 ensure_reading_progress_columns()
 ensure_mock_pack_column()
+ensure_question_group_column()
 app = FastAPI(title="Voxi Mini App API")
 app.include_router(mock_list.router)
 app.include_router(admin_upload_router)
