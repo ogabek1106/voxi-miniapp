@@ -97,9 +97,9 @@ def add_question(passage_id: int, payload: QuestionCreate, db: Session = Depends
             raise HTTPException(status_code=400, detail="correct_answer is required")
         group_id = None
 
-            if payload.type == ReadingQuestionType.MATCHING:
-                max_group = db.query(func.max(ReadingQuestion.question_group_id)).scalar()
-                group_id = (max_group or 0) + 1
+        if payload.type == ReadingQuestionType.MATCHING:
+            max_group = db.query(func.max(ReadingQuestion.question_group_id)).scalar()
+            group_id = (max_group or 0) + 1
         
         q = ReadingQuestion(
             passage_id=passage_id,
