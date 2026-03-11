@@ -73,7 +73,7 @@ from typing import List, Any
 class QuestionCreate(BaseModel):
     type: ReadingQuestionType
     order_index: int
-
+    question_group_id: Optional[int] = None
     instruction: Optional[str] = None
     content: dict
     correct_answer: dict
@@ -95,11 +95,7 @@ def add_question(passage_id: int, payload: QuestionCreate, db: Session = Depends
 
         if not payload.correct_answer:
             raise HTTPException(status_code=400, detail="correct_answer is required")
-        group_id = None
-
-        if payload.type == ReadingQuestionType.MATCHING:
-            max_group = db.query(func.max(ReadingQuestion.question_group_id)).scalar()
-            group_id = (max_group or 0) + 1
+        group_id = payload.question_group_id
         
         q = ReadingQuestion(
             passage_id=passage_id,
