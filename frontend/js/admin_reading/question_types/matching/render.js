@@ -139,7 +139,11 @@ if (groupData && groupData.length) {
 
 }
 if (block) {
-  window.__globalQuestionCounter = baseQ + qCount - 1;
+  const next = baseQ + qCount - 1;
+
+  if (next > window.__globalQuestionCounter) {
+    window.__globalQuestionCounter = next;
+  }
 }
 console.log("STEP R7: HTML inserted");
 wrap.querySelectorAll(".match-answer").forEach(sel => {
