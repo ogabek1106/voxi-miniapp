@@ -8,7 +8,7 @@ window.addPassage = function () {
   const nextIndex = count + 1;
 
   // 🔢 Global question number
-  const qNum = ++window.__globalQuestionCounter;
+  const qNum = window.__globalQuestionCounter + 1;
 
   const block = document.createElement("div");
   block.className = "passage-block";
@@ -82,7 +82,7 @@ window.addQuestion = function (btn) {
   const questionsWrap = btn.closest(".questions-wrap");
   if (!questionsWrap) return;
 
-  const qNum = ++window.__globalQuestionCounter;
+  const qNum = window.__globalQuestionCounter + 1;
 
   const block = document.createElement("div");
   block.className = "question-block";
