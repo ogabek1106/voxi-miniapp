@@ -1,8 +1,17 @@
 // frontend/js/admin_reading/ui/passages.js
 window.AdminReading = window.AdminReading || {};
 window.getNextQuestionNumber = function () {
-  const nums = [...document.querySelectorAll(".question-block")]
+
+  const blockNums = [...document.querySelectorAll(".question-block")]
     .map(b => parseInt(b.dataset.globalQ) || 0);
+
+  const rowNums = [...document.querySelectorAll(".matching-editor div")]
+    .map(el => {
+      const m = el.textContent.match(/^Q(\d+)/);
+      return m ? parseInt(m[1]) : 0;
+    });
+
+  const nums = [...blockNums, ...rowNums];
 
   return nums.length ? Math.max(...nums) + 1 : 1;
 };
@@ -14,7 +23,7 @@ window.addPassage = function () {
   const nextIndex = count + 1;
 
   // 🔢 Global question number
-  const qNum = window.__globalQuestionCounter + 1;
+  const qNum = getNextQuestionNumber();
 
   const block = document.createElement("div");
   block.className = "passage-block";
@@ -88,7 +97,7 @@ window.addQuestion = function (btn) {
   const questionsWrap = btn.closest(".questions-wrap");
   if (!questionsWrap) return;
 
-  const qNum = window.__globalQuestionCounter + 1;
+  const qNum = getNextQuestionNumber();
 
   const block = document.createElement("div");
   block.className = "question-block";
