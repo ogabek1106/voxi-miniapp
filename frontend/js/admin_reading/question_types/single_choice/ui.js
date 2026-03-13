@@ -3,8 +3,6 @@ window.AdminReading = window.AdminReading || {};
 
 AdminReading.renderSingleChoiceUI = function (wrap, data = null) {
 
-  console.log("STEP MCQ UI: renderSingleChoiceUI", wrap);
-
   wrap.innerHTML = `
     <div class="mcq-editor">
 
@@ -45,5 +43,30 @@ AdminReading.renderSingleChoiceUI = function (wrap, data = null) {
 
     </div>
   `;
+
+  // 🔹 populate fields if editing existing question
+  if (data) {
+
+    const questionInput = wrap.querySelector(".mcq-question");
+    const optionInputs = wrap.querySelectorAll(".mcq-option-input");
+    const correctSelect = wrap.querySelector(".mcq-correct");
+
+    if (data.content?.text) {
+      questionInput.value = data.content.text;
+    }
+
+    if (data.meta?.options) {
+      data.meta.options.forEach((opt, i) => {
+        if (optionInputs[i]) {
+          optionInputs[i].value = opt;
+        }
+      });
+    }
+
+    if (data.correct_answer?.value) {
+      correctSelect.value = data.correct_answer.value;
+    }
+
+  }
 
 };
