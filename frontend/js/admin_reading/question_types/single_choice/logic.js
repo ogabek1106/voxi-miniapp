@@ -5,11 +5,11 @@ AdminReading.registerQuestionType("single_choice", function(container, data = nu
 
   console.log("MCQ loader triggered", container);
 
-  if (!AdminReading.renderSingleChoiceUI) {
-    console.error("renderSingleChoiceUI not found");
+  if (!AdminReading.renderSingleChoice) {
+    console.error("renderSingleChoice not found");
     return;
   }
 
-  AdminReading.renderSingleChoiceUI(container, data);
+  AdminReading.renderSingleChoice(container, data);
 
 });
