@@ -82,7 +82,7 @@ for (let i = 0; i < qCount; i++) {
 html += `
   <div style="display:flex; gap:8px; margin-bottom:6px;">
 
-    <div style="
+    <div class="match-q-label" style="
       width:40px;
       display:flex;
       align-items:center;
