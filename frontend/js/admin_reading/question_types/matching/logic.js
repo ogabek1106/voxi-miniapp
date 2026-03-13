@@ -18,9 +18,7 @@ AdminReading.registerQuestionType("matching", function(container, data = null) {
   const optInput = container.querySelector(".match-opt-count");
 
   // first render ONLY if editing existing data
-  if (data) {
-    AdminReading.generateMatching(qInput, data);
-  }
+  AdminReading.generateMatching(qInput, data || null);
 
   // realtime updates
   qInput.addEventListener("input", () => {
