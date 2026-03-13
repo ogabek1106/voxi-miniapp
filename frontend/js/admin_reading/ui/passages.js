@@ -49,7 +49,7 @@ window.addPassage = function () {
       <h5>Questions</h5>
 
       <div class="question-block" data-type="matching" data-global-q="${qNum}" data-question-id="temp_${qNum}" style="padding:8px; border:1px solid #e5e5ea; border-radius:8px; margin-bottom:8px;">
-        <div style="font-weight:700; margin-bottom:6px;">Q${qNum}</div>
+        <div class="q-header" style="font-weight:700; margin-bottom:6px;">Q${qNum}</div>
 
         <div style="margin-bottom:6px;">
   <label>Question type</label>
@@ -82,11 +82,26 @@ window.addPassage = function () {
   // initial load
   AdminReading.loadQuestionUI(select.value, meta);
 
+  const header = block.querySelector(".q-header");
+  if (select.value === "matching" && header) {
+    header.style.display = "none";
+  }
   // react when user changes type
   select.addEventListener("change", () => {
+
     meta.innerHTML = "";
     block.dataset.type = select.value;
+
+    const header = block.querySelector(".q-header");
+
+    if (select.value === "matching") {
+      if (header) header.style.display = "none";
+    } else {
+      if (header) header.style.display = "block";
+    }
+
     AdminReading.loadQuestionUI(select.value, meta);
+
   });
 };
 
@@ -107,7 +122,7 @@ window.addQuestion = function (btn) {
   block.style.marginBottom = "8px";
 
   block.innerHTML = `
-    <div style="font-weight:700; margin-bottom:6px;">Q${qNum}</div>
+    <div class="q-header" style="font-weight:700; margin-bottom:6px;">Q${qNum}</div>
 
     <div style="margin-bottom:6px;">
   <label>Question type</label>
@@ -134,11 +149,25 @@ window.addQuestion = function (btn) {
 
   // initial load
   AdminReading.loadQuestionUI(select.value, meta);
-
+  const header = block.querySelector(".q-header");
+  if (select.value === "matching" && header) {
+    header.style.display = "none";
+  }
   // react when type changes
   select.addEventListener("change", () => {
+
     meta.innerHTML = "";
     block.dataset.type = select.value;
+
+    const header = block.querySelector(".q-header");
+
+    if (select.value === "matching") {
+      if (header) header.style.display = "none";
+    } else {
+      if (header) header.style.display = "block";
+    }
+
     AdminReading.loadQuestionUI(select.value, meta);
+
   });
 };
