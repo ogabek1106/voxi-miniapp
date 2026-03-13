@@ -1,5 +1,11 @@
 // frontend/js/admin_reading/ui/passages.js
 window.AdminReading = window.AdminReading || {};
+window.getNextQuestionNumber = function () {
+  const nums = [...document.querySelectorAll(".question-block")]
+    .map(b => parseInt(b.dataset.globalQ) || 0);
+
+  return nums.length ? Math.max(...nums) + 1 : 1;
+};
 window.addPassage = function () {
   const wrap = document.getElementById("passages-wrap");
   if (!wrap) return;
