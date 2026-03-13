@@ -135,17 +135,20 @@ window.openAdminReading = async function (testId) {
       passageBlock.style.marginTop = "16px";
 
       let questionsHtml = "";
+      const renderedGroups = new Set();let questionsHtml = "";
 
       for (let qi = 0; qi < p.questions.length; qi++) {
 
         const q = p.questions[qi];
         // prevent duplicate MATCHING blocks using group id
-        if (
-          q.type === "MATCHING" &&
-          qi > 0 &&
-          p.questions[qi - 1].question_group_id === q.question_group_id
-        ) {
-          continue;
+        if (q.type === "MATCHING") {
+          const gid = q.question_group_id || 0;
+
+          if (renderedGroups.has(gid)) {
+            continue;
+          }
+
+          renderedGroups.add(gid);
         }
 
         window.__globalQuestionCounter++;
