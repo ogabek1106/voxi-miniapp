@@ -258,10 +258,18 @@ window.openAdminReading = async function (testId) {
 
         const initialType = typeSelect ? typeSelect.value : questionData.type.toLowerCase();
 
+        let payload = questionData;
+
+        if (questionData.type === "MATCHING") {
+          payload = p.questions.filter(
+            q => q.question_group_id === questionData.question_group_id
+          );
+        }
+
         AdminReading.loadQuestionUI(
           initialType,
           meta,
-          questionData
+          payload
         );
 
         // 🔁 Gate switch
