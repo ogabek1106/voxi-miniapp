@@ -1,7 +1,7 @@
 // frontend/js/admin_reading/question_types/matching/render.js
 window.AdminReading = window.AdminReading || {};
 
-window.AdminReading.generateMatching = function(input) {
+window.AdminReading.generateMatching = function(input, groupData = null) {
 console.log("generateMatching called", input);
 if (!input) return;
 
@@ -98,6 +98,34 @@ if (block) {
   block.dataset.generatedQuestions = qCount;
 }
 wrap.innerHTML = html;
+if (groupData && groupData.length) {
+
+  const options = groupData[0]?.meta?.options || [];
+
+  const optionInputs = wrap.querySelectorAll(".match-option");
+  optionInputs.forEach((input, i) => {
+    if (options[i]) input.value = options[i];
+  });
+
+}
+if (groupData && groupData.length) {
+
+  const qInputs = wrap.querySelectorAll(".match-question");
+  const ansInputs = wrap.querySelectorAll(".match-answer");
+
+  groupData.forEach((q, i) => {
+
+    if (qInputs[i]) {
+      qInputs[i].value = q.content?.text || "";
+    }
+
+    if (ansInputs[i]) {
+      ansInputs[i].value = q.correct_answer?.value || "A";
+    }
+
+  });
+
+}
 if (block) {
   window.__globalQuestionCounter = baseQ + qCount - 1;
 }
