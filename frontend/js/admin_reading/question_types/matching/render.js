@@ -19,8 +19,20 @@ console.error("matching-editor not found");
 return;
 }
 
-const qCount = parseInt(meta.querySelector(".match-q-count")?.value || 0);
+let qCount = parseInt(meta.querySelector(".match-q-count")?.value || 0);
 let oCount = parseInt(meta.querySelector(".match-opt-count")?.value || 0);
+
+if (groupData && groupData.length) {
+  qCount = groupData.length;
+
+  const options = groupData[0]?.meta?.options || [];
+  oCount = Math.max(options.length, 2);
+}
+const qInput = meta.querySelector(".match-q-count");
+const oInput = meta.querySelector(".match-opt-count");
+
+if (qInput) qInput.value = qCount;
+if (oInput) oInput.value = oCount;
 console.log("STEP R4: counts", { qCount, oCount });
 if (oCount < 2) oCount = 2;
 
