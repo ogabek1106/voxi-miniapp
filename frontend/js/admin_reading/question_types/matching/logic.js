@@ -18,15 +18,15 @@ AdminReading.registerQuestionType("matching", function(container, data = null) {
   const optInput = container.querySelector(".match-opt-count");
 
   // first render
-  AdminReading.generateMatching(qInput);
+  AdminReading.generateMatching(qInput, data);
 
   // realtime updates
   qInput.addEventListener("input", () => {
-    AdminReading.generateMatching(qInput);
+    AdminReading.generateMatching(qInput, null);
   });
 
   optInput.addEventListener("input", () => {
-    AdminReading.generateMatching(optInput);
+    AdminReading.generateMatching(optInput, null);
   });
 
 });
