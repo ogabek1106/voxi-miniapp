@@ -135,7 +135,7 @@ window.openAdminReading = async function (testId) {
       passageBlock.style.marginTop = "16px";
 
       let questionsHtml = "";
-      const renderedGroups = new Set();let questionsHtml = "";
+      const renderedGroups = new Set();
 
       for (let qi = 0; qi < p.questions.length; qi++) {
 
