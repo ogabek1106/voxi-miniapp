@@ -162,7 +162,11 @@ window.openAdminReading = async function (testId) {
         const answerValue = q.correct_answer?.value || "";
 
         questionsHtml += `
-          <div class="question-block" data-global-q="${window.__globalQuestionCounter}" data-question-id="${q.id}" style="padding:8px; border:1px solid #e5e5ea; border-radius:8px; margin-bottom:8px;">
+          <div class="question-block" 
+               data-global-q="${window.__globalQuestionCounter}" 
+               data-question-id="${q.type === "MATCHING" ? q.question_group_id : q.id}"
+               data-question-type="${q.type}" 
+               style="padding:8px; border:1px solid #e5e5ea; border-radius:8px; margin-bottom:8px;">
             <div style="font-weight:700; margin-bottom:6px;">Q${window.__globalQuestionCounter}</div>
 
             <div style="margin-bottom:6px;">
@@ -245,9 +249,17 @@ window.openAdminReading = async function (testId) {
         block.dataset.initialized = "1";
         const qid = block.dataset.questionId;
 
-        const questionData = p.questions.find(
-          q => String(q.id) === String(qid)
-        );
+        let questionData;
+
+        if (block.dataset.questionType === "MATCHING") {
+          questionData = p.questions.find(
+            q => String(q.question_group_id) === String(qid)
+          );
+        } else {
+          questionData = p.questions.find(
+            q => String(q.id) === String(qid)
+          );
+        }
         if (!questionData) return;
         const meta = block.querySelector(".q-meta-wrap");
         const typeSelect = block.querySelector(".q-type-select");
