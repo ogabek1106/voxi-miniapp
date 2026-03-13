@@ -156,18 +156,23 @@ window.saveReadingDraft = async function () {
         }
         if (type === "single_choice") {
 
-          const options = Array.from(q.querySelectorAll(".sc-option input"))
+          const optionInputs = q.querySelectorAll(".mcq-option-input");
+
+          const options = Array.from(optionInputs)
             .map(o => o.value.trim())
             .filter(Boolean);
 
-          const correct = q.querySelector(".sc-option input:checked");
+          const correct = q.querySelector(".mcq-correct")?.value || "A";
+
+          const questionText =
+            q.querySelector(".mcq-question")?.value?.trim() || "";
 
           await apiPost(`/admin/reading/passages/${passageId}/questions`, {
             type: "SINGLE_CHOICE",
             order_index: orderCursor++,
             instruction: null,
-            content: { text: q.querySelector(".sc-question")?.value || "" },
-            correct_answer: { value: correct?.value || "A" },
+            content: { text: questionText },
+            correct_answer: { value: correct },
             meta: { options },
             points: 1
           });
@@ -308,18 +313,23 @@ window.publishReading = async function () {
         }
         if (type === "single_choice") {
 
-          const options = Array.from(q.querySelectorAll(".sc-option input"))
+          const optionInputs = q.querySelectorAll(".mcq-option-input");
+
+          const options = Array.from(optionInputs)
             .map(o => o.value.trim())
             .filter(Boolean);
 
-          const correct = q.querySelector(".sc-option input:checked");
+          const correct = q.querySelector(".mcq-correct")?.value || "A";
+
+          const questionText =
+            q.querySelector(".mcq-question")?.value?.trim() || "";
 
           await apiPost(`/admin/reading/passages/${passageId}/questions`, {
             type: "SINGLE_CHOICE",
             order_index: orderCursor++,
             instruction: null,
-            content: { text: q.querySelector(".sc-question")?.value || "" },
-            correct_answer: { value: correct?.value || "A" },
+            content: { text: questionText },
+            correct_answer: { value: correct },
             meta: { options },
             points: 1
           });
