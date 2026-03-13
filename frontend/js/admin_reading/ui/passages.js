@@ -5,11 +5,8 @@ window.getNextQuestionNumber = function () {
   const blockNums = [...document.querySelectorAll(".question-block")]
     .map(b => parseInt(b.dataset.globalQ) || 0);
 
-  const rowNums = [...document.querySelectorAll(".matching-editor div")]
-    .map(el => {
-      const m = el.textContent.match(/^Q(\d+)/);
-      return m ? parseInt(m[1]) : 0;
-    });
+  const rowNums = [...document.querySelectorAll(".match-q-label")]
+    .map(el => parseInt(el.textContent.replace("Q","")) || 0);
 
   const nums = [...blockNums, ...rowNums];
 
