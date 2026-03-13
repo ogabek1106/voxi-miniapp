@@ -174,6 +174,7 @@ def get_reading_test(test_id: int, db: Session = Depends(get_db)):
                         "id": q.id,
                         "order_index": q.order_index,
                         "type": q.type.value if hasattr(q.type, "value") else str(q.type),
+                        "question_group_id": q.question_group_id,
                         "instruction": q.instruction,
                         "content": q.content,
                         "content_type": str(type(q.content)),
