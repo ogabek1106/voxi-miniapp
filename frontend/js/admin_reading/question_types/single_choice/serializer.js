@@ -4,25 +4,25 @@ window.AdminReading = window.AdminReading || {};
 AdminReading.serializeSingleChoice = function(block) {
 
   const options = [];
-  let correct = null;
+  const optionInputs = block.querySelectorAll(".mcq-option-input");
 
-  block.querySelectorAll(".sc-option").forEach((opt, i) => {
-
-    const text = opt.querySelector(".sc-text")?.value || "";
-    const checked = opt.querySelector(".sc-correct")?.checked;
-
-    options.push(text);
-
-    if (checked) correct = String.fromCharCode(65 + i);
-
+  optionInputs.forEach(input => {
+    const text = input.value.trim();
+    if (text) options.push(text);
   });
+
+  const questionText =
+    block.querySelector(".mcq-question")?.value.trim() || "";
+
+  const correct =
+    block.querySelector(".mcq-correct")?.value || "A";
 
   return {
     type: "SINGLE_CHOICE",
     meta: { options },
     questions: [{
-      content: { text: block.querySelector(".sc-question")?.value || "" },
-      correct_answer: { value: correct || "A" },
+      content: { text: questionText },
+      correct_answer: { value: correct },
       order_index: 0
     }]
   };
