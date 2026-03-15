@@ -70,3 +70,8 @@ AdminReading.renderSingleChoiceUI = function (wrap, data = null) {
   }
 
 };
+
+
+AdminReading.registerQuestionType("single_choice", function(container, data) {
+  AdminReading.renderSingleChoiceUI(container, data);
+});
