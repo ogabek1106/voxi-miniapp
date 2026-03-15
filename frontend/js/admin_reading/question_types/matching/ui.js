@@ -26,3 +26,7 @@ if (block) {
   console.log("STEP 4: matching meta UI inserted");
 
 };
+
+AdminReading.registerQuestionType("matching", function(container, data) {
+  AdminReading.renderMatchingMeta(container, data);
+});
