@@ -56,6 +56,7 @@ window.addPassage = function () {
   <select class="q-type-select">
     <option value="matching">Matching</option>
     <option value="single_choice">Single Choice</option>
+    <option value="gap">Gap Filling</option>
   </select>
 </div>
         <div class="q-meta-wrap" style="margin-top:6px;"></div>
@@ -129,6 +130,7 @@ window.addQuestion = function (btn) {
   <select class="q-type-select">
     <option value="matching">Matching</option>
     <option value="single_choice">Single Choice</option>
+    <option value="gap">Gap Filling</option>
   </select>
 </div>
     <div class="q-meta-wrap" style="margin-top:6px;"></div>
