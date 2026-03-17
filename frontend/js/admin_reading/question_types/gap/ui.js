@@ -2,25 +2,31 @@
 
 window.AdminReading = window.AdminReading || {};
 
-// GAP UI loader
 AdminReading.registerQuestionType("gap", function(container, data = null) {
 
   const block = container.closest(".question-block");
-  const qNum = block?.dataset.globalQ || "?";
 
   container.innerHTML = `
     <div class="gap-editor">
 
-      <label>Sentence with blanks</label>
-      <textarea class="gap-text" rows="3"
-        placeholder="Example: Cap of Uz _____ and it's _____ years old."
-        style="width:100%; padding:8px; border-radius:6px;"></textarea>
+      <label>Question text</label>
+      <textarea class="gap-text"
+        rows="3"
+        placeholder="Cap of Uz _____ and it's _____ years old."
+        style="
+          width:100%;
+          box-sizing:border-box;
+          padding:10px;
+          border-radius:8px;
+          border:1px solid #e5e5ea;
+        "
+      ></textarea>
 
-      <div class="gap-answers-wrap" style="margin-top:10px;">
-        <h5>Answers</h5>
+      <div class="gap-answers-wrap" style="margin-top:12px;">
+        <strong>Answers</strong>
       </div>
 
-      <div style="margin-top:8px;">
+      <div style="margin-top:12px;">
         <button type="button" class="gap-add-blank">➕ Add Blank</button>
         <button type="button" class="gap-remove-blank">➖ Remove Last Blank</button>
       </div>
@@ -32,41 +38,40 @@ AdminReading.registerQuestionType("gap", function(container, data = null) {
   const addBtn = container.querySelector(".gap-add-blank");
   const removeBtn = container.querySelector(".gap-remove-blank");
 
-  // default blank
   createGapAnswerBlock(answersWrap);
 
-  addBtn.addEventListener("click", () => {
-    createGapAnswerBlock(answersWrap);
-  });
+  addBtn.onclick = () => createGapAnswerBlock(answersWrap);
 
-  removeBtn.addEventListener("click", () => {
-
+  removeBtn.onclick = () => {
     const blocks = answersWrap.querySelectorAll(".gap-answer-block");
     if (blocks.length <= 1) return;
 
     blocks[blocks.length - 1].remove();
     updateGapLabels(answersWrap);
-
-  });
+  };
 
 });
 
 
-// create answer block
+// 🔹 Create blank block
 function createGapAnswerBlock(wrap) {
 
   const index = wrap.querySelectorAll(".gap-answer-block").length + 1;
 
   const block = document.createElement("div");
   block.className = "gap-answer-block";
-  block.style.marginBottom = "8px";
+  block.style.marginTop = "10px";
 
   block.innerHTML = `
-    <div class="gap-label" style="font-weight:600;">Blank #${index}</div>
+    <div style="font-weight:600; margin-bottom:6px;">
+      Blank #${index}
+    </div>
 
     <div class="gap-options"></div>
 
-    <button type="button" class="gap-add-option">➕ Add variant</button>
+    <button type="button" class="gap-add-option" style="margin-top:6px;">
+      ➕ Add variant
+    </button>
   `;
 
   const optionsWrap = block.querySelector(".gap-options");
@@ -74,16 +79,13 @@ function createGapAnswerBlock(wrap) {
 
   addGapOption(optionsWrap);
 
-  addOptBtn.addEventListener("click", () => {
-    addGapOption(optionsWrap);
-  });
+  addOptBtn.onclick = () => addGapOption(optionsWrap);
 
   wrap.appendChild(block);
-
 }
 
 
-// add answer option
+// 🔹 Add answer input
 function addGapOption(wrap) {
 
   const row = document.createElement("div");
@@ -93,25 +95,34 @@ function addGapOption(wrap) {
   row.style.marginTop = "4px";
 
   row.innerHTML = `
-    <input class="gap-answer-input" placeholder="Correct answer" style="flex:1;" />
-    <button type="button" class="gap-remove-option">✖</button>
+    <input
+      class="gap-answer-input"
+      placeholder="Correct answer"
+      style="
+        flex:1;
+        padding:8px;
+        border-radius:6px;
+        border:1px solid #e5e5ea;
+      "
+    />
+
+    <button type="button" class="gap-remove-option">
+      ✖
+    </button>
   `;
 
-  row.querySelector(".gap-remove-option").addEventListener("click", () => {
+  row.querySelector(".gap-remove-option").onclick = () => {
     row.remove();
-  });
+  };
 
   wrap.appendChild(row);
-
 }
 
 
-// update labels when removing
+// 🔹 Update numbering after remove
 function updateGapLabels(wrap) {
-
   wrap.querySelectorAll(".gap-answer-block").forEach((b, i) => {
-    const label = b.querySelector(".gap-label");
-    if (label) label.textContent = "Blank #" + (i + 1);
+    const label = b.querySelector("div");
+    label.textContent = "Blank #" + (i + 1);
   });
-
 }
