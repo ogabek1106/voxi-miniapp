@@ -8,14 +8,14 @@ if (!input) return;
 const root = input.closest(".q-type-root");
 
 if (!root) {
-  console.error("❌ CRITICAL: q-type-root missing", input);
+  console.error("❌ q-type-root not found", input);
   return;
 }
 
 const meta = root.parentElement;
 
 if (!meta || !meta.classList.contains("q-meta-wrap")) {
-  console.error("❌ CRITICAL: q-meta-wrap missing", meta);
+  console.error("❌ q-meta-wrap missing", meta);
   return;
 }
 const meta = root.parentElement; // q-meta-wrap
