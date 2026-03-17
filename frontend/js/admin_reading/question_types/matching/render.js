@@ -18,7 +18,7 @@ if (!meta || !meta.classList.contains("q-meta-wrap")) {
   console.error("❌ q-meta-wrap missing", meta);
   return;
 }
-const meta = root.parentElement; // q-meta-wrap
+
 console.log("STEP R2: meta found", meta);
 if (!meta) {
 console.error("q-meta-wrap not found");
