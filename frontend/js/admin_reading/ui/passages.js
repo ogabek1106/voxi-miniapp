@@ -48,53 +48,63 @@ window.addPassage = function () {
     <div class="questions-wrap" style="margin-top:12px;">
       <h5>Questions</h5>
 
-      <div class="question-block" data-type="" data-global-q="${qNum}" data-question-id="temp_${qNum}" style="padding:8px; border:1px solid #e5e5ea; border-radius:8px; margin-bottom:8px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+      <div class="question-block" data-type="" data-global-q="${qNum}" data-question-id="temp_${qNum}">
 
-  <div class="q-header" style="font-weight:700;">Q${qNum}</div>
+  <!-- 🔒 FIXED LAYER -->
+  <div class="q-fixed-layer" style="padding:8px; border:1px solid #e5e5ea; border-radius:8px; margin-bottom:8px;">
 
-  <button
-  type="button"
-  class="delete-question-btn"
-  style="
-    width:28px;
-    height:28px;
-    border-radius:50%;
-    background:#fee2e2;
-    color:#b91c1c;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:14px;
-    cursor:pointer;
-  "
->
-  ✖
-</button>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+      <div class="q-header" style="font-weight:700;">Q${qNum}</div>
+
+      <button
+        type="button"
+        class="delete-question-btn"
+        style="
+          width:28px;
+          height:28px;
+          border-radius:50%;
+          background:#fee2e2;
+          color:#b91c1c;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          font-size:14px;
+          cursor:pointer;
+        "
+      >
+        ✖
+      </button>
+    </div>
+
+    <div style="margin-bottom:6px;">
+      <label>Question type</label>
+      <select class="q-type-select">
+        <option value="matching" selected>Matching</option>
+        <option value="single_choice">Single Choice</option>
+        <option value="gap">Gap Filling</option>
+      </select>
+    </div>
+
+  </div>
+
+  <!-- 🔁 DYNAMIC LAYER -->
+  <div class="q-dynamic-layer">
+
+    <div class="q-type-root"></div>
+
+    <hr style="margin:10px 0; border:0; border-top:1px solid #eee;" />
+
+    <div class="image-attach-wrap" style="text-align:right;">
+      <button type="button" class="attach-image-btn" onclick="attachImage(this)">
+        🖼 Add Image
+      </button>
+      <input type="file" accept="image/*" class="hidden-image-input" style="display:none;" />
+      <div class="image-preview" style="margin-top:8px;"></div>
+    </div>
+
+  </div>
 
 </div>
-
-        <div style="margin-bottom:6px;">
-  <label>Question type</label>
-  <select class="q-type-select">
-    <option value="matching" selected>Matching</option>
-    <option value="single_choice">Single Choice</option>
-    <option value="gap">Gap Filling</option>
-  </select>
-</div>
-        <div class="q-meta-wrap" style="margin-top:6px;">
-  <div class="q-type-root"></div>
-</div>
-        <hr style="margin:10px 0; border:0; border-top:1px solid #eee;" />
-
-        <div class="image-attach-wrap" style="text-align:right;">
-          <button type="button" class="attach-image-btn" onclick="attachImage(this)">
-            🖼 Add Image
-          </button>
-          <input type="file" accept="image/*" class="hidden-image-input" style="display:none;" />
-          <div class="image-preview" style="margin-top:8px;"></div>
-        </div>
-      </div>
 
       <button onclick="addQuestion(this)">➕ Add Question</button>
     </div>
@@ -150,42 +160,48 @@ window.addQuestion = function (btn) {
   block.style.marginBottom = "8px";
 
   block.innerHTML = `
+  <!-- 🔒 FIXED LAYER -->
+  <div class="q-fixed-layer" style="padding:8px; border:1px solid #e5e5ea; border-radius:8px; margin-bottom:8px;">
+
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+      <div class="q-header" style="font-weight:700;">Q${qNum}</div>
 
-  <div class="q-header" style="font-weight:700;">Q${qNum}</div>
-
-  <button
-  type="button"
-  class="delete-question-btn"
-  style="
-    width:28px;
-    height:28px;
-    border-radius:50%;
-    background:#fee2e2;
-    color:#b91c1c;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:14px;
-    cursor:pointer;
-  "
->
-  ✖
-</button>
-
-</div>
+      <button
+        type="button"
+        class="delete-question-btn"
+        style="
+          width:28px;
+          height:28px;
+          border-radius:50%;
+          background:#fee2e2;
+          color:#b91c1c;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          font-size:14px;
+          cursor:pointer;
+        "
+      >
+        ✖
+      </button>
+    </div>
 
     <div style="margin-bottom:6px;">
-  <label>Question type</label>
-  <select class="q-type-select">
-    <option value="matching" selected>Matching</option>
-    <option value="single_choice">Single Choice</option>
-    <option value="gap">Gap Filling</option>
-  </select>
-</div>
-    <div class="q-meta-wrap" style="margin-top:6px;">
-  <div class="q-type-root"></div>
-</div>
+      <label>Question type</label>
+      <select class="q-type-select">
+        <option value="matching" selected>Matching</option>
+        <option value="single_choice">Single Choice</option>
+        <option value="gap">Gap Filling</option>
+      </select>
+    </div>
+
+  </div>
+
+  <!-- 🔁 DYNAMIC LAYER -->
+  <div class="q-dynamic-layer">
+
+    <div class="q-type-root"></div>
+
     <hr style="margin:10px 0; border:0; border-top:1px solid #eee;" />
 
     <div class="image-attach-wrap" style="text-align:right;">
@@ -195,7 +211,9 @@ window.addQuestion = function (btn) {
       <input type="file" accept="image/*" class="hidden-image-input" style="display:none;" />
       <div class="image-preview" style="margin-top:8px;"></div>
     </div>
-  `;
+
+  </div>
+`;
 
   questionsWrap.insertBefore(block, btn);
   const root = block.querySelector(".q-type-root");
