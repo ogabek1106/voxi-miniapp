@@ -54,23 +54,23 @@ window.addPassage = function () {
   <div class="q-header" style="font-weight:700;">Q${qNum}</div>
 
   <button
-    type="button"
-    onclick="removeQuestionBlock(this)"
-    style="
-      width:28px;
-      height:28px;
-      border-radius:50%;
-      background:#fee2e2;
-      color:#b91c1c;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:14px;
-      cursor:pointer;
-    "
-  >
-    ✖
-  </button>
+  type="button"
+  class="delete-question-btn"
+  style="
+    width:28px;
+    height:28px;
+    border-radius:50%;
+    background:#fee2e2;
+    color:#b91c1c;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:14px;
+    cursor:pointer;
+  "
+>
+  ✖
+</button>
 
 </div>
 
@@ -82,7 +82,9 @@ window.addPassage = function () {
     <option value="gap">Gap Filling</option>
   </select>
 </div>
-        <div class="q-meta-wrap" style="margin-top:6px;"></div>
+        <div class="q-meta-wrap" style="margin-top:6px;">
+  <div class="q-type-root"></div>
+</div>
         <hr style="margin:10px 0; border:0; border-top:1px solid #eee;" />
 
         <div class="image-attach-wrap" style="text-align:right;">
@@ -100,11 +102,11 @@ window.addPassage = function () {
 
   wrap.appendChild(block);
 
-  const meta = block.querySelector(".q-meta-wrap");
+  const root = block.querySelector(".q-type-root");
   const select = block.querySelector(".q-type-select");
 
   // initial load
-  AdminReading.loadQuestionUI("matching", meta);
+  AdminReading.loadQuestionUI("matching", root);
   block.dataset.type = "matching";
   const header = block.querySelector(".q-header");
   if (select.value === "matching" && header) {
@@ -113,7 +115,7 @@ window.addPassage = function () {
   // react when user changes type
   select.addEventListener("change", () => {
 
-    meta.innerHTML = "";
+    
     block.dataset.type = select.value;
 
     const header = block.querySelector(".q-header");
@@ -124,7 +126,9 @@ window.addPassage = function () {
       if (header) header.style.display = "block";
     }
 
-    AdminReading.loadQuestionUI(select.value, meta);
+    const root = block.querySelector(".q-type-root");
+    root.innerHTML = ""; // ONLY clear inner dynamic zone
+    AdminReading.loadQuestionUI(select.value, root);
 
   });
 };
@@ -151,23 +155,23 @@ window.addQuestion = function (btn) {
   <div class="q-header" style="font-weight:700;">Q${qNum}</div>
 
   <button
-    type="button"
-    onclick="removeQuestionBlock(this)"
-    style="
-      width:28px;
-      height:28px;
-      border-radius:50%;
-      background:#fee2e2;
-      color:#b91c1c;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:14px;
-      cursor:pointer;
-    "
-  >
-    ✖
-  </button>
+  type="button"
+  class="delete-question-btn"
+  style="
+    width:28px;
+    height:28px;
+    border-radius:50%;
+    background:#fee2e2;
+    color:#b91c1c;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:14px;
+    cursor:pointer;
+  "
+>
+  ✖
+</button>
 
 </div>
 
@@ -179,7 +183,9 @@ window.addQuestion = function (btn) {
     <option value="gap">Gap Filling</option>
   </select>
 </div>
-    <div class="q-meta-wrap" style="margin-top:6px;"></div>
+    <div class="q-meta-wrap" style="margin-top:6px;">
+  <div class="q-type-root"></div>
+</div>
     <hr style="margin:10px 0; border:0; border-top:1px solid #eee;" />
 
     <div class="image-attach-wrap" style="text-align:right;">
@@ -192,11 +198,11 @@ window.addQuestion = function (btn) {
   `;
 
   questionsWrap.insertBefore(block, btn);
-  const meta = block.querySelector(".q-meta-wrap");
+  const root = block.querySelector(".q-type-root");
   const select = block.querySelector(".q-type-select");
 
   // initial load
-  AdminReading.loadQuestionUI("matching", meta);
+  AdminReading.loadQuestionUI("matching", root);
   block.dataset.type = "matching";
   const header = block.querySelector(".q-header");
   if (select.value === "matching" && header) {
@@ -205,7 +211,7 @@ window.addQuestion = function (btn) {
   // react when type changes
   select.addEventListener("change", () => {
 
-    meta.innerHTML = "";
+    
     block.dataset.type = select.value;
 
     const header = block.querySelector(".q-header");
@@ -216,35 +222,37 @@ window.addQuestion = function (btn) {
       if (header) header.style.display = "block";
     }
 
-    AdminReading.loadQuestionUI(select.value, meta);
+    const root = block.querySelector(".q-type-root");
+    root.innerHTML = "";
+    AdminReading.loadQuestionUI(select.value, root);
 
   });
 };
 
-window.removeQuestionBlock = function(btn) {
+document.addEventListener("click", function(e) {
+
+  const btn = e.target.closest(".delete-question-btn");
+  if (!btn) return;
 
   const block = btn.closest(".question-block");
   if (!block) return;
 
   block.remove();
 
-  // 🔥 re-number correctly
+  // 🔥 RENumber
   const blocks = document.querySelectorAll(".question-block");
 
-  let currentMax = 0;
+  let current = 1;
 
   blocks.forEach((b) => {
 
-    // get next available number
-    const num = currentMax + 1;
-
-    b.dataset.globalQ = num;
+    b.dataset.globalQ = current;
 
     const header = b.querySelector(".q-header");
-    if (header) header.textContent = "Q" + num;
+    if (header) header.textContent = "Q" + current;
 
-    currentMax = num;
+    current++;
 
   });
 
-};
+});
