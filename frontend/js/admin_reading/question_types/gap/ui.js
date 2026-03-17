@@ -95,21 +95,39 @@ function addGapOption(wrap) {
   row.style.marginTop = "4px";
 
   row.innerHTML = `
-    <input
-      class="gap-answer-input"
-      placeholder="Correct answer"
-      style="
-        flex:1;
-        padding:8px;
-        border-radius:6px;
-        border:1px solid #e5e5ea;
-      "
-    />
+  <input
+    class="gap-answer-input"
+    placeholder="Correct answer"
+    style="
+      flex:1;
+      padding:10px;
+      border-radius:8px;
+      border:1px solid #e5e5ea;
+      font-size:14px;
+    "
+  />
 
-    <button type="button" class="gap-remove-option">
-      ✖
-    </button>
-  `;
+  <button
+    type="button"
+    class="gap-remove-option"
+    style="
+      width:32px;
+      height:32px;
+      min-width:32px;
+      border-radius:50%;
+      background:#fee2e2;
+      color:#b91c1c;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:16px;
+      cursor:pointer;
+    "
+    title="Remove"
+  >
+    ✖
+  </button>
+`;
 
   row.querySelector(".gap-remove-option").onclick = () => {
     row.remove();
