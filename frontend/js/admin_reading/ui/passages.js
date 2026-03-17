@@ -77,8 +77,7 @@ window.addPassage = function () {
         <div style="margin-bottom:6px;">
   <label>Question type</label>
   <select class="q-type-select">
-    <option value="" selected disabled>Select type</option>
-    <option value="matching">Matching</option>
+    <option value="matching" selected>Matching</option>
     <option value="single_choice">Single Choice</option>
     <option value="gap">Gap Filling</option>
   </select>
@@ -105,9 +104,8 @@ window.addPassage = function () {
   const select = block.querySelector(".q-type-select");
 
   // initial load
-  if (select.value) {
-    AdminReading.loadQuestionUI(select.value, meta);
-  }
+  AdminReading.loadQuestionUI("matching", meta);
+  block.dataset.type = "matching";
   const header = block.querySelector(".q-header");
   if (select.value === "matching" && header) {
     header.style.display = "none";
@@ -125,8 +123,6 @@ window.addPassage = function () {
     } else {
       if (header) header.style.display = "block";
     }
-
-    if (!select.value) return;
 
     AdminReading.loadQuestionUI(select.value, meta);
 
@@ -178,8 +174,7 @@ window.addQuestion = function (btn) {
     <div style="margin-bottom:6px;">
   <label>Question type</label>
   <select class="q-type-select">
-    <option value="" selected disabled>Select type</option>
-    <option value="matching">Matching</option>
+    <option value="matching" selected>Matching</option>
     <option value="single_choice">Single Choice</option>
     <option value="gap">Gap Filling</option>
   </select>
@@ -201,9 +196,8 @@ window.addQuestion = function (btn) {
   const select = block.querySelector(".q-type-select");
 
   // initial load
-  if (select.value) {
-    AdminReading.loadQuestionUI(select.value, meta);
-  }
+  AdminReading.loadQuestionUI("matching", meta);
+  block.dataset.type = "matching";
   const header = block.querySelector(".q-header");
   if (select.value === "matching" && header) {
     header.style.display = "none";
@@ -221,8 +215,6 @@ window.addQuestion = function (btn) {
     } else {
       if (header) header.style.display = "block";
     }
-
-    if (!select.value) return;
 
     AdminReading.loadQuestionUI(select.value, meta);
 
