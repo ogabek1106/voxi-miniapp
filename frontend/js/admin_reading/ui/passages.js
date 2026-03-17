@@ -90,7 +90,9 @@ window.addPassage = function () {
   <!-- 🔁 DYNAMIC LAYER -->
   <div class="q-dynamic-layer">
 
-    <div class="q-type-root"></div>
+    <div class="q-meta-wrap">
+  <div class="q-type-root"></div>
+</div>
 
     <hr style="margin:10px 0; border:0; border-top:1px solid #eee;" />
 
@@ -200,7 +202,9 @@ window.addQuestion = function (btn) {
   <!-- 🔁 DYNAMIC LAYER -->
   <div class="q-dynamic-layer">
 
-    <div class="q-type-root"></div>
+    <div class="q-meta-wrap">
+  <div class="q-type-root"></div>
+</div>
 
     <hr style="margin:10px 0; border:0; border-top:1px solid #eee;" />
 
