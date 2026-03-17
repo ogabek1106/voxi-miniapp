@@ -48,12 +48,36 @@ window.addPassage = function () {
     <div class="questions-wrap" style="margin-top:12px;">
       <h5>Questions</h5>
 
-      <div class="question-block" data-type="matching" data-global-q="${qNum}" data-question-id="temp_${qNum}" style="padding:8px; border:1px solid #e5e5ea; border-radius:8px; margin-bottom:8px;">
-        <div class="q-header" style="font-weight:700; margin-bottom:6px;">Q${qNum}</div>
+      <div class="question-block" data-type="" data-global-q="${qNum}" data-question-id="temp_${qNum}" style="padding:8px; border:1px solid #e5e5ea; border-radius:8px; margin-bottom:8px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+
+  <div class="q-header" style="font-weight:700;">Q${qNum}</div>
+
+  <button
+    type="button"
+    onclick="removeQuestionBlock(this)"
+    style="
+      width:28px;
+      height:28px;
+      border-radius:50%;
+      background:#fee2e2;
+      color:#b91c1c;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:14px;
+      cursor:pointer;
+    "
+  >
+    ✖
+  </button>
+
+</div>
 
         <div style="margin-bottom:6px;">
   <label>Question type</label>
   <select class="q-type-select">
+    <option value="" selected disabled>Select type</option>
     <option value="matching">Matching</option>
     <option value="single_choice">Single Choice</option>
     <option value="gap">Gap Filling</option>
@@ -81,8 +105,9 @@ window.addPassage = function () {
   const select = block.querySelector(".q-type-select");
 
   // initial load
-  AdminReading.loadQuestionUI(select.value, meta);
-
+  if (select.value) {
+    AdminReading.loadQuestionUI(select.value, meta);
+  }
   const header = block.querySelector(".q-header");
   if (select.value === "matching" && header) {
     header.style.display = "none";
@@ -101,6 +126,8 @@ window.addPassage = function () {
       if (header) header.style.display = "block";
     }
 
+    if (!select.value) return;
+
     AdminReading.loadQuestionUI(select.value, meta);
 
   });
@@ -114,7 +141,7 @@ window.addQuestion = function (btn) {
 
   const block = document.createElement("div");
   block.className = "question-block";
-  block.dataset.type = "matching";
+  block.dataset.type = "";
   block.dataset.globalQ = qNum;
   block.dataset.questionId = "temp_" + qNum;
   block.style.padding = "8px";
@@ -123,11 +150,35 @@ window.addQuestion = function (btn) {
   block.style.marginBottom = "8px";
 
   block.innerHTML = `
-    <div class="q-header" style="font-weight:700; margin-bottom:6px;">Q${qNum}</div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+
+  <div class="q-header" style="font-weight:700;">Q${qNum}</div>
+
+  <button
+    type="button"
+    onclick="removeQuestionBlock(this)"
+    style="
+      width:28px;
+      height:28px;
+      border-radius:50%;
+      background:#fee2e2;
+      color:#b91c1c;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:14px;
+      cursor:pointer;
+    "
+  >
+    ✖
+  </button>
+
+</div>
 
     <div style="margin-bottom:6px;">
   <label>Question type</label>
   <select class="q-type-select">
+    <option value="" selected disabled>Select type</option>
     <option value="matching">Matching</option>
     <option value="single_choice">Single Choice</option>
     <option value="gap">Gap Filling</option>
@@ -150,7 +201,9 @@ window.addQuestion = function (btn) {
   const select = block.querySelector(".q-type-select");
 
   // initial load
-  AdminReading.loadQuestionUI(select.value, meta);
+  if (select.value) {
+    AdminReading.loadQuestionUI(select.value, meta);
+  }
   const header = block.querySelector(".q-header");
   if (select.value === "matching" && header) {
     header.style.display = "none";
@@ -169,7 +222,37 @@ window.addQuestion = function (btn) {
       if (header) header.style.display = "block";
     }
 
+    if (!select.value) return;
+
     AdminReading.loadQuestionUI(select.value, meta);
 
   });
+};
+
+window.removeQuestionBlock = function(btn) {
+
+  const block = btn.closest(".question-block");
+  if (!block) return;
+
+  block.remove();
+
+  // 🔥 re-number correctly
+  const blocks = document.querySelectorAll(".question-block");
+
+  let currentMax = 0;
+
+  blocks.forEach((b) => {
+
+    // get next available number
+    const num = currentMax + 1;
+
+    b.dataset.globalQ = num;
+
+    const header = b.querySelector(".q-header");
+    if (header) header.textContent = "Q" + num;
+
+    currentMax = num;
+
+  });
+
 };
