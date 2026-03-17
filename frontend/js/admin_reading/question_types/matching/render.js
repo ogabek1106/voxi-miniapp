@@ -5,7 +5,15 @@ window.AdminReading.generateMatching = function(input, groupData = null) {
 console.log("generateMatching called", input);
 if (!input) return;
 
-const meta = input.closest(".q-meta-wrap");
+let meta = input.closest(".q-meta-wrap");
+
+// fallback for new structure
+if (!meta) {
+  const root = input.closest(".q-type-root");
+  if (root) {
+    meta = root.closest(".q-meta-wrap");
+  }
+}
 console.log("STEP R2: meta found", meta);
 if (!meta) {
 console.error("q-meta-wrap not found");
