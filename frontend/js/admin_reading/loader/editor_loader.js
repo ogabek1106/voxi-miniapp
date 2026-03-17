@@ -202,7 +202,9 @@ window.openAdminReading = async function (testId) {
     <option value="gap">Gap Filling</option>
   </select>
 </div>
-            <div class="q-meta-wrap" style="margin-top:6px;"></div>
+            <div class="q-meta-wrap" style="margin-top:6px;">
+  <div class="q-type-root"></div>
+</div>
             
             <hr style="margin:10px 0; border:0; border-top:1px solid #eee;" />
 
@@ -287,7 +289,8 @@ window.openAdminReading = async function (testId) {
           );
         }
         if (!questionData) return;
-        const meta = block.querySelector(".q-meta-wrap");
+        const metaWrap = block.querySelector(".q-meta-wrap");
+        const root = block.querySelector(".q-type-root");
         const typeSelect = block.querySelector(".q-type-select");
 
         if (typeSelect && questionData?.type) {
@@ -306,7 +309,7 @@ window.openAdminReading = async function (testId) {
 
         AdminReading.loadQuestionUI(
           initialType,
-          meta,
+          root,
           payload
         );
 
@@ -316,11 +319,11 @@ window.openAdminReading = async function (testId) {
 
             const newType = typeSelect.value;
   
-            meta.innerHTML = ""; // clear previous UI
+            root.innerHTML = "";
 
             AdminReading.loadQuestionUI(
               newType,
-              meta,
+              root,
               null
             );
   
