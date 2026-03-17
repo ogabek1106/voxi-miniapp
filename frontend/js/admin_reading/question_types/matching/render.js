@@ -12,7 +12,7 @@ if (!root) {
   return;
 }
 
-const meta = root.parentElement;
+const meta = root.closest(".q-meta-wrap");
 
 if (!meta || !meta.classList.contains("q-meta-wrap")) {
   console.error("❌ q-meta-wrap missing", meta);
