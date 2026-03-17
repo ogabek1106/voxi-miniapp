@@ -54,7 +54,9 @@ window.showCreateReading = function (reset = false) {
     Question type: Matching
   </div>
 
-  <div class="q-meta-wrap" style="margin-top:6px;"></div>
+  <div class="q-meta-wrap" style="margin-top:6px;">
+  <div class="q-type-root"></div>
+</div>
 
   <hr style="margin:10px 0; border:0; border-top:1px solid #eee;" />
 
@@ -82,8 +84,8 @@ window.showCreateReading = function (reset = false) {
   `;
   AdminReading.loadQuestionUI(
     "matching",
-    document.querySelector(".q-meta-wrap")
-);
+    document.querySelector(".q-type-root")
+  );
 };
 
 window.showAddPassage = function () {
