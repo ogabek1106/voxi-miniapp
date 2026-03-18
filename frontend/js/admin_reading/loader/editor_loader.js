@@ -207,7 +207,7 @@ window.openAdminReading = async function (testId) {
   </div>
 
   <!-- 🔁 DYNAMIC LAYER -->
-  <div class="q-dynamic-layer">
+  <div class="q-dynamic-layer" style="margin-top:10px;">
 
     <div class="q-meta-wrap">
       <div class="q-type-root"></div>
