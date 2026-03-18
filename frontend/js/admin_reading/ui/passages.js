@@ -120,10 +120,7 @@ window.addPassage = function () {
   // initial load
   AdminReading.loadQuestionUI("matching", root);
   block.dataset.type = "matching";
-  const header = block.querySelector(".q-header");
-  if (select.value === "matching" && header) {
-    header.style.display = "none";
-  }
+  if (header) header.style.opacity = "0.3";
   // react when user changes type
   select.addEventListener("change", () => {
 
@@ -132,11 +129,7 @@ window.addPassage = function () {
 
     const header = block.querySelector(".q-header");
 
-    if (select.value === "matching") {
-      if (header) header.style.display = "none";
-    } else {
-      if (header) header.style.display = "block";
-    }
+    if (header) header.style.opacity = select.value === "matching" ? "0.3" : "1";
 
     const root = block.querySelector(".q-type-root");
     root.innerHTML = ""; // ONLY clear inner dynamic zone
@@ -226,10 +219,7 @@ window.addQuestion = function (btn) {
   // initial load
   AdminReading.loadQuestionUI("matching", root);
   block.dataset.type = "matching";
-  const header = block.querySelector(".q-header");
-  if (select.value === "matching" && header) {
-    header.style.display = "none";
-  }
+  if (header) header.style.opacity = "0.3";
   // react when type changes
   select.addEventListener("change", () => {
 
@@ -238,11 +228,7 @@ window.addQuestion = function (btn) {
 
     const header = block.querySelector(".q-header");
 
-    if (select.value === "matching") {
-      if (header) header.style.display = "none";
-    } else {
-      if (header) header.style.display = "block";
-    }
+    if (header) header.style.opacity = select.value === "matching" ? "0.3" : "1";
 
     const root = block.querySelector(".q-type-root");
     root.innerHTML = "";
