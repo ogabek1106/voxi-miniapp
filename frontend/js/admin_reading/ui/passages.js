@@ -78,7 +78,7 @@ window.addPassage = function () {
 
     <div style="margin-bottom:6px;">
       <label>Question type</label>
-      <select class="q-type-select">
+      <select class="q-type-select" style="width:100%; height:36px; border:1px solid red;">
         <option value="matching" selected>Matching</option>
         <option value="single_choice">Single Choice</option>
         <option value="gap">Gap Filling</option>
@@ -190,7 +190,7 @@ window.addQuestion = function (btn) {
 
     <div style="margin-bottom:6px;">
       <label>Question type</label>
-      <select class="q-type-select">
+      <select class="q-type-select" style="width:100%; height:36px; border:1px solid red;">
         <option value="matching" selected>Matching</option>
         <option value="single_choice">Single Choice</option>
         <option value="gap">Gap Filling</option>
