@@ -302,6 +302,7 @@ window.openAdminReading = async function (testId) {
         const metaWrap = block.querySelector(".q-meta-wrap");
         const root = block.querySelector(".q-type-root");
         const typeSelect = block.querySelector(".q-type-select");
+        console.log("BEFORE UI LOAD:", typeSelect?.outerHTML);
 
         if (typeSelect && questionData?.type) {
           typeSelect.value = questionData.type.toLowerCase();
@@ -322,6 +323,8 @@ window.openAdminReading = async function (testId) {
           root,
           payload
         );
+        const checkSelect = block.querySelector(".q-type-select");
+        console.log("AFTER UI LOAD:", checkSelect?.outerHTML);
 
         // 🔁 Gate switch
         if (typeSelect) {
