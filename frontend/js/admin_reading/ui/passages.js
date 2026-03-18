@@ -116,6 +116,7 @@ window.addPassage = function () {
 
   const root = block.querySelector(".q-type-root");
   const select = block.querySelector(".q-type-select");
+  const header = block.querySelector(".q-header");
 
   // initial load
   AdminReading.loadQuestionUI("matching", root);
@@ -215,6 +216,7 @@ window.addQuestion = function (btn) {
   questionsWrap.insertBefore(block, btn);
   const root = block.querySelector(".q-type-root");
   const select = block.querySelector(".q-type-select");
+  const header = block.querySelector(".q-header");
 
   // initial load
   AdminReading.loadQuestionUI("matching", root);
