@@ -45,31 +45,71 @@ window.showCreateReading = function (reset = false) {
         <div class="questions-wrap" style="margin-top:12px;">
           <h5>Questions</h5>
 
-          <div class="question-block" data-global-q="1" data-question-id="temp_1"
-     style="padding:8px; border:1px solid #e5e5ea; border-radius:8px; margin-bottom:8px;">
+          <div class="question-block" 
+  data-global-q="1" 
+  data-question-id="temp_1"
+  data-question-type="matching"
+>
 
-  <div style="font-weight:700; margin-bottom:6px;">Q1</div>
+  <!-- 🔒 FIXED LAYER -->
+  <div class="q-fixed-layer" style="padding:8px; border:1px solid #e5e5ea; border-radius:8px; margin-bottom:8px;">
 
-  <div style="font-weight:600; margin-bottom:6px;">
-    Question type: Matching
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+      <div class="q-header" style="font-weight:700;">
+        Q1
+      </div>
+
+      <button
+        type="button"
+        class="delete-question-btn"
+        style="
+          width:28px;
+          height:28px;
+          border-radius:50%;
+          background:#fee2e2;
+          color:#b91c1c;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          font-size:14px;
+          cursor:pointer;
+        "
+      >
+        ✖
+      </button>
+    </div>
+
+    <div style="margin-bottom:6px;">
+      <label>Question type</label>
+      <select class="q-type-select">
+        <option value="matching" selected>Matching</option>
+        <option value="single_choice">Single Choice</option>
+        <option value="gap">Gap Filling</option>
+      </select>
+    </div>
+
   </div>
 
-  <div class="q-meta-wrap" style="margin-top:6px;">
-  <div class="q-type-root"></div>
-</div>
+  <!-- 🔁 DYNAMIC LAYER -->
+  <div class="q-dynamic-layer">
 
-  <hr style="margin:10px 0; border:0; border-top:1px solid #eee;" />
+    <div class="q-meta-wrap">
+      <div class="q-type-root"></div>
+    </div>
 
-  <div class="image-attach-wrap" style="text-align:right;">
-    <button type="button" class="attach-image-btn" onclick="attachImage(this)">
-      🖼 Add Image
-    </button>
-    <input type="file" accept="image/*" class="hidden-image-input" style="display:none;" />
-    <div class="image-preview" style="margin-top:8px;"></div>
+    <hr style="margin:10px 0; border:0; border-top:1px solid #eee;" />
+
+    <div class="image-attach-wrap" style="text-align:right;">
+      <button type="button" class="attach-image-btn" onclick="attachImage(this)">
+        🖼 Add Image
+      </button>
+      <input type="file" accept="image/*" class="hidden-image-input" style="display:none;" />
+      <div class="image-preview" style="margin-top:8px;"></div>
+    </div>
+
   </div>
 
 </div>
-
           <button onclick="addQuestion(this)">➕ Add Question</button>
         </div>
       </div>
@@ -86,6 +126,13 @@ window.showCreateReading = function (reset = false) {
     "matching",
     document.querySelector(".q-type-root")
   );
+  const select = document.querySelector(".q-type-select");
+
+  select.addEventListener("change", () => {
+    const root = document.querySelector(".q-type-root");
+    root.innerHTML = "";
+    AdminReading.loadQuestionUI(select.value, root);
+  });
 };
 
 window.showAddPassage = function () {
