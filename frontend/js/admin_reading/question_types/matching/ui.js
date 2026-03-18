@@ -2,11 +2,7 @@
 window.AdminReading = window.AdminReading || {};
 
 AdminReading.renderMatchingMeta = function(wrap) {
-const block = wrap.closest(".question-block");
-if (block) {
-  const qLabel = block.firstElementChild;
-  if (qLabel) qLabel.style.display = "none";
-}
+
   console.log("STEP 3: renderMatchingMeta called", wrap);
 
   wrap.innerHTML = `
