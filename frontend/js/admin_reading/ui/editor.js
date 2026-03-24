@@ -45,7 +45,7 @@ window.showCreateReading = function (reset = false) {
         <div class="questions-wrap" style="margin-top:12px;">
           <h5>Questions</h5>
 
-          <<div class="question-block" 
+          <div class="question-block" 
   data-global-q="1" 
   data-question-id="temp_1"
   data-question-type="matching"
