@@ -48,7 +48,7 @@ window.addPassage = function () {
     <div class="questions-wrap" style="margin-top:12px;">
       <h5>Questions</h5>
 
-      <div class="question-block" data-type="" data-global-q="${qNum}" data-question-id="temp_${qNum}">
+      <div class="question-block" data-type="" data-global-q="${qNum}" data-question-id="temp_${qNum}" style="margin-bottom:8px;">
 
   <!-- 🔒 FIXED LAYER -->
   <div class="q-fixed-layer" style="padding:8px; border:1px solid #e5e5ea; border-radius:8px; margin-bottom:8px;">
@@ -78,7 +78,7 @@ window.addPassage = function () {
 
     <div style="margin-bottom:6px;">
       <label>Question type</label>
-      <select class="q-type-select" style="width:100%; height:36px; border:1px solid red;">
+      <select class="q-type-select" style="width:100%; height:36px;">
         <option value="matching" selected>Matching</option>
         <option value="single_choice">Single Choice</option>
         <option value="gap">Gap Filling</option>
@@ -149,10 +149,7 @@ window.addQuestion = function (btn) {
   block.className = "question-block";
   block.dataset.type = "";
   block.dataset.globalQ = qNum;
-  block.dataset.questionId = "temp_" + qNum;
-  block.style.padding = "8px";
-  block.style.border = "1px solid #e5e5ea";
-  block.style.borderRadius = "8px";
+  block.dataset.questionId = "temp_" + qNum;  
   block.style.marginBottom = "8px";
 
   block.innerHTML = `
@@ -184,7 +181,7 @@ window.addQuestion = function (btn) {
 
     <div style="margin-bottom:6px;">
       <label>Question type</label>
-      <select class="q-type-select" style="width:100%; height:36px; border:1px solid red;">
+      <select class="q-type-select" style="width:100%; height:36px;">
         <option value="matching" selected>Matching</option>
         <option value="single_choice">Single Choice</option>
         <option value="gap">Gap Filling</option>
