@@ -58,7 +58,7 @@ window.showCreateReading = function (reset = false) {
 >
 
   <!-- 🔒 FIXED LAYER -->
-  <div class="q-fixed-layer" style="margin-bottom:8px;">
+  <div class="q-fixed-layer"   style="     padding:8px;     border-bottom:1px solid #eee;     margin-bottom:8px;   " >
 
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
       <div class="q-header" style="font-weight:700;">
