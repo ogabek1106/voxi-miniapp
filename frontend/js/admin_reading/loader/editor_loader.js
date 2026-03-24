@@ -162,13 +162,19 @@ window.openAdminReading = async function (testId) {
         const answerValue = q.correct_answer?.value || "";
 
         questionsHtml += `
-          <div class="question-block" 
+  <div class="question-block" 
      data-global-q="${window.__globalQuestionCounter}" 
-     data-question-id="${q.type === "MATCHING" ? q.question_group_id : q.id}"
-     data-question-type="${q.type}">
+     data-question-id="..."
+     data-question-type="${q.type}"
+     style="
+       border:1px solid #e5e5ea;
+       border-radius:8px;
+       padding:8px;
+       margin-bottom:8px;
+     ">
 
   <!-- 🔒 FIXED LAYER -->
-  <div class="q-fixed-layer" style="padding:8px; border:1px solid #e5e5ea; border-radius:8px; margin-bottom:8px;">
+  <div class="q-fixed-layer" style="margin-bottom:8px;">
 
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
       <div class="q-header" style="font-weight:700;">
