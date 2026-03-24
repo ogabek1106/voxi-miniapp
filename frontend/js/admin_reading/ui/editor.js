@@ -45,14 +45,20 @@ window.showCreateReading = function (reset = false) {
         <div class="questions-wrap" style="margin-top:12px;">
           <h5>Questions</h5>
 
-          <div class="question-block" 
+          <<div class="question-block" 
   data-global-q="1" 
   data-question-id="temp_1"
   data-question-type="matching"
+  style="
+    border:1px solid #e5e5ea;
+    border-radius:8px;
+    padding:8px;
+    margin-bottom:8px;
+  "
 >
 
   <!-- 🔒 FIXED LAYER -->
-  <div class="q-fixed-layer" style="padding:8px; border:1px solid #e5e5ea; border-radius:8px; margin-bottom:8px;">
+  <div class="q-fixed-layer" style="margin-bottom:8px;">
 
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
       <div class="q-header" style="font-weight:700;">
