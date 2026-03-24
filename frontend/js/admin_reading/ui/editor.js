@@ -61,7 +61,7 @@ window.showCreateReading = function (reset = false) {
   <div class="q-fixed-layer"   style="     padding:8px;     border-bottom:1px solid #eee;     margin-bottom:8px;   " >
 
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-      <div class="q-header" style="font-weight:700;">
+      <div class="q-header" style="font-weight:700; display:none;">
         Q1
       </div>
 
@@ -132,7 +132,20 @@ window.showCreateReading = function (reset = false) {
     "matching",
     document.querySelector(".q-type-root")
   );
-  const select = document.querySelector(".q-type-select");
+  const header = document.querySelector(".q-header");
+
+  select.addEventListener("change", () => {
+    const root = document.querySelector(".q-type-root");
+    root.innerHTML = "";
+
+    const isMatching = select.value === "matching";
+
+    if (header) {
+      header.style.display = isMatching ? "none" : "block";
+    }
+
+    AdminReading.loadQuestionUI(select.value, root);
+  });
 
   select.addEventListener("change", () => {
     const root = document.querySelector(".q-type-root");
