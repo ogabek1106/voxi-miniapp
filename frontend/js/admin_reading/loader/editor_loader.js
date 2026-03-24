@@ -164,7 +164,7 @@ window.openAdminReading = async function (testId) {
         questionsHtml += `
   <div class="question-block" 
      data-global-q="${window.__globalQuestionCounter}" 
-     data-question-id="..."
+     data-question-id="${q.type === "MATCHING" ? q.question_group_id : q.id}"
      data-question-type="${q.type}"
      style="
        border:1px solid #e5e5ea;
