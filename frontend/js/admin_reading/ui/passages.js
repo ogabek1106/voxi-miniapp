@@ -48,10 +48,10 @@ window.addPassage = function () {
     <div class="questions-wrap" style="margin-top:12px;">
       <h5>Questions</h5>
 
-      <div class="question-block" data-type="" data-global-q="${qNum}" data-question-id="temp_${qNum}" style="margin-bottom:8px;">
+      <div class="question-block" data-type="" data-global-q="${qNum}" data-question-id="temp_${qNum}" style="   border:1px solid #e5e5ea;   border-radius:8px;   padding:8px;   margin-bottom:8px; ">
 
   <!-- 🔒 FIXED LAYER -->
-  <div class="q-fixed-layer" style="padding:8px; border:1px solid #e5e5ea; border-radius:8px; margin-bottom:8px;">
+  <div class="q-fixed-layer" style="margin-bottom:8px;">
 
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
       <div class="q-header" style="font-weight:700;">Q${qNum}</div>
@@ -147,6 +147,10 @@ window.addQuestion = function (btn) {
 
   const block = document.createElement("div");
   block.className = "question-block";
+  block.style.border = "1px solid #e5e5ea";
+  block.style.borderRadius = "8px";
+  block.style.padding = "8px";
+  block.style.marginBottom = "8px";
   block.dataset.type = "";
   block.dataset.globalQ = qNum;
   block.dataset.questionId = "temp_" + qNum;  
@@ -154,7 +158,7 @@ window.addQuestion = function (btn) {
 
   block.innerHTML = `
   <!-- 🔒 FIXED LAYER -->
-  <div class="q-fixed-layer" style="padding:8px; border:1px solid #e5e5ea; border-radius:8px; margin-bottom:8px;">
+  <div class="q-fixed-layer" style="margin-bottom:8px;">
 
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
       <div class="q-header" style="font-weight:700;">Q${qNum}</div>
