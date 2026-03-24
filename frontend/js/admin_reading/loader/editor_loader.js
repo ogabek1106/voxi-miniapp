@@ -323,12 +323,13 @@ window.openAdminReading = async function (testId) {
             q => q.question_group_id === questionData.question_group_id
           );
         }
-
+        console.log("BEFORE LOAD:", block.outerHTML);
         AdminReading.loadQuestionUI(
           initialType,
           root,
           payload
         );
+        console.log("AFTER LOAD:", block.outerHTML);
         const checkSelect = block.querySelector(".q-type-select");
         console.log("AFTER UI LOAD:", checkSelect?.outerHTML);
 
@@ -339,13 +340,13 @@ window.openAdminReading = async function (testId) {
             const newType = typeSelect.value;
   
             root.innerHTML = "";
-
+            console.log("BEFORE LOAD:", block.outerHTML);
             AdminReading.loadQuestionUI(
               newType,
               root,
               null
             );
-  
+            console.log("AFTER LOAD:", block.outerHTML);
           });
         }
          
