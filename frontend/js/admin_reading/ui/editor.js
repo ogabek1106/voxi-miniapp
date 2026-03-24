@@ -132,6 +132,7 @@ window.showCreateReading = function (reset = false) {
     "matching",
     document.querySelector(".q-type-root")
   );
+  const select = document.querySelector(".q-type-select");
   const header = document.querySelector(".q-header");
 
   select.addEventListener("change", () => {
@@ -147,11 +148,6 @@ window.showCreateReading = function (reset = false) {
     AdminReading.loadQuestionUI(select.value, root);
   });
 
-  select.addEventListener("change", () => {
-    const root = document.querySelector(".q-type-root");
-    root.innerHTML = "";
-    AdminReading.loadQuestionUI(select.value, root);
-  });
 };
 
 window.showAddPassage = function () {
