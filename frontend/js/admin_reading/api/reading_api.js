@@ -181,9 +181,11 @@ window.saveReadingDraft = async function () {
         }     
         if (type === "gap") {
 
+          const groupId = groupCounter++;
+
           const text = q.querySelector(".gap-text")?.value?.trim() || "";
 
-          // 🔹 detect blanks using your logic
+          // 🔹 detect blanks
           const blanks = AdminReading.Gap.detectBlanks(text);
 
           // 🔹 collect answers
@@ -195,21 +197,32 @@ window.saveReadingDraft = async function () {
               .filter(Boolean);
           });
 
-          // 🔴 HARD VALIDATION
+          // 🔴 VALIDATION
           if (answers.length !== blanks.length) {
             alert(`Gap mismatch: ${blanks.length} blanks but ${answers.length} answer groups`);
             return;
           }
 
-          await apiPost(`/admin/reading/passages/${passageId}/questions`, {
-            type: "TEXT_INPUT",
-            order_index: orderCursor++,
-            instruction: null,
-            content: { text: text },
-            correct_answer: { answers: answers },
-            meta: null,
-            points: 1
-          });
+          // 🔥 CREATE ONE QUESTION PER BLANK
+          for (let i = 0; i < blanks.length; i++) {
+
+            const variants = answers[i];
+
+            if (!variants.length) continue;
+
+            const correct = variants[0]; // first = main correct
+
+            await apiPost(`/admin/reading/passages/${passageId}/questions`, {
+              type: "TEXT_INPUT",
+              order_index: orderCursor++,
+              question_group_id: groupId,
+              instruction: null,
+              content: { text: text },
+              correct_answer: { value: correct },
+              meta: { variants: variants },
+              points: 1
+            });
+          }
 
           continue;
         }
