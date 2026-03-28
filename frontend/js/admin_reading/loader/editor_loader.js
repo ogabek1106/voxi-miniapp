@@ -311,7 +311,13 @@ window.openAdminReading = async function (testId) {
         console.log("BEFORE UI LOAD:", typeSelect?.outerHTML);
 
         if (typeSelect && questionData?.type) {
-          typeSelect.value = questionData.type.toLowerCase();
+          let mappedType = questionData.type.toLowerCase();
+
+          if (mappedType === "text_input") {
+            mappedType = "gap";
+          }
+
+          typeSelect.value = mappedType;
         }
 
         const initialType = typeSelect ? typeSelect.value : questionData.type.toLowerCase();
