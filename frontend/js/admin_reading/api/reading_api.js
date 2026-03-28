@@ -202,7 +202,7 @@ window.saveReadingDraft = async function () {
           }
 
           await apiPost(`/admin/reading/passages/${passageId}/questions`, {
-            type: "GAP",
+            type: "TEXT_INPUT",
             order_index: orderCursor++,
             instruction: null,
             content: { text: text },
