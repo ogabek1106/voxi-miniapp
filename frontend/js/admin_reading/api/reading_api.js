@@ -178,7 +178,41 @@ window.saveReadingDraft = async function () {
           });
 
           continue;
-        }        
+        }     
+        if (type === "gap") {
+
+          const text = q.querySelector(".gap-text")?.value?.trim() || "";
+
+          // 🔹 detect blanks using your logic
+          const blanks = AdminReading.Gap.detectBlanks(text);
+
+          // 🔹 collect answers
+          const answerBlocks = q.querySelectorAll(".gap-answer-block");
+
+          const answers = Array.from(answerBlocks).map(block => {
+            return Array.from(block.querySelectorAll(".gap-answer-input"))
+              .map(i => i.value.trim())
+              .filter(Boolean);
+          });
+
+          // 🔴 HARD VALIDATION
+          if (answers.length !== blanks.length) {
+            alert(`Gap mismatch: ${blanks.length} blanks but ${answers.length} answer groups`);
+            return;
+          }
+
+          await apiPost(`/admin/reading/passages/${passageId}/questions`, {
+            type: "GAP",
+            order_index: orderCursor++,
+            instruction: null,
+            content: { text: text },
+            correct_answer: { answers: answers },
+            meta: null,
+            points: 1
+          });
+
+          continue;
+        }
         console.log("🧪 Creating question", qi + 1, "for passage", pi + 1);
         
       }
