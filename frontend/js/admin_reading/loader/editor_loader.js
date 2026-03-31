@@ -213,6 +213,7 @@ window.openAdminReading = async function (testId) {
         <option value="matching">Matching</option>
         <option value="single_choice">Single Choice</option>
         <option value="gap">Gap Filling</option>
+        <option value="yes_no_ng">Yes / No / Not Given</option>
       </select>
     </div>
 
