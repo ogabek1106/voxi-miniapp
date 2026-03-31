@@ -1,13 +1,11 @@
 // frontend/js/admin_reading/question_types/ynng/serializer.js
 window.AdminReading = window.AdminReading || {};
-window.AdminReading.YNNG = window.AdminReading.YNNG || {};
+AdminReading.YNNG = AdminReading.YNNG || {};
 
-window.AdminReading.YNNG.serialize = function (block) {
+AdminReading.serializeYNNG = function(block) {
 
   const text = block.querySelector(".ynng-question")?.value?.trim();
-  const correctRaw = block.querySelector(".ynng-correct")?.value;
-
-  const correct = window.AdminReading.YNNG.normalizeAnswer(correctRaw);
+  const correct = block.querySelector(".ynng-correct")?.value;
 
   if (!text) return null;
 
