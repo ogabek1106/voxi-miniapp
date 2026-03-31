@@ -82,6 +82,7 @@ window.addPassage = function () {
         <option value="matching" selected>Matching</option>
         <option value="single_choice">Single Choice</option>
         <option value="gap">Gap Filling</option>
+        <option value="yes_no_ng">Yes / No / Not Given</option>
       </select>
     </div>
 
@@ -189,6 +190,7 @@ window.addQuestion = function (btn) {
         <option value="matching" selected>Matching</option>
         <option value="single_choice">Single Choice</option>
         <option value="gap">Gap Filling</option>
+        <option value="yes_no_ng">Yes / No / Not Given</option>
       </select>
     </div>
 
