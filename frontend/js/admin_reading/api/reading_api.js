@@ -213,7 +213,31 @@ window.saveReadingDraft = async function () {
           });
 
           continue;
-        }     
+        }
+
+        if (type === "yes_no_ng") {
+
+          const questionText =
+            q.querySelector(".ynng-question")?.value?.trim() || "";
+
+          const correct =
+            q.querySelector(".ynng-correct")?.value || "YES";
+
+          if (!questionText) continue;
+
+          await apiPost(`/admin/reading/passages/${passageId}/questions`, {
+            type: "YES_NO_NG",
+            order_index: orderCursor++,
+            instruction: null,
+            content: { text: questionText },
+            correct_answer: { value: correct },
+            meta: { subtype: "YN" },
+            points: 1
+          });
+
+          continue;
+        }
+        
         if (type === "gap") {
 
           const groupId = groupCounter++;
