@@ -114,6 +114,7 @@ window.openAdminReading = async function (testId) {
 
   try {
     const data = await apiGet(`/admin/reading/tests/${testId}`);
+    console.log("🔥 FULL QUESTIONS:", data.passages.map(p => p.questions));
     showCreateReading(false);
     // fill meta
     document.getElementById("reading-title").value = data.title || "";
