@@ -164,7 +164,7 @@ window.openAdminReading = async function (testId) {
         window.__globalQuestionCounter++;
 
         const textValue = q.content?.text || "";
-        console.log("EDITOR LOAD", {
+        // // console.log("EDITOR LOAD", {
           question_id: q.id,
           raw_content: q.content,
           extracted_text: q.content?.text
@@ -318,7 +318,7 @@ window.openAdminReading = async function (testId) {
         const metaWrap = block.querySelector(".q-meta-wrap");
         const root = block.querySelector(".q-type-root");
         const typeSelect = block.querySelector(".q-type-select");
-        console.log("BEFORE UI LOAD:", typeSelect?.outerHTML);
+        // console.log("BEFORE UI LOAD:", typeSelect?.outerHTML);
 
         if (typeSelect && questionData?.type) {
           let mappedType = questionData.type.toLowerCase();
@@ -343,15 +343,15 @@ window.openAdminReading = async function (testId) {
             .filter(q => q.question_group_id === questionData.question_group_id)
             .sort((a, b) => a.order_index - b.order_index);
         }
-        console.log("BEFORE LOAD:", block.outerHTML);
+        // console.log("BEFORE LOAD:", block.outerHTML);
         AdminReading.loadQuestionUI(
           initialType,
           root,
           payload
         );
-        console.log("AFTER LOAD:", block.outerHTML);
+        // console.log("AFTER LOAD:", block.outerHTML);
         const checkSelect = block.querySelector(".q-type-select");
-        console.log("AFTER UI LOAD:", checkSelect?.outerHTML);
+        // console.log("AFTER UI LOAD:", checkSelect?.outerHTML);
 
         // 🔁 Gate switch
         if (typeSelect) {
@@ -360,17 +360,17 @@ window.openAdminReading = async function (testId) {
             const newType = typeSelect.value;
   
             root.innerHTML = "";
-            console.log("BEFORE LOAD:", block.outerHTML);
+            // console.log("BEFORE LOAD:", block.outerHTML);
             AdminReading.loadQuestionUI(
               newType,
               root,
               null
             );
-            console.log("AFTER LOAD:", block.outerHTML);
+            // console.log("AFTER LOAD:", block.outerHTML);
           });
         }
          
-          console.log("PATCH DEBUG", {
+          // console.log("PATCH DEBUG", {
             block_id: qid,
             questionData: questionData,
             allQuestions: p.questions
