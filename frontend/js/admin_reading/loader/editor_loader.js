@@ -214,6 +214,7 @@ window.openAdminReading = async function (testId) {
         <option value="single_choice">Single Choice</option>
         <option value="gap">Gap Filling</option>
         <option value="yes_no_ng">Yes / No / Not Given</option>
+        <option value="tf_ng">True / False / Not Given</option>
       </select>
     </div>
 
@@ -323,52 +324,54 @@ window.openAdminReading = async function (testId) {
         if (typeSelect && questionData?.type) {
           let mappedType = questionData.type.toLowerCase();
 
+          // 🔹 mappings
           if (mappedType === "text_input") {
             mappedType = "gap";
           }
 
-          typeSelect.value = mappedType;
-        }
+          if (mappedType === "tfng") {
+            mappedType = "tf_ng";
+          }
 
-        const initialType = typeSelect ? typeSelect.value : questionData.type.toLowerCase();
+          // apply to select
+          if (typeSelect) {
+            typeSelect.value = mappedType;
+          }
 
-        let payload = questionData;
+          // final type
+          const initialType = typeSelect 
+            ? typeSelect.value 
+            : mappedType;
 
-        // 🔥 GROUP TYPES (MATCHING + GAP)
-        if (
-          questionData.type === "MATCHING" ||
-          questionData.type === "TEXT_INPUT"
-        ) {
-          payload = p.questions
-            .filter(q => q.question_group_id === questionData.question_group_id)
-            .sort((a, b) => a.order_index - b.order_index);
-        }
-        // console.log("BEFORE LOAD:", block.outerHTML);
-        AdminReading.loadQuestionUI(
-          initialType,
-          root,
-          payload
-        );
-        // console.log("AFTER LOAD:", block.outerHTML);
-        const checkSelect = block.querySelector(".q-type-select");
-        // console.log("AFTER UI LOAD:", checkSelect?.outerHTML);
+          // payload
+          let payload = questionData;
 
-        // 🔁 Gate switch
-        if (typeSelect) {
-          typeSelect.addEventListener("change", () => {
+          // 🔥 GROUP TYPES (MATCHING + GAP)
+          if (
+            questionData.type === "MATCHING" ||
+            questionData.type === "TEXT_INPUT"
+          ) {
+            payload = p.questions
+              .filter(q => q.question_group_id === questionData.question_group_id)
+              .sort((a, b) => a.order_index - b.order_index);
+          }
 
-            const newType = typeSelect.value;
-  
-            root.innerHTML = "";
-            // console.log("BEFORE LOAD:", block.outerHTML);
-            AdminReading.loadQuestionUI(
-              newType,
-              root,
-              null
-            );
-            // console.log("AFTER LOAD:", block.outerHTML);
-          });
-        }
+          // render UI
+          AdminReading.loadQuestionUI(
+            initialType,
+            root,
+            payload
+          );
+
+          // 🔁 Gate switch
+          if (typeSelect) {
+            typeSelect.addEventListener("change", () => {
+              const newType = typeSelect.value;
+
+              root.innerHTML = "";
+              AdminReading.loadQuestionUI(newType, root, null);
+            });
+          }
          
           // console.log("PATCH DEBUG", {
           //  block_id: qid,
