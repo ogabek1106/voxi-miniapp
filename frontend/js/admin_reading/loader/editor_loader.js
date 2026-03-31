@@ -290,148 +290,132 @@ window.openAdminReading = async function (testId) {
         `;
       }
 
-      const textarea = passageBlock.querySelector(".passage-text");
-      if (textarea) {
-        textarea.value = p.text || "";
-      }
-      // 🔹 Load meta for existing questions
-      passageBlock.querySelectorAll(".question-block").forEach((block) => {
+const textarea = passageBlock.querySelector(".passage-text");
+if (textarea) {
+  textarea.value = p.text || "";
+}
 
-        if (block.dataset.initialized) return;
-        block.dataset.initialized = "1";
-        const qid = block.dataset.questionId;
+// 🔹 Load meta for existing questions
+passageBlock.querySelectorAll(".question-block").forEach((block) => {
 
-        let questionData;
+  if (block.dataset.initialized) return;
+  block.dataset.initialized = "1";
 
-        if (
-          block.dataset.questionType === "MATCHING" ||
-          block.dataset.questionType === "gap"
-        ) {
-          questionData = p.questions.find(
-            q => String(q.question_group_id) === String(qid)
-          );
-        } else {
-          questionData = p.questions.find(
-            q => String(q.id) === String(qid)
-          );
-        }
-        if (!questionData) return;
-        const metaWrap = block.querySelector(".q-meta-wrap");
-        const root = block.querySelector(".q-type-root");
-        const typeSelect = block.querySelector(".q-type-select");
-        // console.log("BEFORE UI LOAD:", typeSelect?.outerHTML);
+  const qid = block.dataset.questionId;
 
-        if (typeSelect && questionData?.type) {
-          let mappedType = questionData.type.toLowerCase();
+  let questionData;
 
-          // 🔹 mappings
-          if (mappedType === "text_input") {
-            mappedType = "gap";
-          }
-
-          if (mappedType === "tfng") {
-            mappedType = "tf_ng";
-          }
-
-          // apply to select
-          if (typeSelect) {
-            typeSelect.value = mappedType;
-          }
-
-          // final type
-          const initialType = typeSelect 
-            ? typeSelect.value 
-            : mappedType;
-
-          // payload
-          let payload = questionData;
-
-          // 🔥 GROUP TYPES (MATCHING + GAP)
-          if (
-            questionData.type === "MATCHING" ||
-            questionData.type === "TEXT_INPUT"
-          ) {
-            payload = p.questions
-              .filter(q => q.question_group_id === questionData.question_group_id)
-              .sort((a, b) => a.order_index - b.order_index);
-          }
-
-          // render UI
-          AdminReading.loadQuestionUI(
-            initialType,
-            root,
-            payload
-          );
-
-          // 🔁 Gate switch
-          if (typeSelect) {
-            typeSelect.addEventListener("change", () => {
-              const newType = typeSelect.value;
-
-              root.innerHTML = "";
-              AdminReading.loadQuestionUI(newType, root, null);
-            });
-          }
-         
-          // console.log("PATCH DEBUG", {
-          //  block_id: qid,
-          //  questionData: questionData,
-          //  allQuestions: p.questions
-          // });
-          if (!questionData) return;
-      
-          // Restore question image
-          if (questionData.image_url) {
-            const imageWrap = block.querySelector(".image-attach-wrap");
-            imageWrap.dataset.imageUrl = questionData.image_url;
-
-            const preview = imageWrap.querySelector(".image-preview");
-            preview.innerHTML = `
-              <img src="${window.API + questionData.image_url}" 
-                   style="
-                     width:100%;
-                     max-width:100%;
-                     height:auto;
-                     display:block;
-                     margin:8px auto 0 auto;
-                     border-radius:12px;
-                   " />
-              <button type="button" onclick="removeImage(this)" style="margin-top:8px;">
-                ❌ Remove
-              </button>
-            `;
-            }
-      
-            });
-        
-            });
-
-    // sync counter safely
-    const nums = Array.from(document.querySelectorAll(".question-block"))
-      .map(b => parseInt(b.dataset.globalQ) || 0);
-
-    window.__globalQuestionCounter = nums.length ? Math.max(...nums) : 0;
-
-    // publish/unpublish button
-    const publishWrap = document.getElementById("publish-wrap");
-    if (publishWrap) {
-      if (data.status === "published") {
-        publishWrap.innerHTML = `
-          <button onclick="unpublishReading(${testId})">↩️ Unpublish</button>
-        `;
-      } else {
-        publishWrap.innerHTML = `
-          <button onclick="publishReading()">🚀 Publish</button>
-        `;
-      }
-    }
-
-  } catch (e) {
-    console.error(e);
-    alert("Failed to load reading test");
+  // 🔥 GROUP HANDLING
+  if (
+    block.dataset.questionType === "MATCHING" ||
+    block.dataset.questionType === "gap"
+  ) {
+    questionData = p.questions.find(
+      q => String(q.question_group_id) === String(qid)
+    );
+  } else {
+    questionData = p.questions.find(
+      q => String(q.id) === String(qid)
+    );
   }
-};
 
+  if (!questionData) return;
+
+  const root = block.querySelector(".q-type-root");
+  const typeSelect = block.querySelector(".q-type-select");
+
+  // 🔹 TYPE MAPPING (CORE FIX)
+  let mappedType = questionData.type.toLowerCase();
+
+  if (mappedType === "text_input") {
+    mappedType = "gap";
+  }
+
+  if (mappedType === "tfng") {
+    mappedType = "tf_ng";
+  }
+
+  // apply to dropdown
+  if (typeSelect) {
+    typeSelect.value = mappedType;
+  }
+
+  // always define initial type
+  const initialType = typeSelect ? typeSelect.value : mappedType;
+
+  // 🔹 PAYLOAD PREP
+  let payload = questionData;
+
+  if (
+    questionData.type === "MATCHING" ||
+    questionData.type === "TEXT_INPUT"
+  ) {
+    payload = p.questions
+      .filter(q => q.question_group_id === questionData.question_group_id)
+      .sort((a, b) => a.order_index - b.order_index);
+  }
+
+  // 🔹 RENDER UI (ALWAYS RUNS)
+  AdminReading.loadQuestionUI(initialType, root, payload);
+
+  // 🔁 TYPE SWITCH (UI ONLY)
+  if (typeSelect) {
+    typeSelect.addEventListener("change", () => {
+      const newType = typeSelect.value;
+      root.innerHTML = "";
+      AdminReading.loadQuestionUI(newType, root, null);
+    });
+  }
+
+  // 🔹 RESTORE QUESTION IMAGE
+  if (questionData.image_url) {
+    const imageWrap = block.querySelector(".image-attach-wrap");
+    imageWrap.dataset.imageUrl = questionData.image_url;
+
+    const preview = imageWrap.querySelector(".image-preview");
+    preview.innerHTML = `
+      <img src="${window.API + questionData.image_url}" 
+           style="
+             width:100%;
+             max-width:100%;
+             height:auto;
+             display:block;
+             margin:8px auto 0 auto;
+             border-radius:12px;
+           " />
+      <button type="button" onclick="removeImage(this)" style="margin-top:8px;">
+        ❌ Remove
+      </button>
+    `;
+  }
+
+});
+
+// 🔹 sync counter safely
+const nums = Array.from(document.querySelectorAll(".question-block"))
+  .map(b => parseInt(b.dataset.globalQ) || 0);
+
+window.__globalQuestionCounter = nums.length ? Math.max(...nums) : 0;
+
+// 🔹 publish/unpublish button
+const publishWrap = document.getElementById("publish-wrap");
+
+if (publishWrap) {
+  if (data.status === "published") {
+    publishWrap.innerHTML = `
+      <button onclick="unpublishReading(${testId})">↩️ Unpublish</button>
+    `;
+  } else {
+    publishWrap.innerHTML = `
+      <button onclick="publishReading()">🚀 Publish</button>
+    `;
+  }
+}
+} catch (e) {
+  console.error(e);
+  alert("Failed to load reading test");
+}
+};
 window.showPackReading = async function (packId) {
   window.__currentPackId = packId;
 
