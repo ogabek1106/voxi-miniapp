@@ -34,12 +34,49 @@ AdminReading.registerQuestionType("gap", function(container, data = null) {
     </div>
   `;
 
+  const textArea = container.querySelector(".gap-text");
+
+  if (data && Array.isArray(data) && data.length > 0) {
+    textArea.value = data[0].content?.text || "";
+  }
+  
   const answersWrap = container.querySelector(".gap-answers-wrap");
   const addBtn = container.querySelector(".gap-add-blank");
   const removeBtn = container.querySelector(".gap-remove-blank");
+  if (data && Array.isArray(data) && data.length > 0) {
 
-  createGapAnswerBlock(answersWrap);
+    // 🔥 clear existing
+    answersWrap.innerHTML = "<strong>Answers</strong>";
 
+    data.forEach((q, i) => {
+
+      // create blank block
+      createGapAnswerBlock(answersWrap);
+
+      const blocks = answersWrap.querySelectorAll(".gap-answer-block");
+      const currentBlock = blocks[blocks.length - 1];
+
+      const optionsWrap = currentBlock.querySelector(".gap-options");
+
+      // clear default option
+      optionsWrap.innerHTML = "";
+
+      const variants = q.meta?.variants || [];
+
+      variants.forEach(v => {
+        addGapOption(optionsWrap);
+        const inputs = optionsWrap.querySelectorAll(".gap-answer-input");
+        inputs[inputs.length - 1].value = v;
+      });
+
+    });
+
+  } else {
+    // fallback for new question
+    createGapAnswerBlock(answersWrap);
+  }
+
+  
   addBtn.onclick = () => createGapAnswerBlock(answersWrap);
 
   removeBtn.onclick = () => {
