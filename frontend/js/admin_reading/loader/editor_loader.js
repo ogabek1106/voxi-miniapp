@@ -174,7 +174,11 @@ window.openAdminReading = async function (testId) {
         questionsHtml += `
   <div class="question-block" 
      data-global-q="${window.__globalQuestionCounter}" 
-     data-question-id="${q.type === "MATCHING" ? q.question_group_id : q.id}"
+     data-question-id="${
+       (q.type === "MATCHING" || q.type === "TEXT_INPUT")
+         ? q.question_group_id
+         : q.id
+     }"
      data-question-type="${q.type === "TEXT_INPUT" ? "gap" : q.type}"
      style="
        border:1px solid #e5e5ea;
@@ -305,7 +309,10 @@ window.openAdminReading = async function (testId) {
 
         let questionData;
 
-        if (block.dataset.questionType === "MATCHING") {
+        if (
+          block.dataset.questionType === "MATCHING" ||
+          block.dataset.questionType === "gap"
+        ) {
           questionData = p.questions.find(
             q => String(q.question_group_id) === String(qid)
           );
