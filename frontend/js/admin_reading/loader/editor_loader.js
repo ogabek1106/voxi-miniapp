@@ -393,7 +393,7 @@ passageBlock.querySelectorAll(".question-block").forEach((block) => {
   }
 
 });
-
+});
 // 🔹 sync counter safely
 const nums = Array.from(document.querySelectorAll(".question-block"))
   .map(b => parseInt(b.dataset.globalQ) || 0);
