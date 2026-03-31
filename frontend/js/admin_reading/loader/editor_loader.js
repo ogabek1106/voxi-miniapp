@@ -136,10 +136,20 @@ window.openAdminReading = async function (testId) {
 
       let questionsHtml = "";
       const renderedGroups = new Set();
-
+    
       for (let qi = 0; qi < p.questions.length; qi++) {
 
         const q = p.questions[qi];
+        // 🔥 HANDLE GAP GROUPING (like MATCHING)
+        if (q.type === "TEXT_INPUT" && q.question_group_id) {
+          const gid = q.question_group_id;
+
+          if (renderedGroups.has(gid)) {
+            continue;
+          }
+
+          renderedGroups.add(gid);
+        }
         // prevent duplicate MATCHING blocks using group id
         if (q.type === "MATCHING") {
           const gid = q.question_group_id || 0;
@@ -165,7 +175,7 @@ window.openAdminReading = async function (testId) {
   <div class="question-block" 
      data-global-q="${window.__globalQuestionCounter}" 
      data-question-id="${q.type === "MATCHING" ? q.question_group_id : q.id}"
-     data-question-type="${q.type}"
+     data-question-type="${q.type === "TEXT_INPUT" ? "gap" : q.type}"
      style="
        border:1px solid #e5e5ea;
        border-radius:8px;
@@ -324,10 +334,14 @@ window.openAdminReading = async function (testId) {
 
         let payload = questionData;
 
-        if (questionData.type === "MATCHING") {
-          payload = p.questions.filter(
-            q => q.question_group_id === questionData.question_group_id
-          );
+        // 🔥 GROUP TYPES (MATCHING + GAP)
+        if (
+          questionData.type === "MATCHING" ||
+          questionData.type === "TEXT_INPUT"
+        ) {
+          payload = p.questions
+            .filter(q => q.question_group_id === questionData.question_group_id)
+            .sort((a, b) => a.order_index - b.order_index);
         }
         console.log("BEFORE LOAD:", block.outerHTML);
         AdminReading.loadQuestionUI(
