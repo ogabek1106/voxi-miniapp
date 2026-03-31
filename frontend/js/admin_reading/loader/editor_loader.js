@@ -164,11 +164,11 @@ window.openAdminReading = async function (testId) {
         window.__globalQuestionCounter++;
 
         const textValue = q.content?.text || "";
-        // // console.log("EDITOR LOAD", {
-          question_id: q.id,
-          raw_content: q.content,
-          extracted_text: q.content?.text
-        });
+        // console.log("EDITOR LOAD", {
+        //  question_id: q.id,
+        //  raw_content: q.content,
+        //  extracted_text: q.content?.text
+        // });
         const answerValue = q.correct_answer?.value || "";
 
         questionsHtml += `
@@ -371,10 +371,10 @@ window.openAdminReading = async function (testId) {
         }
          
           // console.log("PATCH DEBUG", {
-            block_id: qid,
-            questionData: questionData,
-            allQuestions: p.questions
-          });
+          //  block_id: qid,
+          //  questionData: questionData,
+          //  allQuestions: p.questions
+          // });
           if (!questionData) return;
       
           // Restore question image
