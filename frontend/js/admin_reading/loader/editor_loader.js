@@ -141,25 +141,16 @@ window.openAdminReading = async function (testId) {
 
         const q = p.questions[qi];
         // 🔥 HANDLE GAP GROUPING (like MATCHING)
-        if (q.type === "TEXT_INPUT" && q.question_group_id) {
-          const gid = q.question_group_id;
+        const groupKey = `${q.type}_${q.question_group_id || q.id}`;
 
-          if (renderedGroups.has(gid)) {
+        // treat grouped types ALWAYS as grouped
+        if (q.type === "MATCHING" || q.type === "TEXT_INPUT") {
+          if (renderedGroups.has(groupKey)) {
             continue;
           }
-
-          renderedGroups.add(gid);
+          renderedGroups.add(groupKey);
         }
-        // prevent duplicate MATCHING blocks using group id
-        if (q.type === "MATCHING") {
-          const gid = q.question_group_id || 0;
-
-          if (renderedGroups.has(gid)) {
-            continue;
-          }
-
-          renderedGroups.add(gid);
-        }
+        
 
         window.__globalQuestionCounter++;
 
