@@ -50,6 +50,43 @@ window.saveReadingDraft = async function () {
     return;
   }
   try {
+    const passageBlocks = document.querySelectorAll(".passage-block");
+    // 🔴 PRE-VALIDATION (BEFORE ANY DELETE)
+    for (let pi = 0; pi < passageBlocks.length; pi++) {
+      const p = passageBlocks[pi];
+
+      const questions = p.querySelector(".questions-wrap")
+        .querySelectorAll(".question-block");
+
+      for (let qi = 0; qi < questions.length; qi++) {
+        const q = questions[qi];
+        const type = q.querySelector(".q-type-select")?.value;
+
+        if (type === "gap") {
+          const text = q.querySelector(".gap-text")?.value?.trim() || "";
+          const blanks = AdminReading.Gap.detectBlanks(text);
+
+          const answerBlocks = q.querySelectorAll(".gap-answer-block");
+
+          const answers = Array.from(answerBlocks).map(block => {
+            return Array.from(block.querySelectorAll(".gap-answer-input"))
+              .map(i => i.value.trim())
+              .filter(Boolean);
+          });
+
+          if (answers.length !== blanks.length) {
+            alert(`❌ Gap mismatch: ${blanks.length} blanks but ${answers.length} answer groups`);
+  
+            if (btn) {
+              btn.disabled = false;
+              btn.innerText = "💾 Save Draft";
+            }
+
+            return;
+          }
+        }
+      }
+    }
    
     let testId;
     console.log("🧪 Save draft started");
@@ -78,9 +115,7 @@ window.saveReadingDraft = async function () {
       window.__currentEditingTestId = testId;
     }
 
-    // 2) Create passages
-    const passageBlocks = document.querySelectorAll(".passage-block");
-
+    
     for (let pi = 0; pi < passageBlocks.length; pi++) {
       const p = passageBlocks[pi];
 
@@ -197,12 +232,7 @@ window.saveReadingDraft = async function () {
               .filter(Boolean);
           });
 
-          // 🔴 VALIDATION
-          if (answers.length !== blanks.length) {
-            alert(`Gap mismatch: ${blanks.length} blanks but ${answers.length} answer groups`);
-            return;
-          }
-
+  
           // 🔥 CREATE ONE QUESTION PER BLANK
           for (let i = 0; i < blanks.length; i++) {
 
