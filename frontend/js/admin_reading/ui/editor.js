@@ -91,6 +91,7 @@ window.showCreateReading = function (reset = false) {
         <option value="matching" selected>Matching</option>
         <option value="single_choice">Single Choice</option>
         <option value="gap">Gap Filling</option>
+        <option value="yes_no_ng">Yes / No / Not Given</option>
       </select>
     </div>
 
