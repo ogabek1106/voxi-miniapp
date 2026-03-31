@@ -244,28 +244,31 @@ window.openAdminReading = async function (testId) {
       }
 
       passageBlock.innerHTML = `
-        <h4>Passage ${passageIndex}</h4>
+  <h4>Passage ${passageIndex}</h4>
 
-        <label>Passage title</label>
-        <input class="passage-title" value="${(p.title || "").replace(/"/g, "&quot;")}" />
+  <label>Passage title</label>
+  <input class="passage-title" value="${(p.title || "").replace(/"/g, "&quot;")}" />
 
-        <label style="margin-top:8px; display:block;">Passage text</label>
-        <textarea class="passage-text" rows="6" style="width:100%; padding:10px; border-radius:8px;"></textarea>
-        <hr style="margin:10px 0; border:0; border-top:1px solid #eee;" />
+  <label style="margin-top:8px; display:block;">Passage text</label>
+  <textarea class="passage-text" rows="6" style="width:100%; padding:10px; border-radius:8px;"></textarea>
+  <hr style="margin:10px 0; border:0; border-top:1px solid #eee;" />
 
-        <div class="image-attach-wrap" style="text-align:right;">
-          <button type="button" class="attach-image-btn" onclick="attachImage(this)">
-            🖼 Add Image
-          </button>
-          <input type="file" accept="image/*" class="hidden-image-input" style="display:none;" />
-          <div class="image-preview" style="margin-top:8px;"></div>
-        </div>
-        <div class="questions-wrap" style="margin-top:12px;">
-          <h5>Questions</h5>
-          ${questionsHtml}
-          <button onclick="addQuestion(this)">➕ Add Question</button>
-        </div>
-      `;
+  <div class="image-attach-wrap" style="text-align:right;">
+    <button type="button" class="attach-image-btn" onclick="attachImage(this)">
+      🖼 Add Image
+    </button>
+    <input type="file" accept="image/*" class="hidden-image-input" style="display:none;" />
+    <div class="image-preview" style="margin-top:8px;"></div>
+  </div>
+
+  <div class="questions-wrap" style="margin-top:12px;">
+    <h5>Questions</h5>
+    <div class="questions-container"></div>
+    <button onclick="addQuestion(this)">➕ Add Question</button>
+  </div>
+`;    
+      const questionsContainer = passageBlock.querySelector(".questions-container");
+      questionsContainer.innerHTML = questionsHtml;
 
       wrap.appendChild(passageBlock);
       // Restore passage image
