@@ -81,6 +81,7 @@ window.addPassage = function () {
       <select class="q-type-select" style="width:100%; height:36px;">
         <option value="matching" selected>Matching</option>
         <option value="single_choice">Single Choice</option>
+        <option value="multiple_choice">Multiple Choice</option>
         <option value="gap">Gap Filling</option>
         <option value="yes_no_ng">Yes / No / Not Given</option>
         <option value="tf_ng">True / False / Not Given</option>
@@ -190,6 +191,7 @@ window.addQuestion = function (btn) {
       <select class="q-type-select" style="width:100%; height:36px;">
         <option value="matching" selected>Matching</option>
         <option value="single_choice">Single Choice</option>
+        <option value="multiple_choice">Multiple Choice</option>
         <option value="gap">Gap Filling</option>
         <option value="yes_no_ng">Yes / No / Not Given</option>
         <option value="tf_ng">True / False / Not Given</option>
