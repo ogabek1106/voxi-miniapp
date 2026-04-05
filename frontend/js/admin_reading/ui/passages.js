@@ -85,6 +85,7 @@ window.addPassage = function () {
         <option value="gap">Gap Filling</option>
         <option value="yes_no_ng">Yes / No / Not Given</option>
         <option value="tf_ng">True / False / Not Given</option>
+        <option value="summary">Summary Completion</option>
       </select>
     </div>
 
@@ -195,6 +196,7 @@ window.addQuestion = function (btn) {
         <option value="gap">Gap Filling</option>
         <option value="yes_no_ng">Yes / No / Not Given</option>
         <option value="tf_ng">True / False / Not Given</option>
+        <option value="summary">Summary Completion</option>
       </select>
     </div>
 
