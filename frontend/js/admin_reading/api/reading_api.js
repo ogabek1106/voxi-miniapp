@@ -215,6 +215,60 @@ window.saveReadingDraft = async function () {
           continue;
         }
 
+        if (type === "multiple_choice") {
+
+          const questionText =
+            q.querySelector(".mcq-question")?.value?.trim() || "";
+
+          if (!questionText) continue;
+
+          const maxAnswers = parseInt(
+            q.querySelector(".mcq-max")?.value || "1",
+            10
+          );
+
+          const optionEls = q.querySelectorAll(".mcq-option");
+
+          const options = [];
+          const correct_answers = [];
+
+          optionEls.forEach((el, index) => {
+            const key = String.fromCharCode(65 + index);
+
+            const text = el.querySelector(".mcq-option-text")?.value?.trim();
+
+            if (!text) return;
+
+            options.push({ key, text });
+
+            if (el.querySelector(".mcq-correct")?.checked) {
+              correct_answers.push(key);
+            }
+          });
+
+          if (!options.length) continue;
+          if (!correct_answers.length) continue;
+
+          await apiPost(`/admin/reading/passages/${passageId}/questions`, {
+            type: "MULTIPLE_CHOICE",
+            order_index: orderCursor++,
+            instruction: null,
+            content: {
+              text: questionText,
+              options: options
+            },
+            correct_answer: {
+              value: correct_answers
+            },
+            meta: {
+              max_answers: maxAnswers
+            },
+            points: 1
+          });
+
+          continue;
+        }
+        
         if (type === "yes_no_ng") {
 
           const questionText =
@@ -437,6 +491,60 @@ window.publishReading = async function () {
 
           continue;
         }
+
+        if (type === "multiple_choice") {
+
+  const questionText =
+    q.querySelector(".mcq-question")?.value?.trim() || "";
+
+  if (!questionText) continue;
+
+  const maxAnswers = parseInt(
+    q.querySelector(".mcq-max")?.value || "1",
+    10
+  );
+
+  const optionEls = q.querySelectorAll(".mcq-option");
+
+  const options = [];
+  const correct_answers = [];
+
+  optionEls.forEach((el, index) => {
+    const key = String.fromCharCode(65 + index);
+
+    const text = el.querySelector(".mcq-option-text")?.value?.trim();
+    if (!text) return;
+
+    options.push({ key, text });
+
+    if (el.querySelector(".mcq-correct")?.checked) {
+      correct_answers.push(key);
+    }
+  });
+
+  if (!options.length) continue;
+  if (!correct_answers.length) continue;
+
+  await apiPost(`/admin/reading/passages/${passageId}/questions`, {
+    type: "MULTIPLE_CHOICE",
+    order_index: orderCursor++,
+    instruction: null,
+    content: {
+      text: questionText,
+      options: options
+    },
+    correct_answer: {
+      value: correct_answers
+    },
+    meta: {
+      max_answers: maxAnswers
+    },
+    points: 1
+  });
+
+  continue;
+}
+        
         const text = q.querySelector(".q-text")?.value;
         const correctAnswer = q.querySelector(".q-answer")?.value;
         let meta = null;
