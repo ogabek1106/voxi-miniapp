@@ -45,16 +45,21 @@ AdminReading.registerQuestionType("multiple_choice", function(container, data = 
     const div = document.createElement("div");
     div.className = "mcq-option";
     div.style = `
-  display:flex;
+  display:grid;
+  grid-template-columns: 24px 24px 1fr;
   align-items:center;
   gap:8px;
-  margin-bottom:6px;
+  margin-bottom:8px;
 `;
 
     div.innerHTML = `
-  <input type="checkbox" class="mcq-correct" ${checked ? "checked" : ""} />
+  <input 
+    type="checkbox" 
+    class="mcq-correct" 
+    ${checked ? "checked" : ""} 
+  />
 
-  <span style="width:20px;">${key}</span>
+  <span style="font-weight:600;">${key}</span>
 
   <input 
     type="text" 
@@ -62,11 +67,11 @@ AdminReading.registerQuestionType("multiple_choice", function(container, data = 
     value="${text.replace(/"/g, "&quot;")}" 
     placeholder="Option text..."
     style="
-      flex:1;
-      min-width: 0;
-      padding:8px;
-      border-radius:6px;
+      width:100%;
+      padding:10px;
+      border-radius:8px;
       border:1px solid #e5e5ea;
+      box-sizing:border-box;
     "
   />
 `;
