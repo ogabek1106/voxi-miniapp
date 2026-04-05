@@ -33,15 +33,20 @@ AdminReading.registerQuestionType("summary", function(container, data = null) {
 
       <label style="margin-top:10px;">Word bank (optional)</label>
       <textarea class="summary-word-bank"
-        rows="2"
-        placeholder="Comma separated: Tashkent, Samarkand, Bukhara"
-        style="
-          width:100%;
-          padding:10px;
-          border-radius:8px;
-          border:1px solid #e5e5ea;
-        "
-      ></textarea>
+  rows="1"
+  placeholder="Comma separated: Tashkent, Samarkand, Bukhara"
+  style="
+    width:100%;
+    padding:10px;
+    border-radius:8px;
+    border:1px solid #e5e5ea;
+    resize: vertical;
+    min-height: 42px;
+    max-height: 80px;
+    overflow-y: auto;
+    box-sizing: border-box;
+  "
+></textarea>
 
       <div class="summary-answers-wrap" style="margin-top:12px;">
         <strong>Answers</strong>
