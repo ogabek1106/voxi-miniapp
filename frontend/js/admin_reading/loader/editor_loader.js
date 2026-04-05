@@ -338,6 +338,9 @@ passageBlock.querySelectorAll(".question-block").forEach((block) => {
   if (mappedType === "tfng") {
     mappedType = "tf_ng";
   }
+  if (mappedType === "multiple_choice") {
+    mappedType = "multiple_choice";
+  }
 
   // apply to dropdown
   if (typeSelect) {
