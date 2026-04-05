@@ -334,6 +334,20 @@ window.saveReadingDraft = async function () {
 
           continue;
         }
+        if (type === "summary") {
+
+  const payload = AdminReading.serializeSummary(q);
+
+  if (!payload || !payload.length) continue;
+
+  for (const item of payload) {
+    await apiPost(`/admin/reading/passages/${passageId}/questions`, item);
+  }
+
+  orderCursor += payload.length;
+
+  continue;
+}
         console.log("🧪 Creating question", qi + 1, "for passage", pi + 1);
         
       }
@@ -541,6 +555,21 @@ window.publishReading = async function () {
     },
     points: 1
   });
+
+  continue;
+}
+
+        if (type === "summary") {
+
+  const payload = AdminReading.serializeSummary(q);
+
+  if (!payload || !payload.length) continue;
+
+  for (const item of payload) {
+    await apiPost(`/admin/reading/passages/${passageId}/questions`, item);
+  }
+
+  orderCursor += payload.length;
 
   continue;
 }
