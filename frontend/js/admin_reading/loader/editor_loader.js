@@ -329,18 +329,11 @@ passageBlock.querySelectorAll(".question-block").forEach((block) => {
   const typeSelect = block.querySelector(".q-type-select");
 
   // 🔹 TYPE MAPPING (CORE FIX)
-  let mappedType = questionData.type.toLowerCase();
+  let mappedType = questionData.type?.toLowerCase();
 
-  if (mappedType === "text_input") {
-    mappedType = "gap";
-  }
-
-  if (mappedType === "tfng") {
-    mappedType = "tf_ng";
-  }
-  if (mappedType === "multiple_choice") {
-    mappedType = "multiple_choice";
-  }
+  if (mappedType === "text_input") mappedType = "gap";
+  if (mappedType === "tfng") mappedType = "tf_ng";
+  if (mappedType === "multi_choice") mappedType = "multiple_choice";
 
   // apply to dropdown
   if (typeSelect) {
