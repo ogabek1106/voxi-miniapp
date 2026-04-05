@@ -20,7 +20,7 @@ AdminReading.serializeSummary = function(block) {
 
   if (!text) return [];
 
-  const groupId = Date.now(); // temp group id
+  const groupId = Math.floor(Math.random() * 1000000000); // temp group id
 
   return answers.map((ans, index) => ({
     type: "TEXT_INPUT",
