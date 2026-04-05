@@ -44,13 +44,32 @@ AdminReading.registerQuestionType("multiple_choice", function(container, data = 
 
     const div = document.createElement("div");
     div.className = "mcq-option";
-    div.style = "display:flex; gap:8px; margin-bottom:6px;";
+    div.style = `
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:6px;
+`;
 
     div.innerHTML = `
-      <input type="checkbox" class="mcq-correct" ${checked ? "checked" : ""}/>
-      <span>${key}</span>
-      <input type="text" class="mcq-option-text" value="${text}" placeholder="Option text..." style="flex:1;" />
-    `;
+  <input type="checkbox" class="mcq-correct" ${checked ? "checked" : ""} />
+
+  <span style="width:20px;">${key}</span>
+
+  <input 
+    type="text" 
+    class="mcq-option-text" 
+    value="${text.replace(/"/g, "&quot;")}" 
+    placeholder="Option text..."
+    style="
+      flex:1;
+      min-width: 0;
+      padding:8px;
+      border-radius:6px;
+      border:1px solid #e5e5ea;
+    "
+  />
+`;
 
     optionsContainer.appendChild(div);
   }
