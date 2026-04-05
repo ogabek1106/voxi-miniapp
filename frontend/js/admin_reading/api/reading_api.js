@@ -250,7 +250,7 @@ window.saveReadingDraft = async function () {
           if (!correct_answers.length) continue;
 
           await apiPost(`/admin/reading/passages/${passageId}/questions`, {
-            type: "MULTIPLE_CHOICE",
+            type: "MULTI_CHOICE",
             order_index: orderCursor++,
             instruction: null,
             content: {
@@ -526,7 +526,7 @@ window.publishReading = async function () {
   if (!correct_answers.length) continue;
 
   await apiPost(`/admin/reading/passages/${passageId}/questions`, {
-    type: "MULTIPLE_CHOICE",
+    type: "MULTI_CHOICE",
     order_index: orderCursor++,
     instruction: null,
     content: {
