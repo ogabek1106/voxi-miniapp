@@ -40,7 +40,12 @@ AdminReading.registerQuestionType("multiple_choice", function(container, data = 
   function createOption(opt = {}, index = 0) {
     const key = opt.key || String.fromCharCode(65 + index);
     const text = opt.text || "";
-    const checked = (data?.correct_answers || []).includes(key);
+    const correctList =
+      data?.correct_answers ||
+      data?.correct_answer?.value ||
+      [];
+
+    const checked = correctList.includes(key);
 
     const div = document.createElement("div");
     div.className = "mcq-option";
