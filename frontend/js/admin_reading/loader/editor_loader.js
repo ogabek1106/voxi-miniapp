@@ -171,7 +171,11 @@ window.openAdminReading = async function (testId) {
          ? q.question_group_id
          : q.id
      }"
-     data-question-type="${q.type === "TEXT_INPUT" ? "gap" : q.type}"
+     data-question-type="${
+  q.type === "TEXT_INPUT"
+    ? (q.meta?.mode === "summary" ? "summary" : "gap")
+    : q.type
+}"
      style="
        border:1px solid #e5e5ea;
        border-radius:8px;
@@ -313,7 +317,8 @@ passageBlock.querySelectorAll(".question-block").forEach((block) => {
   // 🔥 GROUP HANDLING
   if (
     block.dataset.questionType === "MATCHING" ||
-    block.dataset.questionType === "gap"
+    block.dataset.questionType === "gap" ||
+    block.dataset.questionType === "summary"
   ) {
     questionData = p.questions.find(
       q => String(q.question_group_id) === String(qid)
@@ -332,7 +337,13 @@ passageBlock.querySelectorAll(".question-block").forEach((block) => {
   // 🔹 TYPE MAPPING (CORE FIX)
   let mappedType = questionData.type?.toLowerCase();
 
-  if (mappedType === "text_input") mappedType = "gap";
+  if (mappedType === "text_input") {
+    if (questionData.meta?.mode === "summary") {
+      mappedType = "summary";
+    } else {
+      mappedType = "gap";
+    }
+  }
   if (mappedType === "tfng") mappedType = "tf_ng";
   if (mappedType === "multi_choice") mappedType = "multiple_choice";
 
@@ -349,7 +360,13 @@ passageBlock.querySelectorAll(".question-block").forEach((block) => {
 
   if (
     questionData.type === "MATCHING" ||
-    questionData.type === "TEXT_INPUT"
+    (
+      questionData.type === "TEXT_INPUT" &&
+      (
+        questionData.meta?.mode === "summary" ||
+        !questionData.meta?.mode
+      )
+    )
   ) {
     payload = p.questions
       .filter(q => q.question_group_id === questionData.question_group_id)
