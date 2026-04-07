@@ -221,6 +221,7 @@ window.openAdminReading = async function (testId) {
       <label style="font-weight:600;">Question type</label>
       <select class="q-type-select" style="width:100%; margin-top:4px;">
         <option value="matching">Matching</option>
+        <option value="paragraph_matching">Paragraph Matching</option>
         <option value="single_choice">Single Choice</option>
         <option value="multiple_choice">Multiple Choice</option>
         <option value="gap">Gap Filling</option>
