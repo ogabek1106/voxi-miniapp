@@ -291,6 +291,26 @@ window.saveReadingDraft = async function () {
 
           continue;
         }
+
+        if (type === "tf_ng") {
+
+          const payload = AdminReading.serializeTFNG(q);
+
+          if (!payload) continue;
+
+          const imageWrap = q.querySelector(".image-attach-wrap");
+          const imageUrl = imageWrap?.dataset.imageUrl || null;
+
+          await apiPost(`/admin/reading/passages/${passageId}/questions`, {
+            ...payload,
+            order_index: orderCursor++,
+            instruction: null,
+            image_url: imageUrl,
+            points: 1
+          });
+
+          continue;
+        }
         
         if (type === "gap") {
 
@@ -558,6 +578,82 @@ window.publishReading = async function () {
 
   continue;
 }
+
+        if (type === "yes_no_ng") {
+
+          const questionText =
+            q.querySelector(".ynng-question")?.value?.trim() || "";
+
+          const correct =
+            q.querySelector(".ynng-correct")?.value || "YES";
+
+          if (!questionText) continue;
+
+          await apiPost(`/admin/reading/passages/${passageId}/questions`, {
+            type: "YES_NO_NG",
+            order_index: orderCursor++,
+            instruction: null,
+            content: { text: questionText },
+            correct_answer: { value: correct },
+            meta: { subtype: "YN" },
+            points: 1
+          });
+
+          continue;
+        }
+
+        if (type === "tf_ng") {
+
+          const payload = AdminReading.serializeTFNG(q);
+
+          if (!payload) continue;
+
+          const imageWrap = q.querySelector(".image-attach-wrap");
+          const imageUrl = imageWrap?.dataset.imageUrl || null;
+
+          await apiPost(`/admin/reading/passages/${passageId}/questions`, {
+            ...payload,
+            order_index: orderCursor++,
+            instruction: null,
+            image_url: imageUrl,
+            points: 1
+          });
+
+          continue;
+        }
+
+        if (type === "gap") {
+
+          const groupId = groupCounter++;
+          const text = q.querySelector(".gap-text")?.value?.trim() || "";
+          const blanks = AdminReading.Gap.detectBlanks(text);
+          const answerBlocks = q.querySelectorAll(".gap-answer-block");
+
+          const answers = Array.from(answerBlocks).map(block => {
+            return Array.from(block.querySelectorAll(".gap-answer-input"))
+              .map(i => i.value.trim())
+              .filter(Boolean);
+          });
+
+          for (let i = 0; i < blanks.length; i++) {
+            const variants = answers[i];
+
+            if (!variants.length) continue;
+
+            await apiPost(`/admin/reading/passages/${passageId}/questions`, {
+              type: "TEXT_INPUT",
+              order_index: orderCursor++,
+              question_group_id: groupId,
+              instruction: null,
+              content: { text: text },
+              correct_answer: { value: variants[0] },
+              meta: { variants: variants },
+              points: 1
+            });
+          }
+
+          continue;
+        }
 
         if (type === "summary") {
 
