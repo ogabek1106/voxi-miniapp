@@ -90,8 +90,11 @@ window.showCreateReading = function (reset = false) {
       <select class="q-type-select">
         <option value="matching" selected>Matching</option>
         <option value="single_choice">Single Choice</option>
+        <option value="multiple_choice">Multiple Choice</option>
         <option value="gap">Gap Filling</option>
         <option value="yes_no_ng">Yes / No / Not Given</option>
+        <option value="tf_ng">True / False / Not Given</option>
+        <option value="summary">Summary Completion</option>
       </select>
     </div>
 
