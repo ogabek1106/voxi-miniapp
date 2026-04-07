@@ -89,6 +89,7 @@ window.showCreateReading = function (reset = false) {
       <label>Question type</label>
       <select class="q-type-select">
         <option value="matching" selected>Matching</option>
+        <option value="paragraph_matching">Paragraph Matching</option>
         <option value="single_choice">Single Choice</option>
         <option value="multiple_choice">Multiple Choice</option>
         <option value="gap">Gap Filling</option>
