@@ -126,7 +126,9 @@ window.openAdminReading = async function (testId) {
     const wrap = document.getElementById("passages-wrap");
     wrap.innerHTML = "";
 
-    data.passages.forEach((p, pi) => {
+    [...(data.passages || [])]
+      .sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
+      .forEach((p, pi) => {
       const passageIndex = pi + 1;
 
       const passageBlock = document.createElement("div");
@@ -135,12 +137,16 @@ window.openAdminReading = async function (testId) {
       passageBlock.style.textAlign = "left";
       passageBlock.style.marginTop = "16px";
 
+      const questions = [...(p.questions || [])].sort((a, b) => {
+        return (a.order_index || 0) - (b.order_index || 0);
+      });
+
       let questionsHtml = "";
       const renderedGroups = new Set();
     
-      for (let qi = 0; qi < p.questions.length; qi++) {
+      for (let qi = 0; qi < questions.length; qi++) {
 
-        const q = p.questions[qi];
+        const q = questions[qi];
         // 🔥 HANDLE GAP GROUPING (like MATCHING)
         const groupKey = `${q.type}_${q.question_group_id || q.id}`;
 
@@ -320,11 +326,11 @@ passageBlock.querySelectorAll(".question-block").forEach((block) => {
     block.dataset.questionType === "gap" ||
     block.dataset.questionType === "summary"
   ) {
-    questionData = p.questions.find(
+    questionData = questions.find(
       q => String(q.question_group_id) === String(qid)
     );
   } else {
-    questionData = p.questions.find(
+    questionData = questions.find(
       q => String(q.id) === String(qid)
     );
   }
@@ -368,8 +374,8 @@ passageBlock.querySelectorAll(".question-block").forEach((block) => {
       )
     )
   ) {
-    payload = p.questions
-      .filter(q => q.question_group_id === questionData.question_group_id)
+    payload = questions
+      .filter(q => String(q.question_group_id) === String(questionData.question_group_id))
       .sort((a, b) => a.order_index - b.order_index);
   }
 
