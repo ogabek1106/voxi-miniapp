@@ -8,6 +8,7 @@ function mapType(old) {
   if (old === "tfng") return "TFNG";
   if (old === "yesno") return "YES_NO_NG";
   if (old === "matching") return "MATCHING";
+  if (old === "paragraph_matching") return "PARAGRAPH_MATCHING";
   return "TEXT_INPUT";
 }
 

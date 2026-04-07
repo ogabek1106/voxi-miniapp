@@ -151,13 +151,21 @@ window.openAdminReading = async function (testId) {
         const groupKey = `${q.type}_${q.question_group_id || q.id}`;
 
         // treat grouped types ALWAYS as grouped
-        if (q.type === "MATCHING" || q.type === "TEXT_INPUT") {
+        if (q.type === "MATCHING" || q.type === "PARAGRAPH_MATCHING" || q.type === "TEXT_INPUT") {
           if (renderedGroups.has(groupKey)) {
             continue;
           }
           renderedGroups.add(groupKey);
         }
         
+
+        const renderedQuestionCount =
+          q.type === "PARAGRAPH_MATCHING"
+            ? questions.filter(item =>
+                item.type === "PARAGRAPH_MATCHING" &&
+                String(item.question_group_id) === String(q.question_group_id)
+              ).length
+            : 1;
 
         window.__globalQuestionCounter++;
 
@@ -173,7 +181,7 @@ window.openAdminReading = async function (testId) {
   <div class="question-block" 
      data-global-q="${window.__globalQuestionCounter}" 
      data-question-id="${
-       (q.type === "MATCHING" || q.type === "TEXT_INPUT")
+       (q.type === "MATCHING" || q.type === "PARAGRAPH_MATCHING" || q.type === "TEXT_INPUT")
          ? q.question_group_id
          : q.id
      }"
@@ -254,6 +262,10 @@ window.openAdminReading = async function (testId) {
 
 </div>
         `;
+
+        if (renderedQuestionCount > 1) {
+          window.__globalQuestionCounter += renderedQuestionCount - 1;
+        }
       }
 
       passageBlock.innerHTML = `
@@ -324,6 +336,7 @@ passageBlock.querySelectorAll(".question-block").forEach((block) => {
   // 🔥 GROUP HANDLING
   if (
     block.dataset.questionType === "MATCHING" ||
+    block.dataset.questionType === "PARAGRAPH_MATCHING" ||
     block.dataset.questionType === "gap" ||
     block.dataset.questionType === "summary"
   ) {
@@ -367,6 +380,7 @@ passageBlock.querySelectorAll(".question-block").forEach((block) => {
 
   if (
     questionData.type === "MATCHING" ||
+    questionData.type === "PARAGRAPH_MATCHING" ||
     (
       questionData.type === "TEXT_INPUT" &&
       (

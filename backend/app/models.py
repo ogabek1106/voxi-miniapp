@@ -63,6 +63,7 @@ class ReadingQuestionType(enum.Enum):
     SINGLE_CHOICE = "SINGLE_CHOICE"
     MULTI_CHOICE = "MULTI_CHOICE"
     MATCHING = "MATCHING"
+    PARAGRAPH_MATCHING = "PARAGRAPH_MATCHING"
     TEXT_INPUT = "TEXT_INPUT"
 
 class ReadingQuestion(Base):

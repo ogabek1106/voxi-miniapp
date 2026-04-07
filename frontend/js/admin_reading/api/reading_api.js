@@ -189,6 +189,20 @@ window.saveReadingDraft = async function () {
 
           continue;
         }
+        if (type === "paragraph_matching") {
+          const groupId = groupCounter++;
+          const payload = AdminReading.serializeParagraphMatching(q, groupId, orderCursor);
+
+          if (!payload || !payload.length) continue;
+
+          for (const item of payload) {
+            await apiPost(`/admin/reading/passages/${passageId}/questions`, item);
+          }
+
+          orderCursor += payload.length;
+
+          continue;
+        }
         if (type === "single_choice") {
 
           const optionInputs = q.querySelectorAll(".mcq-option-input");
@@ -497,6 +511,20 @@ window.publishReading = async function () {
             });
 
           }
+
+          continue;
+        }
+        if (type === "paragraph_matching") {
+          const groupId = groupCounter++;
+          const payload = AdminReading.serializeParagraphMatching(q, groupId, orderCursor);
+
+          if (!payload || !payload.length) continue;
+
+          for (const item of payload) {
+            await apiPost(`/admin/reading/passages/${passageId}/questions`, item);
+          }
+
+          orderCursor += payload.length;
 
           continue;
         }

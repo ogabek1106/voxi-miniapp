@@ -8,7 +8,10 @@ window.getNextQuestionNumber = function () {
   const rowNums = [...document.querySelectorAll(".match-q-label")]
     .map(el => parseInt(el.textContent.replace("Q","")) || 0);
 
-  const nums = [...blockNums, ...rowNums];
+  const paragraphRowNums = [...document.querySelectorAll(".paragraph-match-q-label")]
+    .map(el => parseInt(el.textContent.replace("Q","")) || 0);
+
+  const nums = [...blockNums, ...rowNums, ...paragraphRowNums];
 
   return nums.length ? Math.max(...nums) + 1 : 1;
 };

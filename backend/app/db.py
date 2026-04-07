@@ -68,3 +68,18 @@ def ensure_question_group_column():
             "ADD COLUMN IF NOT EXISTS question_group_id INTEGER;"
         ))
         conn.commit()
+
+
+def ensure_reading_question_type_values():
+    with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+        enum_exists = conn.execute(text(
+            "SELECT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'readingquestiontype');"
+        )).scalar()
+
+        if not enum_exists:
+            return
+
+        conn.execute(text(
+            "ALTER TYPE readingquestiontype "
+            "ADD VALUE IF NOT EXISTS 'PARAGRAPH_MATCHING';"
+        ))

@@ -15,7 +15,8 @@ from app.api.admin_reading import router as admin_reading_router
 from .db import (
     ensure_reading_progress_columns,
     ensure_mock_pack_column,
-    ensure_question_group_column
+    ensure_question_group_column,
+    ensure_reading_question_type_values
 )
 from app.api.admin_upload import router as admin_upload_router
 from app.api import admin_mock_packs
@@ -25,6 +26,7 @@ os.makedirs("media", exist_ok=True)
 ensure_reading_progress_columns()
 ensure_mock_pack_column()
 ensure_question_group_column()
+ensure_reading_question_type_values()
 app = FastAPI(title="Voxi Mini App API")
 app.include_router(mock_list.router)
 app.include_router(admin_upload_router)
