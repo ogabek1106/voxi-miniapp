@@ -175,6 +175,8 @@ UserReading.initPassageCounter = function () {
   };
 
   dropdown.onclick = function (event) {
+    event.stopPropagation();
+
     const target = event.target.closest("[data-passage-target]");
     if (!target) return;
 
