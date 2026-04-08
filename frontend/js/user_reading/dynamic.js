@@ -63,7 +63,7 @@ UserReading.renderPassage = function (passage, passageIndex) {
       </p>
 
       <div class="reading-questions">
-        ${(passsage.questions || []).map((q, qi) => window.renderSingleQuestion(q, qi)).join("")}
+        ${(passage.questions || []).map((q, qi) => window.renderSingleQuestion(q, qi)).join("")}
       </div>
     </section>
   `;
