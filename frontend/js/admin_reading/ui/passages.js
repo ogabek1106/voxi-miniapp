@@ -3,7 +3,11 @@ window.AdminReading = window.AdminReading || {};
 window.getNextQuestionNumber = function () {
 
   const blockNums = [...document.querySelectorAll(".question-block")]
-    .map(b => parseInt(b.dataset.globalQ) || 0);
+    .map(b => {
+      const start = parseInt(b.dataset.globalQ) || 0;
+      const generated = parseInt(b.dataset.generatedQuestions) || 1;
+      return start + generated - 1;
+    });
 
   const rowNums = [...document.querySelectorAll(".match-q-label")]
     .map(el => parseInt(el.textContent.replace("Q","")) || 0);
@@ -11,7 +15,13 @@ window.getNextQuestionNumber = function () {
   const paragraphRowNums = [...document.querySelectorAll(".paragraph-match-q-label")]
     .map(el => parseInt(el.textContent.replace("Q","")) || 0);
 
-  const nums = [...blockNums, ...rowNums, ...paragraphRowNums];
+  const summaryRowNums = [...document.querySelectorAll(".summary-blank-label")]
+    .map(el => {
+      const match = el.textContent.match(/Q(\d+)/);
+      return match ? parseInt(match[1], 10) : 0;
+    });
+
+  const nums = [...blockNums, ...rowNums, ...paragraphRowNums, ...summaryRowNums];
 
   return nums.length ? Math.max(...nums) + 1 : 1;
 };
@@ -83,7 +93,6 @@ window.addPassage = function () {
       <label>Question type</label>
       <select class="q-type-select" style="width:100%; height:36px;">
         <option value="matching" selected>Matching</option>
-        <option value="paragraph_matching">Paragraph Matching</option>
         <option value="single_choice">Single Choice</option>
         <option value="multiple_choice">Multiple Choice</option>
         <option value="gap">Gap Filling</option>
@@ -195,7 +204,6 @@ window.addQuestion = function (btn) {
       <label>Question type</label>
       <select class="q-type-select" style="width:100%; height:36px;">
         <option value="matching" selected>Matching</option>
-        <option value="paragraph_matching">Paragraph Matching</option>
         <option value="single_choice">Single Choice</option>
         <option value="multiple_choice">Multiple Choice</option>
         <option value="gap">Gap Filling</option>
