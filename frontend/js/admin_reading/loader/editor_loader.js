@@ -165,7 +165,13 @@ window.openAdminReading = async function (testId) {
                 item.type === "PARAGRAPH_MATCHING" &&
                 String(item.question_group_id) === String(q.question_group_id)
               ).length
-            : 1;
+            : q.type === "TEXT_INPUT" && q.meta?.mode === "summary"
+              ? questions.filter(item =>
+                  item.type === "TEXT_INPUT" &&
+                  item.meta?.mode === "summary" &&
+                  String(item.question_group_id) === String(q.question_group_id)
+                ).length
+              : 1;
 
         window.__globalQuestionCounter++;
 
@@ -431,8 +437,26 @@ passageBlock.querySelectorAll(".question-block").forEach((block) => {
 });
 });
 // 🔹 sync counter safely
-const nums = Array.from(document.querySelectorAll(".question-block"))
-  .map(b => parseInt(b.dataset.globalQ) || 0);
+const blockNums = Array.from(document.querySelectorAll(".question-block"))
+  .map(b => {
+    const start = parseInt(b.dataset.globalQ) || 0;
+    const generated = parseInt(b.dataset.generatedQuestions) || 1;
+    return start + generated - 1;
+  });
+
+const matchingNums = Array.from(document.querySelectorAll(".match-q-label"))
+  .map(el => parseInt(el.textContent.replace("Q", "")) || 0);
+
+const paragraphNums = Array.from(document.querySelectorAll(".paragraph-match-q-label"))
+  .map(el => parseInt(el.textContent.replace("Q", "")) || 0);
+
+const summaryNums = Array.from(document.querySelectorAll(".summary-blank-label"))
+  .map(el => {
+    const match = el.textContent.match(/Q(\d+)/);
+    return match ? parseInt(match[1], 10) : 0;
+  });
+
+const nums = [...blockNums, ...matchingNums, ...paragraphNums, ...summaryNums];
 
 window.__globalQuestionCounter = nums.length ? Math.max(...nums) : 0;
 
