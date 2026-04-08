@@ -2,9 +2,6 @@
 
 window.UserReading = window.UserReading || {};
 
-/**
- * Renders NEW header (no legacy, no back button)
- */
 UserReading.renderHeader = function () {
   return `
     <div id="reading-header" style="
@@ -12,77 +9,86 @@ UserReading.renderHeader = function () {
       top: 0;
       z-index: 100;
       background: var(--bg-color, #fff);
-      padding: 6px 8px;
+      padding: 4px 8px;
     ">
-      
       <div style="
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 6px;
-        height: 40px;
+        height: 30px;
       ">
-
-        <!-- TIMER -->
         <div id="header-timer" style="
           flex: 1;
           position: relative;
           height: 100%;
-          border-radius: 8px;
+          border-radius: 6px;
           background: #e5e5ea;
           overflow: hidden;
           display: flex;
           align-items: center;
           justify-content: center;
           font-weight: 700;
-          font-size: 13px;
+          font-size: 12px;
         ">
           <div id="timer-fill" style="
             position: absolute;
-            right: 0;
+            left: 0;
             top: 0;
             height: 100%;
             width: 100%;
-            background: #4f46e5;
+            background: #0ea5e9;
             transition: width 1s linear;
           "></div>
-
           <span id="timer-text" style="
             position: relative;
             z-index: 2;
-            color: white;
+            color: #fff;
           ">60:00</span>
         </div>
 
-        <!-- PASSAGE -->
         <div id="header-passage" style="
           flex: 1;
+          position: relative;
           height: 100%;
-          border-radius: 8px;
+          border-radius: 6px;
           background: #f4f4f6;
           display: flex;
           align-items: center;
           justify-content: center;
-          font-weight: 600;
-          font-size: 13px;
+          font-weight: 700;
+          font-size: 12px;
           cursor: pointer;
+          user-select: none;
         ">
-          Passage 1
+          <span id="passage-text">Passage 1</span>
+          <div id="passage-dropdown" style="
+            display: none;
+            position: absolute;
+            top: 34px;
+            left: 0;
+            right: 0;
+            z-index: 200;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+          "></div>
         </div>
 
-        <!-- QUESTION COUNTER -->
         <div id="header-questions" style="
           flex: 1;
           position: relative;
           height: 100%;
-          border-radius: 8px;
+          border-radius: 6px;
           background: #e5e5ea;
           overflow: hidden;
           display: flex;
           align-items: center;
           justify-content: center;
           font-weight: 700;
-          font-size: 13px;
+          font-size: 12px;
         ">
           <div id="questions-fill" style="
             position: absolute;
@@ -90,17 +96,153 @@ UserReading.renderHeader = function () {
             top: 0;
             height: 100%;
             width: 0%;
-            background: red;
-            transition: width 0.3s ease, background 0.3s ease;
+            background: #ef4444;
+            transition: width 0.25s ease, background 0.25s ease;
           "></div>
-
           <span id="questions-text" style="
             position: relative;
             z-index: 2;
+            color: #111;
           ">0/0</span>
         </div>
-
       </div>
     </div>
   `;
+};
+
+UserReading.initHeader = function (data) {
+  UserReading.initReadingTimer(data?.timer);
+  UserReading.initPassageCounter();
+  UserReading.initQuestionCounter();
+};
+
+UserReading.initReadingTimer = function (timer) {
+  const text = document.getElementById("timer-text");
+  const fill = document.getElementById("timer-fill");
+  if (!text || !fill) return;
+
+  if (window.__userReadingTimer) {
+    clearInterval(window.__userReadingTimer);
+  }
+
+  const fallbackDuration = 60 * 60;
+  const endsAt = timer?.ends_at ? new Date(timer.ends_at).getTime() : Date.now() + fallbackDuration * 1000;
+  const duration = Number(timer?.duration_seconds || timer?.total_seconds || fallbackDuration);
+
+  function tick() {
+    const leftSec = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
+    const minutes = String(Math.floor(leftSec / 60)).padStart(2, "0");
+    const seconds = String(leftSec % 60).padStart(2, "0");
+    const percent = duration > 0 ? Math.max(0, Math.min(100, (leftSec / duration) * 100)) : 0;
+
+    text.textContent = `${minutes}:${seconds}`;
+    fill.style.width = `${percent}%`;
+
+    if (leftSec <= 0) {
+      clearInterval(window.__userReadingTimer);
+      window.__userReadingTimer = null;
+    }
+  }
+
+  tick();
+  window.__userReadingTimer = setInterval(tick, 1000);
+};
+
+UserReading.initPassageCounter = function () {
+  const button = document.getElementById("header-passage");
+  const label = document.getElementById("passage-text");
+  const dropdown = document.getElementById("passage-dropdown");
+  const content = document.getElementById("reading-user-content");
+  const passages = Array.from(document.querySelectorAll(".reading-passage"));
+
+  if (!button || !label || !dropdown || !content || !passages.length) return;
+
+  dropdown.innerHTML = passages.map((_, index) => `
+    <button type="button" data-passage-target="${index}" style="
+      width: 100%;
+      border: 0;
+      background: #fff;
+      padding: 9px 8px;
+      text-align: center;
+      font-weight: 700;
+      cursor: pointer;
+    ">Passage ${index + 1}</button>
+  `).join("");
+
+  button.onclick = function (event) {
+    event.stopPropagation();
+    dropdown.style.display = dropdown.style.display === "none" ? "block" : "none";
+  };
+
+  dropdown.onclick = function (event) {
+    const target = event.target.closest("[data-passage-target]");
+    if (!target) return;
+
+    const passage = passages[Number(target.dataset.passageTarget)];
+    if (passage) {
+      passage.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    dropdown.style.display = "none";
+  };
+
+  if (UserReading.__closePassageDropdown) {
+    document.removeEventListener("click", UserReading.__closePassageDropdown);
+  }
+  UserReading.__closePassageDropdown = function () {
+    dropdown.style.display = "none";
+  };
+  document.addEventListener("click", UserReading.__closePassageDropdown);
+
+  function updateActivePassage() {
+    const headerBottom = document.getElementById("reading-header")?.getBoundingClientRect().bottom || 0;
+    let activeIndex = 0;
+
+    passages.forEach((passage, index) => {
+      if (passage.getBoundingClientRect().top <= headerBottom + 24) {
+        activeIndex = index;
+      }
+    });
+
+    label.textContent = `Passage ${activeIndex + 1}`;
+  }
+
+  content.removeEventListener("scroll", UserReading.__updateActivePassage || function () {});
+  UserReading.__updateActivePassage = updateActivePassage;
+  content.addEventListener("scroll", updateActivePassage, { passive: true });
+  updateActivePassage();
+};
+
+UserReading.initQuestionCounter = function () {
+  const text = document.getElementById("questions-text");
+  const fill = document.getElementById("questions-fill");
+  const content = document.getElementById("reading-user-content");
+  if (!text || !fill || !content) return;
+
+  function hasAnswer(question) {
+    const fields = Array.from(question.querySelectorAll("input, select, textarea"));
+
+    return fields.some((field) => {
+      if (field.type === "radio" || field.type === "checkbox") return field.checked;
+      return String(field.value || "").trim().length > 0;
+    });
+  }
+
+  function updateQuestionProgress() {
+    const questions = Array.from(document.querySelectorAll(".reading-question[data-question-id]"));
+    const total = questions.length;
+    const solved = questions.filter(hasAnswer).length;
+    const percent = total ? (solved / total) * 100 : 0;
+    const green = Math.round((solved / Math.max(total, 1)) * 150);
+
+    text.textContent = `${solved}/${total}`;
+    fill.style.width = `${percent}%`;
+    fill.style.background = `rgb(${239 - green}, ${68 + green}, 68)`;
+  }
+
+  content.removeEventListener("input", UserReading.__updateQuestionProgress || function () {});
+  content.removeEventListener("change", UserReading.__updateQuestionProgress || function () {});
+  UserReading.__updateQuestionProgress = updateQuestionProgress;
+  content.addEventListener("input", updateQuestionProgress);
+  content.addEventListener("change", updateQuestionProgress);
+  updateQuestionProgress();
 };

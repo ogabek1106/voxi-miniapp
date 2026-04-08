@@ -8,44 +8,13 @@ UserReading.renderTest = function (container, data) {
   const content = document.getElementById("reading-user-content");
 
   if (title) title.textContent = data?.title || "Reading Test";
-  UserReading.startTimer(data?.timer);
   if (!content) return;
 
   content.innerHTML = (data.passages || [])
     .map((passage, pi) => UserReading.renderPassage(passage, pi))
     .join("");
-};
 
-UserReading.startTimer = function (timer) {
-  const timerEl = document.getElementById("reading-user-timer");
-  if (!timerEl) return;
-
-  if (window.__userReadingTimer) {
-    clearInterval(window.__userReadingTimer);
-  }
-
-  const endsAt = timer?.ends_at ? new Date(timer.ends_at).getTime() : null;
-  if (!endsAt) {
-    timerEl.textContent = "--:--";
-    return;
-  }
-
-  function tick() {
-    const leftMs = Math.max(0, endsAt - Date.now());
-    const leftSec = Math.ceil(leftMs / 1000);
-    const min = Math.floor(leftSec / 60).toString().padStart(2, "0");
-    const sec = (leftSec % 60).toString().padStart(2, "0");
-
-    timerEl.textContent = `${min}:${sec}`;
-
-    if (leftSec <= 0 && window.__userReadingTimer) {
-      clearInterval(window.__userReadingTimer);
-      window.__userReadingTimer = null;
-    }
-  }
-
-  tick();
-  window.__userReadingTimer = setInterval(tick, 1000);
+  UserReading.initHeader(data);
 };
 
 UserReading.renderPassage = function (passage, passageIndex) {
@@ -54,7 +23,7 @@ UserReading.renderPassage = function (passage, passageIndex) {
     : "";
 
   return `
-    <section class="reading-passage" style="margin-bottom:24px; text-align:left;">
+    <section class="reading-passage" data-passage-index="${passageIndex}" style="margin-bottom:24px; text-align:left;">
       <h4>Passage ${passageIndex + 1}</h4>
       ${passage.title ? `<h5>${UserReading.escapeHtml(passage.title)}</h5>` : ""}
       ${image}
