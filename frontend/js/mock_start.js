@@ -4,22 +4,22 @@ window.openMockWarning = function (packId, title) {
   if (!screenMocks) return;
 
   screenMocks.innerHTML = `
-    <h3>📦 ${title}</h3>
+    <h3>${title}</h3>
 
-    <h4>⚠ IELTS Mock Test Warning</h4>
+    <h4>IELTS Mock Test Warning</h4>
 
     <p style="text-align:left; line-height:1.5;">
-      • The timer will start immediately<br>
-      • Do not refresh the page<br>
-      • Complete all sections in order
+      - The timer will start immediately<br>
+      - Do not refresh the page<br>
+      - Complete all sections in order
     </p>
 
     <button onclick="startMock(${packId})">
-      ▶ Start Test
+      Start Test
     </button>
 
     <button onclick="showMockList()" style="margin-top:10px;">
-      ⬅ Back
+      Back
     </button>
   `;
 };
@@ -35,58 +35,23 @@ window.startMock = async function (mockId) {
   if (!screenReading) return;
 
   screenReading.style.display = "block";
-  screenReading.innerHTML = `<h3>📖 Loading Reading…</h3>`;
+  UserReading.renderLoading(screenReading);
 
   try {
 
-    const telegramId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
-
+    const telegramId = window.getTelegramId();
     const data = await apiGet(`/mock-tests/${mockId}/reading/start?telegram_id=${telegramId}`);
 
     if (!data || !data.passages) {
-      screenReading.innerHTML = `
-        <h3>❌ Invalid API response</h3>
-        <pre style="text-align:left; white-space:pre-wrap; font-size:12px;">
-${JSON.stringify(data, null, 2)}
-        </pre>
-      `;
+      UserReading.renderError(screenReading, `Invalid API response\n${JSON.stringify(data, null, 2)}`);
       return;
     }
 
-    screenReading.innerHTML = `
-      <h3 style="margin-top:6px;">📖 Reading Test</h3>
-
-      ${data.passages.map((p, pi) => `
-        <div style="margin-bottom:24px; text-align:left;">
-          <h4>Passage ${pi + 1}</h4>
-          <p style="white-space:pre-wrap; line-height:1.5;">${p.text}</p>
-
-          ${p.questions.map(q => `
-            <div style="margin:12px 0; padding:12px; border-radius:8px; background:#f4f4f6;">
-              <div style="font-weight:600; margin-bottom:6px;">
-                Q${q.id}
-              </div>
-
-              <input 
-                placeholder="Type your answer…" 
-                style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc;"
-              />
-
-            </div>
-          `).join("")}
-        </div>
-      `).join("")}
-    `;
+    UserReading.renderTest(screenReading, data);
 
   } catch (e) {
 
-    screenReading.innerHTML = `
-      <h3>❌ Reading load failed</h3>
-      <pre style="text-align:left; white-space:pre-wrap; font-size:12px;">
-${e.message}
-      </pre>
-    `;
-
+    UserReading.renderError(screenReading, e);
     console.error(e);
 
   }

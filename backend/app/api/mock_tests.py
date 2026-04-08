@@ -85,6 +85,11 @@ def start_reading_test(mock_id: int, telegram_id: int, db: Session = Depends(get
             .all()
         )
 
+        def public_meta(q):
+            meta = dict(q.meta or {})
+            meta.pop("variants", None)
+            return meta
+
         result.append({
             "id": p.id,
             "title": p.title,
@@ -92,10 +97,14 @@ def start_reading_test(mock_id: int, telegram_id: int, db: Session = Depends(get
             "questions": [
                 {
                     "id": q.id,
-                    "type": q.type,
-                    "text": q.text,
-                    "options": q.options,
-                    "word_limit": q.word_limit
+                    "order_index": q.order_index,
+                    "question_group_id": q.question_group_id,
+                    "type": q.type.value if hasattr(q.type, "value") else str(q.type),
+                    "instruction": q.instruction,
+                    "content": q.content,
+                    "meta": public_meta(q),
+                    "points": q.points,
+                    "image_url": q.image_url
                 }
                 for q in questions
             ]

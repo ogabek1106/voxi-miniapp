@@ -1,5 +1,15 @@
 // frontend/js/app/js
 const tg = window.Telegram?.WebApp;
+
+window.getTelegramId = function () {
+  const telegramId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+
+  if (telegramId) return telegramId;
+
+  // Browser/dev fallback, matching the existing admin test flow.
+  return 1150875355;
+};
+
 function applyTelegramTheme() {
   if (!tg) return;
 
@@ -43,7 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     status.innerText = "Saving...";
 
-    const telegramId = tg?.initDataUnsafe?.user?.id;
+    const telegramId = window.getTelegramId();
     if (!telegramId) {
       status.innerText = "Open this mini app inside Telegram";
       return;
@@ -65,12 +75,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 async function loadMe() {
-  let telegramId = tg?.initDataUnsafe?.user?.id;
-
-  // 🔥 TEMP: allow manual admin in browser
-  if (!telegramId) {
-    telegramId = 1150875355; // your admin ID
-  }
+  let telegramId = window.getTelegramId();
 
   try {
     const me = await apiGet(`/me?telegram_id=${telegramId}`);
