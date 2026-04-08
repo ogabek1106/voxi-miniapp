@@ -64,6 +64,27 @@ AdminReading.registerQuestionType("summary", function(container, data = null) {
   const addBtn = container.querySelector(".summary-add-blank");
   const removeBtn = container.querySelector(".summary-remove-blank");
 
+  function refreshBlankCount() {
+    const blocks = answersWrap.querySelectorAll(".summary-answer-block");
+    const questionBlock = container.closest(".question-block");
+    const count = Math.max(blocks.length, 1);
+    const baseQ = parseInt(questionBlock?.dataset?.globalQ || "1", 10);
+
+    blocks.forEach((block, i) => {
+      const label = block.querySelector(".summary-blank-label");
+      if (label) label.textContent = `Blank #${i + 1}`;
+    });
+
+    if (questionBlock) {
+      questionBlock.dataset.generatedQuestions = count;
+
+      const next = baseQ + count - 1;
+      if (next > window.__globalQuestionCounter) {
+        window.__globalQuestionCounter = next;
+      }
+    }
+  }
+
   function createBlock() {
     const index = answersWrap.querySelectorAll(".summary-answer-block").length + 1;
 
@@ -72,7 +93,7 @@ AdminReading.registerQuestionType("summary", function(container, data = null) {
     block.style.marginTop = "10px";
 
     block.innerHTML = `
-      <div style="font-weight:600; margin-bottom:6px;">
+      <div class="summary-blank-label" style="font-weight:600; margin-bottom:6px;">
         Blank #${index}
       </div>
 
@@ -89,6 +110,7 @@ AdminReading.registerQuestionType("summary", function(container, data = null) {
     `;
 
     answersWrap.appendChild(block);
+    refreshBlankCount();
   }
 
   addBtn.onclick = () => createBlock();
@@ -97,6 +119,7 @@ AdminReading.registerQuestionType("summary", function(container, data = null) {
     const blocks = answersWrap.querySelectorAll(".summary-answer-block");
     if (blocks.length <= 1) return;
     blocks[blocks.length - 1].remove();
+    refreshBlankCount();
   };
 
   // default
@@ -121,6 +144,8 @@ AdminReading.registerQuestionType("summary", function(container, data = null) {
       const inputs = answersWrap.querySelectorAll(".summary-answer-input");
       inputs[inputs.length - 1].value = q.correct_answer?.value || "";
     });
+
+    refreshBlankCount();
   }
 
 });
