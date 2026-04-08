@@ -60,19 +60,31 @@ AdminReading.registerQuestionType("summary", function(container, data = null) {
     </div>
   `;
 
+  const questionBlock = container.closest(".question-block");
+  const header = questionBlock?.querySelector(".q-header");
+  if (header) header.style.display = "none";
+
+  const typeSelect = questionBlock?.querySelector(".q-type-select");
+  if (typeSelect) {
+    typeSelect.addEventListener("change", () => {
+      if (typeSelect.value !== "summary" && header) {
+        header.style.display = "block";
+      }
+    }, { once: true });
+  }
+
   const answersWrap = container.querySelector(".summary-answers-wrap");
   const addBtn = container.querySelector(".summary-add-blank");
   const removeBtn = container.querySelector(".summary-remove-blank");
 
   function refreshBlankCount() {
     const blocks = answersWrap.querySelectorAll(".summary-answer-block");
-    const questionBlock = container.closest(".question-block");
     const count = Math.max(blocks.length, 1);
     const baseQ = parseInt(questionBlock?.dataset?.globalQ || "1", 10);
 
     blocks.forEach((block, i) => {
       const label = block.querySelector(".summary-blank-label");
-      if (label) label.textContent = `Blank #${i + 1}`;
+      if (label) label.textContent = `Q${baseQ + i} Blank #${i + 1}`;
     });
 
     if (questionBlock) {
