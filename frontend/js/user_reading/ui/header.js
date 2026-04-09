@@ -333,6 +333,7 @@ UserReading.initMarkMode = function () {
   UserReading.__markMode = false;
   UserReading.__markDragging = false;
   UserReading.__markStartRange = null;
+  UserReading.__markEndRange = null;
 
   function getRangeFromPoint(x, y) {
     if (document.caretPositionFromPoint) {
@@ -386,6 +387,7 @@ UserReading.initMarkMode = function () {
     content.classList.toggle("mark-mode", enabled);
     toggle.classList.toggle("reading-mark-toggle-active", enabled);
     UserReading.__markStartRange = null;
+    UserReading.__markEndRange = null;
     UserReading.__markDragging = false;
   }
 
@@ -396,6 +398,7 @@ UserReading.initMarkMode = function () {
 
     const point = getPoint(event);
     UserReading.__markStartRange = getRangeFromPoint(point.x, point.y);
+    UserReading.__markEndRange = UserReading.__markStartRange;
 
     event.preventDefault();
   }
@@ -407,27 +410,52 @@ UserReading.initMarkMode = function () {
     const endRange = getRangeFromPoint(point.x, point.y);
     if (!endRange) return;
 
+    UserReading.__markEndRange = endRange;
+    event.preventDefault();
+  }
+
+  function endMark() {
+    if (!UserReading.__markMode || !UserReading.__markStartRange || !UserReading.__markEndRange) {
+      UserReading.__markDragging = false;
+      return;
+    }
+
     const range = document.createRange();
 
     try {
-      range.setStart(UserReading.__markStartRange.startContainer, UserReading.__markStartRange.startOffset);
-      range.setEnd(endRange.startContainer, endRange.startOffset);
+      range.setStart(
+        UserReading.__markStartRange.startContainer,
+        UserReading.__markStartRange.startOffset
+      );
+
+      range.setEnd(
+        UserReading.__markEndRange.startContainer,
+        UserReading.__markEndRange.startOffset
+      );
     } catch (error) {
       try {
-        range.setStart(endRange.startContainer, endRange.startOffset);
-        range.setEnd(UserReading.__markStartRange.startContainer, UserReading.__markStartRange.startOffset);
+        range.setStart(
+          UserReading.__markEndRange.startContainer,
+          UserReading.__markEndRange.startOffset
+        );
+
+        range.setEnd(
+          UserReading.__markStartRange.startContainer,
+          UserReading.__markStartRange.startOffset
+        );
       } catch (innerError) {
+        UserReading.__markDragging = false;
+        UserReading.__markStartRange = null;
+        UserReading.__markEndRange = null;
         return;
       }
     }
 
     applyHighlight(range);
-    event.preventDefault();
-  }
 
-  function endMark() {
     UserReading.__markDragging = false;
     UserReading.__markStartRange = null;
+    UserReading.__markEndRange = null;
   }
 
   if (UserReading.__markStartHandler) {
