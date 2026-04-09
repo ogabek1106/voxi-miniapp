@@ -334,6 +334,8 @@ UserReading.initMarkMode = function () {
   UserReading.__markStartRange = null;
   UserReading.__markEndRange = null;
   UserReading.__markDragging = false;
+  UserReading.__markPressTimer = null;
+  UserReading.__markPressPoint = null;
 
   function splitTextNode(node, startOffset, endOffset) {
     let target = node;
@@ -471,6 +473,36 @@ UserReading.initMarkMode = function () {
   }
 
   function getRangeFromPoint(x, y) {
+    function normalizeRange(range) {
+      if (!range) return null;
+
+      let node = range.startContainer;
+      let offset = range.startOffset;
+
+      if (node.nodeType === 1) {
+        const child = node.childNodes[offset] || node.childNodes[offset - 1];
+        if (!child) return null;
+
+        if (child.nodeType === 3) {
+          node = child;
+          offset = 0;
+        } else {
+          const walker = document.createTreeWalker(child, NodeFilter.SHOW_TEXT);
+          const textNode = walker.nextNode();
+          if (!textNode) return null;
+          node = textNode;
+          offset = 0;
+        }
+      }
+
+      if (node.nodeType !== 3) return null;
+
+      const collapsed = document.createRange();
+      collapsed.setStart(node, Math.min(offset, node.nodeValue.length));
+      collapsed.setEnd(node, Math.min(offset, node.nodeValue.length));
+      return collapsed;
+    }
+
     if (document.caretPositionFromPoint) {
       const pos = document.caretPositionFromPoint(x, y);
       if (!pos) return null;
@@ -478,11 +510,11 @@ UserReading.initMarkMode = function () {
       const range = document.createRange();
       range.setStart(pos.offsetNode, pos.offset);
       range.setEnd(pos.offsetNode, pos.offset);
-      return range;
+      return normalizeRange(range);
     }
 
     if (document.caretRangeFromPoint) {
-      return document.caretRangeFromPoint(x, y);
+      return normalizeRange(document.caretRangeFromPoint(x, y));
     }
 
     return null;
@@ -534,20 +566,8 @@ UserReading.initMarkMode = function () {
   }
 
   function applyHighlight(range) {
-    unmarkRange(range);
     markRange(range);
     mergeAdjacentHighlights(content);
-  }
-
-  function removeHighlight(range) {
-    unmarkRange(range);
-    mergeAdjacentHighlights(content);
-  }
-
-  function isMarkedAtRange(range) {
-    const highlighted = getTextNodesInRange(range, true);
-    const plain = getTextNodesInRange(range, false);
-    return highlighted.length > 0 && plain.length === 0;
   }
 
   function getClientPoint(event) {
@@ -564,11 +584,25 @@ UserReading.initMarkMode = function () {
 
   function setMarkMode(enabled) {
     UserReading.__markMode = enabled;
-    content.classList.toggle("mark-mode", enabled);
     toggle.classList.toggle("reading-mark-toggle-active", enabled);
     UserReading.__markStartRange = null;
     UserReading.__markEndRange = null;
     UserReading.__markDragging = false;
+    UserReading.__markPressPoint = null;
+
+    if (UserReading.__markPressTimer) {
+      clearTimeout(UserReading.__markPressTimer);
+      UserReading.__markPressTimer = null;
+    }
+  }
+
+  function beginMarking(point) {
+    const range = getRangeFromPoint(point.x, point.y);
+    if (!range || !content.contains(range.startContainer)) return;
+
+    UserReading.__markStartRange = range;
+    UserReading.__markEndRange = range;
+    UserReading.__markDragging = true;
   }
 
   function startDrag(event) {
@@ -576,20 +610,33 @@ UserReading.initMarkMode = function () {
     if (event.target && event.target.closest && event.target.closest("input, textarea, select, button, label")) return;
 
     const point = getClientPoint(event);
-    const range = getRangeFromPoint(point.x, point.y);
-    if (!range || !content.contains(range.startContainer)) return;
+    UserReading.__markPressPoint = point;
 
-    UserReading.__markStartRange = range;
-    UserReading.__markEndRange = range;
-    UserReading.__markDragging = true;
-    event.preventDefault();
-    event.stopPropagation();
+    if (UserReading.__markPressTimer) {
+      clearTimeout(UserReading.__markPressTimer);
+    }
+
+    UserReading.__markPressTimer = setTimeout(() => {
+      UserReading.__markPressTimer = null;
+      beginMarking(point);
+    }, 260);
   }
 
   function moveDrag(event) {
+    const point = getClientPoint(event);
+
+    if (UserReading.__markMode && UserReading.__markPressTimer && UserReading.__markPressPoint) {
+      const dx = Math.abs(point.x - UserReading.__markPressPoint.x);
+      const dy = Math.abs(point.y - UserReading.__markPressPoint.y);
+      if (dx > 8 || dy > 8) {
+        clearTimeout(UserReading.__markPressTimer);
+        UserReading.__markPressTimer = null;
+        beginMarking(UserReading.__markPressPoint);
+      }
+    }
+
     if (!UserReading.__markMode || !UserReading.__markDragging) return;
 
-    const point = getClientPoint(event);
     const range = getRangeFromPoint(point.x, point.y);
     if (!range || !content.contains(range.startContainer)) return;
 
@@ -599,7 +646,15 @@ UserReading.initMarkMode = function () {
   }
 
   function endDrag(event) {
-    if (!UserReading.__markMode || !UserReading.__markDragging) return;
+    if (!UserReading.__markMode) return;
+
+    if (UserReading.__markPressTimer && UserReading.__markPressPoint) {
+      clearTimeout(UserReading.__markPressTimer);
+      UserReading.__markPressTimer = null;
+      beginMarking(UserReading.__markPressPoint);
+    }
+
+    if (!UserReading.__markDragging) return;
 
     const point = getClientPoint(event);
     const rangeAtEnd = getRangeFromPoint(point.x, point.y);
@@ -613,55 +668,15 @@ UserReading.initMarkMode = function () {
     UserReading.__markDragging = false;
     UserReading.__markStartRange = null;
     UserReading.__markEndRange = null;
+    UserReading.__markPressPoint = null;
 
     if (!range) return;
 
-    if (isMarkedAtRange(range)) {
-      removeHighlight(range);
-    } else {
-      applyHighlight(range);
-    }
+    applyHighlight(range);
 
     event.preventDefault();
     event.stopPropagation();
   }
-
-  if (UserReading.__markBlocker) {
-    document.removeEventListener("copy", UserReading.__markBlocker, true);
-    document.removeEventListener("cut", UserReading.__markBlocker, true);
-    document.removeEventListener("paste", UserReading.__markBlocker, true);
-    document.removeEventListener("contextmenu", UserReading.__markBlocker, true);
-    document.removeEventListener("dragstart", UserReading.__markBlocker, true);
-    document.removeEventListener("beforeinput", UserReading.__markBlocker, true);
-    document.removeEventListener("selectstart", UserReading.__markBlocker, true);
-  }
-  UserReading.__markBlocker = function (event) {
-    if (!UserReading.__markMode) return;
-    if (!content.contains(event.target)) return;
-    if (event.type === "beforeinput" && event.inputType !== "insertFromPaste") return;
-    event.preventDefault();
-    event.stopPropagation();
-  };
-  document.addEventListener("copy", UserReading.__markBlocker, true);
-  document.addEventListener("cut", UserReading.__markBlocker, true);
-  document.addEventListener("paste", UserReading.__markBlocker, true);
-  document.addEventListener("contextmenu", UserReading.__markBlocker, true);
-  document.addEventListener("dragstart", UserReading.__markBlocker, true);
-  document.addEventListener("beforeinput", UserReading.__markBlocker, true);
-  document.addEventListener("selectstart", UserReading.__markBlocker, true);
-
-  if (UserReading.__markKeyBlocker) {
-    document.removeEventListener("keydown", UserReading.__markKeyBlocker, true);
-  }
-  UserReading.__markKeyBlocker = function (event) {
-    if (!UserReading.__markMode) return;
-    const key = String(event.key || "").toLowerCase();
-    if ((event.ctrlKey || event.metaKey) && ["a", "c", "v", "x"].includes(key)) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-  };
-  document.addEventListener("keydown", UserReading.__markKeyBlocker, true);
 
   if (UserReading.__markStartHandler) {
     content.removeEventListener("mousedown", UserReading.__markStartHandler, true);
@@ -724,7 +739,6 @@ UserReading.ensureMarkerStyles = function () {
     .mark-mode * {
       user-select: none;
       -webkit-user-select: none;
-      -webkit-touch-callout: none;
     }
 
     .reading-mark-toggle-active {
