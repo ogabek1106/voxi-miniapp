@@ -114,16 +114,13 @@ UserReading.renderHeader = function () {
         style="
           position: fixed;
           left: 10px;
-          bottom: 10px;
-          width: 32px;
-          height: 32px;
+          bottom: 88px;
+          width: 34px;
+          height: 34px;
           border: 0;
           border-radius: 50%;
           background: #f4f4f6;
           color: #111;
-          font-size: 16px;
-          font-weight: 700;
-          line-height: 1;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -131,7 +128,12 @@ UserReading.renderHeader = function () {
           cursor: pointer;
           z-index: 140;
         "
-      ><-</button>
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M9.5 3.5L5 8L9.5 12.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+          <path d="M5.5 8H12" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+        </svg>
+      </button>
     </div>
   `;
 };
