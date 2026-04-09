@@ -141,32 +141,22 @@ UserReading.renderHeader = function () {
         left: 0;
         top: 0;
         z-index: 300;
-        gap: 6px;
-        padding: 6px;
+        padding: 4px;
         border-radius: 999px;
-        background: rgba(17,17,17,0.92);
-        box-shadow: 0 10px 26px rgba(0,0,0,0.2);
+        background: rgba(28,28,30,0.96);
+        box-shadow: 0 8px 22px rgba(0,0,0,0.22);
       ">
-        <button type="button" id="reading-mark-btn" style="
+        <button type="button" id="reading-mark-action" style="
           border: 0;
           border-radius: 999px;
-          padding: 6px 10px;
-          background: #fff3a3;
-          color: #111;
-          font-weight: 700;
-          font-size: 12px;
+          padding: 7px 16px;
+          background: transparent;
+          color: #fff;
+          font-weight: 600;
+          font-size: 14px;
           cursor: pointer;
+          letter-spacing: 0;
         ">Mark</button>
-        <button type="button" id="reading-unmark-btn" style="
-          border: 0;
-          border-radius: 999px;
-          padding: 6px 10px;
-          background: #fff;
-          color: #111;
-          font-weight: 700;
-          font-size: 12px;
-          cursor: pointer;
-        ">Unmark</button>
       </div>
     </div>
   `;
@@ -331,10 +321,9 @@ UserReading.initQuestionCounter = function () {
 UserReading.initTextMarker = function () {
   const content = document.getElementById("reading-user-content");
   const toolbar = document.getElementById("reading-mark-toolbar");
-  const markButton = document.getElementById("reading-mark-btn");
-  const unmarkButton = document.getElementById("reading-unmark-btn");
+  const actionButton = document.getElementById("reading-mark-action");
 
-  if (!content || !toolbar || !markButton || !unmarkButton) return;
+  if (!content || !toolbar || !actionButton) return;
 
   UserReading.ensureMarkerStyles();
 
@@ -375,6 +364,12 @@ UserReading.initTextMarker = function () {
     toolbar.style.display = "flex";
   }
 
+  function isMarkedSelection(range) {
+    const highlighted = getTextNodesInRange(range, true);
+    const plain = getTextNodesInRange(range, false);
+    return highlighted.length > 0 && plain.length === 0;
+  }
+
   function updateToolbar() {
     const range = getSelectionRange();
     if (!range) {
@@ -382,6 +377,7 @@ UserReading.initTextMarker = function () {
       return;
     }
 
+    actionButton.textContent = isMarkedSelection(range) ? "Unmark" : "Mark";
     positionToolbar(range);
   }
 
@@ -550,20 +546,23 @@ UserReading.initTextMarker = function () {
   content.addEventListener("paste", UserReading.__markerInputBlocker);
   content.addEventListener("contextmenu", UserReading.__markerInputBlocker);
 
-  [toolbar, markButton, unmarkButton].forEach((element) => {
+  [toolbar, actionButton].forEach((element) => {
     element.onpointerdown = function (event) {
       event.preventDefault();
     };
   });
 
-  markButton.onclick = function (event) {
+  actionButton.onclick = function (event) {
     event.preventDefault();
-    markSelection();
-  };
+    const range = getSelectionRange();
+    if (!range) return;
 
-  unmarkButton.onclick = function (event) {
-    event.preventDefault();
-    unmarkSelection();
+    if (isMarkedSelection(range)) {
+      unmarkSelection();
+      return;
+    }
+
+    markSelection();
   };
 
   if (UserReading.__markerScrollHandler) {
