@@ -567,16 +567,11 @@ UserReading.ensureMarkerStyles = function () {
   style.id = "reading-mark-styles";
   style.textContent = `
     .highlight {
-      background:
-        linear-gradient(
-          180deg,
-          transparent 40%,
-          rgba(255, 230, 0, 0.7) 40%
-        );
+      background: rgba(255, 230, 0, 0.7);
       box-decoration-break: clone;
       -webkit-box-decoration-break: clone;
-      border-radius: 0.2em;
-      padding: 0 0.02em;
+      padding: 0;
+      border-radius: 2px;
     }
 
     .mark-mode,
