@@ -47,11 +47,14 @@ UserReadingIOS.initMarkModeIOS = function () {
   UserReadingIOS.__markMode = false;
   UserReadingIOS.__selectionTimer = null;
   UserReadingIOS.__selectionLock = false;
+  UserReadingIOS.__isProcessing = false;
+  UserReadingIOS.__lastSelectionText = "";
 
   function setMarkMode(enabled) {
     UserReadingIOS.__markMode = enabled;
     toggle.classList.toggle("reading-mark-toggle-active", enabled);
     log(`mode: ${enabled ? "ON" : "OFF"}`);
+    log(`toggle class: ${toggle.classList.contains("reading-mark-toggle-active") ? "active" : "inactive"}`);
   }
 
   function clearSelection() {
@@ -61,7 +64,7 @@ UserReadingIOS.initMarkModeIOS = function () {
   }
 
   function applySelectedText() {
-    if (UserReadingIOS.__selectionLock) return false;
+    if (UserReadingIOS.__selectionLock || UserReadingIOS.__isProcessing) return false;
 
     const selection = window.getSelection();
     const text = String(selection?.toString() || "").trim();
@@ -74,6 +77,10 @@ UserReadingIOS.initMarkModeIOS = function () {
       log("ignored: collapsed");
       return false;
     }
+    if (text === UserReadingIOS.__lastSelectionText) {
+      log("ignored: duplicate selection");
+      return false;
+    }
 
     try {
       const range = selection.getRangeAt(0).cloneRange();
@@ -84,16 +91,22 @@ UserReadingIOS.initMarkModeIOS = function () {
 
       document.removeEventListener("selectionchange", onSelectionChange);
       UserReadingIOS.__selectionLock = true;
+      UserReadingIOS.__isProcessing = true;
+      UserReadingIOS.__lastSelectionText = text;
       log(`highlight start text="${text.slice(0, 40)}"`);
       UserReading.applyHighlight(range);
-      clearSelection();
-      UserReadingIOS.__selectionLock = false;
-      syncSelectionListener();
       log("highlight success");
+      setTimeout(() => {
+        clearSelection();
+        UserReadingIOS.__selectionLock = false;
+        UserReadingIOS.__isProcessing = false;
+        syncSelectionListener();
+      }, 80);
       return true;
     } catch (error) {
       clearSelection();
       UserReadingIOS.__selectionLock = false;
+      UserReadingIOS.__isProcessing = false;
       syncSelectionListener();
       log(`highlight error: ${String(error?.message || error).slice(0, 60)}`);
       return false;
@@ -102,6 +115,10 @@ UserReadingIOS.initMarkModeIOS = function () {
 
   function onSelectionChange() {
     log(`selection change mode=${UserReadingIOS.__markMode ? "ON" : "OFF"}`);
+    if (UserReadingIOS.__isProcessing) {
+      log("ignored: processing");
+      return;
+    }
     if (!UserReadingIOS.__markMode) return;
     if (UserReadingIOS.__selectionTimer) {
       clearTimeout(UserReadingIOS.__selectionTimer);
@@ -110,7 +127,7 @@ UserReadingIOS.initMarkModeIOS = function () {
     UserReadingIOS.__selectionTimer = setTimeout(() => {
       UserReadingIOS.__selectionTimer = null;
       applySelectedText();
-    }, 80);
+    }, 90);
   }
 
   function syncSelectionListener() {
