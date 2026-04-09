@@ -46,10 +46,9 @@ UserReadingIOS.initMarkModeIOS = function () {
 
   UserReadingIOS.__markMode = false;
   UserReadingIOS.__selectionTimer = null;
-  UserReadingIOS.__selectionLock = false;
-  UserReadingIOS.__isProcessing = false;
   UserReadingIOS.__lastSelectionText = "";
   UserReadingIOS.__selectionEndTimer = null;
+  const content = document.getElementById("reading-user-content");
 
   function setMarkMode(enabled) {
     UserReadingIOS.__markMode = enabled;
@@ -64,14 +63,27 @@ UserReadingIOS.initMarkModeIOS = function () {
     log("selection cleared");
   }
 
-  function applySelectedText() {
-    if (UserReadingIOS.__selectionLock || UserReadingIOS.__isProcessing) return false;
+  function selectionInsideContent(selection) {
+    if (!content || !selection || selection.rangeCount === 0) return false;
 
+    const range = selection.getRangeAt(0);
+    const node = range.commonAncestorContainer.nodeType === 1
+      ? range.commonAncestorContainer
+      : range.commonAncestorContainer.parentNode;
+
+    return !!node && content.contains(node);
+  }
+
+  function applySelectedText() {
     const selection = window.getSelection();
     const text = String(selection?.toString() || "").trim();
     log(`selection check rc=${selection?.rangeCount || 0} collapsed=${selection?.isCollapsed ? "yes" : "no"} text="${text.slice(0, 40)}"`);
     if (!selection || selection.rangeCount === 0) {
       log("ignored: no selection");
+      return false;
+    }
+    if (!selectionInsideContent(selection)) {
+      log("ignored: outside content");
       return false;
     }
     if (selection.isCollapsed) {
@@ -90,25 +102,16 @@ UserReadingIOS.initMarkModeIOS = function () {
         return false;
       }
 
-      document.removeEventListener("selectionchange", onSelectionChange);
-      UserReadingIOS.__selectionLock = true;
-      UserReadingIOS.__isProcessing = true;
       UserReadingIOS.__lastSelectionText = text;
       log(`highlight start text="${text.slice(0, 40)}"`);
       UserReading.applyHighlight(range);
       log("highlight success");
       setTimeout(() => {
         clearSelection();
-        UserReadingIOS.__selectionLock = false;
-        UserReadingIOS.__isProcessing = false;
-        syncSelectionListener();
-      }, 80);
+      }, 120);
       return true;
     } catch (error) {
       clearSelection();
-      UserReadingIOS.__selectionLock = false;
-      UserReadingIOS.__isProcessing = false;
-      syncSelectionListener();
       log(`highlight error: ${String(error?.message || error).slice(0, 60)}`);
       return false;
     }
@@ -116,6 +119,11 @@ UserReadingIOS.initMarkModeIOS = function () {
 
   function onSelectionChange() {
     log(`selection change mode=${UserReadingIOS.__markMode ? "ON" : "OFF"}`);
+    const selection = window.getSelection();
+    const text = String(selection?.toString() || "").trim();
+    if (UserReadingIOS.__markMode && selection && !selection.isCollapsed && selectionInsideContent(selection)) {
+      log(`selection ready text="${text.slice(0, 40)}"`);
+    }
   }
 
   function handleSelectionEnd() {
@@ -126,8 +134,17 @@ UserReadingIOS.initMarkModeIOS = function () {
 
     UserReadingIOS.__selectionEndTimer = setTimeout(() => {
       UserReadingIOS.__selectionEndTimer = null;
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
+        log("ignored: no stable selection");
+        return;
+      }
+      if (!selectionInsideContent(selection)) {
+        log("ignored: stable selection outside content");
+        return;
+      }
       applySelectedText();
-    }, 90);
+    }, 240);
   }
 
   function syncSelectionListener() {
@@ -138,12 +155,12 @@ UserReadingIOS.initMarkModeIOS = function () {
   }
 
   if (UserReadingIOS.__touchEndHandler) {
-    document.removeEventListener("touchend", UserReadingIOS.__touchEndHandler, true);
-    document.removeEventListener("mouseup", UserReadingIOS.__touchEndHandler, true);
+    document.removeEventListener("touchend", UserReadingIOS.__touchEndHandler);
+    document.removeEventListener("mouseup", UserReadingIOS.__touchEndHandler);
   }
   UserReadingIOS.__touchEndHandler = handleSelectionEnd;
-  document.addEventListener("touchend", handleSelectionEnd, true);
-  document.addEventListener("mouseup", handleSelectionEnd, true);
+  document.addEventListener("touchend", handleSelectionEnd);
+  document.addEventListener("mouseup", handleSelectionEnd);
 
   toggle.onclick = function () {
     const selection = window.getSelection();
