@@ -49,6 +49,7 @@ UserReadingIOS.initMarkModeIOS = function () {
   UserReadingIOS.__selectionLock = false;
   UserReadingIOS.__isProcessing = false;
   UserReadingIOS.__lastSelectionText = "";
+  UserReadingIOS.__selectionEndTimer = null;
 
   function setMarkMode(enabled) {
     UserReadingIOS.__markMode = enabled;
@@ -115,17 +116,16 @@ UserReadingIOS.initMarkModeIOS = function () {
 
   function onSelectionChange() {
     log(`selection change mode=${UserReadingIOS.__markMode ? "ON" : "OFF"}`);
-    if (UserReadingIOS.__isProcessing) {
-      log("ignored: processing");
-      return;
-    }
+  }
+
+  function handleSelectionEnd() {
     if (!UserReadingIOS.__markMode) return;
-    if (UserReadingIOS.__selectionTimer) {
-      clearTimeout(UserReadingIOS.__selectionTimer);
+    if (UserReadingIOS.__selectionEndTimer) {
+      clearTimeout(UserReadingIOS.__selectionEndTimer);
     }
 
-    UserReadingIOS.__selectionTimer = setTimeout(() => {
-      UserReadingIOS.__selectionTimer = null;
+    UserReadingIOS.__selectionEndTimer = setTimeout(() => {
+      UserReadingIOS.__selectionEndTimer = null;
       applySelectedText();
     }, 90);
   }
@@ -136,6 +136,14 @@ UserReadingIOS.initMarkModeIOS = function () {
       document.addEventListener("selectionchange", onSelectionChange);
     }
   }
+
+  if (UserReadingIOS.__touchEndHandler) {
+    document.removeEventListener("touchend", UserReadingIOS.__touchEndHandler, true);
+    document.removeEventListener("mouseup", UserReadingIOS.__touchEndHandler, true);
+  }
+  UserReadingIOS.__touchEndHandler = handleSelectionEnd;
+  document.addEventListener("touchend", handleSelectionEnd, true);
+  document.addEventListener("mouseup", handleSelectionEnd, true);
 
   toggle.onclick = function () {
     const selection = window.getSelection();
