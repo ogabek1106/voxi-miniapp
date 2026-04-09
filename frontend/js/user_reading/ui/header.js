@@ -565,6 +565,25 @@ UserReading.initMarkMode = function () {
     return wordRange;
   }
 
+  function expandRangeToCharacter(range) {
+    if (!range) return null;
+    const node = range.startContainer;
+    if (!node || node.nodeType !== 3) return null;
+
+    const text = node.nodeValue || "";
+    if (!text.length) return null;
+
+    let start = Math.min(range.startOffset, Math.max(text.length - 1, 0));
+    if (start === text.length && text.length > 0) start -= 1;
+    const end = Math.min(start + 1, text.length);
+    if (start < 0 || start >= end) return null;
+
+    const charRange = document.createRange();
+    charRange.setStart(node, start);
+    charRange.setEnd(node, end);
+    return charRange;
+  }
+
   function applyHighlight(range) {
     markRange(range);
     mergeAdjacentHighlights(content);
@@ -584,6 +603,7 @@ UserReading.initMarkMode = function () {
 
   function setMarkMode(enabled) {
     UserReading.__markMode = enabled;
+    content.classList.toggle("mark-mode", enabled);
     toggle.classList.toggle("reading-mark-toggle-active", enabled);
     UserReading.__markStartRange = null;
     UserReading.__markEndRange = null;
@@ -603,11 +623,19 @@ UserReading.initMarkMode = function () {
     UserReading.__markStartRange = range;
     UserReading.__markEndRange = range;
     UserReading.__markDragging = true;
+
+    const instantRange = expandRangeToWord(range) || expandRangeToCharacter(range);
+    if (instantRange) {
+      applyHighlight(instantRange);
+    }
   }
 
   function startDrag(event) {
     if (!UserReading.__markMode) return;
     if (event.target && event.target.closest && event.target.closest("input, textarea, select, button, label")) return;
+
+    event.preventDefault();
+    event.stopPropagation();
 
     const point = getClientPoint(event);
     UserReading.__markPressPoint = point;
@@ -641,6 +669,15 @@ UserReading.initMarkMode = function () {
     if (!range || !content.contains(range.startContainer)) return;
 
     UserReading.__markEndRange = range;
+    const liveRange =
+      normalizeDragRange(UserReading.__markStartRange, UserReading.__markEndRange) ||
+      expandRangeToWord(range) ||
+      expandRangeToCharacter(range);
+
+    if (liveRange) {
+      applyHighlight(liveRange);
+    }
+
     event.preventDefault();
     event.stopPropagation();
   }
