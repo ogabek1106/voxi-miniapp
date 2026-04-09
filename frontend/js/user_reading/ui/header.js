@@ -134,6 +134,40 @@ UserReading.renderHeader = function () {
           <path d="M4.5 11H17.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"></path>
         </svg>
       </button>
+
+      <div id="reading-mark-toolbar" style="
+        display: none;
+        position: fixed;
+        left: 0;
+        top: 0;
+        z-index: 300;
+        gap: 6px;
+        padding: 6px;
+        border-radius: 999px;
+        background: rgba(17,17,17,0.92);
+        box-shadow: 0 10px 26px rgba(0,0,0,0.2);
+      ">
+        <button type="button" id="reading-mark-btn" style="
+          border: 0;
+          border-radius: 999px;
+          padding: 6px 10px;
+          background: #fff3a3;
+          color: #111;
+          font-weight: 700;
+          font-size: 12px;
+          cursor: pointer;
+        ">Mark</button>
+        <button type="button" id="reading-unmark-btn" style="
+          border: 0;
+          border-radius: 999px;
+          padding: 6px 10px;
+          background: #fff;
+          color: #111;
+          font-weight: 700;
+          font-size: 12px;
+          cursor: pointer;
+        ">Unmark</button>
+      </div>
     </div>
   `;
 };
@@ -158,6 +192,7 @@ UserReading.initHeader = function (data) {
   UserReading.initReadingTimer(data?.timer);
   UserReading.initPassageCounter();
   UserReading.initQuestionCounter();
+  UserReading.initTextMarker();
 };
 
 UserReading.initReadingTimer = function (timer) {
@@ -291,4 +326,278 @@ UserReading.initQuestionCounter = function () {
   content.addEventListener("input", updateQuestionProgress);
   content.addEventListener("change", updateQuestionProgress);
   updateQuestionProgress();
+};
+
+UserReading.initTextMarker = function () {
+  const content = document.getElementById("reading-user-content");
+  const toolbar = document.getElementById("reading-mark-toolbar");
+  const markButton = document.getElementById("reading-mark-btn");
+  const unmarkButton = document.getElementById("reading-unmark-btn");
+
+  if (!content || !toolbar || !markButton || !unmarkButton) return;
+
+  UserReading.ensureMarkerStyles();
+
+  content.style.userSelect = "text";
+  content.style.webkitUserSelect = "text";
+  content.style.webkitTouchCallout = "none";
+
+  function hideToolbar() {
+    toolbar.style.display = "none";
+  }
+
+  function getSelectionRange() {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return null;
+
+    const range = selection.getRangeAt(0);
+    const ancestor = range.commonAncestorContainer.nodeType === 1
+      ? range.commonAncestorContainer
+      : range.commonAncestorContainer.parentNode;
+
+    if (!ancestor || !content.contains(ancestor)) return null;
+    return range;
+  }
+
+  function positionToolbar(range) {
+    const rect = range.getBoundingClientRect();
+    if (!rect || (!rect.width && !rect.height)) {
+      hideToolbar();
+      return;
+    }
+
+    const width = toolbar.offsetWidth || 140;
+    const left = Math.max(8, Math.min(window.innerWidth - width - 8, rect.left + (rect.width / 2) - (width / 2)));
+    const top = Math.max(8, rect.top - 52);
+
+    toolbar.style.left = `${left}px`;
+    toolbar.style.top = `${top}px`;
+    toolbar.style.display = "flex";
+  }
+
+  function updateToolbar() {
+    const range = getSelectionRange();
+    if (!range) {
+      hideToolbar();
+      return;
+    }
+
+    positionToolbar(range);
+  }
+
+  function clearSelection() {
+    const selection = window.getSelection();
+    if (selection) selection.removeAllRanges();
+    hideToolbar();
+  }
+
+  function splitTextNode(node, startOffset, endOffset) {
+    let target = node;
+    let localEnd = endOffset;
+
+    if (startOffset > 0) {
+      target = target.splitText(startOffset);
+      localEnd -= startOffset;
+    }
+
+    if (localEnd < target.nodeValue.length) {
+      target.splitText(localEnd);
+    }
+
+    return target;
+  }
+
+  function rangeIntersectsTextNode(range, textNode) {
+    const probe = document.createRange();
+    probe.selectNodeContents(textNode);
+
+    return (
+      range.compareBoundaryPoints(Range.END_TO_START, probe) > 0 &&
+      range.compareBoundaryPoints(Range.START_TO_END, probe) < 0
+    );
+  }
+
+  function getTextNodesInRange(range, highlightedOnly) {
+    const root = range.commonAncestorContainer.nodeType === 1
+      ? range.commonAncestorContainer
+      : range.commonAncestorContainer.parentNode;
+
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode(node) {
+        if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        if (!content.contains(node.parentNode)) return NodeFilter.FILTER_REJECT;
+        if (!rangeIntersectsTextNode(range, node)) return NodeFilter.FILTER_REJECT;
+
+        const inMark = !!node.parentNode.closest(".reading-mark");
+        if (highlightedOnly && !inMark) return NodeFilter.FILTER_REJECT;
+        if (!highlightedOnly && inMark) return NodeFilter.FILTER_REJECT;
+
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+
+    const nodes = [];
+    let current = walker.nextNode();
+    while (current) {
+      nodes.push(current);
+      current = walker.nextNode();
+    }
+    return nodes;
+  }
+
+  function getOffsetsForNode(range, node) {
+    const startOffset = node === range.startContainer ? range.startOffset : 0;
+    const endOffset = node === range.endContainer ? range.endOffset : node.nodeValue.length;
+    return { startOffset, endOffset };
+  }
+
+  function markSelection() {
+    const range = getSelectionRange();
+    if (!range) return;
+
+    const nodes = getTextNodesInRange(range, false);
+    nodes.forEach((node) => {
+      const { startOffset, endOffset } = getOffsetsForNode(range, node);
+      if (startOffset === endOffset) return;
+
+      const target = splitTextNode(node, startOffset, endOffset);
+      const mark = document.createElement("span");
+      mark.className = "reading-mark";
+      mark.setAttribute("data-reading-mark", "1");
+      target.parentNode.insertBefore(mark, target);
+      mark.appendChild(target);
+    });
+
+    clearSelection();
+  }
+
+  function unmarkSelection() {
+    const range = getSelectionRange();
+    if (!range) return;
+
+    const nodes = getTextNodesInRange(range, true);
+    nodes.forEach((node) => {
+      const { startOffset, endOffset } = getOffsetsForNode(range, node);
+      if (startOffset === endOffset) return;
+
+      const target = splitTextNode(node, startOffset, endOffset);
+      const mark = target.parentNode.closest(".reading-mark");
+      if (!mark) return;
+
+      const parent = mark.parentNode;
+      const beforeWrapper = document.createElement("span");
+      const afterWrapper = document.createElement("span");
+      beforeWrapper.className = "reading-mark";
+      beforeWrapper.setAttribute("data-reading-mark", "1");
+      afterWrapper.className = "reading-mark";
+      afterWrapper.setAttribute("data-reading-mark", "1");
+
+      while (mark.firstChild && mark.firstChild !== target) {
+        beforeWrapper.appendChild(mark.firstChild);
+      }
+
+      while (target.nextSibling) {
+        afterWrapper.appendChild(target.nextSibling);
+      }
+
+      if (beforeWrapper.childNodes.length) {
+        parent.insertBefore(beforeWrapper, mark);
+      }
+
+      parent.insertBefore(target, mark);
+
+      if (afterWrapper.childNodes.length) {
+        parent.insertBefore(afterWrapper, mark.nextSibling);
+      }
+
+      mark.remove();
+    });
+
+    Array.from(content.querySelectorAll(".reading-mark")).forEach((mark) => {
+      if (!mark.textContent) mark.remove();
+    });
+
+    clearSelection();
+  }
+
+  if (UserReading.__markerSelectionHandler) {
+    document.removeEventListener("selectionchange", UserReading.__markerSelectionHandler);
+  }
+  UserReading.__markerSelectionHandler = updateToolbar;
+  document.addEventListener("selectionchange", updateToolbar);
+
+  if (UserReading.__markerMouseUpHandler) {
+    content.removeEventListener("mouseup", UserReading.__markerMouseUpHandler);
+    content.removeEventListener("touchend", UserReading.__markerMouseUpHandler);
+  }
+  UserReading.__markerMouseUpHandler = function () {
+    setTimeout(updateToolbar, 10);
+  };
+  content.addEventListener("mouseup", UserReading.__markerMouseUpHandler);
+  content.addEventListener("touchend", UserReading.__markerMouseUpHandler, { passive: true });
+
+  if (UserReading.__markerInputBlocker) {
+    content.removeEventListener("copy", UserReading.__markerInputBlocker);
+    content.removeEventListener("cut", UserReading.__markerInputBlocker);
+    content.removeEventListener("paste", UserReading.__markerInputBlocker);
+    content.removeEventListener("contextmenu", UserReading.__markerInputBlocker);
+  }
+  UserReading.__markerInputBlocker = function (event) {
+    event.preventDefault();
+  };
+  content.addEventListener("copy", UserReading.__markerInputBlocker);
+  content.addEventListener("cut", UserReading.__markerInputBlocker);
+  content.addEventListener("paste", UserReading.__markerInputBlocker);
+  content.addEventListener("contextmenu", UserReading.__markerInputBlocker);
+
+  [toolbar, markButton, unmarkButton].forEach((element) => {
+    element.onpointerdown = function (event) {
+      event.preventDefault();
+    };
+  });
+
+  markButton.onclick = function (event) {
+    event.preventDefault();
+    markSelection();
+  };
+
+  unmarkButton.onclick = function (event) {
+    event.preventDefault();
+    unmarkSelection();
+  };
+
+  if (UserReading.__markerScrollHandler) {
+    window.removeEventListener("scroll", UserReading.__markerScrollHandler);
+  }
+  UserReading.__markerScrollHandler = hideToolbar;
+  window.addEventListener("scroll", UserReading.__markerScrollHandler, { passive: true });
+};
+
+UserReading.ensureMarkerStyles = function () {
+  if (document.getElementById("reading-mark-styles")) return;
+
+  const style = document.createElement("style");
+  style.id = "reading-mark-styles";
+  style.textContent = `
+    .reading-mark {
+      background:
+        linear-gradient(
+          180deg,
+          transparent 0%,
+          transparent 14%,
+          rgba(255, 248, 184, 0.35) 14%,
+          rgba(255, 244, 153, 0.82) 24%,
+          rgba(255, 239, 122, 0.92) 45%,
+          rgba(255, 242, 140, 0.86) 76%,
+          rgba(255, 248, 184, 0.4) 88%,
+          transparent 100%
+        );
+      box-decoration-break: clone;
+      -webkit-box-decoration-break: clone;
+      border-radius: 0.2em;
+      padding: 0 0.02em;
+    }
+  `;
+
+  document.head.appendChild(style);
 };
