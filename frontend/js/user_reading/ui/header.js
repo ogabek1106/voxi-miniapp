@@ -114,7 +114,7 @@ UserReading.renderHeader = function () {
         style="
           position: fixed;
           left: 10px;
-          bottom: 88px;
+          bottom: 68px;
           width: 34px;
           height: 34px;
           border: 0;
@@ -129,9 +129,9 @@ UserReading.renderHeader = function () {
           z-index: 140;
         "
       >
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-          <path d="M9.5 3.5L5 8L9.5 12.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-          <path d="M5.5 8H12" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+          <path d="M8 4L3 9L8 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+          <path d="M4 9H14.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
         </svg>
       </button>
     </div>
