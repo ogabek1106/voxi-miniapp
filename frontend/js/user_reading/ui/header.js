@@ -334,7 +334,6 @@ UserReading.initMarkMode = function () {
   UserReading.__markDragging = false;
   UserReading.__markStartRange = null;
   UserReading.__markEndRange = null;
-  UserReading.__markStartTouchY = null;
   content.style.position = "relative";
   if (UserReading.__markPreview?.parentNode) {
     UserReading.__markPreview.parentNode.removeChild(UserReading.__markPreview);
@@ -463,7 +462,6 @@ UserReading.initMarkMode = function () {
     UserReading.__markStartRange = null;
     UserReading.__markEndRange = null;
     UserReading.__markDragging = false;
-    UserReading.__markStartTouchY = null;
     if (UserReading.__markPreview) {
       UserReading.__markPreview.innerHTML = "";
     }
@@ -475,7 +473,6 @@ UserReading.initMarkMode = function () {
     UserReading.__markDragging = true;
 
     const point = getPoint(event);
-    UserReading.__markStartTouchY = point.y;
     UserReading.__markStartRange = getRangeFromPoint(point.x, point.y);
     UserReading.__markEndRange = UserReading.__markStartRange;
 
@@ -486,19 +483,6 @@ UserReading.initMarkMode = function () {
     if (!UserReading.__markMode || !UserReading.__markDragging || !UserReading.__markStartRange) return;
 
     const point = getPoint(event);
-    if (UserReading.__markStartTouchY == null) {
-      UserReading.__markStartTouchY = point.y;
-    }
-
-    const deltaY = Math.abs(point.y - UserReading.__markStartTouchY);
-    if (deltaY > 10) {
-      UserReading.__markDragging = false;
-      if (UserReading.__markPreview) {
-        UserReading.__markPreview.innerHTML = "";
-      }
-      return;
-    }
-
     const endRange = getRangeFromPoint(point.x, point.y);
     if (!endRange) return;
 
@@ -518,7 +502,6 @@ UserReading.initMarkMode = function () {
   function endMark() {
     if (!UserReading.__markMode || !UserReading.__markStartRange || !UserReading.__markEndRange) {
       UserReading.__markDragging = false;
-      UserReading.__markStartTouchY = null;
       return;
     }
 
@@ -530,7 +513,6 @@ UserReading.initMarkMode = function () {
       UserReading.__markDragging = false;
       UserReading.__markStartRange = null;
       UserReading.__markEndRange = null;
-      UserReading.__markStartTouchY = null;
       if (UserReading.__markPreview) {
         UserReading.__markPreview.innerHTML = "";
       }
@@ -545,7 +527,6 @@ UserReading.initMarkMode = function () {
     UserReading.__markDragging = false;
     UserReading.__markStartRange = null;
     UserReading.__markEndRange = null;
-    UserReading.__markStartTouchY = null;
   }
 
   if (UserReading.__markStartHandler) {
