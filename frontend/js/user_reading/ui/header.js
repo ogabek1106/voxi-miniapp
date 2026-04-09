@@ -141,7 +141,7 @@ UserReading.renderHeader = function () {
         aria-label="Toggle mark mode"
         style="
           position: fixed;
-          left: 60px;
+          right: 10px;
           bottom: 68px;
           width: 42px;
           height: 42px;
@@ -162,23 +162,6 @@ UserReading.renderHeader = function () {
           <path d="M5 15L7.8 14.4L15.9 6.3C16.3 5.9 16.3 5.2 15.9 4.8L15.2 4.1C14.8 3.7 14.1 3.7 13.7 4.1L5.6 12.2L5 15Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
         </svg>
       </button>
-
-      <div id="reading-mark-hint" style="
-        display: none;
-        position: fixed;
-        left: 108px;
-        bottom: 73px;
-        z-index: 145;
-        padding: 8px 12px;
-        border-radius: 999px;
-        background: rgba(28,28,30,0.94);
-        color: #fff;
-        font-size: 13px;
-        font-weight: 600;
-        box-shadow: 0 8px 22px rgba(0,0,0,0.22);
-      ">
-        Mark Mode
-      </div>
     </div>
   `;
 };
@@ -342,9 +325,8 @@ UserReading.initQuestionCounter = function () {
 UserReading.initMarkMode = function () {
   const content = document.getElementById("reading-user-content");
   const toggle = document.getElementById("reading-mark-toggle");
-  const hint = document.getElementById("reading-mark-hint");
 
-  if (!content || !toggle || !hint) return;
+  if (!content || !toggle) return;
 
   UserReading.ensureMarkerStyles();
 
@@ -529,6 +511,28 @@ UserReading.initMarkMode = function () {
     return range.collapsed ? null : range;
   }
 
+  function expandRangeToWord(range) {
+    if (!range) return null;
+    const node = range.startContainer;
+    if (!node || node.nodeType !== 3) return null;
+
+    const text = node.nodeValue || "";
+    if (!text.trim()) return null;
+
+    let start = Math.min(range.startOffset, text.length);
+    let end = Math.min(range.startOffset, text.length);
+    const isWordChar = (char) => /[A-Za-z0-9'-]/.test(char || "");
+
+    while (start > 0 && isWordChar(text[start - 1])) start -= 1;
+    while (end < text.length && isWordChar(text[end])) end += 1;
+    if (start === end) return null;
+
+    const wordRange = document.createRange();
+    wordRange.setStart(node, start);
+    wordRange.setEnd(node, end);
+    return wordRange;
+  }
+
   function applyHighlight(range) {
     unmarkRange(range);
     markRange(range);
@@ -562,7 +566,6 @@ UserReading.initMarkMode = function () {
     UserReading.__markMode = enabled;
     content.classList.toggle("mark-mode", enabled);
     toggle.classList.toggle("reading-mark-toggle-active", enabled);
-    hint.style.display = enabled ? "block" : "none";
     UserReading.__markStartRange = null;
     UserReading.__markEndRange = null;
     UserReading.__markDragging = false;
@@ -580,6 +583,7 @@ UserReading.initMarkMode = function () {
     UserReading.__markEndRange = range;
     UserReading.__markDragging = true;
     event.preventDefault();
+    event.stopPropagation();
   }
 
   function moveDrag(event) {
@@ -591,6 +595,7 @@ UserReading.initMarkMode = function () {
 
     UserReading.__markEndRange = range;
     event.preventDefault();
+    event.stopPropagation();
   }
 
   function endDrag(event) {
@@ -602,7 +607,9 @@ UserReading.initMarkMode = function () {
       UserReading.__markEndRange = rangeAtEnd;
     }
 
-    const range = normalizeDragRange(UserReading.__markStartRange, UserReading.__markEndRange);
+    const range =
+      normalizeDragRange(UserReading.__markStartRange, UserReading.__markEndRange) ||
+      expandRangeToWord(UserReading.__markEndRange || UserReading.__markStartRange);
     UserReading.__markDragging = false;
     UserReading.__markStartRange = null;
     UserReading.__markEndRange = null;
@@ -616,6 +623,7 @@ UserReading.initMarkMode = function () {
     }
 
     event.preventDefault();
+    event.stopPropagation();
   }
 
   if (UserReading.__markBlocker) {
@@ -656,32 +664,30 @@ UserReading.initMarkMode = function () {
   document.addEventListener("keydown", UserReading.__markKeyBlocker, true);
 
   if (UserReading.__markStartHandler) {
-    content.removeEventListener("mousedown", UserReading.__markStartHandler);
-    content.removeEventListener("touchstart", UserReading.__markStartHandler);
+    content.removeEventListener("mousedown", UserReading.__markStartHandler, true);
+    content.removeEventListener("touchstart", UserReading.__markStartHandler, true);
   }
   UserReading.__markStartHandler = startDrag;
-  content.addEventListener("mousedown", startDrag);
-  content.addEventListener("touchstart", startDrag, { passive: false });
+  content.addEventListener("mousedown", startDrag, true);
+  content.addEventListener("touchstart", startDrag, { passive: false, capture: true });
 
   if (UserReading.__markMoveHandler) {
-    content.removeEventListener("mousemove", UserReading.__markMoveHandler);
-    content.removeEventListener("touchmove", UserReading.__markMoveHandler);
+    document.removeEventListener("mousemove", UserReading.__markMoveHandler, true);
+    document.removeEventListener("touchmove", UserReading.__markMoveHandler, true);
   }
   UserReading.__markMoveHandler = moveDrag;
-  content.addEventListener("mousemove", moveDrag);
-  content.addEventListener("touchmove", moveDrag, { passive: false });
+  document.addEventListener("mousemove", moveDrag, true);
+  document.addEventListener("touchmove", moveDrag, { passive: false, capture: true });
 
   if (UserReading.__markEndHandler) {
-    content.removeEventListener("mouseup", UserReading.__markEndHandler);
-    content.removeEventListener("mouseleave", UserReading.__markEndHandler);
-    content.removeEventListener("touchend", UserReading.__markEndHandler);
-    content.removeEventListener("touchcancel", UserReading.__markEndHandler);
+    document.removeEventListener("mouseup", UserReading.__markEndHandler, true);
+    document.removeEventListener("touchend", UserReading.__markEndHandler, true);
+    document.removeEventListener("touchcancel", UserReading.__markEndHandler, true);
   }
   UserReading.__markEndHandler = endDrag;
-  content.addEventListener("mouseup", endDrag);
-  content.addEventListener("mouseleave", endDrag);
-  content.addEventListener("touchend", endDrag, { passive: false });
-  content.addEventListener("touchcancel", endDrag, { passive: false });
+  document.addEventListener("mouseup", endDrag, true);
+  document.addEventListener("touchend", endDrag, { passive: false, capture: true });
+  document.addEventListener("touchcancel", endDrag, { passive: false, capture: true });
 
   toggle.onclick = function () {
     setMarkMode(!UserReading.__markMode);
