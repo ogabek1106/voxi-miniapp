@@ -334,6 +334,8 @@ UserReading.initMarkMode = function () {
   UserReading.__markDragging = false;
   UserReading.__markStartRange = null;
   UserReading.__markEndRange = null;
+  UserReading.__markStartTouchY = null;
+  content.style.position = "relative";
   if (UserReading.__markPreview?.parentNode) {
     UserReading.__markPreview.parentNode.removeChild(UserReading.__markPreview);
   }
@@ -341,7 +343,11 @@ UserReading.initMarkMode = function () {
   UserReading.__markPreview.style.position = "absolute";
   UserReading.__markPreview.style.pointerEvents = "none";
   UserReading.__markPreview.style.zIndex = "50";
-  document.body.appendChild(UserReading.__markPreview);
+  UserReading.__markPreview.style.top = "0";
+  UserReading.__markPreview.style.left = "0";
+  UserReading.__markPreview.style.right = "0";
+  UserReading.__markPreview.style.bottom = "0";
+  content.appendChild(UserReading.__markPreview);
 
   function getRangeFromPoint(x, y) {
     if (document.caretPositionFromPoint) {
@@ -399,16 +405,42 @@ UserReading.initMarkMode = function () {
     if (!range || range.collapsed) return;
 
     const rects = range.getClientRects();
+    const containerRect = content.getBoundingClientRect();
 
     for (const rect of rects) {
       const div = document.createElement("div");
       div.className = "mark-preview-rect";
-      div.style.left = rect.left + window.scrollX + "px";
-      div.style.top = rect.top + window.scrollY + "px";
+      div.style.left = rect.left - containerRect.left + content.scrollLeft + "px";
+      div.style.top = rect.top - containerRect.top + content.scrollTop + "px";
       div.style.width = rect.width + "px";
       div.style.height = rect.height + "px";
       preview.appendChild(div);
     }
+  }
+
+  function buildRange(start, end) {
+    if (!start || !end) return null;
+
+    const range = document.createRange();
+
+    try {
+      const isForward =
+        start.startContainer === end.startContainer
+          ? start.startOffset <= end.startOffset
+          : !!(start.startContainer.compareDocumentPosition(end.startContainer) & Node.DOCUMENT_POSITION_FOLLOWING);
+
+      if (isForward) {
+        range.setStart(start.startContainer, start.startOffset);
+        range.setEnd(end.startContainer, end.startOffset);
+      } else {
+        range.setStart(end.startContainer, end.startOffset);
+        range.setEnd(start.startContainer, start.startOffset);
+      }
+    } catch (error) {
+      return null;
+    }
+
+    return range;
   }
 
   function setMarkMode(enabled) {
@@ -418,6 +450,10 @@ UserReading.initMarkMode = function () {
     UserReading.__markStartRange = null;
     UserReading.__markEndRange = null;
     UserReading.__markDragging = false;
+    UserReading.__markStartTouchY = null;
+    if (UserReading.__markPreview) {
+      UserReading.__markPreview.innerHTML = "";
+    }
   }
 
   function startMark(event) {
@@ -426,6 +462,7 @@ UserReading.initMarkMode = function () {
     UserReading.__markDragging = true;
 
     const point = getPoint(event);
+    UserReading.__markStartTouchY = point.y;
     UserReading.__markStartRange = getRangeFromPoint(point.x, point.y);
     UserReading.__markEndRange = UserReading.__markStartRange;
 
@@ -436,77 +473,49 @@ UserReading.initMarkMode = function () {
     if (!UserReading.__markMode || !UserReading.__markDragging || !UserReading.__markStartRange) return;
 
     const point = getPoint(event);
+    if (UserReading.__markStartTouchY == null) {
+      UserReading.__markStartTouchY = point.y;
+    }
+
+    const deltaY = Math.abs(point.y - UserReading.__markStartTouchY);
+    if (deltaY > 10) {
+      UserReading.__markDragging = false;
+      if (UserReading.__markPreview) {
+        UserReading.__markPreview.innerHTML = "";
+      }
+      return;
+    }
+
     const endRange = getRangeFromPoint(point.x, point.y);
     if (!endRange) return;
 
     UserReading.__markEndRange = endRange;
-    const range = document.createRange();
-
-    try {
-      range.setStart(
-        UserReading.__markStartRange.startContainer,
-        UserReading.__markStartRange.startOffset
-      );
-
-      range.setEnd(
-        endRange.startContainer,
-        endRange.startOffset
-      );
-    } catch (error) {
-      try {
-        range.setStart(
-          endRange.startContainer,
-          endRange.startOffset
-        );
-
-        range.setEnd(
-          UserReading.__markStartRange.startContainer,
-          UserReading.__markStartRange.startOffset
-        );
-      } catch (innerError) {
-        return;
-      }
-    }
+    const range = buildRange(UserReading.__markStartRange, endRange);
+    if (!range) return;
 
     renderPreview(range);
-    event.preventDefault();
+    if (UserReading.__markDragging) {
+      event.preventDefault();
+    }
   }
 
   function endMark() {
     if (!UserReading.__markMode || !UserReading.__markStartRange || !UserReading.__markEndRange) {
       UserReading.__markDragging = false;
+      UserReading.__markStartTouchY = null;
       return;
     }
 
-    const range = document.createRange();
-
-    try {
-      range.setStart(
-        UserReading.__markStartRange.startContainer,
-        UserReading.__markStartRange.startOffset
-      );
-
-      range.setEnd(
-        UserReading.__markEndRange.startContainer,
-        UserReading.__markEndRange.startOffset
-      );
-    } catch (error) {
-      try {
-        range.setStart(
-          UserReading.__markEndRange.startContainer,
-          UserReading.__markEndRange.startOffset
-        );
-
-        range.setEnd(
-          UserReading.__markStartRange.startContainer,
-          UserReading.__markStartRange.startOffset
-        );
-      } catch (innerError) {
-        UserReading.__markDragging = false;
-        UserReading.__markStartRange = null;
-        UserReading.__markEndRange = null;
-        return;
+    const range = buildRange(UserReading.__markStartRange, UserReading.__markEndRange);
+    if (!range) {
+      UserReading.__markDragging = false;
+      UserReading.__markStartRange = null;
+      UserReading.__markEndRange = null;
+      UserReading.__markStartTouchY = null;
+      if (UserReading.__markPreview) {
+        UserReading.__markPreview.innerHTML = "";
       }
+      return;
     }
 
     if (UserReading.__markPreview) {
@@ -517,6 +526,7 @@ UserReading.initMarkMode = function () {
     UserReading.__markDragging = false;
     UserReading.__markStartRange = null;
     UserReading.__markEndRange = null;
+    UserReading.__markStartTouchY = null;
   }
 
   if (UserReading.__markStartHandler) {
