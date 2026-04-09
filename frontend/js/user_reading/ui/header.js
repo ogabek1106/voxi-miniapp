@@ -182,10 +182,36 @@ UserReading.goBack = function () {
   }
 };
 
+UserReading.isIOS = function () {
+  const ua = navigator.userAgent || "";
+  return /iPad|iPhone|iPod/.test(ua) || (/Mac/.test(ua) && navigator.maxTouchPoints > 1);
+};
+
+UserReading.applyHighlight = function (range) {
+  if (!range || range.collapsed) return;
+
+  const span = document.createElement("span");
+  span.className = "highlight";
+
+  try {
+    range.surroundContents(span);
+  } catch (error) {
+    const contents = range.extractContents();
+    span.appendChild(contents);
+    range.insertNode(span);
+  }
+};
+
 UserReading.initHeader = function (data) {
   UserReading.initReadingTimer(data?.timer);
   UserReading.initPassageCounter();
   UserReading.initQuestionCounter();
+
+  if (UserReading.isIOS() && window.UserReadingIOS?.initMarkModeIOS) {
+    window.UserReadingIOS.initMarkModeIOS();
+    return;
+  }
+
   UserReading.initMarkMode();
 };
 
@@ -416,21 +442,6 @@ UserReading.initMarkMode = function () {
     };
   }
 
-  function applyHighlight(range) {
-    if (!range || range.collapsed) return;
-
-    const span = document.createElement("span");
-    span.className = "highlight";
-
-    try {
-      range.surroundContents(span);
-    } catch (error) {
-      const contents = range.extractContents();
-      span.appendChild(contents);
-      range.insertNode(span);
-    }
-  }
-
   function renderPreview(range) {
     const preview = UserReading.__markPreview;
     if (!preview) return;
@@ -550,7 +561,7 @@ UserReading.initMarkMode = function () {
     if (UserReading.__markPreview) {
       UserReading.__markPreview.innerHTML = "";
     }
-    applyHighlight(range);
+    UserReading.applyHighlight(range);
 
     UserReading.__markDragging = false;
     UserReading.__markStartRange = null;
@@ -587,7 +598,7 @@ UserReading.initMarkMode = function () {
     if (!UserReading.__markMode && selection && !selection.isCollapsed) {
       try {
         const range = selection.getRangeAt(0);
-        applyHighlight(range);
+        UserReading.applyHighlight(range);
         selection.removeAllRanges();
         return;
       } catch (error) {}
