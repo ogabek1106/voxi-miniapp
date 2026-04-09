@@ -19,6 +19,7 @@ UserReading.renderShell = function (container) {
       display:flex;
       flex-direction:column;
       height:100%;
+      position:relative;
     ">
 
       <!-- HEADER -->
@@ -32,8 +33,50 @@ UserReading.renderShell = function (container) {
         box-sizing:border-box;
       "></div>
 
+      <button
+        type="button"
+        onclick="UserReading.goBack()"
+        aria-label="Back"
+        style="
+          position:absolute;
+          left:10px;
+          bottom:10px;
+          width:32px;
+          height:32px;
+          border:0;
+          border-radius:50%;
+          background:#f4f4f6;
+          color:#111;
+          font-size:16px;
+          font-weight:700;
+          line-height:1;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          box-shadow:0 3px 10px rgba(0,0,0,0.12);
+          cursor:pointer;
+          z-index:120;
+        "
+      ><-</button>
+
     </div>
   `;
+};
+
+UserReading.goBack = function () {
+  if (typeof window.showMocksScreen === "function") {
+    window.showMocksScreen();
+    return;
+  }
+
+  if (window.history.length > 1) {
+    window.history.back();
+    return;
+  }
+
+  if (typeof window.goHome === "function") {
+    window.goHome();
+  }
 };
 
 UserReading.renderLoading = function (container) {
