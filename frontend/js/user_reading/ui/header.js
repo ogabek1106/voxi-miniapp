@@ -376,6 +376,32 @@ UserReading.initMarkMode = function () {
     return null;
   }
 
+  function expandToWord(range) {
+    if (!range) return null;
+
+    let node = range.startContainer;
+    let offset = range.startOffset;
+
+    if (node.nodeType !== 3) return range;
+
+    const text = node.textContent || "";
+    let start = offset;
+    let end = offset;
+
+    while (start > 0 && /\w/.test(text[start - 1])) {
+      start--;
+    }
+
+    while (end < text.length && /\w/.test(text[end])) {
+      end++;
+    }
+
+    const newRange = document.createRange();
+    newRange.setStart(node, start);
+    newRange.setEnd(node, end);
+    return newRange;
+  }
+
   function getPoint(event) {
     if (event.touches && event.touches[0]) {
       return {
@@ -473,7 +499,8 @@ UserReading.initMarkMode = function () {
     UserReading.__markDragging = true;
 
     const point = getPoint(event);
-    UserReading.__markStartRange = getRangeFromPoint(point.x, point.y);
+    const rawRange = getRangeFromPoint(point.x, point.y);
+    UserReading.__markStartRange = expandToWord(rawRange);
     UserReading.__markEndRange = UserReading.__markStartRange;
 
     event.preventDefault();
@@ -483,7 +510,8 @@ UserReading.initMarkMode = function () {
     if (!UserReading.__markMode || !UserReading.__markDragging || !UserReading.__markStartRange) return;
 
     const point = getPoint(event);
-    const endRange = getRangeFromPoint(point.x, point.y);
+    const rawEnd = getRangeFromPoint(point.x, point.y);
+    const endRange = expandToWord(rawEnd);
     if (!endRange) return;
 
     UserReading.__markEndRange = endRange;
@@ -554,6 +582,17 @@ UserReading.initMarkMode = function () {
   content.addEventListener("touchend", endMark);
 
   toggle.onclick = function () {
+    const selection = window.getSelection();
+
+    if (!UserReading.__markMode && selection && !selection.isCollapsed) {
+      try {
+        const range = selection.getRangeAt(0);
+        applyHighlight(range);
+        selection.removeAllRanges();
+        return;
+      } catch (error) {}
+    }
+
     setMarkMode(!UserReading.__markMode);
   };
 
