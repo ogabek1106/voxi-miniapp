@@ -330,6 +330,9 @@ UserReading.initTextMarker = function () {
   content.style.userSelect = "text";
   content.style.webkitUserSelect = "text";
   content.style.webkitTouchCallout = "none";
+  document.body.style.webkitTouchCallout = "none";
+  document.body.style.webkitUserSelect = "none";
+  document.body.style.userSelect = "none";
 
   function hideToolbar() {
     toolbar.style.display = "none";
@@ -533,18 +536,44 @@ UserReading.initTextMarker = function () {
   content.addEventListener("touchend", UserReading.__markerMouseUpHandler, { passive: true });
 
   if (UserReading.__markerInputBlocker) {
+    document.removeEventListener("copy", UserReading.__markerInputBlocker, true);
+    document.removeEventListener("cut", UserReading.__markerInputBlocker, true);
+    document.removeEventListener("paste", UserReading.__markerInputBlocker, true);
+    document.removeEventListener("contextmenu", UserReading.__markerInputBlocker, true);
+    document.removeEventListener("dragstart", UserReading.__markerInputBlocker, true);
+    document.removeEventListener("beforeinput", UserReading.__markerInputBlocker, true);
     content.removeEventListener("copy", UserReading.__markerInputBlocker);
     content.removeEventListener("cut", UserReading.__markerInputBlocker);
     content.removeEventListener("paste", UserReading.__markerInputBlocker);
     content.removeEventListener("contextmenu", UserReading.__markerInputBlocker);
   }
   UserReading.__markerInputBlocker = function (event) {
+    if (event.type === "beforeinput" && event.inputType !== "insertFromPaste") return;
     event.preventDefault();
   };
+  document.addEventListener("copy", UserReading.__markerInputBlocker, true);
+  document.addEventListener("cut", UserReading.__markerInputBlocker, true);
+  document.addEventListener("paste", UserReading.__markerInputBlocker, true);
+  document.addEventListener("contextmenu", UserReading.__markerInputBlocker, true);
+  document.addEventListener("dragstart", UserReading.__markerInputBlocker, true);
+  document.addEventListener("beforeinput", UserReading.__markerInputBlocker, true);
   content.addEventListener("copy", UserReading.__markerInputBlocker);
   content.addEventListener("cut", UserReading.__markerInputBlocker);
   content.addEventListener("paste", UserReading.__markerInputBlocker);
   content.addEventListener("contextmenu", UserReading.__markerInputBlocker);
+
+  if (UserReading.__markerKeyBlocker) {
+    document.removeEventListener("keydown", UserReading.__markerKeyBlocker, true);
+  }
+  UserReading.__markerKeyBlocker = function (event) {
+    const key = String(event.key || "").toLowerCase();
+    const blockedWithMeta = ["a", "c", "v", "x"];
+    if ((event.ctrlKey || event.metaKey) && blockedWithMeta.includes(key)) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  };
+  document.addEventListener("keydown", UserReading.__markerKeyBlocker, true);
 
   [toolbar, actionButton].forEach((element) => {
     element.onpointerdown = function (event) {
