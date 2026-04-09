@@ -135,28 +135,49 @@ UserReading.renderHeader = function () {
         </svg>
       </button>
 
-      <div id="reading-mark-toolbar" style="
+      <button
+        type="button"
+        id="reading-mark-toggle"
+        aria-label="Toggle mark mode"
+        style="
+          position: fixed;
+          left: 60px;
+          bottom: 68px;
+          width: 42px;
+          height: 42px;
+          border: 0;
+          border-radius: 50%;
+          background: #f4f4f6;
+          color: #111;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 5px 14px rgba(0,0,0,0.16);
+          cursor: pointer;
+          z-index: 140;
+        "
+      >
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <path d="M13.8 3.4L16.6 6.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+          <path d="M5 15L7.8 14.4L15.9 6.3C16.3 5.9 16.3 5.2 15.9 4.8L15.2 4.1C14.8 3.7 14.1 3.7 13.7 4.1L5.6 12.2L5 15Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+        </svg>
+      </button>
+
+      <div id="reading-mark-hint" style="
         display: none;
         position: fixed;
-        left: 0;
-        top: 0;
-        z-index: 300;
-        padding: 4px;
+        left: 108px;
+        bottom: 73px;
+        z-index: 145;
+        padding: 8px 12px;
         border-radius: 999px;
-        background: rgba(28,28,30,0.96);
+        background: rgba(28,28,30,0.94);
+        color: #fff;
+        font-size: 13px;
+        font-weight: 600;
         box-shadow: 0 8px 22px rgba(0,0,0,0.22);
       ">
-        <button type="button" id="reading-mark-action" style="
-          border: 0;
-          border-radius: 999px;
-          padding: 7px 16px;
-          background: transparent;
-          color: #fff;
-          font-weight: 600;
-          font-size: 14px;
-          cursor: pointer;
-          letter-spacing: 0;
-        ">Mark</button>
+        Mark Mode
       </div>
     </div>
   `;
@@ -182,7 +203,7 @@ UserReading.initHeader = function (data) {
   UserReading.initReadingTimer(data?.timer);
   UserReading.initPassageCounter();
   UserReading.initQuestionCounter();
-  UserReading.initTextMarker();
+  UserReading.initMarkMode();
 };
 
 UserReading.initReadingTimer = function (timer) {
@@ -318,77 +339,19 @@ UserReading.initQuestionCounter = function () {
   updateQuestionProgress();
 };
 
-UserReading.initTextMarker = function () {
+UserReading.initMarkMode = function () {
   const content = document.getElementById("reading-user-content");
-  const toolbar = document.getElementById("reading-mark-toolbar");
-  const actionButton = document.getElementById("reading-mark-action");
+  const toggle = document.getElementById("reading-mark-toggle");
+  const hint = document.getElementById("reading-mark-hint");
 
-  if (!content || !toolbar || !actionButton) return;
+  if (!content || !toggle || !hint) return;
 
   UserReading.ensureMarkerStyles();
 
-  content.style.userSelect = "text";
-  content.style.webkitUserSelect = "text";
-  content.style.webkitTouchCallout = "none";
-  document.body.style.webkitTouchCallout = "none";
-  document.body.style.webkitUserSelect = "none";
-  document.body.style.userSelect = "none";
-
-  function hideToolbar() {
-    toolbar.style.display = "none";
-  }
-
-  function getSelectionRange() {
-    const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return null;
-
-    const range = selection.getRangeAt(0);
-    const ancestor = range.commonAncestorContainer.nodeType === 1
-      ? range.commonAncestorContainer
-      : range.commonAncestorContainer.parentNode;
-
-    if (!ancestor || !content.contains(ancestor)) return null;
-    return range;
-  }
-
-  function positionToolbar(range) {
-    const rect = range.getBoundingClientRect();
-    if (!rect || (!rect.width && !rect.height)) {
-      hideToolbar();
-      return;
-    }
-
-    const width = toolbar.offsetWidth || 140;
-    const left = Math.max(8, Math.min(window.innerWidth - width - 8, rect.left + (rect.width / 2) - (width / 2)));
-    const top = Math.max(8, rect.top - 52);
-
-    toolbar.style.left = `${left}px`;
-    toolbar.style.top = `${top}px`;
-    toolbar.style.display = "flex";
-  }
-
-  function isMarkedSelection(range) {
-    const highlighted = getTextNodesInRange(range, true);
-    const plain = getTextNodesInRange(range, false);
-    return highlighted.length > 0 && plain.length === 0;
-  }
-
-  function updateToolbar() {
-    const range = getSelectionRange();
-    if (!range) {
-      hideToolbar();
-      return;
-    }
-
-    actionButton.textContent = isMarkedSelection(range) ? "Unmark" : "Mark";
-    positionToolbar(range);
-  }
-
-  function clearSelection() {
-    const selection = window.getSelection();
-    if (selection) selection.removeAllRanges();
-    hideToolbar();
-  }
+  UserReading.__markMode = false;
+  UserReading.__markStartRange = null;
+  UserReading.__markEndRange = null;
+  UserReading.__markDragging = false;
 
   function splitTextNode(node, startOffset, endOffset) {
     let target = node;
@@ -450,10 +413,7 @@ UserReading.initTextMarker = function () {
     return { startOffset, endOffset };
   }
 
-  function markSelection() {
-    const range = getSelectionRange();
-    if (!range) return;
-
+  function markRange(range) {
     const nodes = getTextNodesInRange(range, false);
     nodes.forEach((node) => {
       const { startOffset, endOffset } = getOffsetsForNode(range, node);
@@ -466,14 +426,9 @@ UserReading.initTextMarker = function () {
       target.parentNode.insertBefore(mark, target);
       mark.appendChild(target);
     });
-
-    clearSelection();
   }
 
-  function unmarkSelection() {
-    const range = getSelectionRange();
-    if (!range) return;
-
+  function unmarkRange(range) {
     const nodes = getTextNodesInRange(range, true);
     nodes.forEach((node) => {
       const { startOffset, endOffset } = getOffsetsForNode(range, node);
@@ -515,90 +470,224 @@ UserReading.initTextMarker = function () {
     Array.from(content.querySelectorAll(".reading-mark")).forEach((mark) => {
       if (!mark.textContent) mark.remove();
     });
-
-    clearSelection();
   }
 
-  if (UserReading.__markerSelectionHandler) {
-    document.removeEventListener("selectionchange", UserReading.__markerSelectionHandler);
-  }
-  UserReading.__markerSelectionHandler = updateToolbar;
-  document.addEventListener("selectionchange", updateToolbar);
+  function mergeAdjacentHighlights(root) {
+    Array.from(root.querySelectorAll(".reading-mark")).forEach((mark) => {
+      let next = mark.nextSibling;
+      while (next && next.nodeType === 1 && next.classList.contains("reading-mark")) {
+        while (next.firstChild) {
+          mark.appendChild(next.firstChild);
+        }
+        const oldNext = next;
+        next = next.nextSibling;
+        oldNext.remove();
+      }
 
-  if (UserReading.__markerMouseUpHandler) {
-    content.removeEventListener("mouseup", UserReading.__markerMouseUpHandler);
-    content.removeEventListener("touchend", UserReading.__markerMouseUpHandler);
+      mark.normalize();
+    });
   }
-  UserReading.__markerMouseUpHandler = function () {
-    setTimeout(updateToolbar, 10);
-  };
-  content.addEventListener("mouseup", UserReading.__markerMouseUpHandler);
-  content.addEventListener("touchend", UserReading.__markerMouseUpHandler, { passive: true });
 
-  if (UserReading.__markerInputBlocker) {
-    document.removeEventListener("copy", UserReading.__markerInputBlocker, true);
-    document.removeEventListener("cut", UserReading.__markerInputBlocker, true);
-    document.removeEventListener("paste", UserReading.__markerInputBlocker, true);
-    document.removeEventListener("contextmenu", UserReading.__markerInputBlocker, true);
-    document.removeEventListener("dragstart", UserReading.__markerInputBlocker, true);
-    document.removeEventListener("beforeinput", UserReading.__markerInputBlocker, true);
-    content.removeEventListener("copy", UserReading.__markerInputBlocker);
-    content.removeEventListener("cut", UserReading.__markerInputBlocker);
-    content.removeEventListener("paste", UserReading.__markerInputBlocker);
-    content.removeEventListener("contextmenu", UserReading.__markerInputBlocker);
+  function getRangeFromPoint(x, y) {
+    if (document.caretPositionFromPoint) {
+      const pos = document.caretPositionFromPoint(x, y);
+      if (!pos) return null;
+
+      const range = document.createRange();
+      range.setStart(pos.offsetNode, pos.offset);
+      range.setEnd(pos.offsetNode, pos.offset);
+      return range;
+    }
+
+    if (document.caretRangeFromPoint) {
+      return document.caretRangeFromPoint(x, y);
+    }
+
+    return null;
   }
-  UserReading.__markerInputBlocker = function (event) {
+
+  function compareCollapsedRanges(a, b) {
+    const probeA = document.createRange();
+    const probeB = document.createRange();
+    probeA.setStart(a.startContainer, a.startOffset);
+    probeA.setEnd(a.startContainer, a.startOffset);
+    probeB.setStart(b.startContainer, b.startOffset);
+    probeB.setEnd(b.startContainer, b.startOffset);
+    return probeA.compareBoundaryPoints(Range.START_TO_START, probeB);
+  }
+
+  function normalizeDragRange(startRange, endRange) {
+    if (!startRange || !endRange) return null;
+
+    const range = document.createRange();
+    const order = compareCollapsedRanges(startRange, endRange);
+    const first = order <= 0 ? startRange : endRange;
+    const second = order <= 0 ? endRange : startRange;
+
+    range.setStart(first.startContainer, first.startOffset);
+    range.setEnd(second.startContainer, second.startOffset);
+    return range.collapsed ? null : range;
+  }
+
+  function applyHighlight(range) {
+    unmarkRange(range);
+    markRange(range);
+    mergeAdjacentHighlights(content);
+  }
+
+  function removeHighlight(range) {
+    unmarkRange(range);
+    mergeAdjacentHighlights(content);
+  }
+
+  function isMarkedAtRange(range) {
+    const highlighted = getTextNodesInRange(range, true);
+    const plain = getTextNodesInRange(range, false);
+    return highlighted.length > 0 && plain.length === 0;
+  }
+
+  function getClientPoint(event) {
+    if (event.touches && event.touches[0]) {
+      return { x: event.touches[0].clientX, y: event.touches[0].clientY };
+    }
+
+    if (event.changedTouches && event.changedTouches[0]) {
+      return { x: event.changedTouches[0].clientX, y: event.changedTouches[0].clientY };
+    }
+
+    return { x: event.clientX, y: event.clientY };
+  }
+
+  function setMarkMode(enabled) {
+    UserReading.__markMode = enabled;
+    content.classList.toggle("mark-mode", enabled);
+    toggle.classList.toggle("reading-mark-toggle-active", enabled);
+    hint.style.display = enabled ? "block" : "none";
+    UserReading.__markStartRange = null;
+    UserReading.__markEndRange = null;
+    UserReading.__markDragging = false;
+  }
+
+  function startDrag(event) {
+    if (!UserReading.__markMode) return;
+    if (event.target && event.target.closest && event.target.closest("input, textarea, select, button, label")) return;
+
+    const point = getClientPoint(event);
+    const range = getRangeFromPoint(point.x, point.y);
+    if (!range || !content.contains(range.startContainer)) return;
+
+    UserReading.__markStartRange = range;
+    UserReading.__markEndRange = range;
+    UserReading.__markDragging = true;
+    event.preventDefault();
+  }
+
+  function moveDrag(event) {
+    if (!UserReading.__markMode || !UserReading.__markDragging) return;
+
+    const point = getClientPoint(event);
+    const range = getRangeFromPoint(point.x, point.y);
+    if (!range || !content.contains(range.startContainer)) return;
+
+    UserReading.__markEndRange = range;
+    event.preventDefault();
+  }
+
+  function endDrag(event) {
+    if (!UserReading.__markMode || !UserReading.__markDragging) return;
+
+    const point = getClientPoint(event);
+    const rangeAtEnd = getRangeFromPoint(point.x, point.y);
+    if (rangeAtEnd && content.contains(rangeAtEnd.startContainer)) {
+      UserReading.__markEndRange = rangeAtEnd;
+    }
+
+    const range = normalizeDragRange(UserReading.__markStartRange, UserReading.__markEndRange);
+    UserReading.__markDragging = false;
+    UserReading.__markStartRange = null;
+    UserReading.__markEndRange = null;
+
+    if (!range) return;
+
+    if (isMarkedAtRange(range)) {
+      removeHighlight(range);
+    } else {
+      applyHighlight(range);
+    }
+
+    event.preventDefault();
+  }
+
+  if (UserReading.__markBlocker) {
+    document.removeEventListener("copy", UserReading.__markBlocker, true);
+    document.removeEventListener("cut", UserReading.__markBlocker, true);
+    document.removeEventListener("paste", UserReading.__markBlocker, true);
+    document.removeEventListener("contextmenu", UserReading.__markBlocker, true);
+    document.removeEventListener("dragstart", UserReading.__markBlocker, true);
+    document.removeEventListener("beforeinput", UserReading.__markBlocker, true);
+    document.removeEventListener("selectstart", UserReading.__markBlocker, true);
+  }
+  UserReading.__markBlocker = function (event) {
+    if (!UserReading.__markMode) return;
+    if (!content.contains(event.target)) return;
     if (event.type === "beforeinput" && event.inputType !== "insertFromPaste") return;
     event.preventDefault();
+    event.stopPropagation();
   };
-  document.addEventListener("copy", UserReading.__markerInputBlocker, true);
-  document.addEventListener("cut", UserReading.__markerInputBlocker, true);
-  document.addEventListener("paste", UserReading.__markerInputBlocker, true);
-  document.addEventListener("contextmenu", UserReading.__markerInputBlocker, true);
-  document.addEventListener("dragstart", UserReading.__markerInputBlocker, true);
-  document.addEventListener("beforeinput", UserReading.__markerInputBlocker, true);
-  content.addEventListener("copy", UserReading.__markerInputBlocker);
-  content.addEventListener("cut", UserReading.__markerInputBlocker);
-  content.addEventListener("paste", UserReading.__markerInputBlocker);
-  content.addEventListener("contextmenu", UserReading.__markerInputBlocker);
+  document.addEventListener("copy", UserReading.__markBlocker, true);
+  document.addEventListener("cut", UserReading.__markBlocker, true);
+  document.addEventListener("paste", UserReading.__markBlocker, true);
+  document.addEventListener("contextmenu", UserReading.__markBlocker, true);
+  document.addEventListener("dragstart", UserReading.__markBlocker, true);
+  document.addEventListener("beforeinput", UserReading.__markBlocker, true);
+  document.addEventListener("selectstart", UserReading.__markBlocker, true);
 
-  if (UserReading.__markerKeyBlocker) {
-    document.removeEventListener("keydown", UserReading.__markerKeyBlocker, true);
+  if (UserReading.__markKeyBlocker) {
+    document.removeEventListener("keydown", UserReading.__markKeyBlocker, true);
   }
-  UserReading.__markerKeyBlocker = function (event) {
+  UserReading.__markKeyBlocker = function (event) {
+    if (!UserReading.__markMode) return;
     const key = String(event.key || "").toLowerCase();
-    const blockedWithMeta = ["a", "c", "v", "x"];
-    if ((event.ctrlKey || event.metaKey) && blockedWithMeta.includes(key)) {
+    if ((event.ctrlKey || event.metaKey) && ["a", "c", "v", "x"].includes(key)) {
       event.preventDefault();
       event.stopPropagation();
     }
   };
-  document.addEventListener("keydown", UserReading.__markerKeyBlocker, true);
+  document.addEventListener("keydown", UserReading.__markKeyBlocker, true);
 
-  [toolbar, actionButton].forEach((element) => {
-    element.onpointerdown = function (event) {
-      event.preventDefault();
-    };
-  });
+  if (UserReading.__markStartHandler) {
+    content.removeEventListener("mousedown", UserReading.__markStartHandler);
+    content.removeEventListener("touchstart", UserReading.__markStartHandler);
+  }
+  UserReading.__markStartHandler = startDrag;
+  content.addEventListener("mousedown", startDrag);
+  content.addEventListener("touchstart", startDrag, { passive: false });
 
-  actionButton.onclick = function (event) {
-    event.preventDefault();
-    const range = getSelectionRange();
-    if (!range) return;
+  if (UserReading.__markMoveHandler) {
+    content.removeEventListener("mousemove", UserReading.__markMoveHandler);
+    content.removeEventListener("touchmove", UserReading.__markMoveHandler);
+  }
+  UserReading.__markMoveHandler = moveDrag;
+  content.addEventListener("mousemove", moveDrag);
+  content.addEventListener("touchmove", moveDrag, { passive: false });
 
-    if (isMarkedSelection(range)) {
-      unmarkSelection();
-      return;
-    }
+  if (UserReading.__markEndHandler) {
+    content.removeEventListener("mouseup", UserReading.__markEndHandler);
+    content.removeEventListener("mouseleave", UserReading.__markEndHandler);
+    content.removeEventListener("touchend", UserReading.__markEndHandler);
+    content.removeEventListener("touchcancel", UserReading.__markEndHandler);
+  }
+  UserReading.__markEndHandler = endDrag;
+  content.addEventListener("mouseup", endDrag);
+  content.addEventListener("mouseleave", endDrag);
+  content.addEventListener("touchend", endDrag, { passive: false });
+  content.addEventListener("touchcancel", endDrag, { passive: false });
 
-    markSelection();
+  toggle.onclick = function () {
+    setMarkMode(!UserReading.__markMode);
   };
 
-  if (UserReading.__markerScrollHandler) {
-    window.removeEventListener("scroll", UserReading.__markerScrollHandler);
-  }
-  UserReading.__markerScrollHandler = hideToolbar;
-  window.addEventListener("scroll", UserReading.__markerScrollHandler, { passive: true });
+  setMarkMode(false);
 };
 
 UserReading.ensureMarkerStyles = function () {
@@ -612,18 +701,29 @@ UserReading.ensureMarkerStyles = function () {
         linear-gradient(
           180deg,
           transparent 0%,
-          transparent 14%,
-          rgba(255, 248, 184, 0.35) 14%,
-          rgba(255, 244, 153, 0.82) 24%,
-          rgba(255, 239, 122, 0.92) 45%,
-          rgba(255, 242, 140, 0.86) 76%,
-          rgba(255, 248, 184, 0.4) 88%,
+          transparent 34%,
+          rgba(255, 241, 128, 0.18) 34%,
+          rgba(255, 236, 94, 0.72) 44%,
+          rgba(255, 232, 78, 0.82) 64%,
+          rgba(255, 240, 122, 0.66) 84%,
           transparent 100%
         );
       box-decoration-break: clone;
       -webkit-box-decoration-break: clone;
       border-radius: 0.2em;
       padding: 0 0.02em;
+    }
+
+    .mark-mode,
+    .mark-mode * {
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    .reading-mark-toggle-active {
+      background: #fff2a8 !important;
+      color: #7c4a00 !important;
     }
   `;
 
