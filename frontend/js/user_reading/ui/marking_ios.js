@@ -47,7 +47,10 @@ UserReadingIOS.initMarkModeIOS = function () {
   UserReadingIOS.__markMode = false;
   UserReadingIOS.__selectionTimer = null;
   UserReadingIOS.__lastSelectionText = "";
+  UserReadingIOS.__lastAppliedText = "";
   UserReadingIOS.__selectionEndTimer = null;
+  UserReadingIOS.__lastSelectionRange = null;
+  UserReadingIOS.__lastSelectionTs = 0;
   const content = document.getElementById("reading-user-content");
 
   function setMarkMode(enabled) {
@@ -74,36 +77,29 @@ UserReadingIOS.initMarkModeIOS = function () {
     return !!node && content.contains(node);
   }
 
-  function applySelectedText() {
-    const selection = window.getSelection();
-    const text = String(selection?.toString() || "").trim();
-    log(`selection check rc=${selection?.rangeCount || 0} collapsed=${selection?.isCollapsed ? "yes" : "no"} text="${text.slice(0, 40)}"`);
-    if (!selection || selection.rangeCount === 0) {
-      log("ignored: no selection");
-      return false;
-    }
-    if (!selectionInsideContent(selection)) {
-      log("ignored: outside content");
-      return false;
-    }
-    if (selection.isCollapsed) {
-      log("ignored: collapsed");
-      return false;
-    }
-    if (text === UserReadingIOS.__lastSelectionText) {
+  function snapshotSelection(selection) {
+    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return;
+    if (!selectionInsideContent(selection)) return;
+
+    const text = String(selection.toString() || "").trim();
+    if (!text.length) return;
+
+    UserReadingIOS.__lastSelectionRange = selection.getRangeAt(0).cloneRange();
+    UserReadingIOS.__lastSelectionText = text;
+    UserReadingIOS.__lastSelectionTs = Date.now();
+    log(`snapshot text="${text.slice(0, 40)}"`);
+  }
+
+  function applyRange(range, text, source) {
+    if (!range || !text.length) return false;
+    if (text === UserReadingIOS.__lastAppliedText) {
       log("ignored: duplicate selection");
       return false;
     }
 
     try {
-      const range = selection.getRangeAt(0).cloneRange();
-      if (!text.length) {
-        log("ignored: empty text");
-        return false;
-      }
-
-      UserReadingIOS.__lastSelectionText = text;
-      log(`highlight start text="${text.slice(0, 40)}"`);
+      UserReadingIOS.__lastAppliedText = text;
+      log(`highlight start source=${source} text="${text.slice(0, 40)}"`);
       UserReading.applyHighlight(range);
       log("highlight success");
       setTimeout(() => {
@@ -117,11 +113,43 @@ UserReadingIOS.initMarkModeIOS = function () {
     }
   }
 
+  function applySelectedText() {
+    const selection = window.getSelection();
+    const text = String(selection?.toString() || "").trim();
+    log(`selection check rc=${selection?.rangeCount || 0} collapsed=${selection?.isCollapsed ? "yes" : "no"} text="${text.slice(0, 40)}"`);
+    if (selection && selection.rangeCount > 0 && !selection.isCollapsed && selectionInsideContent(selection) && text.length) {
+      snapshotSelection(selection);
+      return applyRange(selection.getRangeAt(0).cloneRange(), text, "live");
+    }
+
+    const recentEnough = Date.now() - UserReadingIOS.__lastSelectionTs < 2000;
+    if (recentEnough && UserReadingIOS.__lastSelectionRange && UserReadingIOS.__lastSelectionText) {
+      log(`using cached selection text="${UserReadingIOS.__lastSelectionText.slice(0, 40)}"`);
+      return applyRange(UserReadingIOS.__lastSelectionRange.cloneRange(), UserReadingIOS.__lastSelectionText, "cached");
+    }
+
+    if (!selection || selection.rangeCount === 0) {
+      log("ignored: no selection");
+      return false;
+    }
+    if (!selectionInsideContent(selection)) {
+      log("ignored: outside content");
+      return false;
+    }
+    if (selection.isCollapsed) {
+      log("ignored: collapsed");
+      return false;
+    }
+    log("ignored: empty text");
+    return false;
+  }
+
   function onSelectionChange() {
     log(`selection change mode=${UserReadingIOS.__markMode ? "ON" : "OFF"}`);
     const selection = window.getSelection();
     const text = String(selection?.toString() || "").trim();
     if (UserReadingIOS.__markMode && selection && !selection.isCollapsed && selectionInsideContent(selection)) {
+      snapshotSelection(selection);
       log(`selection ready text="${text.slice(0, 40)}"`);
     }
   }
@@ -166,6 +194,10 @@ UserReadingIOS.initMarkModeIOS = function () {
     const selection = window.getSelection();
     const text = String(selection?.toString() || "").trim();
     log(`pencil clicked mode=${UserReadingIOS.__markMode ? "ON" : "OFF"} hasSelection=${selection && !selection.isCollapsed ? "yes" : "no"} text="${text.slice(0, 40)}"`);
+
+    if (selection && selection.rangeCount > 0 && !selection.isCollapsed && selectionInsideContent(selection)) {
+      snapshotSelection(selection);
+    }
 
     if (!UserReadingIOS.__markMode && selection && !selection.isCollapsed) {
       if (applySelectedText()) {
