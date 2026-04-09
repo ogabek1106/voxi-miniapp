@@ -354,6 +354,16 @@ UserReading.initMarkMode = function () {
       const pos = document.caretPositionFromPoint(x, y);
       if (!pos) return null;
 
+      if (pos.offsetNode.nodeType !== 3) {
+        const textNode = pos.offsetNode.childNodes[0];
+        if (!textNode) return null;
+
+        const range = document.createRange();
+        range.setStart(textNode, 0);
+        range.setEnd(textNode, 0);
+        return range;
+      }
+
       const range = document.createRange();
       range.setStart(pos.offsetNode, pos.offset);
       range.setEnd(pos.offsetNode, pos.offset);
@@ -418,23 +428,26 @@ UserReading.initMarkMode = function () {
     }
   }
 
-  function buildRange(start, end) {
+  function buildSafeRange(start, end) {
     if (!start || !end) return null;
 
     const range = document.createRange();
 
     try {
+      const startNode = start.startContainer;
+      const endNode = end.startContainer;
+
       const isForward =
-        start.startContainer === end.startContainer
+        startNode === endNode
           ? start.startOffset <= end.startOffset
-          : !!(start.startContainer.compareDocumentPosition(end.startContainer) & Node.DOCUMENT_POSITION_FOLLOWING);
+          : !!(startNode.compareDocumentPosition(endNode) & Node.DOCUMENT_POSITION_FOLLOWING);
 
       if (isForward) {
-        range.setStart(start.startContainer, start.startOffset);
-        range.setEnd(end.startContainer, end.startOffset);
+        range.setStart(startNode, start.startOffset);
+        range.setEnd(endNode, end.startOffset);
       } else {
-        range.setStart(end.startContainer, end.startOffset);
-        range.setEnd(start.startContainer, start.startOffset);
+        range.setStart(endNode, end.startOffset);
+        range.setEnd(startNode, start.startOffset);
       }
     } catch (error) {
       return null;
@@ -490,7 +503,10 @@ UserReading.initMarkMode = function () {
     if (!endRange) return;
 
     UserReading.__markEndRange = endRange;
-    const range = buildRange(UserReading.__markStartRange, endRange);
+    const range = buildSafeRange(
+      UserReading.__markStartRange,
+      endRange
+    );
     if (!range) return;
 
     renderPreview(range);
@@ -506,7 +522,10 @@ UserReading.initMarkMode = function () {
       return;
     }
 
-    const range = buildRange(UserReading.__markStartRange, UserReading.__markEndRange);
+    const range = buildSafeRange(
+      UserReading.__markStartRange,
+      UserReading.__markEndRange
+    );
     if (!range) {
       UserReading.__markDragging = false;
       UserReading.__markStartRange = null;
