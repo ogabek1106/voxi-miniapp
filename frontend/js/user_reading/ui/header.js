@@ -334,6 +334,14 @@ UserReading.initMarkMode = function () {
   UserReading.__markDragging = false;
   UserReading.__markStartRange = null;
   UserReading.__markEndRange = null;
+  if (UserReading.__markPreview?.parentNode) {
+    UserReading.__markPreview.parentNode.removeChild(UserReading.__markPreview);
+  }
+  UserReading.__markPreview = document.createElement("div");
+  UserReading.__markPreview.style.position = "absolute";
+  UserReading.__markPreview.style.pointerEvents = "none";
+  UserReading.__markPreview.style.zIndex = "50";
+  document.body.appendChild(UserReading.__markPreview);
 
   function getRangeFromPoint(x, y) {
     if (document.caretPositionFromPoint) {
@@ -382,6 +390,27 @@ UserReading.initMarkMode = function () {
     }
   }
 
+  function renderPreview(range) {
+    const preview = UserReading.__markPreview;
+    if (!preview) return;
+
+    preview.innerHTML = "";
+
+    if (!range || range.collapsed) return;
+
+    const rects = range.getClientRects();
+
+    for (const rect of rects) {
+      const div = document.createElement("div");
+      div.className = "mark-preview-rect";
+      div.style.left = rect.left + window.scrollX + "px";
+      div.style.top = rect.top + window.scrollY + "px";
+      div.style.width = rect.width + "px";
+      div.style.height = rect.height + "px";
+      preview.appendChild(div);
+    }
+  }
+
   function setMarkMode(enabled) {
     UserReading.__markMode = enabled;
     content.classList.toggle("mark-mode", enabled);
@@ -411,6 +440,35 @@ UserReading.initMarkMode = function () {
     if (!endRange) return;
 
     UserReading.__markEndRange = endRange;
+    const range = document.createRange();
+
+    try {
+      range.setStart(
+        UserReading.__markStartRange.startContainer,
+        UserReading.__markStartRange.startOffset
+      );
+
+      range.setEnd(
+        endRange.startContainer,
+        endRange.startOffset
+      );
+    } catch (error) {
+      try {
+        range.setStart(
+          endRange.startContainer,
+          endRange.startOffset
+        );
+
+        range.setEnd(
+          UserReading.__markStartRange.startContainer,
+          UserReading.__markStartRange.startOffset
+        );
+      } catch (innerError) {
+        return;
+      }
+    }
+
+    renderPreview(range);
     event.preventDefault();
   }
 
@@ -451,6 +509,9 @@ UserReading.initMarkMode = function () {
       }
     }
 
+    if (UserReading.__markPreview) {
+      UserReading.__markPreview.innerHTML = "";
+    }
     applyHighlight(range);
 
     UserReading.__markDragging = false;
@@ -517,6 +578,12 @@ UserReading.ensureMarkerStyles = function () {
     .reading-mark-toggle-active {
       background: #fff2a8 !important;
       color: #7c4a00 !important;
+    }
+
+    .mark-preview-rect {
+      position: absolute;
+      background: rgba(255, 230, 0, 0.35);
+      border-radius: 2px;
     }
   `;
 
