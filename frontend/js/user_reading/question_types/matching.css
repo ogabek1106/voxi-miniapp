@@ -1,0 +1,46 @@
+/* ===== MATCHING GROUP ===== */
+
+.matching-group {
+  margin-bottom: 24px;
+}
+
+/* OPTIONS LIST (A, B, C...) */
+.matching-options {
+  margin-bottom: 14px;
+  font-size: 14px;
+}
+
+.matching-option-item {
+  margin-bottom: 3px;
+}
+
+/* QUESTIONS */
+.matching-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.matching-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+/* TEXT */
+.matching-text {
+  flex: 1;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 15.5px;
+  line-height: 1.6;
+  text-align: justify;
+}
+
+/* SELECT */
+.matching-select {
+  min-width: 70px;
+  padding: 4px 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
