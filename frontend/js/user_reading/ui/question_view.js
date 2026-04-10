@@ -191,19 +191,46 @@ UserReading.renderMultiChoice = function (q, base) {
 };
 
 
-/**
- * TFNG
- */
 UserReading.renderTFNG = function (q, base) {
-  return UserReading.renderSelect(q.id, ["TRUE", "FALSE", "NOT_GIVEN"]);
+  const text = q.content?.text || "";
+
+  return `
+    <div class="tfng-question">
+
+      <div class="tfng-text">
+        ${UserReading.escapeHtml(text)}
+      </div>
+
+      <div class="tfng-options">
+        ${UserReading.renderTFNGOption(q.id, "TRUE")}
+        ${UserReading.renderTFNGOption(q.id, "FALSE")}
+        ${UserReading.renderTFNGOption(q.id, "NOT GIVEN")}
+      </div>
+
+    </div>
+  `;
 };
 
+
+UserReading.renderTFNGOption = function (questionId, value) {
+  return `
+    <label class="tfng-option">
+      <input
+        type="radio"
+        name="q_${questionId}"
+        value="${value}"
+        data-qid="${questionId}"
+      />
+      <span>${value}</span>
+    </label>
+  `;
+};
 
 /**
  * YES / NO / NOT GIVEN
  */
 UserReading.renderYNNG = function (q, base) {
-  return UserReading.renderSelect(q.id, ["YES", "NO", "NOT_GIVEN"]);
+  return UserReading.renderSelect(q.id, ["YES", "NO", "NOT GIVEN"]);
 };
 
 
