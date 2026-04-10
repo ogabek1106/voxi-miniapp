@@ -7,13 +7,19 @@
 .tfng-text {
   font-family: Georgia, "Times New Roman", serif;
   font-size: 15.5px;
-  line-height: 1.6;
+  line-height: 1.7;
   margin-bottom: 8px;
+  text-align: justify; 
 }
 
 .tfng-options {
   display: flex;
-  gap: 18px;
+  gap: 24px;
+  align-items: center;
+  flex-wrap: wrap;      /* prevents overflow on small screens */
+}
+.tfng-option {
+  white-space: nowrap;   /* keeps TRUE / NOT GIVEN in one line */
 }
 
 .tfng-option {
