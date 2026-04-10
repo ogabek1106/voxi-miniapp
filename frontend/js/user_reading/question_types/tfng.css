@@ -2,35 +2,49 @@
 
 .tfng-question {
   margin-bottom: 18px;
+  width: 100%;
 }
 
 .tfng-text {
   font-family: Georgia, "Times New Roman", serif;
   font-size: 15.5px;
   line-height: 1.7;
-  margin-bottom: 8px;
-  text-align: justify; 
+  margin-bottom: 12px;
+  width: 100%;
+  text-align: justify !important;
+  text-align-last: left;
 }
 
 .tfng-options {
   display: flex;
-  gap: 24px;
+  width: 100%;
+  gap: 8px;
+  justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;      /* prevents overflow on small screens */
-}
-.tfng-option {
-  white-space: nowrap;   /* keeps TRUE / NOT GIVEN in one line */
+  flex-wrap: nowrap;
 }
 
 .tfng-option {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
   cursor: pointer;
   font-family: Arial, sans-serif;
-  font-size: 14px;
+  font-size: 13px;
+  white-space: nowrap;
+  margin: 0;
 }
 
 .tfng-option input[type="radio"] {
+  width: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
   cursor: pointer;
+  flex: 0 0 auto;
+}
+
+.tfng-option span {
+  display: inline-block;
+  line-height: 1;
 }
