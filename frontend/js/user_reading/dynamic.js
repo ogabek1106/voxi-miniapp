@@ -18,23 +18,5 @@ UserReading.renderTest = function (container, data) {
 };
 
 UserReading.renderPassage = function (passage, passageIndex) {
-  const image = passage.image_url
-    ? `<img src="${window.API}${passage.image_url}" style="width:100%; max-width:100%; border-radius:8px; margin:10px 0;" />`
-    : "";
-
-  return `
-    <section class="reading-passage" data-passage-index="${passageIndex}" style="margin-bottom:24px; text-align:left;">
-      <h4>Passage ${passageIndex + 1}</h4>
-      ${passage.title ? `<h5>${UserReading.escapeHtml(passage.title)}</h5>` : ""}
-      ${image}
-      <p style="white-space:pre-wrap; line-height:1.5;">
-        ${UserReading.escapeHtml(passage.text || "")}
-      </p>
-
-      <div class="reading-questions">
-        ${(passage.questions || []).map((q, qi) => window.renderSingleQuestion(q, qi)).join("")}
-      </div>
-    </section>
-  `;
+  return UserReading.renderPassageView(passage, passageIndex);
 };
-
