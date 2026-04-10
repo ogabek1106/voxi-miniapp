@@ -1,0 +1,90 @@
+/* ===== QUESTION BASE (SHARED) ===== */
+
+/* Whole question block */
+.question-block {
+  margin: 18px 0;
+  padding: 14px 12px;
+
+  border-radius: 12px;
+  background: var(--card-bg, #f4f4f6);
+
+  box-sizing: border-box;
+}
+
+/* Header (Q number + instruction) */
+.question-header {
+  margin-bottom: 10px;
+}
+
+/* Q1, Q2... */
+.question-number {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+
+  margin-bottom: 4px;
+}
+
+/* Instruction (if exists) */
+.question-instruction {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
+
+  color: #555;
+}
+
+/* Shared question text (fallback if type doesn't override) */
+.question-text {
+  font-size: 15.5px;
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+
+/* Options (radio / checkbox) */
+.option {
+  display: block;
+  margin: 6px 0;
+
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+
+  cursor: pointer;
+}
+
+/* Inputs (generic fallback) */
+.question-input {
+  width: 100%;
+  padding: 10px;
+
+  border-radius: 8px;
+  border: 1px solid #ccc;
+
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+/* Select dropdown */
+.question-select {
+  width: 100%;
+  padding: 10px;
+
+  border-radius: 8px;
+  border: 1px solid #ccc;
+
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+/* Small hint text (e.g. word limit) */
+.question-hint {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #777;
+}
+
+/* Container for all questions under a passage */
+.questions-container {
+  margin-top: 10px;
+  padding-bottom: 20px;
+}
