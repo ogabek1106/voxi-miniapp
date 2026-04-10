@@ -1,18 +1,25 @@
 // frontend/js/user_reading/ui/question_view.js
 
 window.UserReading = window.UserReading || {};
+
+UserReading.isMatchingType = function (type) {
+  const normalizedType = String(type || "").toUpperCase();
+  return normalizedType === "MATCHING" || normalizedType === "PARAGRAPH_MATCHING";
+};
+
 UserReading.groupMatchingQuestions = function (questions) {
   const result = [];
 
-  questions.forEach(q => {
-    if (q.type === "MATCHING" && q.question_group_id) {
+  questions.forEach((q) => {
+    if (UserReading.isMatchingType(q.type) && q.question_group_id) {
       let group = result.find(
-        g => g.type === "MATCHING_GROUP" && g.group_id === q.question_group_id
+        (g) => g.type === "MATCHING_GROUP" && g.group_id === q.question_group_id
       );
 
       if (!group) {
         group = {
           type: "MATCHING_GROUP",
+          question_type: String(q.type || "").toUpperCase(),
           group_id: q.question_group_id,
           questions: [],
           meta: q.meta || {}
@@ -25,7 +32,8 @@ UserReading.groupMatchingQuestions = function (questions) {
       result.push(q);
     }
   });
-  result.forEach(item => {
+
+  result.forEach((item) => {
     if (item.type === "MATCHING_GROUP") {
       item.questions.sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
     }
@@ -34,61 +42,34 @@ UserReading.groupMatchingQuestions = function (questions) {
   return result;
 };
 
-/**
- * MAIN ENTRY (used by dynamic.js)
- * KEEP for compatibility
- */
-window.renderSingleQuestion = function (question, index, passageIndex = 0, displayOrder = null) {
-  return UserReading.renderSingleQuestion(question, index, passageIndex, displayOrder);
+window.renderSingleQuestion = function (question, index, passageIndex = 0, displayOrder = null, passage = null) {
+  return UserReading.renderSingleQuestion(question, index, passageIndex, displayOrder, passage);
 };
 
-
-/**
- * Render ALL questions for a passage
- */
 UserReading.renderQuestionsForPassage = function (passage, passageIndex, startingQuestionNumber = 1) {
   if (!passage.questions || !passage.questions.length) return "";
+
   const grouped = UserReading.groupMatchingQuestions(passage.questions);
+  let currentNumber = startingQuestionNumber;
 
-let currentNumber = startingQuestionNumber;
+  return `
+    <div class="questions-container">
+      ${grouped.map((item, index) => {
+        if (item.type === "MATCHING_GROUP") {
+          const block = UserReading.renderMatchingGroup(item, passageIndex, currentNumber, passage);
+          currentNumber += item.questions.length;
+          return block;
+        }
 
-return `
-  <div class="questions-container">
-    ${grouped.map((item, index) => {
-
-      // ✅ MATCHING GROUP
-      if (item.type === "MATCHING_GROUP") {
-        const block = UserReading.renderMatchingGroup(
-          item,
-          passageIndex,
-          currentNumber
-        );
-
-        currentNumber += item.questions.length;
+        const block = UserReading.renderSingleQuestion(item, index, passageIndex, currentNumber, passage);
+        currentNumber += 1;
         return block;
-      }
-
-      // ✅ NORMAL QUESTIONS
-      const block = UserReading.renderSingleQuestion(
-        item,
-        index,
-        passageIndex,
-        currentNumber
-      );
-
-      currentNumber += 1;
-      return block;
-
-    }).join("")}
-  </div>
-`;
+      }).join("")}
+    </div>
+  `;
 };
 
-
-/**
- * ROUTER: decides which renderer to use
- */
-UserReading.renderSingleQuestion = function (q, questionIndex, passageIndex, displayOrder = null) {
+UserReading.renderSingleQuestion = function (q, questionIndex, passageIndex, displayOrder = null, passage = null) {
   const type = (q.type || "").toUpperCase();
 
   const base = {
@@ -125,8 +106,23 @@ UserReading.renderSingleQuestion = function (q, questionIndex, passageIndex, dis
       inner = UserReading.renderGap(q, base);
       break;
 
+    case "MATCHING":
+    case "PARAGRAPH_MATCHING":
+      inner = UserReading.renderMatchingGroup({
+        type: "MATCHING_GROUP",
+        question_type: type,
+        group_id: q.question_group_id || q.id,
+        questions: [q],
+        meta: q.meta || {}
+      }, passageIndex, base.order, passage);
+      break;
+
     default:
       inner = `<div>Unsupported question type: ${type}</div>`;
+  }
+
+  if (UserReading.isMatchingType(type)) {
+    return inner;
   }
 
   return `
@@ -143,10 +139,6 @@ UserReading.renderSingleQuestion = function (q, questionIndex, passageIndex, dis
   `;
 };
 
-
-/**
- * Header (Q number + instruction)
- */
 UserReading.renderQuestionHeader = function (base) {
   return `
     <div class="question-header">
@@ -165,14 +157,6 @@ UserReading.renderQuestionHeader = function (base) {
   `;
 };
 
-
-/* =========================
-   QUESTION TYPES
-========================= */
-
-/**
- * TEXT INPUT (your DB example)
- */
 UserReading.renderTextInput = function (q, base) {
   const text = q.content?.text || "";
   const wordLimit = q.meta?.word_limit || q.word_limit;
@@ -200,10 +184,6 @@ UserReading.renderTextInput = function (q, base) {
   `;
 };
 
-
-/**
- * SINGLE CHOICE
- */
 UserReading.renderSingleChoice = function (q, base) {
   const options = q.options || q.meta?.options || [];
 
@@ -225,10 +205,6 @@ UserReading.renderSingleChoice = function (q, base) {
   `;
 };
 
-
-/**
- * MULTI CHOICE
- */
 UserReading.renderMultiChoice = function (q, base) {
   const options = q.options || q.content?.options || [];
 
@@ -237,7 +213,7 @@ UserReading.renderMultiChoice = function (q, base) {
       ${UserReading.escapeHtml(q.content?.text || "")}
     </div>
 
-    ${options.map(opt => `
+    ${options.map((opt) => `
       <label class="option">
         <input type="checkbox" name="q_${q.id}" value="${opt.key}">
         ${UserReading.escapeHtml(opt.key)}. ${UserReading.escapeHtml(opt.text)}
@@ -246,13 +222,11 @@ UserReading.renderMultiChoice = function (q, base) {
   `;
 };
 
-
 UserReading.renderTFNG = function (q, base) {
   const text = q.content?.text || "";
 
   return `
     <div class="tfng-question">
-
       <div class="tfng-text">
         ${UserReading.escapeHtml(text)}
       </div>
@@ -262,11 +236,9 @@ UserReading.renderTFNG = function (q, base) {
         ${UserReading.renderTFNGOption(q.id, "FALSE")}
         ${UserReading.renderTFNGOption(q.id, "NOT GIVEN")}
       </div>
-
     </div>
   `;
 };
-
 
 UserReading.renderTFNGOption = function (questionId, value) {
   return `
@@ -282,52 +254,77 @@ UserReading.renderTFNGOption = function (questionId, value) {
   `;
 };
 
-/**
- * YES / NO / NOT GIVEN
- */
 UserReading.renderYNNG = function (q, base) {
   return UserReading.renderSelect(q.id, ["YES", "NO", "NOT GIVEN"]);
 };
 
-
-/**
- * SHARED SELECT
- */
 UserReading.renderSelect = function (questionId, options) {
   return `
     <select name="q_${questionId}" class="question-select">
       <option value="">Choose answer</option>
-      ${options.map(o => `
-        <option value="${o}">
-          ${o.replace("_", " ")}
+      ${options.map((option) => `
+        <option value="${option}">
+          ${option.replace("_", " ")}
         </option>
       `).join("")}
     </select>
   `;
 };
 
-UserReading.renderMatchingGroup = function (group, passageIndex, startNumber) {
-  const options = group.meta?.options || [];
+UserReading.buildParagraphMatchingLetters = function (group, passage) {
+  const paragraphCount = String(passage?.text || "")
+    .split("\n")
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean)
+    .length;
+
+  const maxAnswerIndex = (group.questions || []).reduce((maxIndex, question) => {
+    const answer = String(question.correct_answer?.value || "").trim().toUpperCase();
+    if (!answer) return maxIndex;
+
+    const code = answer.charCodeAt(0);
+    if (code < 65 || code > 90) return maxIndex;
+
+    return Math.max(maxIndex, code - 64);
+  }, 0);
+
+  const optionCount = Math.max(paragraphCount, maxAnswerIndex, 1);
+
+  return Array.from({ length: optionCount }, (_, index) =>
+    String.fromCharCode(65 + index)
+  );
+};
+
+UserReading.renderMatchingGroup = function (group, passageIndex, startNumber, passage = null) {
+  const isParagraphMatching = group.question_type === "PARAGRAPH_MATCHING";
+  const options = isParagraphMatching
+    ? UserReading.buildParagraphMatchingLetters(group, passage)
+    : (group.meta?.options || []);
+  const endNumber = startNumber + group.questions.length - 1;
+  const headerLabel = group.questions.length > 1
+    ? `Questions ${startNumber}-${endNumber}`
+    : `Question ${startNumber}`;
 
   return `
     <div class="question-block matching-group">
-
       <div class="question-header">
         <div class="question-number">
-          Questions ${startNumber}–${startNumber + group.questions.length - 1}
+          ${headerLabel}
         </div>
       </div>
 
-      <div class="matching-options">
-        ${options.map((opt, i) => {
-          const letter = String.fromCharCode(65 + i);
-          return `
-            <div class="matching-option-item">
-              <strong>${letter}</strong>. ${UserReading.escapeHtml(opt)}
-            </div>
-          `;
-        }).join("")}
-      </div>
+      ${isParagraphMatching ? "" : `
+        <div class="matching-options">
+          ${options.map((opt, i) => {
+            const letter = String.fromCharCode(65 + i);
+            return `
+              <div class="matching-option-item">
+                <strong>${letter}</strong>. ${UserReading.escapeHtml(opt)}
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `}
 
       <div class="matching-rows">
         ${group.questions.map((q, i) => {
@@ -335,30 +332,28 @@ UserReading.renderMatchingGroup = function (group, passageIndex, startNumber) {
 
           return `
             <div class="matching-row">
-
               <div class="matching-text">
                 ${number}. ${UserReading.escapeHtml(q.content?.text || "")}
               </div>
 
               ${UserReading.renderMatchingSelect(q.id, options)}
-
             </div>
           `;
         }).join("")}
       </div>
-
     </div>
   `;
 };
-
 
 UserReading.renderMatchingSelect = function (questionId, options) {
   return `
     <select name="q_${questionId}" class="matching-select">
       <option value="">Choose</option>
 
-      ${options.map((_, index) => {
-        const letter = String.fromCharCode(65 + index);
+      ${options.map((option, index) => {
+        const letter = typeof option === "string" && option.length === 1
+          ? option
+          : String.fromCharCode(65 + index);
 
         return `
           <option value="${letter}">
@@ -366,7 +361,6 @@ UserReading.renderMatchingSelect = function (questionId, options) {
           </option>
         `;
       }).join("")}
-
     </select>
   `;
 };
