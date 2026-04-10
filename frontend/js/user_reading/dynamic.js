@@ -18,5 +18,9 @@ UserReading.renderTest = function (container, data) {
 };
 
 UserReading.renderPassage = function (passage, passageIndex) {
-  return UserReading.renderPassageView(passage, passageIndex);
+  return `
+    ${UserReading.renderPassageView(passage, passageIndex)}
+
+    ${UserReading.renderQuestionsForPassage(passage, passageIndex)}
+  `;
 };
