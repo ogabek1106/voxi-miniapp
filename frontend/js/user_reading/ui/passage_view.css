@@ -1,0 +1,33 @@
+.passage-container {
+  padding: 12px 14px 20px 14px;
+  text-align: left;
+}
+
+.passage-number {
+  font-size: 15px;
+  font-weight: 700;
+  text-align: left;
+  margin-bottom: 6px;
+}
+
+.passage-title {
+  font-size: 25px;
+  font-weight: 700;
+  text-align: left;
+  margin-bottom: 12px;
+  line-height: 1.2;
+}
+
+.passage-body {
+  text-align: justify;
+  font-size: 15.5px;
+  line-height: 1.7;
+}
+
+.passage-body p {
+  margin: 0 0 12px 0;
+}
+
+.passage-body p:last-child {
+  margin-bottom: 0;
+}
