@@ -66,7 +66,7 @@ UserReading.renderSingleQuestion = function (q, questionIndex, passageIndex) {
       break;
 
     case "TEXT_INPUT":
-      inner = UserReading.renderTextInput(q, base);
+      inner = UserReading.renderGap(q, base);
       break;
 
     default:
