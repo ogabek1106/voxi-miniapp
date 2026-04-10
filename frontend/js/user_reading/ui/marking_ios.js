@@ -7,6 +7,37 @@ UserReadingIOS.initMarkModeIOS = function () {
   const toggle = document.getElementById("reading-mark-toggle");
   const existingPanel = document.getElementById("ios-mark-debug-panel");
   if (existingPanel) existingPanel.remove();
+  if (UserReadingIOS.__selectionTimer) {
+    clearTimeout(UserReadingIOS.__selectionTimer);
+    UserReadingIOS.__selectionTimer = null;
+  }
+  if (UserReadingIOS.__selectionEndTimer) {
+    clearTimeout(UserReadingIOS.__selectionEndTimer);
+    UserReadingIOS.__selectionEndTimer = null;
+  }
+  if (UserReadingIOS.__touchEndHandler) {
+    document.removeEventListener("touchend", UserReadingIOS.__touchEndHandler);
+    document.removeEventListener("mouseup", UserReadingIOS.__touchEndHandler);
+    UserReadingIOS.__touchEndHandler = null;
+  }
+  if (UserReadingIOS.__selectionChangeHandler) {
+    document.removeEventListener("selectionchange", UserReadingIOS.__selectionChangeHandler);
+    UserReadingIOS.__selectionChangeHandler = null;
+  }
+
+  UserReadingIOS.__markMode = false;
+  UserReadingIOS.__lastSelectionText = "";
+  UserReadingIOS.__lastAppliedText = "";
+  UserReadingIOS.__lastSelectionRange = null;
+  UserReadingIOS.__lastSelectionTs = 0;
+
+  if (toggle) {
+    toggle.classList.remove("reading-mark-toggle-active");
+    toggle.style.display = "none";
+    toggle.onclick = null;
+  }
+
+  return;
 
   const panel = document.createElement("div");
   panel.id = "ios-mark-debug-panel";
