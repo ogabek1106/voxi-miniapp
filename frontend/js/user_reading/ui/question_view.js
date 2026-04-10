@@ -6,22 +6,27 @@ window.UserReading = window.UserReading || {};
  * MAIN ENTRY (used by dynamic.js)
  * KEEP for compatibility
  */
-window.renderSingleQuestion = function (question, index, passageIndex = 0) {
-  return UserReading.renderSingleQuestion(question, index, passageIndex);
+window.renderSingleQuestion = function (question, index, passageIndex = 0, displayOrder = null) {
+  return UserReading.renderSingleQuestion(question, index, passageIndex, displayOrder);
 };
 
 
 /**
  * Render ALL questions for a passage
  */
-UserReading.renderQuestionsForPassage = function (passage, passageIndex) {
+UserReading.renderQuestionsForPassage = function (passage, passageIndex, startingQuestionNumber = 1) {
   if (!passage.questions || !passage.questions.length) return "";
 
   return `
     <div class="questions-container">
       ${passage.questions
         .map((q, qi) =>
-          UserReading.renderSingleQuestion(q, qi, passageIndex)
+          UserReading.renderSingleQuestion(
+            q,
+            qi,
+            passageIndex,
+            startingQuestionNumber + qi
+          )
         )
         .join("")}
     </div>
@@ -32,14 +37,14 @@ UserReading.renderQuestionsForPassage = function (passage, passageIndex) {
 /**
  * ROUTER: decides which renderer to use
  */
-UserReading.renderSingleQuestion = function (q, questionIndex, passageIndex) {
+UserReading.renderSingleQuestion = function (q, questionIndex, passageIndex, displayOrder = null) {
   const type = (q.type || "").toUpperCase();
 
   const base = {
     id: q.id,
     passageIndex,
     questionIndex,
-    order: q.order_index || questionIndex + 1,
+    order: displayOrder || q.order_index || questionIndex + 1,
     instruction: q.instruction,
     image: q.image_url,
     meta: q.meta || {},
