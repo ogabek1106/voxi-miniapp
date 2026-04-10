@@ -1,0 +1,30 @@
+/* ===== TFNG QUESTION TYPE ===== */
+
+.tfng-question {
+  margin-bottom: 18px;
+}
+
+.tfng-text {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 15.5px;
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+
+.tfng-options {
+  display: flex;
+  gap: 18px;
+}
+
+.tfng-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+}
+
+.tfng-option input[type="radio"] {
+  cursor: pointer;
+}
