@@ -95,25 +95,25 @@
 }
 
 .announcement {
-  margin: 12px 0;        /* wider horizontally */
-  padding: 0;             /* remove gray frame */
-  background: transparent;/* no background */
-  border: none;           /* remove stroke */
+  margin: 12px 0;
+  padding: 0;
+  background: transparent;
+  border: none;
   border-radius: 16px;
-  overflow: hidden;       /* clip image corners */
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
 
 #announcement-img {
   width: 100%;
-  height: 150px;          /* bigger height */
+  height: 150px;
   object-fit: cover;
-  border-radius: 16px;   /* rounded card look */
+  border-radius: 16px;
 }
 
 #announcement-text {
-  display: none;         /* hide text (optional) */
+  display: none;
 }
 
 .content {
@@ -127,10 +127,10 @@
   margin-top: 24px;
   height: 56px;
   font-size: 16px;
-  font-weight: 700;          /* bolder text */
+  font-weight: 700;
   border-radius: 14px;
-  background: #ffffff;      /* white buttons */
-  color: #000000;           /* black text */
+  background: #ffffff;
+  color: #000000;
   border: 1.5px solid #e5e5ea;
   box-shadow: 0 2px 6px rgba(0,0,0,0.08);
 }
@@ -165,7 +165,7 @@
 .form {
   width: 100%;
   max-width: 320px;
-  margin: 0 auto;   /* center horizontally */
+  margin: 0 auto;
 }
 input, button {
   box-sizing: border-box;
@@ -182,20 +182,17 @@ input, button {
   transform: scale(1.1);
 }
 
-/* 🔥 FORCE Reading to be full-width */
 #screen-reading {
   max-width: 100% !important;
   width: 100% !important;
   padding: 0 !important;
 }
 
-/* remove container clamp for reading only */
 #screen-reading.container {
   max-width: 100% !important;
   width: 100% !important;
 }
 
-/* remove content padding only when reading is visible */
 #screen-reading {
   max-width: 100% !important;
   width: 100% !important;
@@ -204,7 +201,6 @@ input, button {
   padding-right: 2px;
   box-sizing: border-box;
 }
-/* ✨ Premium look: remove strokes / borders globally */
 .header,
 .bottom-nav,
 .divider,
@@ -214,12 +210,10 @@ button {
   border: none !important;
 }
 
-/* soften any leftover hairlines */
 * {
   outline: none;
 }
 
-/* optional: make cards feel softer */
 .primary-btn {
   box-shadow: 0 4px 10px rgba(0,0,0,0.08) !important;
 }
@@ -230,15 +224,12 @@ button {
 
   <div class="app">
 
-    <!-- Announcement -->
     <div class="announcement" id="announcement" style="display:none;">
       <img id="announcement-img" src="./assets/coming_soon.png" />
     </div>
 
-    <!-- Main content (scrollable) -->
     <div class="content" id="content">
 
-      <!-- Name screen -->
       <div class="container" id="screen-name" style="display:none;">
         <div class="form"> 
           <h3>Enter your name</h3>
@@ -248,25 +239,20 @@ button {
         </div>
       </div>
 
-      <!-- Home screen -->
       <div class="container" id="screen-home">
         <button class="primary-btn" onclick="showMocksScreen()">🧠 IELTS Mock Test</button>
 
-        <!-- Admin-only button (hidden by default) -->
         <button class="primary-btn" id="adminBtn" style="display:none; margin-top:12px;" onclick="showAdminPanel()">
           🛠 Admin Panel
         </button>
       </div>
 
 
-      <!-- Profile screen -->
       <div class="container" id="screen-profile" style="display:none;"></div>
 
 
-      <!-- Mocks screen (your existing one) -->
       <div class="container" id="screen-mocks" style="display:none;"></div>
 
-      <!-- Admin screen -->
       <div class="container" id="screen-admin" style="display:none;">
         <h3>Admin Panel</h3>
 
@@ -279,13 +265,11 @@ button {
         </button>
       </div>
       
-      <!-- Reading screen -->
       <div class="container" id="screen-reading" style="display:none;"></div>
 
 
     </div>
 
-    <!-- Bottom Nav -->
     <div class="bottom-nav">
       <button class="nav-btn active" id="btn-home">
         <img src="./assets/home.png" alt="Home" class="nav-icon" />
@@ -312,16 +296,10 @@ button {
   <script src="js/user_reading/dynamic.js"></script>
   <script src="js/mock_start.js"></script>
   <script src="./js/admin_mock_packs.js?v=1"></script>
-  <!-- CORE -->
   <script src="/js/admin_reading/core/state.js"></script>
   <script src="/js/admin_reading/core/utils.js"></script>
-
-  <!-- QUESTION TYPES -->
-
   <script src="/js/admin_reading/question_types/gate.js"></script>
-
   <script src="/js/admin_reading/question_types/options.js"></script>
-
   <script src="/js/admin_reading/question_types/matching/ui.js"></script>
   <script src="/js/admin_reading/question_types/matching/logic.js"></script>
   <script src="/js/admin_reading/question_types/matching/render.js"></script>
@@ -352,16 +330,10 @@ button {
   <script src="/js/admin_reading/question_types/summary/logic.js"></script>
   <script src="/js/admin_reading/question_types/summary/render.js"></script>
   <script src="/js/admin_reading/question_types/summary/serializer.js"></script>
-  
-  <!-- UI -->
   <script src="/js/admin_reading/ui/images.js"></script>
   <script src="/js/admin_reading/ui/passages.js?v=2"></script>
   <script src="/js/admin_reading/ui/editor.js"></script>
-
-  <!-- API -->
   <script src="/js/admin_reading/api/reading_api.js"></script>
-
-  <!-- LOADER -->
   <script src="/js/admin_reading/loader/editor_loader.js"></script>
   <script src="./js/admin_mock.js?v=1"></script>
   <script src="./js/app.js"></script>

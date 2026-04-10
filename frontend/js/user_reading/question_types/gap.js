@@ -8,18 +8,14 @@ window.UserReading = window.UserReading || {};
  */
 UserReading.renderGap = function (q, base) {
   const rawText = q.content?.text || "";
-
-  // Detect blanks (____ or ______ or longer)
-  const parts = rawText.split(/_{3,}/g); // split by 3+ underscores
+  const parts = rawText.split(/_{3,}/g);
   const blanksCount = parts.length - 1;
 
   let html = `<div class="question-text">`;
 
   parts.forEach((part, index) => {
-    // text part
     html += `<span>${UserReading.escapeHtml(part)}</span>`;
 
-    // insert input if not last part
     if (index < blanksCount) {
       html += UserReading.renderGapInput(q, index);
     }
@@ -31,9 +27,6 @@ UserReading.renderGap = function (q, base) {
 };
 
 
-/**
- * Single input field for gap
- */
 UserReading.renderGapInput = function (q, blankIndex) {
   const name = `q_${q.id}_${blankIndex}`;
 
@@ -45,6 +38,8 @@ UserReading.renderGapInput = function (q, blankIndex) {
       data-blank-index="${blankIndex}"
       class="gap-input"
       autocomplete="off"
+      autocapitalize="off"
+      spellcheck="false"
     />
   `;
 };

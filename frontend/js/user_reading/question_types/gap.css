@@ -1,6 +1,5 @@
 /* ===== GAP QUESTION TYPE ===== */
 
-/* Container text (inherits passage feel) */
 .question-text {
   font-family: Georgia, "Times New Roman", serif;
   font-size: 15.5px;
@@ -8,49 +7,36 @@
   text-align: justify;
 }
 
-/* Each inline input */
 .gap-input {
   display: inline-block;
-
-  width: 90px; /* fixed underline length */
-
+  width: 90px !important;
   margin: 0 4px;
-
-  border: none;
-  border-bottom: 2px solid #000;
-
-  background: transparent;
-
+  margin-top: 0 !important;
+  padding: 0 0 2px !important;
+  border: none !important;
+  border-bottom: 2px solid #000 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
   font-family: Georgia, "Times New Roman", serif;
   font-size: 15px;
-
   text-align: center;
-
   outline: none;
 }
 
-/* Focus state (user is typing) */
 .gap-input:focus {
-  border-bottom: 2px solid var(--primary);
+  border-bottom: 2px solid #000 !important;
 }
 
-/* Slight hover feedback (optional but nice) */
-.gap-input:hover {
-  border-bottom: 2px solid #666;
-}
-
-/* Remove ugly browser autofill styles */
 .gap-input:-webkit-autofill {
-  box-shadow: 0 0 0px 1000px white inset;
+  box-shadow: 0 0 0 1000px white inset;
   -webkit-text-fill-color: #000;
 }
 
-/* Better spacing when multiple inputs in a sentence */
 .question-text .gap-input + .gap-input {
   margin-left: 6px;
 }
 
-/* Optional: make long sentences breathe */
 .question-text span {
   word-break: break-word;
 }
