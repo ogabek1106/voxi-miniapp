@@ -14,15 +14,12 @@
 /* Header (Q number + instruction) */
 .question-header {
   margin-bottom: 10px;
+  text-align: left;
 }
 
 /* Q1, Q2... */
 .question-number {
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-
-  margin-bottom: 4px;
+  text-align: left;
 }
 
 /* Instruction (if exists) */
