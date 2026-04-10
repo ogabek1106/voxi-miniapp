@@ -4,6 +4,7 @@
 }
 
 .passage-number {
+  font-family: system-ui, -apple-system, sans-serif;
   font-size: 15px;
   font-weight: 700;
   text-align: left;
@@ -11,6 +12,7 @@
 }
 
 .passage-title {
+  font-family: system-ui, -apple-system, sans-serif;
   font-size: 25px;
   font-weight: 700;
   text-align: left;
@@ -19,6 +21,7 @@
 }
 
 .passage-body {
+  font-family: Georgia, "Times New Roman", serif;
   text-align: justify;
   font-size: 15.5px;
   line-height: 1.7;
