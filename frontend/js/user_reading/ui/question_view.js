@@ -95,7 +95,7 @@ UserReading.renderQuestionHeader = function (base) {
   return `
     <div class="question-header">
       <div class="question-number">
-        Q${base.order}
+        Question ${base.order}
       </div>
 
       ${
