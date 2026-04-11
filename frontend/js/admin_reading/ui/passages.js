@@ -101,6 +101,12 @@ window.addPassage = function () {
         <option value="summary">Summary Completion</option>
       </select>
     </div>
+    <div style="margin-top:6px;">
+  <label>Instruction</label>
+  <select class="q-instruction-select" style="width:100%; height:36px;">
+    <option value="">Select instruction</option>
+  </select>
+</div>
 
   </div>
 
@@ -133,15 +139,19 @@ window.addPassage = function () {
 
   const root = block.querySelector(".q-type-root");
   const select = block.querySelector(".q-type-select");
+  const instructionSelect = block.querySelector(".q-instruction-select");
   const header = block.querySelector(".q-header");
 
   // initial load
   AdminReading.loadQuestionUI("matching", root);
+  ReadingInstructions.fillSelect(instructionSelect, "MATCHING");
   block.dataset.type = "matching";
   if (header) header.style.opacity = "0.3";
   // react when user changes type
   select.addEventListener("change", () => {
+    const typeKey = select.value.toUpperCase();
 
+    ReadingInstructions.fillSelect(instructionSelect, typeKey);
     
     block.dataset.type = select.value;
 
@@ -212,6 +222,12 @@ window.addQuestion = function (btn) {
         <option value="summary">Summary Completion</option>
       </select>
     </div>
+    <div style="margin-top:6px;">
+  <label>Instruction</label>
+  <select class="q-instruction-select" style="width:100%; height:36px;">
+    <option value="">Select instruction</option>
+  </select>
+</div>
 
   </div>
 
@@ -238,16 +254,20 @@ window.addQuestion = function (btn) {
   questionsWrap.insertBefore(block, btn);
   const root = block.querySelector(".q-type-root");
   const select = block.querySelector(".q-type-select");
+  const instructionSelect = block.querySelector(".q-instruction-select");
   const header = block.querySelector(".q-header");
 
   // initial load
   AdminReading.loadQuestionUI("matching", root);
+  ReadingInstructions.fillSelect(instructionSelect, "MATCHING");
   block.dataset.type = "matching";
   if (header) header.style.opacity = "0.3";
   // react when type changes
   select.addEventListener("change", () => {
 
-    
+    const typeKey = select.value.toUpperCase();
+
+    ReadingInstructions.fillSelect(instructionSelect, typeKey);
     block.dataset.type = select.value;
 
     const header = block.querySelector(".q-header");
