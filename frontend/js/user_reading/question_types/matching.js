@@ -97,7 +97,7 @@ UserReading.renderMatchingGroup = function (group, passageIndex, startNumber, pa
             const letter = String.fromCharCode(65 + i);
             return `
               <div class="matching-option-item">
-                <strong>${letter}</strong>. ${UserReading.escapeHtml(opt)}
+                <strong>${letter}.</strong> ${UserReading.escapeHtml(opt)}
               </div>
             `;
           }).join("")}
