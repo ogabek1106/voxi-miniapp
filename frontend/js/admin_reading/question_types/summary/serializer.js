@@ -3,7 +3,7 @@
 window.AdminReading = window.AdminReading || {};
 AdminReading.Summary = AdminReading.Summary || {};
 
-AdminReading.serializeSummary = function(block) {
+AdminReading.serializeSummary = function(block, groupId = null, startOrderIndex = 1) {
 
   const text = block.querySelector(".summary-text")?.value?.trim();
   const wordLimit = parseInt(block.querySelector(".summary-word-limit")?.value || "0", 10);
@@ -20,12 +20,12 @@ AdminReading.serializeSummary = function(block) {
 
   if (!text) return [];
 
-  const groupId = Math.floor(Math.random() * 1000000000); // temp group id
+  const resolvedGroupId = groupId || Math.floor(Math.random() * 1000000000);
 
   return answers.map((ans, index) => ({
     type: "TEXT_INPUT",
-    order_index: index + 1,
-    question_group_id: groupId,
+    order_index: startOrderIndex + index,
+    question_group_id: resolvedGroupId,
     instruction: null,
     content: { text },
     correct_answer: { value: ans },

@@ -370,7 +370,8 @@ window.saveReadingDraft = async function () {
         }
         if (type === "summary") {
 
-  const payload = AdminReading.serializeSummary(q);
+  const groupId = groupCounter++;
+  const payload = AdminReading.serializeSummary(q, groupId, orderCursor);
 
   if (!payload || !payload.length) continue;
 
@@ -685,7 +686,8 @@ window.publishReading = async function () {
 
         if (type === "summary") {
 
-  const payload = AdminReading.serializeSummary(q);
+  const groupId = groupCounter++;
+  const payload = AdminReading.serializeSummary(q, groupId, orderCursor);
 
   if (!payload || !payload.length) continue;
 
