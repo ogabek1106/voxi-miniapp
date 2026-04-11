@@ -203,7 +203,7 @@ UserReading.applyHighlight = function (range) {
 };
 
 UserReading.initHeader = function (data) {
-  UserReading.initReadingTimer(data?.timer);
+  UserReading.initReadingTimer(data?.timer, data);
   UserReading.initPassageCounter();
   UserReading.initQuestionCounter();
 
@@ -215,7 +215,15 @@ UserReading.initHeader = function (data) {
   UserReading.initMarkMode();
 };
 
-UserReading.initReadingTimer = function (timer) {
+UserReading.mixColor = function (fromRgb, toRgb, ratio) {
+  const clamped = Math.max(0, Math.min(1, ratio));
+  const r = Math.round(fromRgb[0] + (toRgb[0] - fromRgb[0]) * clamped);
+  const g = Math.round(fromRgb[1] + (toRgb[1] - fromRgb[1]) * clamped);
+  const b = Math.round(fromRgb[2] + (toRgb[2] - fromRgb[2]) * clamped);
+  return `rgb(${r}, ${g}, ${b})`;
+};
+
+UserReading.initReadingTimer = function (timer, data) {
   const text = document.getElementById("timer-text");
   const fill = document.getElementById("timer-fill");
   if (!text || !fill) return;
@@ -224,18 +232,42 @@ UserReading.initReadingTimer = function (timer) {
     clearInterval(window.__userReadingTimer);
   }
 
-  const fallbackDuration = 60 * 60;
-  const endsAt = timer?.ends_at ? new Date(timer.ends_at).getTime() : Date.now() + fallbackDuration * 1000;
-  const duration = Number(timer?.duration_seconds || timer?.total_seconds || fallbackDuration);
+  const configuredMinutes = Number(data?.time_limit_minutes || 60);
+  const expectedDuration = Math.max(1, configuredMinutes) * 60;
+  const fallbackDuration = expectedDuration;
+  const serverDuration = Number(timer?.duration_seconds || timer?.total_seconds || 0);
+
+  let duration = fallbackDuration;
+  if (serverDuration > 0 && serverDuration >= fallbackDuration * 0.9) {
+    duration = serverDuration;
+  }
+
+  const serverEndsAt = timer?.ends_at ? new Date(timer.ends_at).getTime() : NaN;
+  const useServerEnd =
+    Number.isFinite(serverEndsAt) &&
+    Math.abs(Math.round((serverEndsAt - Date.now()) / 1000) - duration) <= 15;
+  const endsAt = useServerEnd ? serverEndsAt : Date.now() + duration * 1000;
 
   function tick() {
     const leftSec = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
     const minutes = String(Math.floor(leftSec / 60)).padStart(2, "0");
     const seconds = String(leftSec % 60).padStart(2, "0");
-    const percent = duration > 0 ? Math.max(0, Math.min(100, (leftSec / duration) * 100)) : 0;
+    const leftRatio = duration > 0 ? Math.max(0, Math.min(1, leftSec / duration)) : 0;
+    const percent = leftRatio * 100;
+    const elapsedRatio = 1 - leftRatio;
 
     text.textContent = `${minutes}:${seconds}`;
     fill.style.width = `${percent}%`;
+    fill.style.background = UserReading.mixColor([34, 197, 94], [220, 38, 38], elapsedRatio);
+    text.style.color = leftRatio > 0.35 ? "#ffffff" : "#111111";
+    UserReading.__timerLeftSec = leftSec;
+
+    document.dispatchEvent(new CustomEvent("userreading:timer-tick", {
+      detail: {
+        leftSec,
+        durationSec: duration
+      }
+    }));
 
     if (leftSec <= 0) {
       clearInterval(window.__userReadingTimer);
@@ -252,7 +284,7 @@ UserReading.initPassageCounter = function () {
   const label = document.getElementById("passage-text");
   const dropdown = document.getElementById("passage-dropdown");
   const content = document.getElementById("reading-user-content");
-  const passages = Array.from(document.querySelectorAll(".reading-passage"));
+  const passages = Array.from(document.querySelectorAll(".passage-container"));
 
   if (!button || !label || !dropdown || !content || !passages.length) return;
 
@@ -268,9 +300,11 @@ UserReading.initPassageCounter = function () {
     ">Passage ${index + 1}</button>
   `).join("");
 
+  button.style.cursor = "pointer";
+
   button.onclick = function (event) {
     event.stopPropagation();
-    dropdown.style.display = dropdown.style.display === "none" ? "block" : "none";
+    dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
   };
 
   dropdown.onclick = function (event) {
@@ -314,31 +348,168 @@ UserReading.initPassageCounter = function () {
 };
 
 UserReading.initQuestionCounter = function () {
+  const host = document.getElementById("header-questions");
   const text = document.getElementById("questions-text");
   const fill = document.getElementById("questions-fill");
   const content = document.getElementById("reading-user-content");
-  if (!text || !fill || !content) return;
+  if (!host || !text || !fill || !content) return;
 
-  function hasAnswer(question) {
-    const fields = Array.from(question.querySelectorAll("input, select, textarea"));
+  host.style.cursor = "pointer";
+  host.style.overflow = "visible";
+  fill.style.borderRadius = "6px";
 
-    return fields.some((field) => {
-      if (field.type === "radio" || field.type === "checkbox") return field.checked;
-      return String(field.value || "").trim().length > 0;
+  let dropdown = document.getElementById("questions-dropdown");
+  if (!dropdown) {
+    dropdown = document.createElement("div");
+    dropdown.id = "questions-dropdown";
+    dropdown.style.display = "none";
+    dropdown.style.position = "absolute";
+    dropdown.style.top = "34px";
+    dropdown.style.left = "0";
+    dropdown.style.right = "0";
+    dropdown.style.zIndex = "200";
+    dropdown.style.background = "#ffffff";
+    dropdown.style.border = "1px solid #ddd";
+    dropdown.style.borderRadius = "6px";
+    dropdown.style.boxShadow = "0 8px 20px rgba(0,0,0,0.12)";
+    dropdown.style.maxHeight = "288px";
+    dropdown.style.overflowY = "auto";
+    host.appendChild(dropdown);
+  }
+
+  function getQuestionId(field) {
+    const explicit = Number(field.getAttribute("data-qid"));
+    if (Number.isFinite(explicit) && explicit > 0) return explicit;
+
+    const name = String(field.name || "");
+    const match = name.match(/^q_(\d+)/);
+    return match ? Number(match[1]) : null;
+  }
+
+  function getQuestionAnchor(field) {
+    return field.closest(".matching-row")
+      || field.closest(".summary-inline-blank")
+      || field.closest(".question-block")
+      || field;
+  }
+
+  function fieldHasValue(field) {
+    if (field.type === "radio" || field.type === "checkbox") {
+      return !!field.checked;
+    }
+    return String(field.value || "").trim().length > 0;
+  }
+
+  function collectQuestions() {
+    const fields = Array.from(content.querySelectorAll('[name^="q_"], [data-qid]'));
+    const byId = new Map();
+
+    fields.forEach((field) => {
+      const qid = getQuestionId(field);
+      if (!qid) return;
+
+      if (!byId.has(qid)) {
+        byId.set(qid, {
+          qid,
+          controls: [],
+          anchor: getQuestionAnchor(field),
+          order: byId.size + 1
+        });
+      }
+
+      byId.get(qid).controls.push(field);
     });
+
+    return Array.from(byId.values()).sort((a, b) => a.order - b.order);
+  }
+
+  function isAnswered(questionEntry) {
+    const controls = questionEntry.controls || [];
+    if (!controls.length) return false;
+
+    const hasChoice = controls.some((field) =>
+      field.type === "radio" || field.type === "checkbox"
+    );
+
+    if (hasChoice) {
+      return controls.some((field) => field.checked);
+    }
+
+    return controls.every(fieldHasValue);
+  }
+
+  function buildDropdown(questions, answeredSet, lessThanTenMinLeft) {
+    dropdown.innerHTML = questions.map((question) => {
+      const answered = answeredSet.has(question.qid);
+      const bg = answered
+        ? "#dcfce7"
+        : (lessThanTenMinLeft ? "#fee2e2" : "#f8fafc");
+      const color = answered ? "#166534" : (lessThanTenMinLeft ? "#991b1b" : "#111827");
+      return `
+        <button type="button" data-question-order="${question.order}" style="
+          width: 100%;
+          border: 0;
+          border-bottom: 1px solid #f1f5f9;
+          background: ${bg};
+          color: ${color};
+          padding: 9px 10px;
+          text-align: left;
+          font-weight: 700;
+          cursor: pointer;
+        ">Question ${question.order}</button>
+      `;
+    }).join("");
   }
 
   function updateQuestionProgress() {
-    const questions = Array.from(document.querySelectorAll(".reading-question[data-question-id]"));
+    const questions = collectQuestions();
     const total = questions.length;
-    const solved = questions.filter(hasAnswer).length;
-    const percent = total ? (solved / total) * 100 : 0;
-    const green = Math.round((solved / Math.max(total, 1)) * 150);
+    const answeredSet = new Set(
+      questions.filter(isAnswered).map((question) => question.qid)
+    );
+    const solved = answeredSet.size;
+    const ratio = total > 0 ? solved / total : 0;
+    const percent = ratio * 100;
+    const lessThanTenMinLeft = Number(UserReading.__timerLeftSec || 0) <= 10 * 60;
 
     text.textContent = `${solved}/${total}`;
     fill.style.width = `${percent}%`;
-    fill.style.background = `rgb(${239 - green}, ${68 + green}, 68)`;
+    fill.style.background = UserReading.mixColor([220, 38, 38], [34, 197, 94], ratio);
+    buildDropdown(questions, answeredSet, lessThanTenMinLeft);
+    UserReading.__questionList = questions;
   }
+
+  host.onclick = function (event) {
+    event.stopPropagation();
+    dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+  };
+
+  dropdown.onclick = function (event) {
+    event.stopPropagation();
+    const target = event.target.closest("[data-question-order]");
+    if (!target) return;
+
+    const order = Number(target.dataset.questionOrder);
+    const question = (UserReading.__questionList || []).find((item) => item.order === order);
+    if (question?.anchor) {
+      question.anchor.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    dropdown.style.display = "none";
+  };
+
+  if (UserReading.__closeQuestionsDropdown) {
+    document.removeEventListener("click", UserReading.__closeQuestionsDropdown);
+  }
+  UserReading.__closeQuestionsDropdown = function () {
+    dropdown.style.display = "none";
+  };
+  document.addEventListener("click", UserReading.__closeQuestionsDropdown);
+
+  if (UserReading.__timerTickListener) {
+    document.removeEventListener("userreading:timer-tick", UserReading.__timerTickListener);
+  }
+  UserReading.__timerTickListener = updateQuestionProgress;
+  document.addEventListener("userreading:timer-tick", UserReading.__timerTickListener);
 
   content.removeEventListener("input", UserReading.__updateQuestionProgress || function () {});
   content.removeEventListener("change", UserReading.__updateQuestionProgress || function () {});
