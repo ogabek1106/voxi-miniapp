@@ -6,6 +6,7 @@ AdminReading.Summary = AdminReading.Summary || {};
 AdminReading.serializeSummary = function(block, groupId = null, startOrderIndex = 1) {
 
   const text = block.querySelector(".summary-text")?.value?.trim();
+  const instruction = block.querySelector(".q-instruction-select")?.value?.trim() || null;
   const wordLimit = parseInt(block.querySelector(".summary-word-limit")?.value || "0", 10);
 
   const wordBankRaw = block.querySelector(".summary-word-bank")?.value || "";
@@ -26,7 +27,7 @@ AdminReading.serializeSummary = function(block, groupId = null, startOrderIndex 
     type: "TEXT_INPUT",
     order_index: startOrderIndex + index,
     question_group_id: resolvedGroupId,
-    instruction: null,
+    instruction: instruction,
     content: { text },
     correct_answer: { value: ans },
     meta: {

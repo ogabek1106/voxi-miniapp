@@ -98,6 +98,12 @@ window.showCreateReading = function (reset = false) {
         <option value="summary">Summary Completion</option>
       </select>
     </div>
+    <div style="margin-top:6px;">
+      <label>Instruction</label>
+      <select class="q-instruction-select" style="width:100%; height:36px;">
+        <option value="">Select instruction</option>
+      </select>
+    </div>
 
   </div>
 
@@ -138,11 +144,32 @@ window.showCreateReading = function (reset = false) {
     document.querySelector(".q-type-root")
   );
   const select = document.querySelector(".q-type-select");
+  const instructionSelect = document.querySelector(".q-instruction-select");
   const header = document.querySelector(".q-header");
+
+  if (instructionSelect && window.ReadingInstructions?.fillSelect) {
+    window.ReadingInstructions.fillSelect(instructionSelect, "MATCHING");
+  }
 
   select.addEventListener("change", () => {
     const root = document.querySelector(".q-type-root");
     root.innerHTML = "";
+    const instructionTypeMap = {
+      matching: "MATCHING",
+      paragraph_matching: "PARAGRAPH_MATCHING",
+      single_choice: "SINGLE_CHOICE",
+      multiple_choice: "MULTI_CHOICE",
+      yes_no_ng: "YES_NO_NG",
+      tf_ng: "TFNG",
+      gap: "TEXT_INPUT",
+      summary: "TEXT_INPUT"
+    };
+    if (instructionSelect && window.ReadingInstructions?.fillSelect) {
+      window.ReadingInstructions.fillSelect(
+        instructionSelect,
+        instructionTypeMap[select.value] || "TEXT_INPUT"
+      );
+    }
 
     const isMatching = select.value === "matching";
 

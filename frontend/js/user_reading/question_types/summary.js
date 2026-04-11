@@ -76,6 +76,7 @@ UserReading.renderSummaryBlankControl = function (question, number, wordBank) {
 
 UserReading.renderSummaryGroup = function (group, startNumber) {
   const text = group.content?.text || group.questions?.[0]?.content?.text || "";
+  const instruction = group.questions?.[0]?.instruction || "";
   const wordLimit = group.meta?.word_limit || group.questions?.[0]?.meta?.word_limit;
   const wordBank = group.meta?.word_bank || group.questions?.[0]?.meta?.word_bank || [];
   const endNumber = startNumber + group.questions.length - 1;
@@ -107,6 +108,11 @@ UserReading.renderSummaryGroup = function (group, startNumber) {
     <div class="question-block summary-group">
       <div class="question-header">
         <div class="question-number">${headerLabel}</div>
+        ${instruction ? `
+          <div class="question-instruction">
+            ${UserReading.escapeHtml(instruction)}
+          </div>
+        ` : ""}
       </div>
 
       ${wordLimit ? `

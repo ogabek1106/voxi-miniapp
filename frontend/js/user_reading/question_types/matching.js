@@ -78,6 +78,7 @@ UserReading.renderMatchingGroup = function (group, passageIndex, startNumber, pa
   const options = isParagraphMatching
     ? UserReading.buildParagraphMatchingLetters(group, passage)
     : (group.meta?.options || []);
+  const instruction = group.questions?.[0]?.instruction || "";
   const endNumber = startNumber + group.questions.length - 1;
   const headerLabel = group.questions.length > 1
     ? `Questions ${startNumber}-${endNumber}`
@@ -89,6 +90,11 @@ UserReading.renderMatchingGroup = function (group, passageIndex, startNumber, pa
         <div class="question-number">
           ${headerLabel}
         </div>
+        ${instruction ? `
+          <div class="question-instruction">
+            ${UserReading.escapeHtml(instruction)}
+          </div>
+        ` : ""}
       </div>
 
       ${isParagraphMatching ? "" : `
