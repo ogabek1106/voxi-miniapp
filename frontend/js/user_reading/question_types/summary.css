@@ -1,0 +1,94 @@
+/* ===== SUMMARY GROUP ===== */
+
+.summary-group {
+  margin-bottom: 24px;
+}
+
+.summary-word-limit {
+  margin-bottom: 10px;
+  font-size: 13px;
+  color: #555;
+  text-align: left;
+}
+
+.summary-word-bank {
+  margin-bottom: 14px;
+  text-align: left;
+}
+
+.summary-word-bank-label {
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.summary-word-bank-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.summary-word-bank-item {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid #d8d8dd;
+  font-size: 13px;
+}
+
+.summary-text {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 15.5px;
+  line-height: 1.8;
+  text-align: justify;
+}
+
+.summary-inline-blank {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 4px;
+  vertical-align: baseline;
+}
+
+.summary-blank-label {
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.summary-blank-input {
+  width: 84px !important;
+  margin-top: 0 !important;
+  padding: 0 0 2px !important;
+  border: none !important;
+  border-bottom: 2px solid #000 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 15px;
+  text-align: center;
+}
+
+.summary-blank-input:focus {
+  border-bottom: 2px solid #000 !important;
+}
+
+.summary-blank-select {
+  width: auto !important;
+  min-width: 88px;
+  margin-top: 0 !important;
+  padding: 4px 6px !important;
+  border-radius: 8px;
+  border: 1px solid #d2d2d8;
+  background: #ffffff;
+  font-size: 13px;
+}
+
+.summary-extra-blanks {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

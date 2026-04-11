@@ -49,7 +49,10 @@ window.renderSingleQuestion = function (question, index, passageIndex = 0, displ
 UserReading.renderQuestionsForPassage = function (passage, passageIndex, startingQuestionNumber = 1) {
   if (!passage.questions || !passage.questions.length) return "";
 
-  const grouped = UserReading.groupMatchingQuestions(passage.questions);
+  const groupedMatching = UserReading.groupMatchingQuestions(passage.questions);
+  const grouped = UserReading.groupSummaryQuestions
+    ? UserReading.groupSummaryQuestions(groupedMatching)
+    : groupedMatching;
   let currentNumber = startingQuestionNumber;
 
   return `
@@ -57,6 +60,12 @@ UserReading.renderQuestionsForPassage = function (passage, passageIndex, startin
       ${grouped.map((item, index) => {
         if (item.type === "MATCHING_GROUP") {
           const block = UserReading.renderMatchingGroup(item, passageIndex, currentNumber, passage);
+          currentNumber += item.questions.length;
+          return block;
+        }
+
+        if (item.type === "SUMMARY_GROUP") {
+          const block = UserReading.renderSummaryGroup(item, currentNumber);
           currentNumber += item.questions.length;
           return block;
         }
@@ -103,7 +112,15 @@ UserReading.renderSingleQuestion = function (q, questionIndex, passageIndex, dis
       break;
 
     case "TEXT_INPUT":
-      inner = UserReading.renderGap(q, base);
+      inner = UserReading.isSummaryQuestion && UserReading.isSummaryQuestion(q)
+        ? UserReading.renderSummaryGroup({
+            type: "SUMMARY_GROUP",
+            group_id: q.question_group_id || q.id,
+            questions: [q],
+            meta: q.meta || {},
+            content: q.content || {}
+          }, base.order)
+        : UserReading.renderGap(q, base);
       break;
 
     case "MATCHING":
@@ -121,7 +138,7 @@ UserReading.renderSingleQuestion = function (q, questionIndex, passageIndex, dis
       inner = `<div>Unsupported question type: ${type}</div>`;
   }
 
-  if (UserReading.isMatchingType(type)) {
+  if (UserReading.isMatchingType(type) || (UserReading.isSummaryQuestion && UserReading.isSummaryQuestion(q))) {
     return inner;
   }
 
