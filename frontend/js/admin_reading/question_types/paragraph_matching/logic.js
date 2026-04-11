@@ -24,8 +24,16 @@ AdminReading.registerQuestionType("paragraph_matching", function(container, data
   }
 
   const wrap = container.querySelector(".paragraph-matching-editor");
+  const paragraphCountInput = container.querySelector(".paragraph-match-count");
   const addBtn = container.querySelector(".paragraph-match-add");
   const removeBtn = container.querySelector(".paragraph-match-remove");
+
+  if (paragraphCountInput && Array.isArray(data) && data.length > 0) {
+    const savedCount = parseInt(data[0]?.meta?.paragraph_count || "0", 10);
+    if (savedCount > 0) {
+      paragraphCountInput.value = String(savedCount);
+    }
+  }
 
   AdminReading.renderParagraphMatching(wrap, data || null);
 

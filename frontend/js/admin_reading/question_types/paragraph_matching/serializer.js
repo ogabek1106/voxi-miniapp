@@ -5,6 +5,10 @@ AdminReading.serializeParagraphMatching = function(block, groupId, orderIndex = 
 
   const wrap = block.querySelector(".paragraph-matching-editor");
   if (!wrap) return [];
+  const paragraphCount = Math.max(
+    parseInt(block.querySelector(".paragraph-match-count")?.value || "0", 10) || 0,
+    1
+  );
 
   const resolvedGroupId = groupId || block.dataset.questionGroupId || Date.now();
   const payload = [];
@@ -23,7 +27,7 @@ AdminReading.serializeParagraphMatching = function(block, groupId, orderIndex = 
       instruction: null,
       content: { text: questionText },
       correct_answer: { value: answer },
-      meta: {},
+      meta: { paragraph_count: paragraphCount },
       points: 1
     });
 

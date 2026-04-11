@@ -272,6 +272,14 @@ UserReading.renderSelect = function (questionId, options) {
 };
 
 UserReading.buildParagraphMatchingLetters = function (group, passage) {
+  const savedParagraphCount = parseInt(group?.meta?.paragraph_count || "0", 10);
+
+  if (savedParagraphCount > 0) {
+    return Array.from({ length: savedParagraphCount }, (_, index) =>
+      String.fromCharCode(65 + index)
+    );
+  }
+
   const paragraphCount = String(passage?.text || "")
     .split("\n")
     .map((paragraph) => paragraph.trim())
