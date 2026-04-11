@@ -62,6 +62,10 @@ window.showMocksScreen = function () {
   showMockList();
 };
 
+window.showMocksComingSoon = function () {
+  alert("WILL BE SOON!");
+};
+
 function render(html) {
   if (!screenMocks) return;
   screenMocks.innerHTML = html;
