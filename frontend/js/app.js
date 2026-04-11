@@ -22,13 +22,14 @@ function applyTelegramTheme() {
   document.documentElement.style.setProperty("--primary", theme.button_color || "#4f46e5");
 }
 
-
 if (tg) {
   tg.ready();
   tg.expand();
-  applyTelegramTheme();                 // 👈 ADD
-  tg.onEvent("themeChanged", applyTelegramTheme); // 👈 ADD
+  applyTelegramTheme();
+  tg.onEvent("themeChanged", applyTelegramTheme);
 }
+
+window.__isAdmin = false;
 
 document.addEventListener("DOMContentLoaded", () => {
   goHome();
@@ -42,9 +43,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   btn.onclick = async () => {
-    // 🔴 Remove this after testing
-    // alert("Save clicked");
-
     const name = document.getElementById("name").value.trim();
     if (!name) {
       status.innerText = "Please enter your name";
@@ -60,12 +58,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
-      const res = await apiPost("/users", { telegram_id: telegramId, name });
+      await apiPost("/users", { telegram_id: telegramId, name });
       status.innerText = "Saved!";
       document.getElementById("screen-name").style.display = "none";
       goHome();
       loadMe();
-
     } catch (e) {
       status.innerText = "Network error";
       console.error(e);
@@ -75,16 +72,18 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 async function loadMe() {
-  let telegramId = window.getTelegramId();
+  const telegramId = window.getTelegramId();
 
   try {
     const me = await apiGet(`/me?telegram_id=${telegramId}`);
+    window.__isAdmin = !!(me.is_admin || telegramId === 1150875355);
 
-    if (me.is_admin || telegramId === 1150875355) {
+    if (window.__isAdmin) {
       const adminBtn = document.getElementById("adminBtn");
       if (adminBtn) adminBtn.style.display = "block";
     }
   } catch (e) {
+    window.__isAdmin = telegramId === 1150875355;
     console.error("Failed to load /me", e);
   }
 }

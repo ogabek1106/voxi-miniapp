@@ -62,7 +62,11 @@ window.showMocksScreen = function () {
   showMockList();
 };
 
-window.showMocksComingSoon = function () {
+window.showMocksEntry = function () {
+  if (window.__isAdmin) {
+    window.showMocksScreen();
+    return;
+  }
   alert("WILL BE SOON!");
 };
 
