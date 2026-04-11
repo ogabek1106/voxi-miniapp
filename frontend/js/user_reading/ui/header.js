@@ -435,7 +435,7 @@ UserReading.initQuestionCounter = function () {
       return controls.some((field) => field.checked);
     }
 
-    return controls.every(fieldHasValue);
+    return controls.some(fieldHasValue);
   }
 
   function buildDropdown(questions, answeredSet, lessThanTenMinLeft) {
