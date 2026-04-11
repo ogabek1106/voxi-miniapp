@@ -52,9 +52,11 @@
 }
 
 .summary-blank-label {
-  font-size: 12px;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 13px;
   font-weight: 700;
   white-space: nowrap;
+  line-height: 1;
 }
 
 .summary-blank-input {

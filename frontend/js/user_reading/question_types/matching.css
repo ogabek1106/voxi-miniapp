@@ -37,6 +37,13 @@
   text-align: justify;
 }
 
+.matching-row-number {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+
 /* SELECT */
 .matching-select {
   min-width: 70px;

@@ -45,7 +45,7 @@ UserReading.renderSummaryBlankControl = function (question, number, wordBank) {
   if (Array.isArray(wordBank) && wordBank.length > 0) {
     return `
       <span class="summary-inline-blank">
-        <span class="summary-blank-label">Q${number}</span>
+        <span class="summary-blank-label">${number}</span>
         <select name="q_${question.id}" class="summary-blank-select">
           <option value="">Choose</option>
           ${wordBank.map((word) => `
@@ -60,7 +60,7 @@ UserReading.renderSummaryBlankControl = function (question, number, wordBank) {
 
   return `
     <span class="summary-inline-blank">
-      <span class="summary-blank-label">Q${number}</span>
+      <span class="summary-blank-label">${number}</span>
       <input
         type="text"
         name="q_${question.id}"

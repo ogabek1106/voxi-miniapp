@@ -111,7 +111,8 @@ UserReading.renderMatchingGroup = function (group, passageIndex, startNumber, pa
           return `
             <div class="matching-row">
               <div class="matching-text">
-                ${number}. ${UserReading.escapeHtml(q.content?.text || "")}
+                <span class="matching-row-number">${number}.</span>
+                ${UserReading.escapeHtml(q.content?.text || "")}
               </div>
 
               ${UserReading.renderMatchingSelect(q.id, options)}
