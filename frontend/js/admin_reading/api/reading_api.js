@@ -59,7 +59,9 @@ window.saveReadingDraft = async function () {
         .querySelectorAll(".question-block");
 
       for (let qi = 0; qi < questions.length; qi++) {
+        
         const q = questions[qi];
+        const instruction = q.querySelector(".q-instruction-select")?.value?.trim() || null;
         const type = q.querySelector(".q-type-select")?.value;
 
         if (type === "gap") {
@@ -147,8 +149,9 @@ window.saveReadingDraft = async function () {
       let orderCursor = 1;
       let groupCounter = 1;
       for (let qi = 0; qi < questions.length; qi++) {
+        
         const q = questions[qi];
-
+        const instruction = q.querySelector(".q-instruction-select")?.value?.trim() || null;
         console.log("---- QUESTION BLOCK ----");
         console.log(q);
 
@@ -178,7 +181,7 @@ window.saveReadingDraft = async function () {
               type: "MATCHING",
               order_index: orderCursor++,
               question_group_id: groupId,
-              instruction: null,
+              instruction: instruction,
               content: { text: qText },
               correct_answer: { value: answer },
               meta: { options: options },
@@ -219,7 +222,7 @@ window.saveReadingDraft = async function () {
           await apiPost(`/admin/reading/passages/${passageId}/questions`, {
             type: "SINGLE_CHOICE",
             order_index: orderCursor++,
-            instruction: null,
+            instruction: instruction,
             content: { text: questionText },
             correct_answer: { value: correct },
             meta: { options },
@@ -266,7 +269,7 @@ window.saveReadingDraft = async function () {
           await apiPost(`/admin/reading/passages/${passageId}/questions`, {
             type: "MULTI_CHOICE",
             order_index: orderCursor++,
-            instruction: null,
+            instruction: instruction,
             content: {
               text: questionText,
               options: options
@@ -296,7 +299,7 @@ window.saveReadingDraft = async function () {
           await apiPost(`/admin/reading/passages/${passageId}/questions`, {
             type: "YES_NO_NG",
             order_index: orderCursor++,
-            instruction: null,
+            instruction: instruction,
             content: { text: questionText },
             correct_answer: { value: correct },
             meta: { subtype: "YN" },
@@ -318,7 +321,7 @@ window.saveReadingDraft = async function () {
           await apiPost(`/admin/reading/passages/${passageId}/questions`, {
             ...payload,
             order_index: orderCursor++,
-            instruction: null,
+            instruction: instruction,
             image_url: imageUrl,
             points: 1
           });
@@ -358,7 +361,7 @@ window.saveReadingDraft = async function () {
               type: "TEXT_INPUT",
               order_index: orderCursor++,
               question_group_id: groupId,
-              instruction: null,
+              instruction: instruction,
               content: { text: text },
               correct_answer: { value: correct },
               meta: { variants: variants },
@@ -483,8 +486,9 @@ window.publishReading = async function () {
       let orderCursor = 1;
       let groupCounter = 1;
       for (let qi = 0; qi < questions.length; qi++) {
+        
         const q = questions[qi];
-
+        const instruction = q.querySelector(".q-instruction-select")?.value?.trim() || null;
         const type = q.querySelector(".q-type-select")?.value;
         if (type === "matching") {
           const groupId = groupCounter++;
@@ -504,7 +508,7 @@ window.publishReading = async function () {
               type: "MATCHING",
               order_index: orderCursor++,
               question_group_id: groupId,
-              instruction: null,
+              instruction: instruction,
               content: { text: qText },
               correct_answer: { value: answer },
               meta: { options: options },
@@ -545,7 +549,7 @@ window.publishReading = async function () {
           await apiPost(`/admin/reading/passages/${passageId}/questions`, {
             type: "SINGLE_CHOICE",
             order_index: orderCursor++,
-            instruction: null,
+            instruction: instruction,
             content: { text: questionText },
             correct_answer: { value: correct },
             meta: { options },
@@ -591,7 +595,7 @@ window.publishReading = async function () {
   await apiPost(`/admin/reading/passages/${passageId}/questions`, {
     type: "MULTI_CHOICE",
     order_index: orderCursor++,
-    instruction: null,
+    instruction: instruction,
     content: {
       text: questionText,
       options: options
@@ -621,7 +625,7 @@ window.publishReading = async function () {
           await apiPost(`/admin/reading/passages/${passageId}/questions`, {
             type: "YES_NO_NG",
             order_index: orderCursor++,
-            instruction: null,
+            instruction: instruction,
             content: { text: questionText },
             correct_answer: { value: correct },
             meta: { subtype: "YN" },
@@ -643,7 +647,7 @@ window.publishReading = async function () {
           await apiPost(`/admin/reading/passages/${passageId}/questions`, {
             ...payload,
             order_index: orderCursor++,
-            instruction: null,
+            instruction: instruction,
             image_url: imageUrl,
             points: 1
           });
@@ -673,7 +677,7 @@ window.publishReading = async function () {
               type: "TEXT_INPUT",
               order_index: orderCursor++,
               question_group_id: groupId,
-              instruction: null,
+              instruction: instruction,
               content: { text: text },
               correct_answer: { value: variants[0] },
               meta: { variants: variants },
@@ -718,7 +722,7 @@ window.publishReading = async function () {
         await apiPost(`/admin/reading/passages/${passageId}/questions`, {
           type: mapType(type),
           order_index: orderCursor++,
-          instruction: null,
+          instruction: instruction,
           content: { text: text },
           correct_answer: { value: correctAnswer },
           image_url: imageUrl,
