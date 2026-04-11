@@ -4,10 +4,13 @@ window.UserReading = window.UserReading || {};
 
 UserReading.renderPassageView = function (passage, passageIndex) {
   const image = passage.image_url
-    ? `<img 
-         src="${window.API}${passage.image_url}" 
-         class="passage-image"
-       />`
+    ? `<div class="passage-image-wrap">
+         <img 
+           src="${window.API}${passage.image_url}" 
+           class="passage-image"
+           alt="Passage image"
+         />
+       </div>`
     : "";
 
   return `
@@ -28,13 +31,13 @@ UserReading.renderPassageView = function (passage, passageIndex) {
         }
       </div>
 
-      <!-- IMAGE (OPTIONAL) -->
-      ${image}
-
       <!-- PASSAGE BODY -->
       <div class="passage-body">
         ${UserReading.formatPassageText(passage.text)}
       </div>
+
+      <!-- IMAGE (OPTIONAL) -->
+      ${image}
 
     </section>
   `;

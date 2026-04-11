@@ -152,6 +152,8 @@ window.saveReadingDraft = async function () {
         
         const q = questions[qi];
         const instruction = q.querySelector(".q-instruction-select")?.value?.trim() || null;
+        const imageWrap = q.querySelector(".image-attach-wrap");
+        const imageUrl = imageWrap?.dataset.imageUrl || null;
         console.log("---- QUESTION BLOCK ----");
         console.log(q);
 
@@ -182,6 +184,7 @@ window.saveReadingDraft = async function () {
               order_index: orderCursor++,
               question_group_id: groupId,
               instruction: instruction,
+              image_url: imageUrl,
               content: { text: qText },
               correct_answer: { value: answer },
               meta: { options: options },
@@ -199,7 +202,10 @@ window.saveReadingDraft = async function () {
           if (!payload || !payload.length) continue;
 
           for (const item of payload) {
-            await apiPost(`/admin/reading/passages/${passageId}/questions`, item);
+            await apiPost(`/admin/reading/passages/${passageId}/questions`, {
+              ...item,
+              image_url: imageUrl
+            });
           }
 
           orderCursor += payload.length;
@@ -223,6 +229,7 @@ window.saveReadingDraft = async function () {
             type: "SINGLE_CHOICE",
             order_index: orderCursor++,
             instruction: instruction,
+            image_url: imageUrl,
             content: { text: questionText },
             correct_answer: { value: correct },
             meta: { options },
@@ -270,6 +277,7 @@ window.saveReadingDraft = async function () {
             type: "MULTI_CHOICE",
             order_index: orderCursor++,
             instruction: instruction,
+            image_url: imageUrl,
             content: {
               text: questionText,
               options: options
@@ -300,6 +308,7 @@ window.saveReadingDraft = async function () {
             type: "YES_NO_NG",
             order_index: orderCursor++,
             instruction: instruction,
+            image_url: imageUrl,
             content: { text: questionText },
             correct_answer: { value: correct },
             meta: { subtype: "YN" },
@@ -314,9 +323,6 @@ window.saveReadingDraft = async function () {
           const payload = AdminReading.serializeTFNG(q);
 
           if (!payload) continue;
-
-          const imageWrap = q.querySelector(".image-attach-wrap");
-          const imageUrl = imageWrap?.dataset.imageUrl || null;
 
           await apiPost(`/admin/reading/passages/${passageId}/questions`, {
             ...payload,
@@ -362,6 +368,7 @@ window.saveReadingDraft = async function () {
               order_index: orderCursor++,
               question_group_id: groupId,
               instruction: instruction,
+              image_url: imageUrl,
               content: { text: text },
               correct_answer: { value: correct },
               meta: { variants: variants },
@@ -379,7 +386,10 @@ window.saveReadingDraft = async function () {
   if (!payload || !payload.length) continue;
 
   for (const item of payload) {
-    await apiPost(`/admin/reading/passages/${passageId}/questions`, item);
+    await apiPost(`/admin/reading/passages/${passageId}/questions`, {
+      ...item,
+      image_url: imageUrl
+    });
   }
 
   orderCursor += payload.length;
@@ -489,6 +499,8 @@ window.publishReading = async function () {
         
         const q = questions[qi];
         const instruction = q.querySelector(".q-instruction-select")?.value?.trim() || null;
+        const imageWrap = q.querySelector(".image-attach-wrap");
+        const imageUrl = imageWrap?.dataset.imageUrl || null;
         const type = q.querySelector(".q-type-select")?.value;
         if (type === "matching") {
           const groupId = groupCounter++;
@@ -509,6 +521,7 @@ window.publishReading = async function () {
               order_index: orderCursor++,
               question_group_id: groupId,
               instruction: instruction,
+              image_url: imageUrl,
               content: { text: qText },
               correct_answer: { value: answer },
               meta: { options: options },
@@ -526,7 +539,10 @@ window.publishReading = async function () {
           if (!payload || !payload.length) continue;
 
           for (const item of payload) {
-            await apiPost(`/admin/reading/passages/${passageId}/questions`, item);
+            await apiPost(`/admin/reading/passages/${passageId}/questions`, {
+              ...item,
+              image_url: imageUrl
+            });
           }
 
           orderCursor += payload.length;
@@ -550,6 +566,7 @@ window.publishReading = async function () {
             type: "SINGLE_CHOICE",
             order_index: orderCursor++,
             instruction: instruction,
+            image_url: imageUrl,
             content: { text: questionText },
             correct_answer: { value: correct },
             meta: { options },
@@ -596,6 +613,7 @@ window.publishReading = async function () {
     type: "MULTI_CHOICE",
     order_index: orderCursor++,
     instruction: instruction,
+    image_url: imageUrl,
     content: {
       text: questionText,
       options: options
@@ -626,6 +644,7 @@ window.publishReading = async function () {
             type: "YES_NO_NG",
             order_index: orderCursor++,
             instruction: instruction,
+            image_url: imageUrl,
             content: { text: questionText },
             correct_answer: { value: correct },
             meta: { subtype: "YN" },
@@ -640,9 +659,6 @@ window.publishReading = async function () {
           const payload = AdminReading.serializeTFNG(q);
 
           if (!payload) continue;
-
-          const imageWrap = q.querySelector(".image-attach-wrap");
-          const imageUrl = imageWrap?.dataset.imageUrl || null;
 
           await apiPost(`/admin/reading/passages/${passageId}/questions`, {
             ...payload,
@@ -678,6 +694,7 @@ window.publishReading = async function () {
               order_index: orderCursor++,
               question_group_id: groupId,
               instruction: instruction,
+              image_url: imageUrl,
               content: { text: text },
               correct_answer: { value: variants[0] },
               meta: { variants: variants },
@@ -696,7 +713,10 @@ window.publishReading = async function () {
   if (!payload || !payload.length) continue;
 
   for (const item of payload) {
-    await apiPost(`/admin/reading/passages/${passageId}/questions`, item);
+    await apiPost(`/admin/reading/passages/${passageId}/questions`, {
+      ...item,
+      image_url: imageUrl
+    });
   }
 
   orderCursor += payload.length;
@@ -717,8 +737,6 @@ window.publishReading = async function () {
             allow_numbers: !!allowNumbers
           };
         }
-        const imageWrap = q.querySelector(".image-attach-wrap");
-        const imageUrl = imageWrap?.dataset.imageUrl || null;
         await apiPost(`/admin/reading/passages/${passageId}/questions`, {
           type: mapType(type),
           order_index: orderCursor++,

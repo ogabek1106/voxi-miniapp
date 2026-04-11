@@ -77,6 +77,7 @@ UserReading.renderSummaryBlankControl = function (question, number, wordBank) {
 UserReading.renderSummaryGroup = function (group, startNumber) {
   const text = group.content?.text || group.questions?.[0]?.content?.text || "";
   const instruction = group.questions?.[0]?.instruction || "";
+  const imageUrl = group.questions?.[0]?.image_url || "";
   const wordLimit = group.meta?.word_limit || group.questions?.[0]?.meta?.word_limit;
   const wordBank = group.meta?.word_bank || group.questions?.[0]?.meta?.word_bank || [];
   const endNumber = startNumber + group.questions.length - 1;
@@ -114,6 +115,8 @@ UserReading.renderSummaryGroup = function (group, startNumber) {
           </div>
         ` : ""}
       </div>
+
+      ${UserReading.renderQuestionImage(imageUrl)}
 
       ${wordLimit ? `
         <div class="summary-word-limit">

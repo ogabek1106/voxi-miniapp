@@ -152,6 +152,7 @@ UserReading.renderSingleQuestion = function (q, questionIndex, passageIndex, dis
       ${UserReading.renderQuestionHeader(base)}
 
       ${inner}
+      ${UserReading.renderQuestionImage(base.image)}
     </div>
   `;
 };
@@ -170,6 +171,16 @@ UserReading.renderQuestionHeader = function (base) {
              </div>`
           : ""
       }
+    </div>
+  `;
+};
+
+UserReading.renderQuestionImage = function (imageUrl) {
+  if (!imageUrl) return "";
+
+  return `
+    <div class="question-image-wrap">
+      <img src="${window.API}${imageUrl}" class="question-image" alt="Question image" />
     </div>
   `;
 };

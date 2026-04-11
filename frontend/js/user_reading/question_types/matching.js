@@ -79,6 +79,7 @@ UserReading.renderMatchingGroup = function (group, passageIndex, startNumber, pa
     ? UserReading.buildParagraphMatchingLetters(group, passage)
     : (group.meta?.options || []);
   const instruction = group.questions?.[0]?.instruction || "";
+  const imageUrl = group.questions?.[0]?.image_url || "";
   const endNumber = startNumber + group.questions.length - 1;
   const headerLabel = group.questions.length > 1
     ? `Questions ${startNumber}-${endNumber}`
@@ -96,6 +97,8 @@ UserReading.renderMatchingGroup = function (group, passageIndex, startNumber, pa
           </div>
         ` : ""}
       </div>
+
+      ${UserReading.renderQuestionImage(imageUrl)}
 
       ${isParagraphMatching ? "" : `
         <div class="matching-options">
