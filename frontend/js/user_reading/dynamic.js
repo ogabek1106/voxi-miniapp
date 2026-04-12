@@ -12,18 +12,20 @@ UserReading.renderTest = function (container, data) {
 
   let nextQuestionNumber = 1;
 
-  content.innerHTML = (data.passages || [])
-    .map((passage, pi) => {
-      const passageHtml = UserReading.renderPassage(
-        passage,
-        pi,
-        nextQuestionNumber
-      );
+    content.innerHTML =
+    (data.passages || [])
+      .map((passage, pi) => {
+        const passageHtml = UserReading.renderPassage(
+          passage,
+          pi,
+          nextQuestionNumber
+        );
 
-      nextQuestionNumber += passage?.questions?.length || 0;
-      return passageHtml;
-    })
-    .join("");
+        nextQuestionNumber += passage?.questions?.length || 0;
+        return passageHtml;
+      })
+      .join("") +
+    UserReading.renderSubmitSection();
 
   UserReading.initHeader(data);
 };
