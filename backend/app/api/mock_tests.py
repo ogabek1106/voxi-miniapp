@@ -164,18 +164,19 @@ def start_reading_test(mock_id: int, telegram_id: int, db: Session = Depends(get
         db.refresh(progress)
     else:
         if is_admin:
-            progress.answers = {}
-            progress.started_at = now
-            progress.ends_at = now + timedelta(minutes=max(int(test.time_limit_minutes or 60), 1))
-            progress.is_submitted = False
-            progress.submitted_at = None
-            progress.raw_score = None
-            progress.max_score = None
-            progress.band_score = None
-            progress.updated_at = now
-            db.add(progress)
-            db.commit()
-            db.refresh(progress)
+            if progress.is_submitted:
+                progress.answers = {}
+                progress.started_at = now
+                progress.ends_at = now + timedelta(minutes=max(int(test.time_limit_minutes or 60), 1))
+                progress.is_submitted = False
+                progress.submitted_at = None
+                progress.raw_score = None
+                progress.max_score = None
+                progress.band_score = None
+                progress.updated_at = now
+                db.add(progress)
+                db.commit()
+                db.refresh(progress)
         else:
             if not progress.started_at:
                 progress.started_at = now

@@ -308,7 +308,8 @@ UserReading.initReadingTimer = function (timer, data) {
   const endsAt = useServerEnd ? serverEndsAt : Date.now() + duration * 1000;
 
   function tick() {
-    const leftSec = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
+    const rawLeftSec = (endsAt - Date.now()) / 1000;
+    const leftSec = Math.max(0, Math.min(duration, Math.ceil(rawLeftSec)));
     const minutes = String(Math.floor(leftSec / 60)).padStart(2, "0");
     const seconds = String(leftSec % 60).padStart(2, "0");
     const leftRatio = duration > 0 ? Math.max(0, Math.min(1, leftSec / duration)) : 0;
