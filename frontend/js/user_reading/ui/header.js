@@ -871,6 +871,7 @@ UserReading.ensureMarkerStyles = function () {
 };
 
 UserReading.handleSubmitAttempt = function () {
+  console.log("COLLECTED ANSWERS:", UserReading.collectAnswers());
   const questions = UserReading.__questionList || [];
 
   if (!questions.length) {
