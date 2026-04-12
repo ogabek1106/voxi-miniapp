@@ -114,7 +114,7 @@ UserReading.renderHeader = function () {
         style="
           position: fixed;
           left: 10px;
-          bottom: 68px;
+          bottom: 20px;
           width: 42px;
           height: 42px;
           border: 0;
@@ -142,7 +142,7 @@ UserReading.renderHeader = function () {
         style="
           position: fixed;
           right: 10px;
-          bottom: 68px;
+          bottom: 20px;
           width: 42px;
           height: 42px;
           border: 0;
@@ -162,34 +162,33 @@ UserReading.renderHeader = function () {
           <path d="M5 15L7.8 14.4L15.9 6.3C16.3 5.9 16.3 5.2 15.9 4.8L15.2 4.1C14.8 3.7 14.1 3.7 13.7 4.1L5.6 12.2L5 15Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
         </svg>
       </button>
-            <button
-        type="button"
-        id="reading-submit-btn"
-        aria-label="Submit reading"
-        style="
-          position: fixed;
-          left: 50%;
-          transform: translateX(-50%);
-          bottom: 12px;
-          width: calc(100% - 24px);
-          max-width: 320px;
-          height: 46px;
-          border: 0;
-          border-radius: 12px;
-          background: #111827;
-          color: #ffffff;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: 700;
-          font-size: 14px;
-          box-shadow: 0 5px 14px rgba(0,0,0,0.16);
-          cursor: pointer;
-          z-index: 145;
-        "
-      >
-        Submit
-      </button>
+                  <div style="
+        margin-top: 16px;
+        padding: 0 8px 20px 8px;
+      ">
+        <button
+          type="button"
+          id="reading-submit-btn"
+          aria-label="Submit reading"
+          style="
+            width: 100%;
+            height: 46px;
+            border: 0;
+            border-radius: 12px;
+            background: #111827;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            box-shadow: 0 5px 14px rgba(0,0,0,0.16);
+            cursor: pointer;
+          "
+        >
+          Submit
+        </button>
+      </div>
     </div>
   `;
 };
