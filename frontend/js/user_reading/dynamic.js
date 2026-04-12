@@ -28,6 +28,7 @@ UserReading.renderTest = function (container, data) {
     UserReading.renderSubmitSection();
 
   UserReading.initHeader(data);
+  UserReading.initAutoSave(data);
 };
 
 UserReading.renderPassage = function (passage, passageIndex, startingQuestionNumber = 1) {
@@ -36,4 +37,32 @@ UserReading.renderPassage = function (passage, passageIndex, startingQuestionNum
 
     ${UserReading.renderQuestionsForPassage(passage, passageIndex, startingQuestionNumber)}
   `;
+};
+
+UserReading.initAutoSave = function (data) {
+  const content = document.getElementById("reading-user-content");
+  const testId = data?.id;
+
+  if (!content || !testId) return;
+
+  // clear old listeners if re-render
+  if (UserReading.__autoSaveHandler) {
+    content.removeEventListener("input", UserReading.__autoSaveHandler);
+    content.removeEventListener("change", UserReading.__autoSaveHandler);
+  }
+
+  let timeout = null;
+
+  function triggerSave() {
+    clearTimeout(timeout);
+
+    timeout = setTimeout(() => {
+      UserReading.saveProgress(testId);
+    }, 800); // debounce
+  }
+
+  UserReading.__autoSaveHandler = triggerSave;
+
+  content.addEventListener("input", triggerSave);
+  content.addEventListener("change", triggerSave);
 };
