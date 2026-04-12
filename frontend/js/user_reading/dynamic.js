@@ -10,14 +10,17 @@ UserReading.renderTest = function (container, data) {
   if (title) title.textContent = data?.title || "Reading Test";
   if (!content) return;
 
+  UserReading.__mockId = data?.mock_id || null;
+  UserReading.__isSubmitted = false;
+
   let nextQuestionNumber = 1;
 
-    content.innerHTML =
+  content.innerHTML =
     (data.passages || [])
-      .map((passage, pi) => {
+      .map((passage, passageIndex) => {
         const passageHtml = UserReading.renderPassage(
           passage,
-          pi,
+          passageIndex,
           nextQuestionNumber
         );
 
@@ -35,9 +38,105 @@ UserReading.renderTest = function (container, data) {
 UserReading.renderPassage = function (passage, passageIndex, startingQuestionNumber = 1) {
   return `
     ${UserReading.renderPassageView(passage, passageIndex)}
-
     ${UserReading.renderQuestionsForPassage(passage, passageIndex, startingQuestionNumber)}
   `;
+};
+
+UserReading.applyRestoredAnswers = function (answers) {
+  Object.keys(answers || {}).forEach((qid) => {
+    const entry = answers[qid];
+    const value = entry?.value;
+
+    const fields = Array.from(
+      document.querySelectorAll(
+        `[name="q_${qid}"], [name^="q_${qid}_"], [data-qid="${qid}"]`
+      )
+    );
+
+    if (!fields.length) return;
+
+    const first = fields[0];
+    const type = String(first.type || "").toLowerCase();
+    const tag = String(first.tagName || "").toLowerCase();
+
+    if (type === "radio") {
+      fields.forEach((field) => {
+        field.checked = String(field.value) === String(value);
+      });
+      return;
+    }
+
+    if (type === "checkbox") {
+      const selected = Array.isArray(value) ? value.map(String) : [];
+      fields.forEach((field) => {
+        field.checked = selected.includes(String(field.value));
+      });
+      return;
+    }
+
+    if (tag === "select") {
+      first.value = value == null ? "" : String(value);
+      return;
+    }
+
+    first.value = value == null ? "" : String(value);
+  });
+};
+
+UserReading.setInputsDisabled = function (disabled) {
+  const content = document.getElementById("reading-user-content");
+  if (!content) return;
+
+  const fields = content.querySelectorAll("input, select, textarea, button");
+  fields.forEach((field) => {
+    if (field.id === "reading-submit-btn") return;
+    field.disabled = !!disabled;
+  });
+};
+
+UserReading.markSubmittedState = function (message) {
+  UserReading.__isSubmitted = true;
+  UserReading.stopAutoSave();
+  UserReading.setInputsDisabled(true);
+
+  const button = document.getElementById("reading-submit-btn");
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Submitted";
+    button.style.opacity = "0.7";
+    button.style.cursor = "not-allowed";
+  }
+
+  if (message) {
+    alert(message);
+  }
+};
+
+UserReading.stopAutoSave = function () {
+  if (UserReading.__autoSaveInterval) {
+    clearInterval(UserReading.__autoSaveInterval);
+    UserReading.__autoSaveInterval = null;
+  }
+
+  if (UserReading.__autoSaveContent && UserReading.__autoSaveInputHandler) {
+    UserReading.__autoSaveContent.removeEventListener("input", UserReading.__autoSaveInputHandler);
+    UserReading.__autoSaveContent.removeEventListener("change", UserReading.__autoSaveInputHandler);
+  }
+  UserReading.__autoSaveContent = null;
+  UserReading.__autoSaveInputHandler = null;
+
+  if (UserReading.__autoSaveVisibilityHandler) {
+    document.removeEventListener("visibilitychange", UserReading.__autoSaveVisibilityHandler);
+    UserReading.__autoSaveVisibilityHandler = null;
+  }
+
+  if (UserReading.__autoSavePageHideHandler) {
+    window.removeEventListener("pagehide", UserReading.__autoSavePageHideHandler);
+    UserReading.__autoSavePageHideHandler = null;
+  }
+
+  UserReading.__autoSaveDirty = false;
+  UserReading.__autoSaveInFlight = false;
 };
 
 UserReading.initAutoSave = function (data) {
@@ -46,26 +145,50 @@ UserReading.initAutoSave = function (data) {
 
   if (!content || !mockId) return;
 
-  // clear old listeners if re-render
-  if (UserReading.__autoSaveHandler) {
-    content.removeEventListener("input", UserReading.__autoSaveHandler);
-    content.removeEventListener("change", UserReading.__autoSaveHandler);
+  UserReading.stopAutoSave();
+  UserReading.__autoSaveDirty = false;
+  UserReading.__autoSaveInFlight = false;
+  UserReading.__autoSaveContent = content;
+
+  async function flush(keepalive = false) {
+    if (UserReading.__isSubmitted || !UserReading.__autoSaveDirty || UserReading.__autoSaveInFlight) {
+      return;
+    }
+
+    UserReading.__autoSaveInFlight = true;
+    try {
+      await UserReading.saveProgress(mockId, { keepalive });
+      UserReading.__autoSaveDirty = false;
+    } catch (error) {
+      console.error("Autosave failed:", error);
+    } finally {
+      UserReading.__autoSaveInFlight = false;
+    }
   }
 
-  let timeout = null;
+  UserReading.__autoSaveInputHandler = function () {
+    if (UserReading.__isSubmitted) return;
+    UserReading.__autoSaveDirty = true;
+  };
 
-  function triggerSave() {
-    clearTimeout(timeout);
+  content.addEventListener("input", UserReading.__autoSaveInputHandler);
+  content.addEventListener("change", UserReading.__autoSaveInputHandler);
 
-    timeout = setTimeout(() => {
-      UserReading.saveProgress(mockId);
-    }, 800); // debounce
-  }
+  UserReading.__autoSaveInterval = setInterval(() => {
+    flush(false);
+  }, 5000);
 
-  UserReading.__autoSaveHandler = triggerSave;
+  UserReading.__autoSaveVisibilityHandler = function () {
+    if (document.visibilityState === "hidden") {
+      flush(true);
+    }
+  };
+  document.addEventListener("visibilitychange", UserReading.__autoSaveVisibilityHandler);
 
-  content.addEventListener("input", triggerSave);
-  content.addEventListener("change", triggerSave);
+  UserReading.__autoSavePageHideHandler = function () {
+    flush(true);
+  };
+  window.addEventListener("pagehide", UserReading.__autoSavePageHideHandler);
 };
 
 UserReading.restoreProgress = async function (data) {
@@ -76,47 +199,14 @@ UserReading.restoreProgress = async function (data) {
     const progress = await UserReading.loadProgress(mockId);
     const answers = progress?.answers || {};
 
-    Object.keys(answers).forEach((qid) => {
-      const entry = answers[qid];
-      const value = entry?.value;
-
-      const fields = Array.from(
-        document.querySelectorAll(
-          `[name="q_${qid}"], [data-qid="${qid}"]`
-        )
-      );
-
-      if (!fields.length) return;
-
-      const first = fields[0];
-      const type = String(first.type || "").toLowerCase();
-      const tag = String(first.tagName || "").toLowerCase();
-
-      if (type === "radio") {
-        fields.forEach((field) => {
-          field.checked = String(field.value) === String(value);
-        });
-        return;
-      }
-
-      if (type === "checkbox") {
-        const selected = Array.isArray(value) ? value.map(String) : [];
-        fields.forEach((field) => {
-          field.checked = selected.includes(String(field.value));
-        });
-        return;
-      }
-
-      if (tag === "select") {
-        first.value = value == null ? "" : String(value);
-        return;
-      }
-
-      first.value = value == null ? "" : String(value);
-    });
+    UserReading.applyRestoredAnswers(answers);
 
     if (typeof UserReading.__updateQuestionProgress === "function") {
       UserReading.__updateQuestionProgress();
+    }
+
+    if (progress?.is_submitted) {
+      UserReading.markSubmittedState("You have already completed this reading test.");
     }
   } catch (error) {
     console.error("Failed to restore progress:", error);

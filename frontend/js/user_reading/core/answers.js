@@ -9,7 +9,7 @@ UserReading.getQuestionIdFromField = function (field) {
   if (Number.isFinite(explicit) && explicit > 0) return explicit;
 
   const name = String(field.name || "");
-  const match = name.match(/^q_(\d+)$/);
+  const match = name.match(/^q_(\d+)/);
   return match ? Number(match[1]) : null;
 };
 
@@ -68,8 +68,12 @@ UserReading.collectAnswers = function () {
       return;
     }
 
+    const typedValues = controls
+      .map((control) => String(control.value || "").trim())
+      .filter((value) => value.length > 0);
+
     answers[String(qid)] = {
-      value: String(first.value || "").trim()
+      value: typedValues.length > 0 ? typedValues[0] : ""
     };
   });
 

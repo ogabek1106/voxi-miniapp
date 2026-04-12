@@ -50,9 +50,16 @@ window.startMock = async function (mockId) {
     UserReading.renderTest(screenReading, data);
 
   } catch (e) {
+    const message = String(e?.message || e || "");
+    console.error(e);
+
+    if (message.includes("already submitted") || message.includes("auto-submitted") || message.includes("Time is up")) {
+      alert("This reading test is already completed.");
+      showMockList();
+      return;
+    }
 
     UserReading.renderError(screenReading, e);
-    console.error(e);
 
   }
 

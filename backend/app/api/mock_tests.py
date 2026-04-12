@@ -1,20 +1,15 @@
-#backend/app/api/mock_tests.py
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from typing import List
-from typing import Dict
-from sqlalchemy.orm import Session
-from fastapi import Depends
-from app.deps import get_db
-from app.models import ReadingTest, ReadingPassage, ReadingQuestion, ReadingTestStatus
-from typing import Dict, List
+# backend/app/api/mock_tests.py
 from datetime import datetime, timedelta
-from app.models import ReadingProgress, User
+from typing import Any, Dict, List
+
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
+
+from app.deps import get_db
+from app.models import ReadingPassage, ReadingProgress, ReadingQuestion, ReadingTest, ReadingTestStatus, User
+
 router = APIRouter(prefix="/mock-tests", tags=["mock-tests"])
-
-
-class SubmitAnswersIn(BaseModel):
-    answers: Dict[int, int]
 
 
 class SubmitResultItem(BaseModel):
@@ -28,8 +23,17 @@ class SubmitResultOut(BaseModel):
     details: List[SubmitResultItem]
 
 
-@router.get("/{mock_id}/reading/start")
-def start_reading_test(mock_id: int, telegram_id: int, db: Session = Depends(get_db)):
+class ReadingSubmitIn(BaseModel):
+    telegram_id: int
+    answers: Dict[str, dict] = Field(default_factory=dict)
+
+
+class ReadingSaveIn(BaseModel):
+    telegram_id: int
+    answers: Dict[str, dict] = Field(default_factory=dict)
+
+
+def _get_test_for_mock(db: Session, mock_id: int) -> ReadingTest:
     test = (
         db.query(ReadingTest)
         .filter(ReadingTest.mock_pack_id == mock_id)
@@ -37,33 +41,114 @@ def start_reading_test(mock_id: int, telegram_id: int, db: Session = Depends(get
     )
     if not test:
         raise HTTPException(status_code=404, detail="Reading test not found for this mock")
+    return test
 
+
+def _get_user_by_telegram(db: Session, telegram_id: int) -> User:
     user = db.query(User).filter(User.telegram_id == telegram_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    return user
 
-    user_id = user.id
+
+def _extract_payload_value(raw: Any) -> Any:
+    if isinstance(raw, dict):
+        return raw.get("value")
+    return raw
+
+
+def _normalize_string(value: Any) -> str:
+    return str(value if value is not None else "").strip().lower()
+
+
+def _is_correct_answer(question: ReadingQuestion, user_payload: Any) -> bool:
+    correct_payload = _extract_payload_value(question.correct_answer)
+    user_value = _extract_payload_value(user_payload)
+
+    if isinstance(correct_payload, list):
+        if not isinstance(user_value, list):
+            return False
+        left = {_normalize_string(item) for item in correct_payload if _normalize_string(item)}
+        right = {_normalize_string(item) for item in user_value if _normalize_string(item)}
+        return left == right and len(left) > 0
+
+    return _normalize_string(user_value) == _normalize_string(correct_payload) and _normalize_string(correct_payload) != ""
+
+
+def _evaluate_reading(questions: List[ReadingQuestion], answers: Dict[str, Any]) -> SubmitResultOut:
+    score = 0
+    details: List[SubmitResultItem] = []
+
+    for question in questions:
+        qid = str(question.id)
+        is_correct = _is_correct_answer(question, answers.get(qid))
+        if is_correct:
+            score += 1
+        details.append(SubmitResultItem(question_id=question.id, correct=is_correct))
+
+    return SubmitResultOut(score=score, total=len(questions), details=details)
+
+
+def _finalize_progress(progress: ReadingProgress, questions: List[ReadingQuestion], submitted_at: datetime) -> SubmitResultOut:
+    result = _evaluate_reading(questions, progress.answers or {})
+    progress.is_submitted = True
+    progress.submitted_at = submitted_at
+    progress.raw_score = result.score
+    progress.max_score = result.total
+    progress.updated_at = submitted_at
+    return result
+
+
+def _query_questions_for_test(db: Session, test_id: int) -> List[ReadingQuestion]:
+    return (
+        db.query(ReadingQuestion)
+        .join(ReadingPassage, ReadingQuestion.passage_id == ReadingPassage.id)
+        .filter(ReadingPassage.test_id == test_id)
+        .order_by(ReadingPassage.order_index.asc(), ReadingQuestion.order_index.asc())
+        .all()
+    )
+
+
+@router.get("/{mock_id}/reading/start")
+def start_reading_test(mock_id: int, telegram_id: int, db: Session = Depends(get_db)):
+    test = _get_test_for_mock(db, mock_id)
+    user = _get_user_by_telegram(db, telegram_id)
+    now = datetime.utcnow()
 
     progress = (
         db.query(ReadingProgress)
-        .filter(
-            ReadingProgress.user_id == user_id,
-            ReadingProgress.test_id == test.id
-        )
+        .filter(ReadingProgress.user_id == user.id, ReadingProgress.test_id == test.id)
         .first()
     )
 
-    now = datetime.utcnow()
+    if progress and progress.is_submitted:
+        raise HTTPException(status_code=400, detail="Reading test already submitted")
 
     if not progress:
         progress = ReadingProgress(
-            user_id=user_id,
+            user_id=user.id,
             test_id=test.id,
             answers={},
             started_at=now,
-            ends_at=now + timedelta(minutes=test.time_limit_minutes),
+            ends_at=now + timedelta(minutes=max(int(test.time_limit_minutes or 60), 1)),
             is_submitted=False
         )
+        db.add(progress)
+        db.commit()
+        db.refresh(progress)
+    else:
+        if not progress.started_at:
+            progress.started_at = now
+        if not progress.ends_at:
+            progress.ends_at = progress.started_at + timedelta(minutes=max(int(test.time_limit_minutes or 60), 1))
+
+        if progress.ends_at and now >= progress.ends_at:
+            questions = _query_questions_for_test(db, test.id)
+            _finalize_progress(progress, questions, now)
+            db.add(progress)
+            db.commit()
+            raise HTTPException(status_code=400, detail="Time is up. Reading was auto-submitted.")
+
         db.add(progress)
         db.commit()
         db.refresh(progress)
@@ -76,38 +161,41 @@ def start_reading_test(mock_id: int, telegram_id: int, db: Session = Depends(get
     )
 
     result = []
-    for p in passages:
+    for passage in passages:
         questions = (
             db.query(ReadingQuestion)
-            .filter(ReadingQuestion.passage_id == p.id)
+            .filter(ReadingQuestion.passage_id == passage.id)
             .order_by(ReadingQuestion.order_index.asc())
             .all()
         )
 
-        def public_meta(q):
-            meta = dict(q.meta or {})
+        def public_meta(question: ReadingQuestion):
+            meta = dict(question.meta or {})
             meta.pop("variants", None)
             return meta
 
         result.append({
-            "id": p.id,
-            "title": p.title,
-            "text": p.text,
+            "id": passage.id,
+            "title": passage.title,
+            "text": passage.text,
+            "image_url": passage.image_url,
             "questions": [
                 {
-                    "id": q.id,
-                    "order_index": q.order_index,
-                    "question_group_id": q.question_group_id,
-                    "type": q.type.value if hasattr(q.type, "value") else str(q.type),
-                    "instruction": q.instruction,
-                    "content": q.content,
-                    "meta": public_meta(q),
-                    "points": q.points,
-                    "image_url": q.image_url
+                    "id": question.id,
+                    "order_index": question.order_index,
+                    "question_group_id": question.question_group_id,
+                    "type": question.type.value if hasattr(question.type, "value") else str(question.type),
+                    "instruction": question.instruction,
+                    "content": question.content,
+                    "meta": public_meta(question),
+                    "points": question.points,
+                    "image_url": question.image_url
                 }
-                for q in questions
+                for question in questions
             ]
         })
+
+    duration_seconds = max(int(test.time_limit_minutes or 60), 1) * 60
 
     return {
         "mock_id": mock_id,
@@ -117,11 +205,10 @@ def start_reading_test(mock_id: int, telegram_id: int, db: Session = Depends(get
         "timer": {
             "started_at": progress.started_at.isoformat() if progress.started_at else None,
             "ends_at": progress.ends_at.isoformat() if progress.ends_at else None,
+            "duration_seconds": duration_seconds
         },
         "passages": result
     }
-class ReadingSubmitIn(BaseModel):
-    answers: Dict[int, str | int]  # question_id -> user answer (string or index)
 
 
 @router.post("/{mock_id}/reading/submit", response_model=SubmitResultOut)
@@ -129,7 +216,7 @@ def submit_reading_test(mock_id: int, payload: ReadingSubmitIn, db: Session = De
     test = (
         db.query(ReadingTest)
         .filter(
-            ReadingTest.id == mock_id,
+            ReadingTest.mock_pack_id == mock_id,
             ReadingTest.status == ReadingTestStatus.published.value
         )
         .first()
@@ -137,73 +224,51 @@ def submit_reading_test(mock_id: int, payload: ReadingSubmitIn, db: Session = De
     if not test:
         raise HTTPException(status_code=404, detail="Reading test not found for this mock")
 
-    # get all questions for this test
-    questions = (
-        db.query(ReadingQuestion)
-        .join(ReadingPassage, ReadingQuestion.passage_id == ReadingPassage.id)
-        .filter(ReadingPassage.test_id == test.id)
-        .all()
+    user = _get_user_by_telegram(db, payload.telegram_id)
+    now = datetime.utcnow()
+
+    progress = (
+        db.query(ReadingProgress)
+        .filter(ReadingProgress.user_id == user.id, ReadingProgress.test_id == test.id)
+        .first()
     )
 
-    correct_map = {q.id: q.correct_answer for q in questions}
+    if not progress:
+        progress = ReadingProgress(
+            user_id=user.id,
+            test_id=test.id,
+            answers={},
+            started_at=now,
+            ends_at=now + timedelta(minutes=max(int(test.time_limit_minutes or 60), 1)),
+            is_submitted=False
+        )
 
-    score = 0
-    details = []
+    if progress.is_submitted:
+        questions = _query_questions_for_test(db, test.id)
+        return _evaluate_reading(questions, progress.answers or {})
 
-    for q_id, user_answer in payload.answers.items():
-        correct_answer = correct_map.get(q_id)
+    if payload.answers:
+        progress.answers = payload.answers
 
-        is_correct = False
-        if correct_answer is not None:
-            # normalize both sides for string answers
-            if isinstance(correct_answer, str):
-                is_correct = str(user_answer).strip().lower() == correct_answer.strip().lower()
-            else:
-                is_correct = user_answer == correct_answer
+    questions = _query_questions_for_test(db, test.id)
+    result = _finalize_progress(progress, questions, now)
+    db.add(progress)
+    db.commit()
 
-        if is_correct:
-            score += 1
-
-        details.append({
-            "question_id": q_id,
-            "correct": is_correct
-        })
-
-    return {
-        "score": score,
-        "total": len(correct_map),
-        "details": details
-    }
-
-class ReadingSaveIn(BaseModel):
-    telegram_id: int
-    answers: Dict[str, dict]
+    return result
 
 
 @router.post("/{mock_id}/reading/save")
 def save_reading_progress(mock_id: int, payload: ReadingSaveIn, db: Session = Depends(get_db)):
-    test = (
-        db.query(ReadingTest)
-        .filter(ReadingTest.mock_pack_id == mock_id)
-        .first()
-    )
-    if not test:
-        raise HTTPException(status_code=404, detail="Reading test not found for this mock")
-
-    user = db.query(User).filter(User.telegram_id == payload.telegram_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    test = _get_test_for_mock(db, mock_id)
+    user = _get_user_by_telegram(db, payload.telegram_id)
+    now = datetime.utcnow()
 
     progress = (
         db.query(ReadingProgress)
-        .filter(
-            ReadingProgress.user_id == user.id,
-            ReadingProgress.test_id == test.id
-        )
+        .filter(ReadingProgress.user_id == user.id, ReadingProgress.test_id == test.id)
         .first()
     )
-
-    now = datetime.utcnow()
 
     if not progress:
         progress = ReadingProgress(
@@ -211,48 +276,42 @@ def save_reading_progress(mock_id: int, payload: ReadingSaveIn, db: Session = De
             test_id=test.id,
             answers=payload.answers or {},
             started_at=now,
-            ends_at=now + timedelta(minutes=test.time_limit_minutes),
+            ends_at=now + timedelta(minutes=max(int(test.time_limit_minutes or 60), 1)),
             is_submitted=False
         )
         db.add(progress)
         db.commit()
-        db.refresh(progress)
         return {"status": "saved"}
 
     if progress.is_submitted:
-        raise HTTPException(status_code=400, detail="Test already submitted")
+        return {"status": "already_submitted"}
+
+    if payload.answers:
+        progress.answers = payload.answers
 
     if progress.ends_at and now >= progress.ends_at:
-        raise HTTPException(status_code=400, detail="Time is up")
+        questions = _query_questions_for_test(db, test.id)
+        _finalize_progress(progress, questions, now)
+        db.add(progress)
+        db.commit()
+        return {"status": "auto_submitted"}
 
-    progress.answers = payload.answers or {}
     progress.updated_at = now
-
     db.add(progress)
     db.commit()
 
     return {"status": "saved"}
 
+
 @router.get("/{mock_id}/reading/resume")
 def resume_reading_progress(mock_id: int, telegram_id: int, db: Session = Depends(get_db)):
-    test = (
-        db.query(ReadingTest)
-        .filter(ReadingTest.mock_pack_id == mock_id)
-        .first()
-    )
-    if not test:
-        raise HTTPException(status_code=404, detail="Reading test not found for this mock")
-
-    user = db.query(User).filter(User.telegram_id == telegram_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+    test = _get_test_for_mock(db, mock_id)
+    user = _get_user_by_telegram(db, telegram_id)
+    now = datetime.utcnow()
 
     progress = (
         db.query(ReadingProgress)
-        .filter(
-            ReadingProgress.user_id == user.id,
-            ReadingProgress.test_id == test.id
-        )
+        .filter(ReadingProgress.user_id == user.id, ReadingProgress.test_id == test.id)
         .first()
     )
 
@@ -269,6 +328,13 @@ def resume_reading_progress(mock_id: int, telegram_id: int, db: Session = Depend
             "band_score": None
         }
 
+    if not progress.is_submitted and progress.ends_at and now >= progress.ends_at:
+        questions = _query_questions_for_test(db, test.id)
+        _finalize_progress(progress, questions, now)
+        db.add(progress)
+        db.commit()
+        db.refresh(progress)
+
     return {
         "answers": progress.answers or {},
         "started_at": progress.started_at,
@@ -280,4 +346,3 @@ def resume_reading_progress(mock_id: int, telegram_id: int, db: Session = Depend
         "max_score": progress.max_score,
         "band_score": float(progress.band_score) if progress.band_score is not None else None
     }
-

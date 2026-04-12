@@ -1,5 +1,5 @@
 # backend/app/models.py
-from sqlalchemy import Column, Integer, String, BigInteger, Text, ForeignKey, JSON, Enum
+from sqlalchemy import Column, Integer, String, BigInteger, Text, ForeignKey, JSON, Enum, Boolean, Float
 from sqlalchemy.orm import relationship
 import enum
 from .db import Base
@@ -94,6 +94,11 @@ class ReadingProgress(Base):
     answers = Column(JSON, nullable=False, default=dict)
     started_at = Column(DateTime(timezone=True), nullable=True)   # ⏱ when test started
     ends_at = Column(DateTime(timezone=True), nullable=True)      # ⏱ absolute end time
+    is_submitted = Column(Boolean, nullable=False, default=False)
+    submitted_at = Column(DateTime(timezone=True), nullable=True)
+    raw_score = Column(Integer, nullable=True)
+    max_score = Column(Integer, nullable=True)
+    band_score = Column(Float, nullable=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 class MockPackStatus(enum.Enum):

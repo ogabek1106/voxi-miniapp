@@ -200,6 +200,10 @@ UserReading.renderSubmitSection = function () {
 };
 
 UserReading.goBack = function () {
+  if (UserReading.__mockId && !UserReading.__isSubmitted && typeof UserReading.saveProgress === "function") {
+    UserReading.saveProgress(UserReading.__mockId, { keepalive: true }).catch(() => {});
+  }
+
   if (typeof window.showMocksScreen === "function") {
     window.showMocksScreen();
     return;
@@ -236,6 +240,7 @@ UserReading.applyHighlight = function (range) {
 };
 
 UserReading.initHeader = function (data) {
+  UserReading.__timerAutoSubmitted = false;
   UserReading.initReadingTimer(data?.timer, data);
   UserReading.initPassageCounter();
   UserReading.initQuestionCounter();
@@ -326,6 +331,11 @@ UserReading.initReadingTimer = function (timer, data) {
     if (leftSec <= 0) {
       clearInterval(window.__userReadingTimer);
       window.__userReadingTimer = null;
+
+      if (!UserReading.__timerAutoSubmitted && !UserReading.__isSubmitted) {
+        UserReading.__timerAutoSubmitted = true;
+        UserReading.submitReading({ auto: true });
+      }
     }
   }
 
@@ -1020,18 +1030,37 @@ UserReading.showSubmitWarning = function (unanswered) {
   };
 };
 
-UserReading.submitReading = async function () {
+UserReading.submitReading = async function (options = {}) {
   const button = document.getElementById("reading-submit-btn");
   if (button?.disabled) return;
+  if (UserReading.__isSubmitted) return;
 
   UserReading.setSubmitButtonLoading(true);
 
   try {
-    alert("✅ Submitted (hook backend here)");
+    if (UserReading.__mockId) {
+      await UserReading.saveProgress(UserReading.__mockId);
+      const result = await UserReading.submitProgress(UserReading.__mockId);
+      const score = Number(result?.score || 0);
+      const total = Number(result?.total || 0);
+
+      UserReading.markSubmittedState(
+        options.auto
+          ? `Time is up. Auto-submitted: ${score}/${total}`
+          : `Submitted: ${score}/${total}`
+      );
+      return;
+    }
+
+    UserReading.markSubmittedState("Submitted");
   } catch (error) {
     console.error("Submit failed:", error);
-    alert("❌ Failed to submit");
-  } finally {
+    alert("Failed to submit");
     UserReading.setSubmitButtonLoading(false);
+    return;
+  } finally {
+    if (!UserReading.__isSubmitted) {
+      UserReading.setSubmitButtonLoading(false);
+    }
   }
 };

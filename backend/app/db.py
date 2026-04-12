@@ -32,6 +32,31 @@ def ensure_reading_progress_columns():
             "ADD COLUMN IF NOT EXISTS ends_at TIMESTAMPTZ;"
         ))
 
+        conn.execute(text(
+            "ALTER TABLE reading_progress "
+            "ADD COLUMN IF NOT EXISTS is_submitted BOOLEAN NOT NULL DEFAULT FALSE;"
+        ))
+
+        conn.execute(text(
+            "ALTER TABLE reading_progress "
+            "ADD COLUMN IF NOT EXISTS submitted_at TIMESTAMPTZ;"
+        ))
+
+        conn.execute(text(
+            "ALTER TABLE reading_progress "
+            "ADD COLUMN IF NOT EXISTS raw_score INTEGER;"
+        ))
+
+        conn.execute(text(
+            "ALTER TABLE reading_progress "
+            "ADD COLUMN IF NOT EXISTS max_score INTEGER;"
+        ))
+
+        conn.execute(text(
+            "ALTER TABLE reading_progress "
+            "ADD COLUMN IF NOT EXISTS band_score DOUBLE PRECISION;"
+        ))
+
         conn.commit()
 
 
