@@ -50,24 +50,20 @@ def start_reading_test(mock_id: int, telegram_id: int, db: Session = Depends(get
         .first()
     )
 
-    now = datetime.utcnow()
+        now = datetime.utcnow()
 
-    if not progress:
-        progress = ReadingProgress(
-            user_id=user_id,
-            test_id=test.id,
-            answers={}
-        )
-        db.add(progress)
-        db.commit()
-        db.refresh(progress)
-
-    # Always restart timer on open (DEV / simple mode)
-    progress.started_at = now
-    progress.ends_at = now + timedelta(minutes=1)  # still 1 minute test mode
-    db.add(progress)
-    db.commit()
-    db.refresh(progress)
+        if not progress:
+            progress = ReadingProgress(
+                user_id=user_id,
+                test_id=test.id,
+                answers={},
+                started_at=now,
+                ends_at=now + timedelta(minutes=test.time_limit_minutes),
+                is_submitted=False
+            )
+            db.add(progress)
+            db.commit()
+            db.refresh(progress)
     
     passages = (
         db.query(ReadingPassage)
@@ -121,8 +117,8 @@ def start_reading_test(mock_id: int, telegram_id: int, db: Session = Depends(get
         "passages": result
     }
 class ReadingSubmitIn(BaseModel):
-    answers: Dict[int, str | int]  # question_id -> user answer (string or index)
-
+    telegram_id: int
+    answers: Dict[str, dict]
 
 class ReadingSubmitItem(BaseModel):
     question_id: int
@@ -187,63 +183,108 @@ def submit_reading_test(mock_id: int, payload: ReadingSubmitIn, db: Session = De
     }
 
 class ReadingSaveIn(BaseModel):
-    answers: Dict[int, str | int]
+    telegram_id: int
+    answers: Dict[str, dict]
 
 
 @router.post("/{mock_id}/reading/save")
-def save_reading_progress(mock_id: int, payload: ReadingSaveIn, telegram_id: int, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.telegram_id == telegram_id).first()
+def save_reading_progress(mock_id: int, payload: ReadingSaveIn, db: Session = Depends(get_db)):
+    test = (
+        db.query(ReadingTest)
+        .filter(ReadingTest.mock_pack_id == mock_id)
+        .first()
+    )
+    if not test:
+        raise HTTPException(status_code=404, detail="Reading test not found for this mock")
+
+    user = db.query(User).filter(User.telegram_id == payload.telegram_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    user_id = user.id
-    """
-    TEMP: user_id is hardcoded to 1.
-    Later you will extract user_id from Telegram auth.
-    """
-
     progress = (
         db.query(ReadingProgress)
-        .filter(ReadingProgress.user_id == user_id, ReadingProgress.test_id == mock_id)
+        .filter(
+            ReadingProgress.user_id == user.id,
+            ReadingProgress.test_id == test.id
+        )
         .first()
     )
 
-    if progress:
-        progress.answers = payload.answers
-    else:
+    now = datetime.utcnow()
+
+    if not progress:
         progress = ReadingProgress(
-            user_id=user_id,
-            test_id=mock_id,
-            answers=payload.answers
+            user_id=user.id,
+            test_id=test.id,
+            answers=payload.answers or {},
+            started_at=now,
+            ends_at=now + timedelta(minutes=test.time_limit_minutes),
+            is_submitted=False
         )
         db.add(progress)
+        db.commit()
+        db.refresh(progress)
+        return {"status": "saved"}
 
+    if progress.is_submitted:
+        raise HTTPException(status_code=400, detail="Test already submitted")
+
+    if progress.ends_at and now >= progress.ends_at:
+        raise HTTPException(status_code=400, detail="Time is up")
+
+    progress.answers = payload.answers or {}
+    progress.updated_at = now
+
+    db.add(progress)
     db.commit()
+
     return {"status": "saved"}
 
 @router.get("/{mock_id}/reading/resume")
 def resume_reading_progress(mock_id: int, telegram_id: int, db: Session = Depends(get_db)):
+    test = (
+        db.query(ReadingTest)
+        .filter(ReadingTest.mock_pack_id == mock_id)
+        .first()
+    )
+    if not test:
+        raise HTTPException(status_code=404, detail="Reading test not found for this mock")
+
     user = db.query(User).filter(User.telegram_id == telegram_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    user_id = user.id
-    """
-    TEMP: user_id is hardcoded to 1.
-    Later you will extract user_id from Telegram auth.
-    """
-
     progress = (
         db.query(ReadingProgress)
-        .filter(ReadingProgress.user_id == user_id, ReadingProgress.test_id == mock_id)
+        .filter(
+            ReadingProgress.user_id == user.id,
+            ReadingProgress.test_id == test.id
+        )
         .first()
     )
 
     if not progress:
-        return {"answers": {}}
+        return {
+            "answers": {},
+            "started_at": None,
+            "updated_at": None,
+            "ends_at": None,
+            "is_submitted": False,
+            "submitted_at": None,
+            "raw_score": None,
+            "max_score": None,
+            "band_score": None
+        }
 
     return {
-        "answers": progress.answers,
-        "updated_at": progress.updated_at
+        "answers": progress.answers or {},
+        "started_at": progress.started_at,
+        "updated_at": progress.updated_at,
+        "ends_at": progress.ends_at,
+        "is_submitted": progress.is_submitted,
+        "submitted_at": progress.submitted_at,
+        "raw_score": progress.raw_score,
+        "max_score": progress.max_score,
+        "band_score": float(progress.band_score) if progress.band_score is not None else None
     }
 
