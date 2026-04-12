@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
+from app.config import ADMIN_IDS
 from app.deps import get_db
 from app.models import ReadingPassage, ReadingProgress, ReadingQuestion, ReadingTest, ReadingTestStatus, User
 
@@ -49,6 +50,10 @@ def _get_user_by_telegram(db: Session, telegram_id: int) -> User:
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
+
+
+def _is_admin_user(user: User) -> bool:
+    return int(user.telegram_id) in ADMIN_IDS
 
 
 def _extract_payload_value(raw: Any) -> Any:
@@ -133,6 +138,7 @@ def _query_questions_for_test(db: Session, test_id: int) -> List[ReadingQuestion
 def start_reading_test(mock_id: int, telegram_id: int, db: Session = Depends(get_db)):
     test = _get_test_for_mock(db, mock_id)
     user = _get_user_by_telegram(db, telegram_id)
+    is_admin = _is_admin_user(user)
     now = _utcnow()
 
     progress = (
@@ -141,7 +147,7 @@ def start_reading_test(mock_id: int, telegram_id: int, db: Session = Depends(get
         .first()
     )
 
-    if progress and progress.is_submitted:
+    if progress and progress.is_submitted and not is_admin:
         raise HTTPException(status_code=400, detail="Reading test already submitted")
 
     if not progress:
@@ -157,21 +163,35 @@ def start_reading_test(mock_id: int, telegram_id: int, db: Session = Depends(get
         db.commit()
         db.refresh(progress)
     else:
-        if not progress.started_at:
+        if is_admin:
+            progress.answers = {}
             progress.started_at = now
-        if not progress.ends_at:
-            progress.ends_at = progress.started_at + timedelta(minutes=max(int(test.time_limit_minutes or 60), 1))
-
-        if _is_time_up(progress.ends_at, now):
-            questions = _query_questions_for_test(db, test.id)
-            _finalize_progress(progress, questions, now)
+            progress.ends_at = now + timedelta(minutes=max(int(test.time_limit_minutes or 60), 1))
+            progress.is_submitted = False
+            progress.submitted_at = None
+            progress.raw_score = None
+            progress.max_score = None
+            progress.band_score = None
+            progress.updated_at = now
             db.add(progress)
             db.commit()
-            raise HTTPException(status_code=400, detail="Time is up. Reading was auto-submitted.")
+            db.refresh(progress)
+        else:
+            if not progress.started_at:
+                progress.started_at = now
+            if not progress.ends_at:
+                progress.ends_at = progress.started_at + timedelta(minutes=max(int(test.time_limit_minutes or 60), 1))
 
-        db.add(progress)
-        db.commit()
-        db.refresh(progress)
+            if _is_time_up(progress.ends_at, now):
+                questions = _query_questions_for_test(db, test.id)
+                _finalize_progress(progress, questions, now)
+                db.add(progress)
+                db.commit()
+                raise HTTPException(status_code=400, detail="Time is up. Reading was auto-submitted.")
+
+            db.add(progress)
+            db.commit()
+            db.refresh(progress)
 
     passages = (
         db.query(ReadingPassage)
@@ -245,6 +265,7 @@ def submit_reading_test(mock_id: int, payload: ReadingSubmitIn, db: Session = De
         raise HTTPException(status_code=404, detail="Reading test not found for this mock")
 
     user = _get_user_by_telegram(db, payload.telegram_id)
+    is_admin = _is_admin_user(user)
     now = _utcnow()
 
     progress = (
@@ -263,9 +284,16 @@ def submit_reading_test(mock_id: int, payload: ReadingSubmitIn, db: Session = De
             is_submitted=False
         )
 
-    if progress.is_submitted:
+    if progress.is_submitted and not is_admin:
         questions = _query_questions_for_test(db, test.id)
         return _evaluate_reading(questions, progress.answers or {})
+
+    if progress.is_submitted and is_admin:
+        progress.is_submitted = False
+        progress.submitted_at = None
+        progress.raw_score = None
+        progress.max_score = None
+        progress.band_score = None
 
     if payload.answers:
         progress.answers = payload.answers
@@ -282,6 +310,7 @@ def submit_reading_test(mock_id: int, payload: ReadingSubmitIn, db: Session = De
 def save_reading_progress(mock_id: int, payload: ReadingSaveIn, db: Session = Depends(get_db)):
     test = _get_test_for_mock(db, mock_id)
     user = _get_user_by_telegram(db, payload.telegram_id)
+    is_admin = _is_admin_user(user)
     now = _utcnow()
 
     progress = (
@@ -303,8 +332,17 @@ def save_reading_progress(mock_id: int, payload: ReadingSaveIn, db: Session = De
         db.commit()
         return {"status": "saved"}
 
-    if progress.is_submitted:
+    if progress.is_submitted and not is_admin:
         return {"status": "already_submitted"}
+
+    if progress.is_submitted and is_admin:
+        progress.is_submitted = False
+        progress.submitted_at = None
+        progress.raw_score = None
+        progress.max_score = None
+        progress.band_score = None
+        progress.started_at = now
+        progress.ends_at = now + timedelta(minutes=max(int(test.time_limit_minutes or 60), 1))
 
     if payload.answers:
         progress.answers = payload.answers
