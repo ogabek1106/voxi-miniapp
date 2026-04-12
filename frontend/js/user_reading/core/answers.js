@@ -88,3 +88,24 @@ UserReading.getAnsweredQuestionIds = function () {
     return String(value || "").trim().length > 0;
   });
 };
+UserReading.collectSaveableAnswers = function () {
+  const answers = UserReading.collectAnswers();
+  const result = {};
+
+  Object.keys(answers).forEach((qid) => {
+    const value = answers[qid]?.value;
+
+    if (Array.isArray(value)) {
+      if (value.length > 0) {
+        result[qid] = { value };
+      }
+      return;
+    }
+
+    if (String(value || "").trim().length > 0) {
+      result[qid] = { value: String(value).trim() };
+    }
+  });
+
+  return result;
+};
