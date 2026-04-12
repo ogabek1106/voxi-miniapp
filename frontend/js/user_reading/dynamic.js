@@ -159,6 +159,9 @@ UserReading.initAutoSave = function (data) {
     try {
       await UserReading.saveProgress(mockId, { keepalive });
       UserReading.__autoSaveDirty = false;
+      if (!keepalive && typeof UserReading.showAutosaveBadge === "function") {
+        UserReading.showAutosaveBadge("Saved!");
+      }
     } catch (error) {
       console.error("Autosave failed:", error);
     } finally {

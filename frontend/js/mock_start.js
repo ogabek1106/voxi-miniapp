@@ -28,6 +28,9 @@ window.startMock = async function (mockId) {
 
   hideAllScreens();
   hideAnnouncement();
+  if (typeof setBottomNavVisible === "function") {
+    setBottomNavVisible(false);
+  }
 
   const content = document.getElementById("content");
   if (content) content.style.padding = "2px 2px";

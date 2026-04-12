@@ -204,8 +204,8 @@ UserReading.goBack = function () {
     UserReading.saveProgress(UserReading.__mockId, { keepalive: true }).catch(() => {});
   }
 
-  if (typeof window.showMocksScreen === "function") {
-    window.showMocksScreen();
+  if (typeof window.goHome === "function") {
+    window.goHome();
     return;
   }
 
@@ -217,6 +217,43 @@ UserReading.goBack = function () {
   if (typeof window.goHome === "function") {
     window.goHome();
   }
+};
+
+UserReading.showAutosaveBadge = function (text = "Saved!") {
+  const header = document.getElementById("reading-header");
+  if (!header) return;
+
+  let badge = document.getElementById("reading-autosave-badge");
+  if (!badge) {
+    badge = document.createElement("div");
+    badge.id = "reading-autosave-badge";
+    badge.style.position = "absolute";
+    badge.style.top = "36px";
+    badge.style.left = "50%";
+    badge.style.transform = "translateX(-50%)";
+    badge.style.padding = "4px 8px";
+    badge.style.borderRadius = "999px";
+    badge.style.fontSize = "11px";
+    badge.style.fontWeight = "700";
+    badge.style.color = "#ffffff";
+    badge.style.background = "#16a34a";
+    badge.style.boxShadow = "0 6px 14px rgba(0,0,0,0.16)";
+    badge.style.opacity = "0";
+    badge.style.pointerEvents = "none";
+    badge.style.transition = "opacity 0.2s ease";
+    badge.style.zIndex = "160";
+    header.appendChild(badge);
+  }
+
+  badge.textContent = text;
+  badge.style.opacity = "1";
+
+  if (UserReading.__autosaveBadgeTimer) {
+    clearTimeout(UserReading.__autosaveBadgeTimer);
+  }
+  UserReading.__autosaveBadgeTimer = setTimeout(() => {
+    badge.style.opacity = "0";
+  }, 1200);
 };
 
 UserReading.isIOS = function () {
