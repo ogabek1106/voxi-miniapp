@@ -73,17 +73,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
 async function loadMe() {
   const telegramId = window.getTelegramId();
+  const adminBtn = document.getElementById("adminBtn");
 
   try {
     const me = await apiGet(`/me?telegram_id=${telegramId}`);
     window.__isAdmin = !!(me.is_admin || telegramId === 1150875355);
 
-    if (window.__isAdmin) {
-      const adminBtn = document.getElementById("adminBtn");
-      if (adminBtn) adminBtn.style.display = "block";
+    if (adminBtn) {
+      adminBtn.style.display = window.__isAdmin ? "block" : "none";
     }
   } catch (e) {
     window.__isAdmin = telegramId === 1150875355;
+
+    if (adminBtn) {
+      adminBtn.style.display = window.__isAdmin ? "block" : "none";
+    }
+
     console.error("Failed to load /me", e);
   }
 }
