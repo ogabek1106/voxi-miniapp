@@ -6,21 +6,21 @@ UserReading.getTelegramUserId = function () {
   return window.Telegram?.WebApp?.initDataUnsafe?.user?.id || null;
 };
 
-UserReading.saveProgress = async function (testId) {
+UserReading.saveProgress = async function (mockId) {
   const userId = UserReading.getTelegramUserId();
-  if (!userId || !testId) return;
+  if (!userId || !mockId) return null;
 
   const answers = UserReading.collectSaveableAnswers();
 
-  return apiPost(`/reading/tests/${testId}/progress`, {
+  return apiPost(`/mock-tests/${mockId}/reading/save`, {
     telegram_id: userId,
     answers: answers
   });
 };
 
-UserReading.loadProgress = async function (testId) {
+UserReading.loadProgress = async function (mockId) {
   const userId = UserReading.getTelegramUserId();
-  if (!userId || !testId) return null;
+  if (!userId || !mockId) return null;
 
-  return apiGet(`/reading/tests/${testId}/progress?telegram_id=${userId}`);
+  return apiGet(`/mock-tests/${mockId}/reading/resume?telegram_id=${userId}`);
 };
