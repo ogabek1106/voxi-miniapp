@@ -170,9 +170,9 @@ UserReading.renderHeader = function () {
 UserReading.renderSubmitSection = function () {
   return `
     <div id="reading-submit-section" style="
-      margin-top: 16px;
-      padding: 0 8px 20px 8px;
-    ">
+  margin-top: 12px;
+  padding: 0 8px 8px 8px;
+">
       <button
         type="button"
         id="reading-submit-btn"
