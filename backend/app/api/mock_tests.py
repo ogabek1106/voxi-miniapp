@@ -107,6 +107,7 @@ def start_reading_test(mock_id: int, telegram_id: int, db: Session = Depends(get
         })
 
     return {
+        "mock_id": mock_id,
         "test_id": test.id,
         "title": test.title,
         "time_limit_minutes": test.time_limit_minutes,
