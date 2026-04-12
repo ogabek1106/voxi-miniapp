@@ -162,6 +162,34 @@ UserReading.renderHeader = function () {
           <path d="M5 15L7.8 14.4L15.9 6.3C16.3 5.9 16.3 5.2 15.9 4.8L15.2 4.1C14.8 3.7 14.1 3.7 13.7 4.1L5.6 12.2L5 15Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
         </svg>
       </button>
+            <button
+        type="button"
+        id="reading-submit-btn"
+        aria-label="Submit reading"
+        style="
+          position: fixed;
+          left: 50%;
+          transform: translateX(-50%);
+          bottom: 12px;
+          width: calc(100% - 24px);
+          max-width: 320px;
+          height: 46px;
+          border: 0;
+          border-radius: 12px;
+          background: #111827;
+          color: #ffffff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 700;
+          font-size: 14px;
+          box-shadow: 0 5px 14px rgba(0,0,0,0.16);
+          cursor: pointer;
+          z-index: 145;
+        "
+      >
+        Submit
+      </button>
     </div>
   `;
 };
@@ -206,6 +234,7 @@ UserReading.initHeader = function (data) {
   UserReading.initReadingTimer(data?.timer, data);
   UserReading.initPassageCounter();
   UserReading.initQuestionCounter();
+  UserReading.initSubmitButton();
 
   if (UserReading.isIOS() && window.UserReadingIOS?.initMarkModeIOS) {
     window.UserReadingIOS.initMarkModeIOS();
@@ -213,6 +242,14 @@ UserReading.initHeader = function (data) {
   }
 
   UserReading.initMarkMode();
+};
+UserReading.initSubmitButton = function () {
+  const button = document.getElementById("reading-submit-btn");
+  if (!button) return;
+
+  button.onclick = function () {
+    UserReading.handleSubmitAttempt();
+  };
 };
 
 UserReading.mixColor = function (fromRgb, toRgb, ratio) {
@@ -814,4 +851,157 @@ UserReading.ensureMarkerStyles = function () {
   `;
 
   document.head.appendChild(style);
+};
+
+UserReading.handleSubmitAttempt = function () {
+  const questions = UserReading.__questionList || [];
+
+  if (!questions.length) {
+    UserReading.submitReading();
+    return;
+  }
+
+  const unanswered = questions.filter((q) => {
+    const controls = q.controls || [];
+
+    if (!controls.length) return true;
+
+    const hasChoice = controls.some((c) =>
+      c.type === "radio" || c.type === "checkbox"
+    );
+
+    if (hasChoice) {
+      return !controls.some((c) => c.checked);
+    }
+
+    return !controls.some((c) => String(c.value || "").trim().length > 0);
+  });
+
+  if (!unanswered.length) {
+    UserReading.submitReading();
+    return;
+  }
+
+  UserReading.showSubmitWarning(unanswered);
+};
+UserReading.showSubmitWarning = function (unanswered) {
+  const existing = document.getElementById("reading-submit-warning");
+  if (existing) existing.remove();
+
+  const count = unanswered.length;
+  const firstUnanswered = unanswered[0];
+
+  const overlay = document.createElement("div");
+  overlay.id = "reading-submit-warning";
+  overlay.style.position = "fixed";
+  overlay.style.inset = "0";
+  overlay.style.background = "rgba(0, 0, 0, 0.45)";
+  overlay.style.display = "flex";
+  overlay.style.alignItems = "center";
+  overlay.style.justifyContent = "center";
+  overlay.style.padding = "16px";
+  overlay.style.zIndex = "9999";
+
+  overlay.innerHTML = `
+    <div style="
+      width: 100%;
+      max-width: 340px;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.22);
+      padding: 18px 16px 14px 16px;
+      box-sizing: border-box;
+      text-align: left;
+    ">
+      <div style="
+        font-size: 17px;
+        font-weight: 800;
+        color: #111827;
+        margin-bottom: 8px;
+      ">
+        Unanswered questions
+      </div>
+
+      <div style="
+        font-size: 14px;
+        line-height: 1.5;
+        color: #374151;
+        margin-bottom: 14px;
+      ">
+        You still have <strong>${count}</strong> unanswered question${count > 1 ? "s" : ""}.
+        You can go back and answer them, or submit anyway.
+      </div>
+
+      <div style="
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+      ">
+        <button
+          type="button"
+          id="reading-submit-back"
+          style="
+            border: 0;
+            border-radius: 10px;
+            background: #f3f4f6;
+            color: #111827;
+            padding: 10px 12px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+          "
+        >
+          Back and answer
+        </button>
+
+        <button
+          type="button"
+          id="reading-submit-anyway"
+          style="
+            border: 0;
+            border-radius: 10px;
+            background: #111827;
+            color: #ffffff;
+            padding: 10px 12px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+          "
+        >
+          Submit anyway
+        </button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  const backBtn = document.getElementById("reading-submit-back");
+  const submitBtn = document.getElementById("reading-submit-anyway");
+
+  backBtn.onclick = function () {
+    overlay.remove();
+
+    if (firstUnanswered?.anchor) {
+      firstUnanswered.anchor.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+      });
+    }
+  };
+
+  submitBtn.onclick = function () {
+    overlay.remove();
+    UserReading.submitReading();
+  };
+
+  overlay.onclick = function (event) {
+    if (event.target === overlay) {
+      overlay.remove();
+    }
+  };
+};
+
+UserReading.submitReading = function () {
+  alert("✅ Submitted (hook backend here)");
 };
