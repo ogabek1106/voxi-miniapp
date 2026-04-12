@@ -28,11 +28,17 @@ function hideAllScreens() {
   if (screenProfile) screenProfile.style.display = "none";
   if (screenReading) screenReading.style.display = "none";
 }
+function setBottomNavVisible(visible) {
+  const nav = document.querySelector(".bottom-nav");
+  if (!nav) return;
 
+  nav.style.display = visible ? "flex" : "none";
+}
 window.goHome = function () {
   hideAllScreens();
   showAnnouncement();
   if (screenHome) screenHome.style.display = "block";
+  setBottomNavVisible(true);
   setActiveNav(0);
 };
 
@@ -43,9 +49,9 @@ window.goProfile = function () {
     screenProfile.style.display = "block";
     renderProfile();
   }
+  setBottomNavVisible(false);
   setActiveNav(1);
 };
-
 function setActiveNav(index) {
   const buttons = document.querySelectorAll(".nav-btn");
   buttons.forEach((btn, i) => {
@@ -59,6 +65,7 @@ window.showMocksScreen = function () {
   hideAllScreens();
   hideAnnouncement();
   screenMocks.style.display = "block";
+  setBottomNavVisible(false);
   showMockList();
 };
 
@@ -88,7 +95,7 @@ function hideAnnouncement() {
 window.showAdminPanel = function () {
   hideAllScreens();
   hideAnnouncement();
-
+  setBottomNavVisible(false);
   if (!screenMocks) return;
 
   screenMocks.style.display = "block";
@@ -106,7 +113,7 @@ window.showDbStats = async function () {
 
   hideAllScreens();
   hideAnnouncement();
-
+  setBottomNavVisible(false);
   try {
     const data = await apiGet(`/__admin/users?telegram_id=${telegramId}`);
 
@@ -240,6 +247,7 @@ window.saveProfile = async function () {
 window.showReadingScreen = function () {
   hideAllScreens();
   hideAnnouncement();
+  setBottomNavVisible(false);
   if (screenReading) {
     screenReading.style.display = "block";
     screenReading.innerHTML = `<h3>📖 Reading screen loaded</h3><p>UI coming next…</p>`;
