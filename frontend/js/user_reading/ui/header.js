@@ -247,9 +247,21 @@ UserReading.initSubmitButton = function () {
   const button = document.getElementById("reading-submit-btn");
   if (!button) return;
 
+  UserReading.setSubmitButtonLoading(false);
+
   button.onclick = function () {
+    if (button.disabled) return;
     UserReading.handleSubmitAttempt();
   };
+};
+UserReading.setSubmitButtonLoading = function (isLoading) {
+  const button = document.getElementById("reading-submit-btn");
+  if (!button) return;
+
+  button.disabled = !!isLoading;
+  button.textContent = isLoading ? "Submitting..." : "Submit";
+  button.style.opacity = isLoading ? "0.7" : "1";
+  button.style.cursor = isLoading ? "not-allowed" : "pointer";
 };
 
 UserReading.mixColor = function (fromRgb, toRgb, ratio) {
@@ -1002,6 +1014,18 @@ UserReading.showSubmitWarning = function (unanswered) {
   };
 };
 
-UserReading.submitReading = function () {
-  alert("✅ Submitted (hook backend here)");
+UserReading.submitReading = async function () {
+  const button = document.getElementById("reading-submit-btn");
+  if (button?.disabled) return;
+
+  UserReading.setSubmitButtonLoading(true);
+
+  try {
+    alert("✅ Submitted (hook backend here)");
+  } catch (error) {
+    console.error("Submit failed:", error);
+    alert("❌ Failed to submit");
+  } finally {
+    UserReading.setSubmitButtonLoading(false);
+  }
 };
