@@ -120,9 +120,11 @@ def start_reading_test(mock_id: int, telegram_id: int, db: Session = Depends(get
         },
         "passages": result
     }
+class ReadingSubmitIn(BaseModel):
+    answers: Dict[int, str | int]  # question_id -> user answer (string or index)
 
 
-@router.post("/{mock_id}/reading/submit", response_model=ReadingSubmitOut)
+@router.post("/{mock_id}/reading/submit", response_model=SubmitResultOut)
 def submit_reading_test(mock_id: int, payload: ReadingSubmitIn, db: Session = Depends(get_db)):
     test = (
         db.query(ReadingTest)
