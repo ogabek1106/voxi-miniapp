@@ -77,6 +77,26 @@ window.showMocksEntry = function () {
   alert("WILL BE SOON!");
 };
 
+window.showReadingEntry = async function () {
+  if (!window.__isAdmin) {
+    alert("WILL BE SOON!");
+    return;
+  }
+
+  try {
+    const mocks = await apiGet("/mock/list");
+    if (!Array.isArray(mocks) || !mocks.length) {
+      alert("No reading mocks available.");
+      return;
+    }
+
+    startMock(mocks[0].id);
+  } catch (error) {
+    console.error("Reading quick entry error:", error);
+    alert("Failed to open reading.");
+  }
+};
+
 function render(html) {
   if (!screenMocks) return;
   screenMocks.innerHTML = html;
