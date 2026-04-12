@@ -28,6 +28,7 @@ UserReading.renderTest = function (container, data) {
     UserReading.renderSubmitSection();
 
   UserReading.initHeader(data);
+  UserReading.restoreProgress(data);
   UserReading.initAutoSave(data);
 };
 
@@ -65,4 +66,59 @@ UserReading.initAutoSave = function (data) {
 
   content.addEventListener("input", triggerSave);
   content.addEventListener("change", triggerSave);
+};
+
+UserReading.restoreProgress = async function (data) {
+  const testId = data?.id;
+  if (!testId) return;
+
+  try {
+    const progress = await UserReading.loadProgress(testId);
+    const answers = progress?.answers || {};
+
+    Object.keys(answers).forEach((qid) => {
+      const entry = answers[qid];
+      const value = entry?.value;
+
+      const fields = Array.from(
+        document.querySelectorAll(
+          `[name="q_${qid}"], [data-qid="${qid}"]`
+        )
+      );
+
+      if (!fields.length) return;
+
+      const first = fields[0];
+      const type = String(first.type || "").toLowerCase();
+      const tag = String(first.tagName || "").toLowerCase();
+
+      if (type === "radio") {
+        fields.forEach((field) => {
+          field.checked = String(field.value) === String(value);
+        });
+        return;
+      }
+
+      if (type === "checkbox") {
+        const selected = Array.isArray(value) ? value.map(String) : [];
+        fields.forEach((field) => {
+          field.checked = selected.includes(String(field.value));
+        });
+        return;
+      }
+
+      if (tag === "select") {
+        first.value = value == null ? "" : String(value);
+        return;
+      }
+
+      first.value = value == null ? "" : String(value);
+    });
+
+    if (typeof UserReading.__updateQuestionProgress === "function") {
+      UserReading.__updateQuestionProgress();
+    }
+  } catch (error) {
+    console.error("Failed to restore progress:", error);
+  }
 };
