@@ -42,9 +42,9 @@ UserReading.renderPassage = function (passage, passageIndex, startingQuestionNum
 
 UserReading.initAutoSave = function (data) {
   const content = document.getElementById("reading-user-content");
-  const testId = data?.id;
+  const mockId = data?.mock_id;
 
-  if (!content || !testId) return;
+  if (!content || !mockId) return;
 
   // clear old listeners if re-render
   if (UserReading.__autoSaveHandler) {
@@ -58,7 +58,7 @@ UserReading.initAutoSave = function (data) {
     clearTimeout(timeout);
 
     timeout = setTimeout(() => {
-      UserReading.saveProgress(testId);
+      UserReading.saveProgress(mockId);
     }, 800); // debounce
   }
 
@@ -69,11 +69,11 @@ UserReading.initAutoSave = function (data) {
 };
 
 UserReading.restoreProgress = async function (data) {
-  const testId = data?.id;
-  if (!testId) return;
+  const mockId = data?.mock_id;
+  if (!mockId) return;
 
   try {
-    const progress = await UserReading.loadProgress(testId);
+    const progress = await UserReading.loadProgress(mockId);
     const answers = progress?.answers || {};
 
     Object.keys(answers).forEach((qid) => {
