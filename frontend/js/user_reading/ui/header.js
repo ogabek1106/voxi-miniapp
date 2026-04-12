@@ -339,9 +339,7 @@ UserReading.initReadingTimer = function (timer, data) {
   }
 
   const serverEndsAt = timer?.ends_at ? new Date(timer.ends_at).getTime() : NaN;
-  const useServerEnd =
-    Number.isFinite(serverEndsAt) &&
-    Math.abs(Math.round((serverEndsAt - Date.now()) / 1000) - duration) <= 15;
+  const useServerEnd = Number.isFinite(serverEndsAt);
   const endsAt = useServerEnd ? serverEndsAt : Date.now() + duration * 1000;
 
   function tick() {
