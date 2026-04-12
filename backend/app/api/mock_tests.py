@@ -1,5 +1,5 @@
 # backend/app/api/mock_tests.py
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -55,6 +55,26 @@ def _extract_payload_value(raw: Any) -> Any:
     if isinstance(raw, dict):
         return raw.get("value")
     return raw
+
+
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def _to_utc(value: datetime | None) -> datetime | None:
+    if value is None:
+        return None
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
+
+
+def _is_time_up(ends_at: datetime | None, now: datetime | None = None) -> bool:
+    if not ends_at:
+        return False
+    current = _to_utc(now or _utcnow())
+    deadline = _to_utc(ends_at)
+    return current >= deadline
 
 
 def _normalize_string(value: Any) -> str:
@@ -113,7 +133,7 @@ def _query_questions_for_test(db: Session, test_id: int) -> List[ReadingQuestion
 def start_reading_test(mock_id: int, telegram_id: int, db: Session = Depends(get_db)):
     test = _get_test_for_mock(db, mock_id)
     user = _get_user_by_telegram(db, telegram_id)
-    now = datetime.utcnow()
+    now = _utcnow()
 
     progress = (
         db.query(ReadingProgress)
@@ -142,7 +162,7 @@ def start_reading_test(mock_id: int, telegram_id: int, db: Session = Depends(get
         if not progress.ends_at:
             progress.ends_at = progress.started_at + timedelta(minutes=max(int(test.time_limit_minutes or 60), 1))
 
-        if progress.ends_at and now >= progress.ends_at:
+        if _is_time_up(progress.ends_at, now):
             questions = _query_questions_for_test(db, test.id)
             _finalize_progress(progress, questions, now)
             db.add(progress)
@@ -225,7 +245,7 @@ def submit_reading_test(mock_id: int, payload: ReadingSubmitIn, db: Session = De
         raise HTTPException(status_code=404, detail="Reading test not found for this mock")
 
     user = _get_user_by_telegram(db, payload.telegram_id)
-    now = datetime.utcnow()
+    now = _utcnow()
 
     progress = (
         db.query(ReadingProgress)
@@ -262,7 +282,7 @@ def submit_reading_test(mock_id: int, payload: ReadingSubmitIn, db: Session = De
 def save_reading_progress(mock_id: int, payload: ReadingSaveIn, db: Session = Depends(get_db)):
     test = _get_test_for_mock(db, mock_id)
     user = _get_user_by_telegram(db, payload.telegram_id)
-    now = datetime.utcnow()
+    now = _utcnow()
 
     progress = (
         db.query(ReadingProgress)
@@ -289,7 +309,7 @@ def save_reading_progress(mock_id: int, payload: ReadingSaveIn, db: Session = De
     if payload.answers:
         progress.answers = payload.answers
 
-    if progress.ends_at and now >= progress.ends_at:
+    if _is_time_up(progress.ends_at, now):
         questions = _query_questions_for_test(db, test.id)
         _finalize_progress(progress, questions, now)
         db.add(progress)
@@ -307,7 +327,7 @@ def save_reading_progress(mock_id: int, payload: ReadingSaveIn, db: Session = De
 def resume_reading_progress(mock_id: int, telegram_id: int, db: Session = Depends(get_db)):
     test = _get_test_for_mock(db, mock_id)
     user = _get_user_by_telegram(db, telegram_id)
-    now = datetime.utcnow()
+    now = _utcnow()
 
     progress = (
         db.query(ReadingProgress)
@@ -328,7 +348,7 @@ def resume_reading_progress(mock_id: int, telegram_id: int, db: Session = Depend
             "band_score": None
         }
 
-    if not progress.is_submitted and progress.ends_at and now >= progress.ends_at:
+    if not progress.is_submitted and _is_time_up(progress.ends_at, now):
         questions = _query_questions_for_test(db, test.id)
         _finalize_progress(progress, questions, now)
         db.add(progress)
