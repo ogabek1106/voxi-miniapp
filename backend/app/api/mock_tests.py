@@ -46,25 +46,28 @@ def start_reading_test(mock_id: int, telegram_id: int, db: Session = Depends(get
 
     progress = (
         db.query(ReadingProgress)
-        .filter(ReadingProgress.user_id == user_id, ReadingProgress.test_id == test.id)
+        .filter(
+            ReadingProgress.user_id == user_id,
+            ReadingProgress.test_id == test.id
+        )
         .first()
     )
 
-        now = datetime.utcnow()
+    now = datetime.utcnow()
 
-        if not progress:
-            progress = ReadingProgress(
-                user_id=user_id,
-                test_id=test.id,
-                answers={},
-                started_at=now,
-                ends_at=now + timedelta(minutes=test.time_limit_minutes),
-                is_submitted=False
-            )
-            db.add(progress)
-            db.commit()
-            db.refresh(progress)
-    
+    if not progress:
+        progress = ReadingProgress(
+            user_id=user_id,
+            test_id=test.id,
+            answers={},
+            started_at=now,
+            ends_at=now + timedelta(minutes=test.time_limit_minutes),
+            is_submitted=False
+        )
+        db.add(progress)
+        db.commit()
+        db.refresh(progress)
+
     passages = (
         db.query(ReadingPassage)
         .filter(ReadingPassage.test_id == test.id)
@@ -117,19 +120,6 @@ def start_reading_test(mock_id: int, telegram_id: int, db: Session = Depends(get
         },
         "passages": result
     }
-class ReadingSubmitIn(BaseModel):
-    telegram_id: int
-    answers: Dict[str, dict]
-
-class ReadingSubmitItem(BaseModel):
-    question_id: int
-    correct: bool
-
-
-class ReadingSubmitOut(BaseModel):
-    score: int
-    total: int
-    details: List[ReadingSubmitItem]
 
 
 @router.post("/{mock_id}/reading/submit", response_model=ReadingSubmitOut)
