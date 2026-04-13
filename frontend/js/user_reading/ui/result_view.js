@@ -180,6 +180,37 @@ UserReading.resultCardToBlob = function ({ band, correct, total, dateText }) {
   });
 };
 
+UserReading.blobToDataUrl = function (blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(String(reader.result || ""));
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+};
+
+UserReading.uploadResultCardImage = async function (blob) {
+  const imageBase64 = await UserReading.blobToDataUrl(blob);
+  const payload = await apiPost("/result-images/upload", {
+    image_base64: imageBase64
+  });
+
+  const url = String(payload?.url || "").trim();
+  if (!url) {
+    throw new Error("Upload returned empty url");
+  }
+
+  if (/^https?:\/\//i.test(url)) {
+    return { url, fileName: payload?.file_name || "" };
+  }
+
+  const normalized = url.startsWith("/") ? url : `/${url}`;
+  return {
+    url: `${window.API}${normalized}`,
+    fileName: payload?.file_name || ""
+  };
+};
+
 UserReading.showResultBadge = function (text = "Saved!", type = "success") {
   const old = document.getElementById("reading-result-badge");
   if (old) old.remove();
@@ -231,35 +262,42 @@ UserReading.saveResultCard = async function () {
 
   try {
     const blob = await UserReading.resultCardToBlob({ band, correct, total, dateText });
-    let saved = false;
+    const uploaded = await UserReading.uploadResultCardImage(blob);
+    const tg = window.Telegram?.WebApp;
+    const remoteUrl = uploaded.url;
+    const remoteName = uploaded.fileName || filename;
+    let triggered = false;
 
-    if (navigator.canShare && navigator.share && typeof File !== "undefined") {
-      const file = new File([blob], filename, { type: "image/png" });
-      if (navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          title: "IELTS Reading Result",
-          text: `Band ${band} • Score ${correct}/${total}`,
-          files: [file]
+    if (tg && typeof tg.downloadFile === "function") {
+      try {
+        tg.downloadFile({
+          url: remoteUrl,
+          file_name: remoteName
         });
-        saved = true;
+        triggered = true;
+      } catch (error) {
+        console.error("Telegram downloadFile failed:", error);
       }
     }
 
-    if (!saved) {
-      const url = URL.createObjectURL(blob);
+    if (!triggered) {
       const link = document.createElement("a");
-      link.href = url;
-      link.download = filename;
+      link.href = remoteUrl;
+      link.download = remoteName;
+      link.rel = "noopener";
+      link.target = "_blank";
       document.body.appendChild(link);
       link.click();
       link.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 3000);
-      saved = true;
+      triggered = true;
     }
 
-    if (saved) {
+    if (triggered) {
       UserReading.showResultBadge("Saved!", "success");
+      return;
     }
+
+    throw new Error("Save trigger failed");
   } catch (error) {
     console.error("Failed to save result card:", error);
     UserReading.showResultBadge("Save failed", "error");

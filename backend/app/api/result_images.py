@@ -40,10 +40,11 @@ def upload_result_image(payload: ResultImageUploadIn):
     file_path.write_bytes(image_bytes)
 
     public_base = os.getenv("PUBLIC_BASE_URL", "").rstrip("/")
-    if not public_base:
-        raise HTTPException(status_code=500, detail="PUBLIC_BASE_URL is not configured")
+    relative_url = f"/static/result_images/{filename}"
+    public_url = f"{public_base}{relative_url}" if public_base else relative_url
 
     return {
-        "url": f"{public_base}/static/result_images/{filename}",
+        "url": public_url,
+        "relative_url": relative_url,
         "file_name": filename
     }
