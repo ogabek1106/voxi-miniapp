@@ -163,3 +163,35 @@ UserReading.saveResultCard = async function () {
     alert("Failed to save image.");
   }
 };
+
+UserReading.uploadResultCardImage = async function () {
+  const card = document.getElementById("reading-result-card");
+  if (!card || typeof html2canvas !== "function") {
+    throw new Error("Result card is not available.");
+  }
+
+  const canvas = await html2canvas(card, {
+    backgroundColor: null,
+    scale: 2,
+    useCORS: true
+  });
+
+  const imageBase64 = canvas.toDataURL("image/png");
+
+  const response = await fetch(`${window.API}/result-images/upload`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      image_base64: imageBase64
+    })
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || "Failed to upload result image");
+  }
+
+  return response.json();
+};
