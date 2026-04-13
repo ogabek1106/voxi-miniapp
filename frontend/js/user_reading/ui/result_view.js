@@ -30,17 +30,20 @@ container.innerHTML = `
 
       <div class="reading-result-brand">Powered by EBAI Academy</div>
       <div class="reading-result-actions">
-  <button class="result-btn" id="result-share-btn">
-    Share with friends
-  </button>
+  <div class="result-action-item" id="result-share-btn">
+    <div class="result-action-circle">🔗</div>
+    <div class="result-action-label">Share</div>
+  </div>
 
-  <button class="result-btn" id="result-story-btn">
-    Share to story
-  </button>
+  <div class="result-action-item" id="result-story-btn">
+    <div class="result-action-circle">📸</div>
+    <div class="result-action-label">Story</div>
+  </div>
 
-  <button class="result-btn" id="result-save-btn">
-    Save to gallery
-  </button>
+  <div class="result-action-item" id="result-save-btn">
+    <div class="result-action-circle">⬇️</div>
+    <div class="result-action-label">Save</div>
+  </div>
 </div>
     </div>
   </div>
