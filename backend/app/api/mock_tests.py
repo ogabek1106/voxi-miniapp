@@ -193,7 +193,8 @@ def start_reading_test(mock_id: int, telegram_id: int, db: Session = Depends(get
             test_id=test.id,
             answers={},
             started_at=now,
-            ends_at=now + timedelta(minutes=max(int(test.time_limit_minutes or 60), 1)),
+            # ends_at=now + timedelta(minutes=max(int(test.time_limit_minutes or 60), 1)),   timer-change
+            ends_at=now + timedelta(seconds=10),
             is_submitted=False
         )
         db.add(progress)
@@ -204,7 +205,8 @@ def start_reading_test(mock_id: int, telegram_id: int, db: Session = Depends(get
             if progress.is_submitted:
                 progress.answers = {}
                 progress.started_at = now
-                progress.ends_at = now + timedelta(minutes=max(int(test.time_limit_minutes or 60), 1))
+                # progress.ends_at = now + timedelta(minutes=max(int(test.time_limit_minutes or 60), 1))   timer-change
+                progress.ends_at = now + timedelta(seconds=10)
                 progress.is_submitted = False
                 progress.submitted_at = None
                 progress.raw_score = None
@@ -273,7 +275,8 @@ def start_reading_test(mock_id: int, telegram_id: int, db: Session = Depends(get
             ]
         })
 
-    duration_seconds = max(int(test.time_limit_minutes or 60), 1) * 60
+    # duration_seconds = max(int(test.time_limit_minutes or 60), 1) * 60    timer-change
+    duration_seconds = 10
 
     return {
         "mock_id": mock_id,
