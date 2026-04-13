@@ -107,8 +107,9 @@
 
 .result-action-label {
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 800;
   color: #6b7280;
+  letter-spacing: 0.2px;
 }
 
 .result-btn:active {
