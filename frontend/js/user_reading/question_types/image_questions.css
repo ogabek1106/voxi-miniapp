@@ -20,45 +20,55 @@
 }
 
 .image-questions-row {
-  display: grid;
-  grid-template-columns: 48px 1fr;
+  display: flex;
+  align-items: baseline;
   gap: 8px;
-  align-items: start;
+  flex-wrap: wrap;
 }
 
 .image-questions-label {
-  font-family: system-ui, -apple-system, sans-serif;
-  font-weight: 800;
-  font-size: 18px;
-  line-height: 1.4;
+  flex: 0 0 auto;
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 700;
+  font-size: 15.5px;
+  line-height: 1.7;
   text-align: left;
 }
 
 .image-questions-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 15.5px;
+  line-height: 1.7;
   text-align: left;
-  font-size: 16px;
-  line-height: 1.6;
 }
 
 .image-inline-gap-input {
-  width: 120px;
-  min-width: 80px;
-  max-width: 180px;
-  border: 0;
-  border-bottom: 2px solid #1f2937;
+  display: inline-block;
+  width: 90px;
+  min-width: 90px;
+  max-width: 140px;
+  margin: 0 4px;
+  margin-top: 0;
+  padding: 0 0 2px;
+  border: none;
+  border-bottom: 2px solid #000;
   border-radius: 0;
   background: transparent;
-  padding: 2px 2px 1px;
-  height: 28px;
+  box-shadow: none;
   box-sizing: border-box;
+  height: auto;
+  font-family: Georgia, "Times New Roman", serif;
   font-size: 15px;
+  text-align: center;
   vertical-align: baseline;
-  margin: 0 4px;
+  outline: none;
 }
 
 .image-inline-gap-input:focus {
   outline: none;
-  border-bottom-color: #111827;
+  border-bottom: 2px solid #000;
 }
 
 .image-questions-viewer {
