@@ -1,5 +1,8 @@
 /* ===== frontend/js/user_reading/ui/result_view.css ===== */
-
+.reading-result-page,
+.reading-result-page * {
+  font-family: system-ui, -apple-system, sans-serif;
+}
 .reading-result-page {
   min-height: 100vh;
   display: flex;
@@ -27,7 +30,7 @@
 
 .reading-result-card-type {
   font-size: 15px;
-  font-weight: 700;
+  font-weight: 600;
   color: #00baff;
   margin-bottom: 16px;
   letter-spacing: 0.2px;
@@ -47,14 +50,14 @@
 
 .reading-result-band-value {
   font-size: 64px;
-  font-weight: 900;
+  font-weight: 600;
   line-height: 1;
   color: #ffffff;
 }
 
 .reading-result-score {
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 600;
   color: #00baff;
   margin-bottom: 10px;
 }
@@ -76,7 +79,7 @@
 .reading-result-actions {
   width: 100%;
   max-width: 320px;
-  margin-top: 26px;
+  margin-top: 44px;
   display: flex;
   justify-content: space-between;
 }
