@@ -76,7 +76,7 @@
 .reading-result-actions {
   width: 100%;
   max-width: 320px;
-  margin-top: 22px;
+  margin-top: 26px;
   display: flex;
   justify-content: space-between;
 }
@@ -110,4 +110,10 @@
 
 .result-btn:active {
   transform: scale(0.98);
+}
+
+.reading-result-card-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
