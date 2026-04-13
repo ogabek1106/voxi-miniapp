@@ -111,16 +111,15 @@ UserReading.initResultActions = function (data) {
     };
   }
 };
-UserReading.shareStoryResult = function ({ band, correct, total }) {
-  const botLink = "https://t.me/voxi_aibot"; // change if needed
+UserReading.shareStoryResult = function () {
+  const tg = window.Telegram?.WebApp;
 
-  const text =
-    `My IELTS Reading result: Band ${band} (${correct}/${total}) 📘\n\n` +
-    `Practice here:\n${botLink}`;
+  if (!tg || typeof tg.showAlert !== "function") {
+    alert("Story sharing is not ready yet.");
+    return;
+  }
 
-  const url = `https://t.me/share/url?url=${encodeURIComponent(botLink)}&text=${encodeURIComponent(text)}`;
-
-  window.open(url, "_blank");
+  tg.showAlert("Story sharing will be enabled after we connect the result card image URL.");
 };
 UserReading.shareResult = function ({ band, correct, total }) {
   const botLink = "https://t.me/voxi_aibot"; // change if needed
