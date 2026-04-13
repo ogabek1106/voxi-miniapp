@@ -142,7 +142,12 @@ def _evaluate_reading(questions: List[ReadingQuestion], answers: Dict[str, Any])
             score += 1
         details.append(SubmitResultItem(question_id=question.id, correct=is_correct))
 
-    return SubmitResultOut(score=score, total=len(questions), details=details)
+    return SubmitResultOut(
+        score=score,
+        total=len(questions),
+        band=_calculate_reading_band(score),
+        details=details
+    )
 
 
 def _finalize_progress(progress: ReadingProgress, questions: List[ReadingQuestion], submitted_at: datetime) -> SubmitResultOut:
@@ -151,6 +156,7 @@ def _finalize_progress(progress: ReadingProgress, questions: List[ReadingQuestio
     progress.submitted_at = submitted_at
     progress.raw_score = result.score
     progress.max_score = result.total
+    progress.band_score = result.band
     progress.updated_at = submitted_at
     return result
 
