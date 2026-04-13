@@ -3,6 +3,7 @@
 .reading-result-page * {
   font-family: system-ui, -apple-system, sans-serif;
 }
+
 .reading-result-page {
   min-height: 100vh;
   display: flex;
@@ -14,10 +15,15 @@
   background: #f3f4f6;
 }
 
+.reading-result-card-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
 .reading-result-card {
   width: 100%;
   max-width: 320px;
-  background: #ffffff;
   border-radius: 28px;
   box-shadow: 0 14px 40px rgba(0,0,0,0.10);
   padding: 26px 20px 20px;
@@ -26,6 +32,7 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
+  background: #ffffff;
 }
 
 .reading-result-card-type {
@@ -110,14 +117,4 @@
   font-weight: 800;
   color: #6b7280;
   letter-spacing: 0.2px;
-}
-
-.result-btn:active {
-  transform: scale(0.98);
-}
-
-.reading-result-card-wrapper {
-  width: 100%;
-  display: flex;
-  justify-content: center;
 }

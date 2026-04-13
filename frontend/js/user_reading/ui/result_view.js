@@ -4,61 +4,60 @@ window.UserReading = window.UserReading || {};
 UserReading.renderResultPage = function (container, data = {}) {
   if (!container) return;
 
-  const band = Number(data.band ?? 7.5);
-  const correct = data.correct ?? 34;
-  const total = data.total ?? 40;
+  const band = Number(data.band ?? 0).toFixed(1);
+  const correct = Number(data.correct ?? 0);
+  const total = Number(data.total ?? 40);
 
   const today = new Date();
-const formattedDate = today.toLocaleDateString("en-GB", {
-  day: "2-digit",
-  month: "short",
-  year: "numeric"
-});
+  const formattedDate = today.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric"
+  });
 
-container.innerHTML = `
-  <div class="reading-result-page">
+  container.innerHTML = `
+    <div class="reading-result-page">
+      <div class="reading-result-card-wrapper">
+        <div
+          class="reading-result-card"
+          id="reading-result-card"
+          data-band="${band}"
+          data-correct="${correct}"
+          data-total="${total}"
+        >
+          <div class="reading-result-card-type">IELTS Reading</div>
 
-  <div class="reading-result-card-wrapper">
-    <div class="reading-result-card" id="reading-result-card">
-      <div class="reading-result-card-type">IELTS Reading</div>
+          <div class="reading-result-band-box">
+            <div class="reading-result-band-value" id="reading-result-band-value">0.0</div>
+          </div>
 
-      <div class="reading-result-band-box">
-        <div class="reading-result-band-value" id="reading-result-band-value">0.0</div>
+          <div class="reading-result-score">Score: ${correct}/${total}</div>
+          <div class="reading-result-date">${formattedDate}</div>
+          <div class="reading-result-brand">Powered by EBAI Academy</div>
+        </div>
       </div>
 
-      <div class="reading-result-score">Score: ${correct}/${total}</div>
+      <div class="reading-result-actions">
+        <div class="result-action-item" id="result-share-btn">
+          <div class="result-action-circle">🔗</div>
+          <div class="result-action-label">Share</div>
+        </div>
 
-      <div class="reading-result-date">${formattedDate}</div>
+        <div class="result-action-item" id="result-story-btn">
+          <div class="result-action-circle">📸</div>
+          <div class="result-action-label">Story</div>
+        </div>
 
-      <div class="reading-result-brand">Powered by EBAI Academy</div>
+        <div class="result-action-item" id="result-save-btn">
+          <div class="result-action-circle">⬇️</div>
+          <div class="result-action-label">Save</div>
+        </div>
+      </div>
     </div>
-  </div>
+  `;
 
-  <div class="reading-result-actions">
-    <div class="result-action-item" id="result-share-btn">
-      <div class="result-action-circle">🔗</div>
-      <div class="result-action-label">Share</div>
-    </div>
-
-    <div class="result-action-item" id="result-story-btn">
-      <div class="result-action-circle">📸</div>
-      <div class="result-action-label">Story</div>
-    </div>
-
-    <div class="result-action-item" id="result-save-btn">
-      <div class="result-action-circle">⬇️</div>
-      <div class="result-action-label">Save</div>
-    </div>
-  </div>
-
-</div>
-`;
-  UserReading.animateBandValue(band);
-  UserReading.initResultActions({
-    band,
-    correct,
-    total
-  });
+  UserReading.animateBandValue(Number(band));
+  UserReading.initResultActions({ band, correct, total });
 };
 
 UserReading.animateBandValue = function (targetBand) {
@@ -70,24 +69,17 @@ UserReading.animateBandValue = function (targetBand) {
 
   function tick() {
     if (current >= targetBand) {
-      el.textContent = targetBand.toFixed(1);
+      el.textContent = Number(targetBand).toFixed(1);
       return;
     }
 
     current = Math.min(current + step, targetBand);
     el.textContent = current.toFixed(1);
 
-    // dynamic speed:
     const remaining = targetBand - current;
-
-    let delay;
-    if (remaining > 1.0) {
-      delay = 20; // very fast at start
-    } else if (remaining > 0.5) {
-      delay = 50; // medium
-    } else {
-      delay = 120; // slow at the end (important!)
-    }
+    let delay = 120;
+    if (remaining > 1.0) delay = 20;
+    else if (remaining > 0.5) delay = 50;
 
     setTimeout(tick, delay);
   }
@@ -100,101 +92,92 @@ UserReading.initResultActions = function (data) {
   const storyBtn = document.getElementById("result-story-btn");
   const saveBtn = document.getElementById("result-save-btn");
 
-  if (shareBtn) {
-    shareBtn.onclick = function () {
-      UserReading.shareResult(data);
-    };
-  }
-
-  if (storyBtn) {
-    storyBtn.onclick = function () {
-      UserReading.shareStoryResult(data);
-    };
-  }
-
-  if (saveBtn) {
-    saveBtn.onclick = function () {
-      UserReading.saveResultCard();
-    };
-  }
+  if (shareBtn) shareBtn.onclick = () => UserReading.shareResult(data);
+  if (storyBtn) storyBtn.onclick = () => UserReading.shareStoryResult();
+  if (saveBtn) saveBtn.onclick = () => UserReading.saveResultCard();
 };
+
 UserReading.shareStoryResult = function () {
   const tg = window.Telegram?.WebApp;
-
-  if (!tg || typeof tg.showAlert !== "function") {
-    alert("Story sharing is not ready yet.");
+  if (tg && typeof tg.showAlert === "function") {
+    tg.showAlert("Story sharing will be enabled soon.");
     return;
   }
-
-  tg.showAlert("Story sharing will be enabled after we connect the result card image URL.");
+  alert("Story sharing will be enabled soon.");
 };
+
 UserReading.shareResult = function ({ band, correct, total }) {
-  const botLink = "https://t.me/voxi_aibot"; // change if needed
-
+  const botLink = "https://t.me/voxi_aibot";
   const text =
-    `I got Band ${band} in IELTS Reading (${correct}/${total}) 📘\n\n` +
+    `I got Band ${band} in IELTS Reading (${correct}/${total})\n\n` +
     `Try it yourself:\n${botLink}`;
-
   const url = `https://t.me/share/url?url=${encodeURIComponent(botLink)}&text=${encodeURIComponent(text)}`;
-
   window.open(url, "_blank");
 };
 
-UserReading.saveResultCard = async function () {
-  const card = document.getElementById("reading-result-card");
-  if (!card || typeof html2canvas !== "function") {
-    alert("Save is not available.");
-    return;
-  }
+UserReading.resultCardToBlob = function ({ band, correct, total, dateText }) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1080;
+  canvas.height = 1350;
 
-  try {
-    const canvas = await html2canvas(card, {
-      backgroundColor: null,
-      scale: 2,
-      useCORS: true
-    });
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas not supported");
 
-    const link = document.createElement("a");
-    link.href = canvas.toDataURL("image/png");
-    link.download = "voxi-ielts-result.png";
-    link.click();
-    UserReading.showResultBadge("Saved!");
-  } catch (error) {
-    console.error("Failed to save result card:", error);
-    alert("Failed to save image.");
-  }
-};
+  const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+  gradient.addColorStop(0, "#f9fbff");
+  gradient.addColorStop(1, "#eef5ff");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-UserReading.uploadResultCardImage = async function () {
-  const card = document.getElementById("reading-result-card");
-  if (!card || typeof html2canvas !== "function") {
-    throw new Error("Result card is not available.");
-  }
+  const cardX = 130;
+  const cardY = 130;
+  const cardW = canvas.width - 260;
+  const cardH = 940;
 
-  const canvas = await html2canvas(card, {
-    backgroundColor: null,
-    scale: 2,
-    useCORS: true
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(cardX, cardY, cardW, cardH);
+  ctx.strokeStyle = "#e6edf7";
+  ctx.lineWidth = 3;
+  ctx.strokeRect(cardX, cardY, cardW, cardH);
+
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#00baff";
+  ctx.font = "700 48px system-ui, -apple-system, sans-serif";
+  ctx.fillText("IELTS Reading", canvas.width / 2, cardY + 90);
+
+  const circleX = canvas.width / 2;
+  const circleY = cardY + 360;
+  const circleR = 150;
+  ctx.fillStyle = "#00baff";
+  ctx.beginPath();
+  ctx.arc(circleX, circleY, circleR, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "900 120px system-ui, -apple-system, sans-serif";
+  ctx.fillText(String(band), circleX, circleY + 40);
+
+  ctx.fillStyle = "#00baff";
+  ctx.font = "800 58px system-ui, -apple-system, sans-serif";
+  ctx.fillText(`Score: ${correct}/${total}`, canvas.width / 2, cardY + 630);
+
+  ctx.fillStyle = "#6b7280";
+  ctx.font = "600 34px system-ui, -apple-system, sans-serif";
+  ctx.fillText(dateText, canvas.width / 2, cardY + 715);
+
+  ctx.fillStyle = "#9ca3af";
+  ctx.font = "700 30px system-ui, -apple-system, sans-serif";
+  ctx.fillText("Powered by EBAI Academy", canvas.width / 2, cardY + 790);
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error("Failed to generate image"));
+        return;
+      }
+      resolve(blob);
+    }, "image/png");
   });
-
-  const imageBase64 = canvas.toDataURL("image/png");
-
-  const response = await fetch(`${window.API}/result-images/upload`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      image_base64: imageBase64
-    })
-  });
-
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(text || "Failed to upload result image");
-  }
-
-  return response.json();
 };
 
 UserReading.showResultBadge = function (text = "Saved!", type = "success") {
@@ -204,7 +187,6 @@ UserReading.showResultBadge = function (text = "Saved!", type = "success") {
   const badge = document.createElement("div");
   badge.id = "reading-result-badge";
   badge.textContent = text;
-
   badge.style.position = "fixed";
   badge.style.left = "50%";
   badge.style.bottom = "32px";
@@ -220,7 +202,6 @@ UserReading.showResultBadge = function (text = "Saved!", type = "success") {
   badge.style.transition = "opacity 0.2s ease, transform 0.2s ease";
   badge.style.pointerEvents = "none";
   badge.style.background = type === "success" ? "#16a34a" : "#dc2626";
-
   document.body.appendChild(badge);
 
   requestAnimationFrame(() => {
@@ -233,4 +214,56 @@ UserReading.showResultBadge = function (text = "Saved!", type = "success") {
     badge.style.transform = "translateX(-50%) translateY(0)";
     setTimeout(() => badge.remove(), 220);
   }, 1400);
+};
+
+UserReading.saveResultCard = async function () {
+  const saveLabel = document.querySelector("#result-save-btn .result-action-label");
+  const card = document.getElementById("reading-result-card");
+  if (!card) return;
+
+  const band = Number(card.dataset.band || 0).toFixed(1);
+  const correct = Number(card.dataset.correct || 0);
+  const total = Number(card.dataset.total || 40);
+  const dateText = document.querySelector(".reading-result-date")?.textContent || "";
+  const filename = `voxi-ielts-result-${Date.now()}.png`;
+
+  if (saveLabel) saveLabel.textContent = "Saving...";
+
+  try {
+    const blob = await UserReading.resultCardToBlob({ band, correct, total, dateText });
+    let saved = false;
+
+    if (navigator.canShare && navigator.share && typeof File !== "undefined") {
+      const file = new File([blob], filename, { type: "image/png" });
+      if (navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: "IELTS Reading Result",
+          text: `Band ${band} • Score ${correct}/${total}`,
+          files: [file]
+        });
+        saved = true;
+      }
+    }
+
+    if (!saved) {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 3000);
+      saved = true;
+    }
+
+    if (saved) {
+      UserReading.showResultBadge("Saved!", "success");
+    }
+  } catch (error) {
+    console.error("Failed to save result card:", error);
+    UserReading.showResultBadge("Save failed", "error");
+  } finally {
+    if (saveLabel) saveLabel.textContent = "Save";
+  }
 };
