@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.config import ADMIN_IDS
 from app.deps import get_db
-from app.models import ReadingPassage, ReadingProgress, ReadingQuestion, ReadingTest, ReadingTestStatus, User
+from app.models import ReadingPassage, ReadingProgress, ReadingQuestion, ReadingTest, User
 
 router = APIRouter(prefix="/mock-tests", tags=["mock-tests"])
 
@@ -254,17 +254,7 @@ def start_reading_test(mock_id: int, telegram_id: int, db: Session = Depends(get
 
 @router.post("/{mock_id}/reading/submit", response_model=SubmitResultOut)
 def submit_reading_test(mock_id: int, payload: ReadingSubmitIn, db: Session = Depends(get_db)):
-    test = (
-        db.query(ReadingTest)
-        .filter(
-            ReadingTest.mock_pack_id == mock_id,
-            ReadingTest.status == ReadingTestStatus.published.value
-        )
-        .first()
-    )
-    if not test:
-        raise HTTPException(status_code=404, detail="Reading test not found for this mock")
-
+    test = _get_test_for_mock(db, mock_id)
     user = _get_user_by_telegram(db, payload.telegram_id)
     is_admin = _is_admin_user(user)
     now = _utcnow()
