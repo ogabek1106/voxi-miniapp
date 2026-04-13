@@ -30,10 +30,10 @@
 
 .reading-result-card-type {
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 800;
   color: #00baff;
   margin-bottom: 16px;
-  letter-spacing: 0.2px;
+  letter-spacing: 0.4px;
 }
 
 .reading-result-band-box {
@@ -57,9 +57,10 @@
 
 .reading-result-score {
   font-size: 22px;
-  font-weight: 600;
+  font-weight: 800;
   color: #00baff;
   margin-bottom: 10px;
+  letter-spacing: 0.2px;
 }
 
 .reading-result-date {
