@@ -29,6 +29,19 @@ container.innerHTML = `
       <div class="reading-result-date">${formattedDate}</div>
 
       <div class="reading-result-brand">Powered by EBAI Academy</div>
+      <div class="reading-result-actions">
+  <button class="result-btn" id="result-share-btn">
+    Share with friends
+  </button>
+
+  <button class="result-btn" id="result-story-btn">
+    Share to story
+  </button>
+
+  <button class="result-btn" id="result-save-btn">
+    Save to gallery
+  </button>
+</div>
     </div>
   </div>
 `;
