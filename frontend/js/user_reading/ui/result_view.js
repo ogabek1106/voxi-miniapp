@@ -28,7 +28,7 @@ container.innerHTML = `
 
       <div class="reading-result-date">${formattedDate}</div>
 
-      <div class="reading-result-brand">Voxi</div>
+      <div class="reading-result-brand">Powered by EBAI Academy</div>
     </div>
   </div>
 `;
