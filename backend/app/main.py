@@ -38,6 +38,7 @@ app.include_router(admin_router)
 app.include_router(admin_mock_packs.router)
 app.include_router(result_images_router)
 app.mount("/media", StaticFiles(directory="/data/media"), name="media")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 # ✅ CORS FIX (required for Telegram Mini App)
 app.add_middleware(
     CORSMiddleware,
