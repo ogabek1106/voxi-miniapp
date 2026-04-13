@@ -17,31 +17,79 @@ window.getInstructionTypeForEditor = function (uiType) {
   return map[String(uiType || "").trim()] || "TEXT_INPUT";
 };
 
+window.getGeneratedCountForQuestionBlock = function (block) {
+  if (!block) return 1;
+
+  const type = String(block.querySelector(".q-type-select")?.value || block.dataset.type || "").trim();
+
+  if (type === "matching") {
+    return Math.max(block.querySelectorAll(".match-question").length, 1);
+  }
+  if (type === "paragraph_matching") {
+    return Math.max(block.querySelectorAll(".paragraph-match-row").length, 1);
+  }
+  if (type === "summary") {
+    return Math.max(block.querySelectorAll(".summary-answer-block").length, 1);
+  }
+  if (type === "image_questions") {
+    return Math.max(block.querySelectorAll(".image-questions-row").length, 1);
+  }
+  if (type === "gap") {
+    return Math.max(block.querySelectorAll(".gap-answer-block").length, 1);
+  }
+  return 1;
+};
+
+window.recalculateQuestionNumbers = function () {
+  const blocks = Array.from(document.querySelectorAll(".question-block"));
+  let current = 1;
+
+  blocks.forEach((block) => {
+    const generated = getGeneratedCountForQuestionBlock(block);
+    block.dataset.globalQ = String(current);
+    block.dataset.generatedQuestions = String(generated);
+
+    const header = block.querySelector(".q-header");
+    if (header) {
+      header.textContent = `Q${current}`;
+    }
+
+    const type = String(block.querySelector(".q-type-select")?.value || block.dataset.type || "").trim();
+
+    if (type === "matching") {
+      block.querySelectorAll(".match-q-label").forEach((label, index) => {
+        label.textContent = `Q${current + index}`;
+      });
+    }
+
+    if (type === "paragraph_matching") {
+      block.querySelectorAll(".paragraph-match-q-label").forEach((label, index) => {
+        label.textContent = `Q${current + index}`;
+      });
+    }
+
+    if (type === "summary") {
+      block.querySelectorAll(".summary-blank-label").forEach((label, index) => {
+        label.textContent = `Q${current + index} Blank #${index + 1}`;
+      });
+    }
+
+    if (type === "image_questions") {
+      block.querySelectorAll(".image-question-label").forEach((label, index) => {
+        label.textContent = `Q${current + index}`;
+      });
+    }
+
+    current += generated;
+  });
+
+  window.__globalQuestionCounter = Math.max(current - 1, 0);
+  return window.__globalQuestionCounter;
+};
+
 window.getNextQuestionNumber = function () {
-  const blockNums = [...document.querySelectorAll(".question-block")]
-    .map((block) => {
-      const start = parseInt(block.dataset.globalQ || "0", 10) || 0;
-      const generated = parseInt(block.dataset.generatedQuestions || "1", 10) || 1;
-      return start + generated - 1;
-    });
-
-  const matchingNums = [...document.querySelectorAll(".match-q-label")]
-    .map((el) => parseInt(String(el.textContent || "").replace("Q", ""), 10) || 0);
-
-  const paragraphNums = [...document.querySelectorAll(".paragraph-match-q-label")]
-    .map((el) => parseInt(String(el.textContent || "").replace("Q", ""), 10) || 0);
-
-  const summaryNums = [...document.querySelectorAll(".summary-blank-label")]
-    .map((el) => {
-      const match = String(el.textContent || "").match(/Q(\d+)/);
-      return match ? parseInt(match[1], 10) : 0;
-    });
-
-  const imageNums = [...document.querySelectorAll(".image-question-label")]
-    .map((el) => parseInt(String(el.textContent || "").replace("Q", ""), 10) || 0);
-
-  const nums = [...blockNums, ...matchingNums, ...paragraphNums, ...summaryNums, ...imageNums];
-  return nums.length ? Math.max(...nums) + 1 : 1;
+  const last = recalculateQuestionNumbers();
+  return (last || 0) + 1;
 };
 
 window.renderAdminQuestionBlock = function (qNum) {
@@ -151,6 +199,7 @@ window.wireAdminQuestionBlock = function (block, initialType = "matching") {
 
     root.innerHTML = "";
     AdminReading.loadQuestionUI(nextType, root);
+    recalculateQuestionNumbers();
   });
 };
 
@@ -198,6 +247,7 @@ window.addQuestion = function (btn) {
   const block = holder.firstElementChild;
   questionsWrap.insertBefore(block, btn);
   wireAdminQuestionBlock(block, "matching");
+  recalculateQuestionNumbers();
 };
 
 document.addEventListener("click", function (event) {
@@ -208,12 +258,5 @@ document.addEventListener("click", function (event) {
   if (!block) return;
   block.remove();
 
-  const blocks = document.querySelectorAll(".question-block");
-  let current = 1;
-  blocks.forEach((item) => {
-    item.dataset.globalQ = current;
-    const header = item.querySelector(".q-header");
-    if (header) header.textContent = `Q${current}`;
-    current += 1;
-  });
+  recalculateQuestionNumbers();
 });
