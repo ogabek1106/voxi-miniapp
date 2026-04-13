@@ -8,17 +8,30 @@ UserReading.renderResultPage = function (container, data = {}) {
   const correct = data.correct ?? 34;
   const total = data.total ?? 40;
 
-  container.innerHTML = `
-    <div class="reading-result-page">
-      <div class="reading-result-title">Your IELTS Band</div>
+  const today = new Date();
+const formattedDate = today.toLocaleDateString("en-GB", {
+  day: "2-digit",
+  month: "short",
+  year: "numeric"
+});
+
+container.innerHTML = `
+  <div class="reading-result-page">
+    <div class="reading-result-card" id="reading-result-card">
+      <div class="reading-result-card-type">IELTS Reading</div>
 
       <div class="reading-result-band-box">
-  <div class="reading-result-band-value" id="reading-result-band-value">0.0</div>
-</div>
+        <div class="reading-result-band-value" id="reading-result-band-value">0.0</div>
+      </div>
 
       <div class="reading-result-score">Score: ${correct}/${total}</div>
+
+      <div class="reading-result-date">${formattedDate}</div>
+
+      <div class="reading-result-brand">Voxi</div>
     </div>
-  `;
+  </div>
+`;
   UserReading.animateBandValue(band);
 };
 
