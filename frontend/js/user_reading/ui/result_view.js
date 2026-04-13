@@ -158,6 +158,7 @@ UserReading.saveResultCard = async function () {
     link.href = canvas.toDataURL("image/png");
     link.download = "voxi-ielts-result.png";
     link.click();
+    UserReading.showResultBadge("Saved!");
   } catch (error) {
     console.error("Failed to save result card:", error);
     alert("Failed to save image.");
