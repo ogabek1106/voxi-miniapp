@@ -195,3 +195,41 @@ UserReading.uploadResultCardImage = async function () {
 
   return response.json();
 };
+
+UserReading.showResultBadge = function (text = "Saved!", type = "success") {
+  const old = document.getElementById("reading-result-badge");
+  if (old) old.remove();
+
+  const badge = document.createElement("div");
+  badge.id = "reading-result-badge";
+  badge.textContent = text;
+
+  badge.style.position = "fixed";
+  badge.style.left = "50%";
+  badge.style.bottom = "32px";
+  badge.style.transform = "translateX(-50%)";
+  badge.style.padding = "10px 16px";
+  badge.style.borderRadius = "999px";
+  badge.style.fontSize = "13px";
+  badge.style.fontWeight = "700";
+  badge.style.color = "#ffffff";
+  badge.style.zIndex = "9999";
+  badge.style.boxShadow = "0 8px 22px rgba(0,0,0,0.18)";
+  badge.style.opacity = "0";
+  badge.style.transition = "opacity 0.2s ease, transform 0.2s ease";
+  badge.style.pointerEvents = "none";
+  badge.style.background = type === "success" ? "#16a34a" : "#dc2626";
+
+  document.body.appendChild(badge);
+
+  requestAnimationFrame(() => {
+    badge.style.opacity = "1";
+    badge.style.transform = "translateX(-50%) translateY(-6px)";
+  });
+
+  setTimeout(() => {
+    badge.style.opacity = "0";
+    badge.style.transform = "translateX(-50%) translateY(0)";
+    setTimeout(() => badge.remove(), 220);
+  }, 1400);
+};
