@@ -1077,14 +1077,18 @@ UserReading.submitReading = async function (options = {}) {
     if (UserReading.__mockId) {
       await UserReading.saveProgress(UserReading.__mockId);
       const result = await UserReading.submitProgress(UserReading.__mockId);
-      const score = Number(result?.score || 0);
-      const total = Number(result?.total || 0);
 
-      UserReading.markSubmittedState(
-        options.auto
-          ? `Time is up. Auto-submitted: ${score}/${total}`
-          : `Submitted: ${score}/${total}`
-      );
+      const score = Number(result?.score || 0);
+      const total = Number(result?.total || 40);
+      const band = result?.band ?? "0.0";
+
+      UserReading.showResultScreen({
+        band,
+        correct: score,
+        total
+      });
+
+      UserReading.__isSubmitted = true;
       return;
     }
 
