@@ -29,11 +29,10 @@
 }
 
 .reading-result-card-type {
-  font-size: 15px;
   font-weight: 800;
+  letter-spacing: 0.4px;
   color: #00baff;
   margin-bottom: 16px;
-  letter-spacing: 0.4px;
 }
 
 .reading-result-band-box {
