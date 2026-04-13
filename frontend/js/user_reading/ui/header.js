@@ -1096,7 +1096,14 @@ UserReading.submitReading = async function (options = {}) {
     UserReading.markSubmittedState("Submitted");
   } catch (error) {
     console.error("Submit failed:", error);
-    alert("Failed to submit");
+
+    let message = "Failed to submit";
+    try {
+      message = String(error?.message || message);
+    } catch (_) {}
+
+    alert(message);
+
     UserReading.setSubmitButtonLoading(false);
     return;
   } finally {
