@@ -97,11 +97,30 @@ UserReading.animateBandValue = function (targetBand) {
 
 UserReading.initResultActions = function (data) {
   const shareBtn = document.getElementById("result-share-btn");
-  if (!shareBtn) return;
+  const storyBtn = document.getElementById("result-story-btn");
 
-  shareBtn.onclick = function () {
-    UserReading.shareResult(data);
-  };
+  if (shareBtn) {
+    shareBtn.onclick = function () {
+      UserReading.shareResult(data);
+    };
+  }
+
+  if (storyBtn) {
+    storyBtn.onclick = function () {
+      UserReading.shareStoryResult(data);
+    };
+  }
+};
+UserReading.shareStoryResult = function ({ band, correct, total }) {
+  const botLink = "https://t.me/voxi_aibot"; // change if needed
+
+  const text =
+    `My IELTS Reading result: Band ${band} (${correct}/${total}) 📘\n\n` +
+    `Practice here:\n${botLink}`;
+
+  const url = `https://t.me/share/url?url=${encodeURIComponent(botLink)}&text=${encodeURIComponent(text)}`;
+
+  window.open(url, "_blank");
 };
 UserReading.shareResult = function ({ band, correct, total }) {
   const botLink = "https://t.me/voxi_aibot"; // change if needed
