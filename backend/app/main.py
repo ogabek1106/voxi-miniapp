@@ -19,6 +19,7 @@ from .db import (
     ensure_reading_question_type_values
 )
 from app.api.admin_upload import router as admin_upload_router
+from app.api.result_images import router as result_images_router
 from app.api import admin_mock_packs
 import os
 
@@ -35,6 +36,7 @@ app.include_router(mock_tests_router)
 app.include_router(me_router)
 app.include_router(admin_router)
 app.include_router(admin_mock_packs.router)
+app.include_router(result_images_router)
 app.mount("/media", StaticFiles(directory="/data/media"), name="media")
 # ✅ CORS FIX (required for Telegram Mini App)
 app.add_middleware(
