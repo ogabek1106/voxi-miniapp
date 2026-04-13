@@ -61,7 +61,13 @@ UserReading.renderImageQuestionsGroup = function (group, startNumber) {
 
       ${imageUrl ? `
         <div class="image-questions-image-wrap">
-          <img src="${window.API}${imageUrl}" class="image-questions-image" alt="Question image" />
+          <img
+            src="${window.API}${imageUrl}"
+            class="image-questions-image"
+            alt="Question image"
+            data-full-image-src="${window.API}${imageUrl}"
+            onclick="UserReading.openImageQuestionsViewer(this.getAttribute('data-full-image-src'))"
+          />
         </div>
       ` : ""}
 
@@ -71,20 +77,97 @@ UserReading.renderImageQuestionsGroup = function (group, startNumber) {
           return `
             <div class="image-questions-row">
               <div class="image-questions-label">${number}.</div>
-              <div class="image-questions-text">${UserReading.escapeHtml(q.content?.text || "")}</div>
-              <input
-                type="text"
-                name="q_${q.id}"
-                data-qid="${q.id}"
-                class="image-questions-input"
-                autocomplete="off"
-                autocapitalize="off"
-                spellcheck="false"
-              />
+              <div class="image-questions-text">
+                ${UserReading.renderImageQuestionInlineGap(q)}
+              </div>
             </div>
           `;
         }).join("")}
       </div>
     </div>
   `;
+};
+
+UserReading.renderImageQuestionInlineGap = function (question) {
+  const rawText = String(question?.content?.text || "");
+  const parts = rawText.split(/_{3,}/g);
+  const blanksCount = parts.length - 1;
+  let html = "";
+
+  parts.forEach((part, index) => {
+    html += `<span>${UserReading.escapeHtml(part)}</span>`;
+    if (index < blanksCount) {
+      html += UserReading.renderImageQuestionInlineInput(question, index);
+    }
+  });
+
+  if (blanksCount <= 0) {
+    html += ` ${UserReading.renderImageQuestionInlineInput(question, 0)}`;
+  }
+
+  return html;
+};
+
+UserReading.renderImageQuestionInlineInput = function (question, blankIndex) {
+  return `
+    <input
+      type="text"
+      name="q_${question.id}_${blankIndex}"
+      data-qid="${question.id}"
+      data-blank-index="${blankIndex}"
+      class="image-inline-gap-input"
+      autocomplete="off"
+      autocapitalize="off"
+      spellcheck="false"
+    />
+  `;
+};
+
+UserReading.ensureImageQuestionsViewer = function () {
+  if (document.getElementById("image-questions-viewer")) return;
+
+  const viewer = document.createElement("div");
+  viewer.id = "image-questions-viewer";
+  viewer.className = "image-questions-viewer";
+  viewer.innerHTML = `
+    <div class="image-questions-viewer-backdrop" onclick="UserReading.closeImageQuestionsViewer()"></div>
+    <div class="image-questions-viewer-content">
+      <button type="button" class="image-questions-viewer-close" onclick="UserReading.closeImageQuestionsViewer()">✕</button>
+      <div class="image-questions-viewer-scroll">
+        <img id="image-questions-viewer-img" class="image-questions-viewer-img" alt="Question image zoom view" />
+      </div>
+    </div>
+  `;
+  document.body.appendChild(viewer);
+
+  const img = viewer.querySelector("#image-questions-viewer-img");
+  if (img) {
+    img.addEventListener("click", () => {
+      img.classList.toggle("zoomed");
+    });
+  }
+};
+
+UserReading.openImageQuestionsViewer = function (src) {
+  if (!src) return;
+  UserReading.ensureImageQuestionsViewer();
+
+  const viewer = document.getElementById("image-questions-viewer");
+  const img = document.getElementById("image-questions-viewer-img");
+  if (!viewer || !img) return;
+
+  img.src = src;
+  img.classList.remove("zoomed");
+  viewer.classList.add("open");
+  document.body.style.overflow = "hidden";
+};
+
+UserReading.closeImageQuestionsViewer = function () {
+  const viewer = document.getElementById("image-questions-viewer");
+  const img = document.getElementById("image-questions-viewer-img");
+  if (!viewer || !img) return;
+
+  viewer.classList.remove("open");
+  img.classList.remove("zoomed");
+  document.body.style.overflow = "";
 };
