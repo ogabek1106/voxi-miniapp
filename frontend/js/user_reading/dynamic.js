@@ -215,3 +215,29 @@ UserReading.restoreProgress = async function (data) {
     console.error("Failed to restore progress:", error);
   }
 };
+
+window.UserReading = window.UserReading || {};
+
+UserReading.showResultScreen = function (data = {}) {
+  const container = document.getElementById("screen-reading");
+  if (!container) return;
+
+  const home = document.getElementById("screen-home");
+  const profile = document.getElementById("screen-profile");
+  const mocks = document.getElementById("screen-mocks");
+  const admin = document.getElementById("screen-admin");
+
+  if (home) home.style.display = "none";
+  if (profile) profile.style.display = "none";
+  if (mocks) mocks.style.display = "none";
+  if (admin) admin.style.display = "none";
+
+  container.style.display = "block";
+  container.innerHTML = "";
+
+  UserReading.renderResultPage(container, {
+    band: data.band ?? "0.0",
+    correct: data.correct ?? 0,
+    total: data.total ?? 40
+  });
+};
