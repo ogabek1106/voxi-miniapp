@@ -1,112 +1,282 @@
 // frontend/js/admin_reading/api/reading_api.js
 window.AdminReading = window.AdminReading || {};
+
 window.collectReadingFormData = function () {
-  
   const title = document.getElementById("reading-title")?.value?.trim();
   const time = parseInt(document.getElementById("reading-time")?.value || "60", 10);
 
   const passages = [];
-  document.querySelectorAll(".passage-block").forEach((p, pi) => {
-    const passageTitle = p.querySelector(".passage-title")?.value || null;
-    const passageText = p.querySelector(".passage-text")?.value || "";
-
-    const questions = [];
-    p.querySelectorAll(".question-block").forEach((q, qi) => {
-      questions.push({
-        type: q.querySelector(".q-type")?.value,
-        text: q.querySelector(".q-text")?.value,
-        correct_answer: q.querySelector(".q-answer")?.value,
-        order_index: qi + 1,
-      });
-    });
-
+  document.querySelectorAll(".passage-block").forEach((passageBlock, passageIndex) => {
     passages.push({
-      title: passageTitle,
-      text: passageText,
-      order_index: pi + 1,
-      questions,
+      title: passageBlock.querySelector(".passage-title")?.value || null,
+      text: passageBlock.querySelector(".passage-text")?.value || "",
+      order_index: passageIndex + 1,
+      questions: Array.from(passageBlock.querySelectorAll(".question-block")).map((block, questionIndex) => ({
+        type: block.querySelector(".q-type-select")?.value || "",
+        order_index: questionIndex + 1
+      }))
     });
   });
 
   return { title, time_limit_minutes: time, passages };
 };
 
-window.saveReadingDraft = async function () {
-  const btn = document.getElementById("btn-save-draft");
-  if (btn) {
-    if (btn.disabled) return;         // prevent double click
-    btn.disabled = true;
-    btn.innerText = "⏳ Saving...";
-  }
-  const title = document.getElementById("reading-title")?.value?.trim();
-  const time = parseInt(document.getElementById("reading-time")?.value || "60", 10);
-
-  if (!title) {
-    alert("Reading name is required");
-    if (btn) {
-      btn.disabled = false;
-      btn.innerText = "💾 Save Draft";
+window.validateReadingEditor = function () {
+  const passageBlocks = document.querySelectorAll(".passage-block");
+  for (let pi = 0; pi < passageBlocks.length; pi++) {
+    const passage = passageBlocks[pi];
+    const passageText = passage.querySelector(".passage-text")?.value?.trim() || "";
+    if (!passageText) {
+      throw new Error(`Passage ${pi + 1} text is empty`);
     }
-    return;
-  }
-  try {
-    const passageBlocks = document.querySelectorAll(".passage-block");
-    // 🔴 PRE-VALIDATION (BEFORE ANY DELETE)
-    for (let pi = 0; pi < passageBlocks.length; pi++) {
-      const p = passageBlocks[pi];
 
-      const questions = p.querySelector(".questions-wrap")
-        .querySelectorAll(".question-block");
+    const questionBlocks = passage.querySelectorAll(".question-block");
+    for (let qi = 0; qi < questionBlocks.length; qi++) {
+      const block = questionBlocks[qi];
+      const type = block.querySelector(".q-type-select")?.value || "";
 
-      for (let qi = 0; qi < questions.length; qi++) {
-        
-        const q = questions[qi];
-        const instruction = q.querySelector(".q-instruction-select")?.value?.trim() || null;
-        const type = q.querySelector(".q-type-select")?.value;
+      if (type === "gap") {
+        const text = block.querySelector(".gap-text")?.value?.trim() || "";
+        const blanks = AdminReading.Gap.detectBlanks(text);
+        const answerBlocks = block.querySelectorAll(".gap-answer-block");
+        const answers = Array.from(answerBlocks).map((answerBlock) =>
+          Array.from(answerBlock.querySelectorAll(".gap-answer-input"))
+            .map((input) => input.value.trim())
+            .filter(Boolean)
+        );
 
-        if (type === "gap") {
-          const text = q.querySelector(".gap-text")?.value?.trim() || "";
-          const blanks = AdminReading.Gap.detectBlanks(text);
-
-          const answerBlocks = q.querySelectorAll(".gap-answer-block");
-
-          const answers = Array.from(answerBlocks).map(block => {
-            return Array.from(block.querySelectorAll(".gap-answer-input"))
-              .map(i => i.value.trim())
-              .filter(Boolean);
-          });
-
-          if (answers.length !== blanks.length) {
-            alert(`❌ Gap mismatch: ${blanks.length} blanks but ${answers.length} answer groups`);
-  
-            if (btn) {
-              btn.disabled = false;
-              btn.innerText = "💾 Save Draft";
-            }
-
-            return;
-          }
+        if (answers.length !== blanks.length) {
+          throw new Error(`Gap mismatch in passage ${pi + 1}: ${blanks.length} blanks but ${answers.length} answer groups`);
         }
       }
     }
-   
-    let testId;
-    console.log("🧪 Save draft started");
-    if (window.__currentEditingTestId) {
-      await apiPut(`/admin/reading/tests/${window.__currentEditingTestId}`, {
+  }
+};
+
+window.createPassagesAndQuestions = async function (testId) {
+  const passageBlocks = document.querySelectorAll(".passage-block");
+
+  for (let pi = 0; pi < passageBlocks.length; pi++) {
+    const passageBlock = passageBlocks[pi];
+    const passageTitle = passageBlock.querySelector(".passage-title")?.value || null;
+    const passageText = passageBlock.querySelector(".passage-text")?.value || "";
+
+    const createdPassage = await apiPost(`/admin/reading/tests/${testId}/passages`, {
+      title: passageTitle,
+      text: passageText,
+      image_url: null,
+      order_index: pi + 1
+    });
+
+    const passageId = createdPassage.id;
+    let orderCursor = 1;
+    let groupCounter = 1;
+
+    const blocks = passageBlock.querySelectorAll(".question-block");
+    for (let qi = 0; qi < blocks.length; qi++) {
+      const block = blocks[qi];
+      const type = block.querySelector(".q-type-select")?.value || "matching";
+      const instruction = block.querySelector(".q-instruction-select")?.value?.trim() || null;
+
+      if (type === "matching") {
+        const groupId = groupCounter++;
+        const options = Array.from(block.querySelectorAll(".match-option"))
+          .map((option) => option.value.trim())
+          .filter(Boolean);
+
+        const questionInputs = block.querySelectorAll(".match-question");
+        const answerSelects = block.querySelectorAll(".match-answer");
+
+        for (let i = 0; i < questionInputs.length; i++) {
+          const text = questionInputs[i].value?.trim();
+          if (!text) continue;
+
+          await apiPost(`/admin/reading/passages/${passageId}/questions`, {
+            type: "MATCHING",
+            order_index: orderCursor++,
+            question_group_id: groupId,
+            instruction,
+            content: { text },
+            correct_answer: { value: answerSelects[i]?.value || "A" },
+            meta: { options },
+            points: 1
+          });
+        }
+        continue;
+      }
+
+      if (type === "paragraph_matching") {
+        const groupId = groupCounter++;
+        const payload = AdminReading.serializeParagraphMatching(block, groupId, orderCursor);
+        if (!payload || !payload.length) continue;
+
+        for (const item of payload) {
+          await apiPost(`/admin/reading/passages/${passageId}/questions`, item);
+        }
+        orderCursor += payload.length;
+        continue;
+      }
+
+      if (type === "single_choice") {
+        const options = Array.from(block.querySelectorAll(".mcq-option-input"))
+          .map((option) => option.value.trim())
+          .filter(Boolean);
+        const questionText = block.querySelector(".mcq-question")?.value?.trim() || "";
+        if (!questionText) continue;
+
+        await apiPost(`/admin/reading/passages/${passageId}/questions`, {
+          type: "SINGLE_CHOICE",
+          order_index: orderCursor++,
+          instruction,
+          content: { text: questionText },
+          correct_answer: { value: block.querySelector(".mcq-correct")?.value || "A" },
+          meta: { options },
+          points: 1
+        });
+        continue;
+      }
+
+      if (type === "multiple_choice") {
+        const questionText = block.querySelector(".mcq-question")?.value?.trim() || "";
+        if (!questionText) continue;
+
+        const optionEls = block.querySelectorAll(".mcq-option");
+        const options = [];
+        const correct = [];
+
+        optionEls.forEach((optionEl, index) => {
+          const key = String.fromCharCode(65 + index);
+          const text = optionEl.querySelector(".mcq-option-text")?.value?.trim();
+          if (!text) return;
+          options.push({ key, text });
+          if (optionEl.querySelector(".mcq-correct")?.checked) {
+            correct.push(key);
+          }
+        });
+
+        if (!options.length || !correct.length) continue;
+
+        await apiPost(`/admin/reading/passages/${passageId}/questions`, {
+          type: "MULTI_CHOICE",
+          order_index: orderCursor++,
+          instruction,
+          content: { text: questionText, options },
+          correct_answer: { value: correct },
+          meta: { max_answers: parseInt(block.querySelector(".mcq-max")?.value || "1", 10) },
+          points: 1
+        });
+        continue;
+      }
+
+      if (type === "yes_no_ng") {
+        const questionText = block.querySelector(".ynng-question")?.value?.trim() || "";
+        if (!questionText) continue;
+
+        await apiPost(`/admin/reading/passages/${passageId}/questions`, {
+          type: "YES_NO_NG",
+          order_index: orderCursor++,
+          instruction,
+          content: { text: questionText },
+          correct_answer: { value: block.querySelector(".ynng-correct")?.value || "YES" },
+          meta: { subtype: "YN" },
+          points: 1
+        });
+        continue;
+      }
+
+      if (type === "tf_ng") {
+        const payload = AdminReading.serializeTFNG(block);
+        if (!payload) continue;
+
+        await apiPost(`/admin/reading/passages/${passageId}/questions`, {
+          ...payload,
+          order_index: orderCursor++,
+          instruction,
+          points: 1
+        });
+        continue;
+      }
+
+      if (type === "gap") {
+        const groupId = groupCounter++;
+        const text = block.querySelector(".gap-text")?.value?.trim() || "";
+        const blanks = AdminReading.Gap.detectBlanks(text);
+        const answerBlocks = block.querySelectorAll(".gap-answer-block");
+
+        const answers = Array.from(answerBlocks).map((answerBlock) =>
+          Array.from(answerBlock.querySelectorAll(".gap-answer-input"))
+            .map((input) => input.value.trim())
+            .filter(Boolean)
+        );
+
+        for (let i = 0; i < blanks.length; i++) {
+          const variants = answers[i] || [];
+          if (!variants.length) continue;
+
+          await apiPost(`/admin/reading/passages/${passageId}/questions`, {
+            type: "TEXT_INPUT",
+            order_index: orderCursor++,
+            question_group_id: groupId,
+            instruction,
+            content: { text },
+            correct_answer: { value: variants[0] },
+            meta: { variants },
+            points: 1
+          });
+        }
+        continue;
+      }
+
+      if (type === "summary") {
+        const groupId = groupCounter++;
+        const payload = AdminReading.serializeSummary(block, groupId, orderCursor);
+        if (!payload || !payload.length) continue;
+
+        for (const item of payload) {
+          await apiPost(`/admin/reading/passages/${passageId}/questions`, item);
+        }
+        orderCursor += payload.length;
+        continue;
+      }
+
+      if (type === "image_questions") {
+        const groupId = groupCounter++;
+        const payload = AdminReading.serializeImageQuestions(block, groupId, orderCursor);
+        if (!payload || !payload.length) continue;
+
+        for (const item of payload) {
+          await apiPost(`/admin/reading/passages/${passageId}/questions`, item);
+        }
+        orderCursor += payload.length;
+      }
+    }
+  }
+};
+
+window.saveReadingDraft = async function () {
+  const btn = document.getElementById("btn-save-draft");
+  if (btn) {
+    if (btn.disabled) return;
+    btn.disabled = true;
+    btn.innerText = "⏳ Saving...";
+  }
+
+  try {
+    const title = document.getElementById("reading-title")?.value?.trim();
+    const time = parseInt(document.getElementById("reading-time")?.value || "60", 10);
+    if (!title) throw new Error("Reading name is required");
+
+    validateReadingEditor();
+
+    let testId = window.__currentEditingTestId;
+    if (testId) {
+      await apiPut(`/admin/reading/tests/${testId}`, {
         title,
         time_limit_minutes: time
       });
 
-      const old = await apiGet(`/admin/reading/tests/${window.__currentEditingTestId}`);
-
-      const deletions = (old.passages || []).map(p =>
-        apiDelete(`/admin/reading/passages/${p.id}`)
-      );
-
-      await Promise.all(deletions);
-
-      testId = window.__currentEditingTestId;
+      const old = await apiGet(`/admin/reading/tests/${testId}`);
+      await Promise.all((old.passages || []).map((passage) => apiDelete(`/admin/reading/passages/${passage.id}`)));
     } else {
       const test = await apiPost("/admin/reading/tests", {
         title,
@@ -117,312 +287,14 @@ window.saveReadingDraft = async function () {
       window.__currentEditingTestId = testId;
     }
 
-    
-    for (let pi = 0; pi < passageBlocks.length; pi++) {
-      const p = passageBlocks[pi];
-
-      const passageTitle = p.querySelector(".passage-title")?.value || null;
-      const passageText = p.querySelector(".passage-text")?.value || "";
-
-      if (!passageText.trim()) {
-        alert(`Passage ${pi + 1} text is empty`);
-        if (btn) {
-          btn.disabled = false;
-          btn.innerText = "💾 Save Draft";
-        }
-        return;
-      }
-      console.log("🧪 Creating passage", pi + 1);
-      const imageWrap = p.querySelector(".image-attach-wrap");
-      const imageUrl = imageWrap?.dataset.imageUrl || null;
-
-      const passage = await apiPost(`/admin/reading/tests/${testId}/passages`, {
-        title: passageTitle,
-        text: passageText,
-        image_url: imageUrl,
-        order_index: pi + 1
-      });
-      const passageId = passage.id;
-
-      // 3) Create questions for this passage
-      const questions = p.querySelector(".questions-wrap").querySelectorAll(".question-block");
-      let orderCursor = 1;
-      let groupCounter = 1;
-      for (let qi = 0; qi < questions.length; qi++) {
-        
-        const q = questions[qi];
-        const instruction = q.querySelector(".q-instruction-select")?.value?.trim() || null;
-        const imageWrap = q.querySelector(".image-attach-wrap");
-        const imageUrl = imageWrap?.dataset.imageUrl || null;
-        console.log("---- QUESTION BLOCK ----");
-        console.log(q);
-
-        const type = q.querySelector(".q-type-select")?.value || "matching";
-       
-
-        console.log("type:", type);
-        
-
-        // const type = typeEl?.value;
-        if (type === "matching") {
-          const groupId = groupCounter++;
-          const options = Array.from(q.querySelectorAll(".match-option"))
-            .map(o => o.value.trim())
-            .filter(Boolean);
-
-          const matchQuestions = q.querySelectorAll(".match-question");
-
-          for (let i = 0; i < matchQuestions.length; i++) {
-
-            const qText = matchQuestions[i].value?.trim();
-            if (!qText) continue;
-
-            const answer = q.querySelectorAll(".match-answer")[i].value;
-
-            await apiPost(`/admin/reading/passages/${passageId}/questions`, {
-              type: "MATCHING",
-              order_index: orderCursor++,
-              question_group_id: groupId,
-              instruction: instruction,
-              image_url: imageUrl,
-              content: { text: qText },
-              correct_answer: { value: answer },
-              meta: { options: options },
-              points: 1
-            });
-
-          }
-
-          continue;
-        }
-        if (type === "paragraph_matching") {
-          const groupId = groupCounter++;
-          const payload = AdminReading.serializeParagraphMatching(q, groupId, orderCursor);
-
-          if (!payload || !payload.length) continue;
-
-          for (const item of payload) {
-            await apiPost(`/admin/reading/passages/${passageId}/questions`, {
-              ...item,
-              image_url: imageUrl
-            });
-          }
-
-          orderCursor += payload.length;
-
-          continue;
-        }
-        if (type === "single_choice") {
-
-          const optionInputs = q.querySelectorAll(".mcq-option-input");
-
-          const options = Array.from(optionInputs)
-            .map(o => o.value.trim())
-            .filter(Boolean);
-
-          const correct = q.querySelector(".mcq-correct")?.value || "A";
-
-          const questionText =
-            q.querySelector(".mcq-question")?.value?.trim() || "";
-
-          await apiPost(`/admin/reading/passages/${passageId}/questions`, {
-            type: "SINGLE_CHOICE",
-            order_index: orderCursor++,
-            instruction: instruction,
-            image_url: imageUrl,
-            content: { text: questionText },
-            correct_answer: { value: correct },
-            meta: { options },
-            points: 1
-          });
-
-          continue;
-        }
-
-        if (type === "multiple_choice") {
-
-          const questionText =
-            q.querySelector(".mcq-question")?.value?.trim() || "";
-
-          if (!questionText) continue;
-
-          const maxAnswers = parseInt(
-            q.querySelector(".mcq-max")?.value || "1",
-            10
-          );
-
-          const optionEls = q.querySelectorAll(".mcq-option");
-
-          const options = [];
-          const correct_answers = [];
-
-          optionEls.forEach((el, index) => {
-            const key = String.fromCharCode(65 + index);
-
-            const text = el.querySelector(".mcq-option-text")?.value?.trim();
-
-            if (!text) return;
-
-            options.push({ key, text });
-
-            if (el.querySelector(".mcq-correct")?.checked) {
-              correct_answers.push(key);
-            }
-          });
-
-          if (!options.length) continue;
-          if (!correct_answers.length) continue;
-
-          await apiPost(`/admin/reading/passages/${passageId}/questions`, {
-            type: "MULTI_CHOICE",
-            order_index: orderCursor++,
-            instruction: instruction,
-            image_url: imageUrl,
-            content: {
-              text: questionText,
-              options: options
-            },
-            correct_answer: {
-              value: correct_answers
-            },
-            meta: {
-              max_answers: maxAnswers
-            },
-            points: 1
-          });
-
-          continue;
-        }
-        
-        if (type === "yes_no_ng") {
-
-          const questionText =
-            q.querySelector(".ynng-question")?.value?.trim() || "";
-
-          const correct =
-            q.querySelector(".ynng-correct")?.value || "YES";
-
-          if (!questionText) continue;
-
-          await apiPost(`/admin/reading/passages/${passageId}/questions`, {
-            type: "YES_NO_NG",
-            order_index: orderCursor++,
-            instruction: instruction,
-            image_url: imageUrl,
-            content: { text: questionText },
-            correct_answer: { value: correct },
-            meta: { subtype: "YN" },
-            points: 1
-          });
-
-          continue;
-        }
-
-        if (type === "tf_ng") {
-
-          const payload = AdminReading.serializeTFNG(q);
-
-          if (!payload) continue;
-
-          await apiPost(`/admin/reading/passages/${passageId}/questions`, {
-            ...payload,
-            order_index: orderCursor++,
-            instruction: instruction,
-            image_url: imageUrl,
-            points: 1
-          });
-
-          continue;
-        }
-        
-        if (type === "gap") {
-
-          const groupId = groupCounter++;
-
-          const text = q.querySelector(".gap-text")?.value?.trim() || "";
-
-          // 🔹 detect blanks
-          const blanks = AdminReading.Gap.detectBlanks(text);
-
-          // 🔹 collect answers
-          const answerBlocks = q.querySelectorAll(".gap-answer-block");
-
-          const answers = Array.from(answerBlocks).map(block => {
-            return Array.from(block.querySelectorAll(".gap-answer-input"))
-              .map(i => i.value.trim())
-              .filter(Boolean);
-          });
-
-  
-          // 🔥 CREATE ONE QUESTION PER BLANK
-          for (let i = 0; i < blanks.length; i++) {
-
-            const variants = answers[i];
-
-            if (!variants.length) continue;
-
-            const correct = variants[0]; // first = main correct
-
-            await apiPost(`/admin/reading/passages/${passageId}/questions`, {
-              type: "TEXT_INPUT",
-              order_index: orderCursor++,
-              question_group_id: groupId,
-              instruction: instruction,
-              image_url: imageUrl,
-              content: { text: text },
-              correct_answer: { value: correct },
-              meta: { variants: variants },
-              points: 1
-            });
-          }
-
-          continue;
-        }
-        if (type === "summary") {
-
-  const groupId = groupCounter++;
-  const payload = AdminReading.serializeSummary(q, groupId, orderCursor);
-
-  if (!payload || !payload.length) continue;
-
-  for (const item of payload) {
-    await apiPost(`/admin/reading/passages/${passageId}/questions`, {
-      ...item,
-      image_url: imageUrl
-    });
-  }
-
-  orderCursor += payload.length;
-
-  continue;
-}
-        console.log("🧪 Creating question", qi + 1, "for passage", pi + 1);
-        
-      }
-    }
+    await createPassagesAndQuestions(testId);
 
     alert("✅ Reading saved");
     openAdminReading(testId);
-    if (btn) {
-      btn.disabled = false;
-      btn.innerText = "💾 Save Draft";
-    }
-
-  } catch (e) {
-    console.error("❌ SAVE DRAFT ERROR FULL:", e);
-
-    if (e?.response) {
-      console.error("Status:", e.response.status);
-      console.error("Data:", e.response.data);
-
-      alert(
-        "❌ Failed to save reading test\n" +
-        "Status: " + e.response.status + "\n" +
-        JSON.stringify(e.response.data, null, 2)
-      );
-    } else {
-      alert("❌ Failed to save reading test\n" + e.message);
-    }
+  } catch (error) {
+    console.error("SAVE DRAFT ERROR:", error);
+    alert(`❌ Failed to save reading test\n${error?.message || "Unknown error"}`);
+  } finally {
     if (btn) {
       btn.disabled = false;
       btn.innerText = "💾 Save Draft";
@@ -431,334 +303,45 @@ window.saveReadingDraft = async function () {
 };
 
 window.publishReading = async function () {
-  const title = document.getElementById("reading-title")?.value?.trim();
-  const time = parseInt(document.getElementById("reading-time")?.value || "60", 10);
-
-  if (!title) {
-    alert("Reading name is required");
-    return;
-  }
-
   try {
-    let testId;
-    console.log("🧪 Save draft started");
+    const title = document.getElementById("reading-title")?.value?.trim();
+    const time = parseInt(document.getElementById("reading-time")?.value || "60", 10);
+    if (!title) {
+      alert("Reading name is required");
+      return;
+    }
 
-    if (window.__currentEditingTestId) {
+    validateReadingEditor();
 
-      await apiPut(`/admin/reading/tests/${window.__currentEditingTestId}`, {
+    let testId = window.__currentEditingTestId;
+    if (testId) {
+      await apiPut(`/admin/reading/tests/${testId}`, {
         title,
         time_limit_minutes: time
       });
 
-      const old = await apiGet(`/admin/reading/tests/${window.__currentEditingTestId}`);
-
-      for (const p of old.passages || []) {
-        try {
-          await apiDelete(`/admin/reading/passages/${p.id}`);
-        } catch (e) {
-          console.warn("Skip delete passage", p.id, e);
-        }
+      const old = await apiGet(`/admin/reading/tests/${testId}`);
+      for (const passage of old.passages || []) {
+        await apiDelete(`/admin/reading/passages/${passage.id}`);
       }
-
-      testId = window.__currentEditingTestId;
     } else {
       const test = await apiPost("/admin/reading/tests", {
         title,
         time_limit_minutes: time,
         mock_pack_id: window.__currentPackId
       });
-
       testId = test.id;
-      window.__currentEditingTestId = testId; // 🔒 ensure id is set after first publish
+      window.__currentEditingTestId = testId;
     }
 
-    const passageBlocks = document.querySelectorAll(".passage-block");
-
-    for (let pi = 0; pi < passageBlocks.length; pi++) {
-      const p = passageBlocks[pi];
-
-      const passageTitle = p.querySelector(".passage-title")?.value || null;
-      const passageText = p.querySelector(".passage-text")?.value || "";
-
-      const imageWrap = p.querySelector(".image-attach-wrap");
-      const imageUrl = imageWrap?.dataset.imageUrl || null;
-
-      const passage = await apiPost(`/admin/reading/tests/${testId}/passages`, {
-        title: passageTitle,
-        text: passageText,
-        image_url: imageUrl,
-        order_index: pi + 1
-      });
-
-      const passageId = passage.id;
-
-      const questions = p.querySelector(".questions-wrap").querySelectorAll(".question-block");
-      let orderCursor = 1;
-      let groupCounter = 1;
-      for (let qi = 0; qi < questions.length; qi++) {
-        
-        const q = questions[qi];
-        const instruction = q.querySelector(".q-instruction-select")?.value?.trim() || null;
-        const imageWrap = q.querySelector(".image-attach-wrap");
-        const imageUrl = imageWrap?.dataset.imageUrl || null;
-        const type = q.querySelector(".q-type-select")?.value;
-        if (type === "matching") {
-          const groupId = groupCounter++;
-          const options = Array.from(q.querySelectorAll(".match-option"))
-            .map(o => o.value.trim())
-            .filter(Boolean);
-
-          const matchQuestions = q.querySelectorAll(".match-question");
-
-          for (let i = 0; i < matchQuestions.length; i++) {
-
-            const qText = matchQuestions[i].value?.trim();
-            if (!qText) continue;
-            const answer = q.querySelectorAll(".match-answer")[i].value;
-
-            await apiPost(`/admin/reading/passages/${passageId}/questions`, {
-              type: "MATCHING",
-              order_index: orderCursor++,
-              question_group_id: groupId,
-              instruction: instruction,
-              image_url: imageUrl,
-              content: { text: qText },
-              correct_answer: { value: answer },
-              meta: { options: options },
-              points: 1
-            });
-
-          }
-
-          continue;
-        }
-        if (type === "paragraph_matching") {
-          const groupId = groupCounter++;
-          const payload = AdminReading.serializeParagraphMatching(q, groupId, orderCursor);
-
-          if (!payload || !payload.length) continue;
-
-          for (const item of payload) {
-            await apiPost(`/admin/reading/passages/${passageId}/questions`, {
-              ...item,
-              image_url: imageUrl
-            });
-          }
-
-          orderCursor += payload.length;
-
-          continue;
-        }
-        if (type === "single_choice") {
-
-          const optionInputs = q.querySelectorAll(".mcq-option-input");
-
-          const options = Array.from(optionInputs)
-            .map(o => o.value.trim())
-            .filter(Boolean);
-
-          const correct = q.querySelector(".mcq-correct")?.value || "A";
-
-          const questionText =
-            q.querySelector(".mcq-question")?.value?.trim() || "";
-
-          await apiPost(`/admin/reading/passages/${passageId}/questions`, {
-            type: "SINGLE_CHOICE",
-            order_index: orderCursor++,
-            instruction: instruction,
-            image_url: imageUrl,
-            content: { text: questionText },
-            correct_answer: { value: correct },
-            meta: { options },
-            points: 1
-          });
-
-          continue;
-        }
-
-        if (type === "multiple_choice") {
-
-  const questionText =
-    q.querySelector(".mcq-question")?.value?.trim() || "";
-
-  if (!questionText) continue;
-
-  const maxAnswers = parseInt(
-    q.querySelector(".mcq-max")?.value || "1",
-    10
-  );
-
-  const optionEls = q.querySelectorAll(".mcq-option");
-
-  const options = [];
-  const correct_answers = [];
-
-  optionEls.forEach((el, index) => {
-    const key = String.fromCharCode(65 + index);
-
-    const text = el.querySelector(".mcq-option-text")?.value?.trim();
-    if (!text) return;
-
-    options.push({ key, text });
-
-    if (el.querySelector(".mcq-correct")?.checked) {
-      correct_answers.push(key);
-    }
-  });
-
-  if (!options.length) continue;
-  if (!correct_answers.length) continue;
-
-  await apiPost(`/admin/reading/passages/${passageId}/questions`, {
-    type: "MULTI_CHOICE",
-    order_index: orderCursor++,
-    instruction: instruction,
-    image_url: imageUrl,
-    content: {
-      text: questionText,
-      options: options
-    },
-    correct_answer: {
-      value: correct_answers
-    },
-    meta: {
-      max_answers: maxAnswers
-    },
-    points: 1
-  });
-
-  continue;
-}
-
-        if (type === "yes_no_ng") {
-
-          const questionText =
-            q.querySelector(".ynng-question")?.value?.trim() || "";
-
-          const correct =
-            q.querySelector(".ynng-correct")?.value || "YES";
-
-          if (!questionText) continue;
-
-          await apiPost(`/admin/reading/passages/${passageId}/questions`, {
-            type: "YES_NO_NG",
-            order_index: orderCursor++,
-            instruction: instruction,
-            image_url: imageUrl,
-            content: { text: questionText },
-            correct_answer: { value: correct },
-            meta: { subtype: "YN" },
-            points: 1
-          });
-
-          continue;
-        }
-
-        if (type === "tf_ng") {
-
-          const payload = AdminReading.serializeTFNG(q);
-
-          if (!payload) continue;
-
-          await apiPost(`/admin/reading/passages/${passageId}/questions`, {
-            ...payload,
-            order_index: orderCursor++,
-            instruction: instruction,
-            image_url: imageUrl,
-            points: 1
-          });
-
-          continue;
-        }
-
-        if (type === "gap") {
-
-          const groupId = groupCounter++;
-          const text = q.querySelector(".gap-text")?.value?.trim() || "";
-          const blanks = AdminReading.Gap.detectBlanks(text);
-          const answerBlocks = q.querySelectorAll(".gap-answer-block");
-
-          const answers = Array.from(answerBlocks).map(block => {
-            return Array.from(block.querySelectorAll(".gap-answer-input"))
-              .map(i => i.value.trim())
-              .filter(Boolean);
-          });
-
-          for (let i = 0; i < blanks.length; i++) {
-            const variants = answers[i];
-
-            if (!variants.length) continue;
-
-            await apiPost(`/admin/reading/passages/${passageId}/questions`, {
-              type: "TEXT_INPUT",
-              order_index: orderCursor++,
-              question_group_id: groupId,
-              instruction: instruction,
-              image_url: imageUrl,
-              content: { text: text },
-              correct_answer: { value: variants[0] },
-              meta: { variants: variants },
-              points: 1
-            });
-          }
-
-          continue;
-        }
-
-        if (type === "summary") {
-
-  const groupId = groupCounter++;
-  const payload = AdminReading.serializeSummary(q, groupId, orderCursor);
-
-  if (!payload || !payload.length) continue;
-
-  for (const item of payload) {
-    await apiPost(`/admin/reading/passages/${passageId}/questions`, {
-      ...item,
-      image_url: imageUrl
-    });
-  }
-
-  orderCursor += payload.length;
-
-  continue;
-}
-        
-        const text = q.querySelector(".q-text")?.value;
-        const correctAnswer = q.querySelector(".q-answer")?.value;
-        let meta = null;
-
-        if (type === "gap") {
-          const maxWords = q.querySelector(".q-max-words")?.value;
-          const allowNumbers = q.querySelector(".q-allow-numbers")?.checked;
-
-          meta = {
-            max_words: maxWords ? parseInt(maxWords) : null,
-            allow_numbers: !!allowNumbers
-          };
-        }
-        await apiPost(`/admin/reading/passages/${passageId}/questions`, {
-          type: mapType(type),
-          order_index: orderCursor++,
-          instruction: instruction,
-          content: { text: text },
-          correct_answer: { value: correctAnswer },
-          image_url: imageUrl,
-          meta: meta,
-          explanation: null,
-          points: 1
-        });
-      }
-    }
-
-    // 🚀 Publish
+    await createPassagesAndQuestions(testId);
     await apiPost(`/admin/reading/tests/${testId}/publish`);
 
     alert("🚀 Reading test published");
     showAdminReadingList();
-  } catch (e) {
-    console.error(e);
-    alert("❌ Failed to publish reading test");
+  } catch (error) {
+    console.error("PUBLISH ERROR:", error);
+    alert(`❌ Failed to publish reading test\n${error?.message || "Unknown error"}`);
   }
 };
 
@@ -770,9 +353,9 @@ window.unpublishReading = async function (testId) {
     await apiPost(`/admin/reading/tests/${testId}/unpublish`);
     alert("↩️ Reading test unpublished");
     showAdminReadingList();
-  } catch (e) {
-    console.error("❌ UNPUBLISH ERROR:", e);
-    alert("❌ Failed to unpublish reading test\n" + (e.message || ""));
+  } catch (error) {
+    console.error("UNPUBLISH ERROR:", error);
+    alert(`❌ Failed to unpublish reading test\n${error?.message || ""}`);
   }
 };
 
@@ -784,8 +367,8 @@ window.deleteReadingTest = async function (testId) {
     await apiDelete(`/admin/reading/tests/${testId}`);
     alert("🗑 Reading test deleted");
     loadAdminReadingList();
-  } catch (e) {
-    console.error("❌ DELETE TEST ERROR:", e);
-    alert("❌ Failed to delete reading test\n" + (e.message || ""));
+  } catch (error) {
+    console.error("DELETE ERROR:", error);
+    alert(`❌ Failed to delete reading test\n${error?.message || ""}`);
   }
 };

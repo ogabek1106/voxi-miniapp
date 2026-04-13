@@ -1,529 +1,227 @@
 // frontend/js/admin_reading/loader/editor_loader.js
 window.AdminReading = window.AdminReading || {};
+
 window.showAdminReadingList = function () {
   hideAllScreens();
   hideAnnouncement();
 
   if (!screenMocks) return;
-
   screenMocks.style.display = "block";
   screenMocks.innerHTML = `
     <h3>📖 Reading Section (Admin)</h3>
 
     <h4 style="margin-top:12px;">Published tests</h4>
-    <div id="admin-reading-published">
-      <p style="opacity:0.6;">Loading…</p>
-    </div>
+    <div id="admin-reading-published"><p style="opacity:0.6;">Loading...</p></div>
 
     <h4 style="margin-top:16px;">Drafts</h4>
-    <div id="admin-reading-drafts">
-      <p style="opacity:0.6;">Loading…</p>
-    </div>
+    <div id="admin-reading-drafts"><p style="opacity:0.6;">Loading...</p></div>
 
     <button style="margin-top:16px;" onclick="showCreateReading()">➕ Create New Reading</button>
-
     <button style="margin-top:12px;" onclick="showAdminMock()">⬅ Back</button>
   `;
+
   setTimeout(loadAdminReadingList, 0);
 };
 
 window.loadAdminReadingList = async function () {
   try {
     const tests = await apiGet("/admin/reading/tests");
-
     const publishedWrap = document.getElementById("admin-reading-published");
     const draftsWrap = document.getElementById("admin-reading-drafts");
-
     if (!publishedWrap || !draftsWrap) return;
 
-    const published = tests.filter(t => t.status === "published");
-    const drafts = tests.filter(t => t.status === "draft");
+    const renderRow = function (test, prefix) {
+      return `
+        <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
+          <button onclick="openAdminReading(${test.id})">${prefix} #${test.id} — ${test.title}</button>
+          <button
+            onclick="deleteReadingTest(${test.id})"
+            style="
+              background:#fee2e2;
+              color:#b91c1c;
+              width:36px;
+              height:36px;
+              min-width:36px;
+              border-radius:8px;
+              display:flex;
+              align-items:center;
+              justify-content:center;
+              flex:0 0 auto;
+            "
+            title="Delete"
+          >
+            🗑
+          </button>
+        </div>
+      `;
+    };
+
+    const published = tests.filter((t) => t.status === "published");
+    const drafts = tests.filter((t) => t.status === "draft");
 
     publishedWrap.innerHTML = published.length
-      ? published.map(t => `
-          <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
-            <button onclick="openAdminReading(${t.id})">
-              📖 #${t.id} — ${t.title}
-            </button>
-            <button
-              onclick="deleteReadingTest(${t.id})"
-              style="
-                background:#fee2e2;
-                color:#b91c1c;
-                width:36px;            /* slim width */
-                height:36px;           /* same height as main buttons */
-                min-width:36px;
-                border-radius:8px;
-                display:flex;
-                align-items:center;
-                justify-content:center;
-                flex:0 0 auto;         /* never stretch */
-              "
-              title="Delete"
-            >
-              🗑
-            </button>
-          </div>
-        `).join("")
+      ? published.map((t) => renderRow(t, "📖")).join("")
       : `<p style="opacity:0.6;">No published tests yet</p>`;
 
     draftsWrap.innerHTML = drafts.length
-      ? drafts.map(t => `
-          <div style="display:flex; gap:8px; align-items:center; margin-bottom:6px;">
-            <button onclick="openAdminReading(${t.id})">
-              ✏️ #${t.id} — ${t.title}
-            </button>
-            <button
-              onclick="deleteReadingTest(${t.id})"
-              style="
-                background:#fee2e2;
-                color:#b91c1c;
-                width:36px;            /* slim width */
-                height:36px;           /* same height as main buttons */
-                min-width:36px;
-                border-radius:8px;
-                display:flex;
-                align-items:center;
-                justify-content:center;
-                flex:0 0 auto;         /* never stretch */
-              "
-              title="Delete"
-            >
-              🗑
-            </button>
-          </div>
-        `).join("")
+      ? drafts.map((t) => renderRow(t, "✏️")).join("")
       : `<p style="opacity:0.6;">No drafts yet</p>`;
-
-  } catch (e) {
-    console.error(e);
+  } catch (error) {
+    console.error(error);
     alert("Failed to load reading tests");
   }
+};
+
+window.mapLoadedQuestionToUiType = function (question) {
+  const rawType = String(question?.type || "").toUpperCase();
+  if (rawType === "MULTI_CHOICE") return "multiple_choice";
+  if (rawType === "SINGLE_CHOICE") return "single_choice";
+  if (rawType === "YES_NO_NG") return "yes_no_ng";
+  if (rawType === "TFNG") return "tf_ng";
+  if (rawType === "MATCHING") return "matching";
+  if (rawType === "PARAGRAPH_MATCHING") return "paragraph_matching";
+  if (rawType === "TEXT_INPUT") {
+    if (question?.meta?.mode === "summary") return "summary";
+    if (question?.meta?.mode === "image_questions") return "image_questions";
+    return "gap";
+  }
+  return "gap";
+};
+
+window.isGroupedUiType = function (uiType) {
+  return uiType === "matching"
+    || uiType === "paragraph_matching"
+    || uiType === "summary"
+    || uiType === "gap"
+    || uiType === "image_questions";
 };
 
 window.openAdminReading = async function (testId) {
   window.__currentEditingTestId = testId;
   hideAllScreens();
   hideAnnouncement();
-
   if (!screenMocks) return;
-
-  // open editor UI (do NOT reset edit mode)
-  // window.showCreateReading(false);
-  window.__currentEditingTestId = testId;
 
   try {
     const data = await apiGet(`/admin/reading/tests/${testId}`);
-    console.log("🔥 FULL QUESTIONS:", data.passages.map(p => p.questions));
     showCreateReading(false);
-    // fill meta
-    document.getElementById("reading-title").value = data.title || "";
-    document.getElementById("reading-time").value = data.time_limit_minutes || 60;
 
-    // reset global counter
-    window.__globalQuestionCounter = 0;
+    const titleInput = document.getElementById("reading-title");
+    const timeInput = document.getElementById("reading-time");
+    if (titleInput) titleInput.value = data.title || "";
+    if (timeInput) timeInput.value = data.time_limit_minutes || 60;
 
     const wrap = document.getElementById("passages-wrap");
+    if (!wrap) return;
     wrap.innerHTML = "";
 
-    [...(data.passages || [])]
-      .sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
-      .forEach((p, pi) => {
-      const passageIndex = pi + 1;
+    let nextNumber = 1;
+    const passages = [...(data.passages || [])].sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
 
+    passages.forEach((passage, passageIndex) => {
       const passageBlock = document.createElement("div");
       passageBlock.className = "passage-block";
-      passageBlock.dataset.index = passageIndex;
+      passageBlock.dataset.index = String(passageIndex + 1);
       passageBlock.style.textAlign = "left";
       passageBlock.style.marginTop = "16px";
 
-      const questions = [...(p.questions || [])].sort((a, b) => {
-        return (a.order_index || 0) - (b.order_index || 0);
+      passageBlock.innerHTML = `
+        <h4>Passage ${passageIndex + 1}</h4>
+        <label>Passage title</label>
+        <input class="passage-title" value="${String(passage.title || "").replace(/"/g, "&quot;")}" />
+        <label style="margin-top:8px; display:block;">Passage text</label>
+        <textarea class="passage-text" rows="6" style="width:100%; padding:10px; border-radius:8px;"></textarea>
+        <hr style="margin:10px 0; border:0; border-top:1px solid #eee;" />
+        <div class="questions-wrap" style="margin-top:12px;">
+          <h5>Questions</h5>
+          <div class="questions-container"></div>
+          <button onclick="addQuestion(this)">➕ Add Question</button>
+        </div>
+      `;
+
+      const textarea = passageBlock.querySelector(".passage-text");
+      if (textarea) textarea.value = passage.text || "";
+
+      const questionsContainer = passageBlock.querySelector(".questions-container");
+      const questions = [...(passage.questions || [])].sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
+      const renderedGroupKeys = new Set();
+
+      questions.forEach((question) => {
+        const uiType = mapLoadedQuestionToUiType(question);
+        const grouped = isGroupedUiType(uiType) && !!question.question_group_id;
+        const groupKey = grouped ? `${uiType}_${question.question_group_id}` : `single_${question.id}`;
+        if (renderedGroupKeys.has(groupKey)) return;
+        renderedGroupKeys.add(groupKey);
+
+        const groupedQuestions = grouped
+          ? questions
+              .filter((q) => String(q.question_group_id) === String(question.question_group_id) && mapLoadedQuestionToUiType(q) === uiType)
+              .sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
+          : [question];
+
+        const displayStart = nextNumber;
+        const count = Math.max(groupedQuestions.length, 1);
+        nextNumber += count;
+
+        const holder = document.createElement("div");
+        holder.innerHTML = renderAdminQuestionBlock(displayStart);
+        const questionBlock = holder.firstElementChild;
+        questionBlock.dataset.questionId = grouped ? String(question.question_group_id) : String(question.id);
+        questionBlock.dataset.questionType = uiType;
+        questionBlock.dataset.generatedQuestions = String(count);
+
+        questionsContainer.appendChild(questionBlock);
+        wireAdminQuestionBlock(questionBlock, uiType);
+
+        const instructionSelect = questionBlock.querySelector(".q-instruction-select");
+        if (instructionSelect && window.ReadingInstructions?.fillSelect) {
+          window.ReadingInstructions.fillSelect(
+            instructionSelect,
+            getInstructionTypeForEditor(uiType),
+            groupedQuestions[0]?.instruction || ""
+          );
+        }
+
+        const root = questionBlock.querySelector(".q-type-root");
+        if (root) {
+          root.innerHTML = "";
+          AdminReading.loadQuestionUI(uiType, root, grouped ? groupedQuestions : question);
+        }
       });
 
-      let questionsHtml = "";
-      const renderedGroups = new Set();
-    
-      for (let qi = 0; qi < questions.length; qi++) {
-
-        const q = questions[qi];
-        // 🔥 HANDLE GAP GROUPING (like MATCHING)
-        const groupKey = `${q.type}_${q.question_group_id || q.id}`;
-
-        // treat grouped types ALWAYS as grouped
-        if (q.type === "MATCHING" || q.type === "PARAGRAPH_MATCHING" || q.type === "TEXT_INPUT") {
-          if (renderedGroups.has(groupKey)) {
-            continue;
-          }
-          renderedGroups.add(groupKey);
-        }
-        
-
-        const renderedQuestionCount =
-          q.type === "PARAGRAPH_MATCHING"
-            ? questions.filter(item =>
-                item.type === "PARAGRAPH_MATCHING" &&
-                String(item.question_group_id) === String(q.question_group_id)
-              ).length
-            : q.type === "TEXT_INPUT" && q.meta?.mode === "summary"
-              ? questions.filter(item =>
-                  item.type === "TEXT_INPUT" &&
-                  item.meta?.mode === "summary" &&
-                  String(item.question_group_id) === String(q.question_group_id)
-                ).length
-              : 1;
-
-        window.__globalQuestionCounter++;
-
-        const textValue = q.content?.text || "";
-        // console.log("EDITOR LOAD", {
-        //  question_id: q.id,
-        //  raw_content: q.content,
-        //  extracted_text: q.content?.text
-        // });
-        const answerValue = q.correct_answer?.value || "";
-
-        questionsHtml += `
-  <div class="question-block" 
-     data-global-q="${window.__globalQuestionCounter}" 
-     data-question-id="${
-       (q.type === "MATCHING" || q.type === "PARAGRAPH_MATCHING" || q.type === "TEXT_INPUT")
-         ? q.question_group_id
-         : q.id
-     }"
-     data-question-type="${
-  q.type === "TEXT_INPUT"
-    ? (q.meta?.mode === "summary" ? "summary" : "gap")
-    : q.type
-}"
-     style="
-       border:1px solid #e5e5ea;
-       border-radius:8px;
-       padding:8px;
-       margin-bottom:8px;
-     ">
-
-  <!-- 🔒 FIXED LAYER -->
-  <div class="q-fixed-layer" style="margin-bottom:8px;">
-
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-      <div class="q-header" style="font-weight:700;">
-        Q${window.__globalQuestionCounter}
-      </div>
-
-      <button
-        type="button"
-        onclick="removeQuestionBlock(this)"
-        style="
-          width:28px;
-          height:28px;
-          border-radius:50%;
-          background:#fee2e2;
-          color:#b91c1c;
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          font-size:14px;
-          cursor:pointer;
-        "
-      >
-        ✖
-      </button>
-    </div>
-
-    <div style="margin-bottom:6px;">
-      <label style="font-weight:600;">Question type</label>
-      <select class="q-type-select" style="width:100%; margin-top:4px;">
-        <option value="matching">Matching</option>
-        <option value="paragraph_matching">Paragraph Matching</option>
-        <option value="single_choice">Single Choice</option>
-        <option value="multiple_choice">Multiple Choice</option>
-        <option value="gap">Gap Filling</option>
-        <option value="yes_no_ng">Yes / No / Not Given</option>
-        <option value="tf_ng">True / False / Not Given</option>
-        <option value="summary">Summary Completion</option>
-      </select>
-    </div>
-    <div style="margin-top:6px;">
-      <label style="font-weight:600;">Instruction</label>
-      <select class="q-instruction-select" style="width:100%; height:36px;">
-        <option value="">Select instruction</option>
-      </select>
-    </div>
-
-  </div>
-
-  <!-- 🔁 DYNAMIC LAYER -->
-  <div class="q-dynamic-layer" style="margin-top:10px;">
-
-    <div class="q-meta-wrap">
-      <div class="q-type-root"></div>
-    </div>
-
-    <hr style="margin:10px 0; border:0; border-top:1px solid #eee;" />
-
-    <div class="image-attach-wrap" style="text-align:right;">
-      <button type="button" class="attach-image-btn" onclick="attachImage(this)">
-        🖼 Add Image
-      </button>
-      <input type="file" accept="image/*" class="hidden-image-input" style="display:none;" />
-      <div class="image-preview" style="margin-top:8px;"></div>
-    </div>
-
-  </div>
-
-</div>
-        `;
-
-        if (renderedQuestionCount > 1) {
-          window.__globalQuestionCounter += renderedQuestionCount - 1;
-        }
-      }
-
-      passageBlock.innerHTML = `
-  <h4>Passage ${passageIndex}</h4>
-
-  <label>Passage title</label>
-  <input class="passage-title" value="${(p.title || "").replace(/"/g, "&quot;")}" />
-
-  <label style="margin-top:8px; display:block;">Passage text</label>
-  <textarea class="passage-text" rows="6" style="width:100%; padding:10px; border-radius:8px;"></textarea>
-  <hr style="margin:10px 0; border:0; border-top:1px solid #eee;" />
-
-  <div class="image-attach-wrap" style="text-align:right;">
-    <button type="button" class="attach-image-btn" onclick="attachImage(this)">
-      🖼 Add Image
-    </button>
-    <input type="file" accept="image/*" class="hidden-image-input" style="display:none;" />
-    <div class="image-preview" style="margin-top:8px;"></div>
-  </div>
-
-  <div class="questions-wrap" style="margin-top:12px;">
-    <h5>Questions</h5>
-    <div class="questions-container"></div>
-    <button onclick="addQuestion(this)">➕ Add Question</button>
-  </div>
-`;    
-      const questionsContainer = passageBlock.querySelector(".questions-container");
-      questionsContainer.innerHTML = questionsHtml;
-
       wrap.appendChild(passageBlock);
-      // Restore passage image
-      if (p.image_url) {
-        const imageWrap = passageBlock.querySelector(".image-attach-wrap");
-        imageWrap.dataset.imageUrl = p.image_url;
-
-        const preview = imageWrap.querySelector(".image-preview");
-        preview.innerHTML = `
-          <img src="${window.API + p.image_url}" 
-               style="
-                 width:100%;
-                 max-width:100%;
-                 height:auto;
-                 display:block;
-                 margin:8px auto 0 auto;
-                 border-radius:12px;
-               " />
-          <button type="button" onclick="removeImage(this)" style="margin-top:8px;">
-            ❌ Remove
-          </button>
-        `;
-      }
-
-const textarea = passageBlock.querySelector(".passage-text");
-if (textarea) {
-  textarea.value = p.text || "";
-}
-
-// 🔹 Load meta for existing questions
-passageBlock.querySelectorAll(".question-block").forEach((block) => {
-
-  if (block.dataset.initialized) return;
-  block.dataset.initialized = "1";
-
-  const qid = block.dataset.questionId;
-
-  let questionData;
-
-  // 🔥 GROUP HANDLING
-  if (
-    block.dataset.questionType === "MATCHING" ||
-    block.dataset.questionType === "PARAGRAPH_MATCHING" ||
-    block.dataset.questionType === "gap" ||
-    block.dataset.questionType === "summary"
-  ) {
-    questionData = questions.find(
-      q => String(q.question_group_id) === String(qid)
-    );
-  } else {
-    questionData = questions.find(
-      q => String(q.id) === String(qid)
-    );
-  }
-
-  if (!questionData) return;
-
-  const root = block.querySelector(".q-type-root");
-  const typeSelect = block.querySelector(".q-type-select");
-  const instructionSelect = block.querySelector(".q-instruction-select");
-
-  // 🔹 TYPE MAPPING (CORE FIX)
-  let mappedType = questionData.type?.toLowerCase();
-
-  if (mappedType === "text_input") {
-    if (questionData.meta?.mode === "summary") {
-      mappedType = "summary";
-    } else {
-      mappedType = "gap";
-    }
-  }
-  if (mappedType === "tfng") mappedType = "tf_ng";
-  if (mappedType === "multi_choice") mappedType = "multiple_choice";
-
-  // apply to dropdown
-  if (typeSelect) {
-    typeSelect.value = mappedType;
-  }
-
-  // always define initial type
-  const initialType = typeSelect ? typeSelect.value : mappedType;
-  const instructionTypeMap = {
-    matching: "MATCHING",
-    paragraph_matching: "PARAGRAPH_MATCHING",
-    single_choice: "SINGLE_CHOICE",
-    multiple_choice: "MULTI_CHOICE",
-    yes_no_ng: "YES_NO_NG",
-    tf_ng: "TFNG",
-    gap: "TEXT_INPUT",
-    summary: "TEXT_INPUT"
-  };
-  const initialInstructionType = instructionTypeMap[initialType] || "TEXT_INPUT";
-
-  if (instructionSelect && window.ReadingInstructions?.fillSelect) {
-    window.ReadingInstructions.fillSelect(
-      instructionSelect,
-      initialInstructionType,
-      questionData.instruction || ""
-    );
-  }
-
-  // 🔹 PAYLOAD PREP
-  let payload = questionData;
-
-  if (
-    questionData.type === "MATCHING" ||
-    questionData.type === "PARAGRAPH_MATCHING" ||
-    (
-      questionData.type === "TEXT_INPUT" &&
-      (
-        questionData.meta?.mode === "summary" ||
-        !questionData.meta?.mode
-      )
-    )
-  ) {
-    payload = questions
-      .filter(q => String(q.question_group_id) === String(questionData.question_group_id))
-      .sort((a, b) => a.order_index - b.order_index);
-  }
-
-  // 🔹 RENDER UI (ALWAYS RUNS)
-  AdminReading.loadQuestionUI(initialType, root, payload);
-
-  // 🔁 TYPE SWITCH (UI ONLY)
-  if (typeSelect) {
-    typeSelect.addEventListener("change", () => {
-      const newType = typeSelect.value;
-      const instructionType = instructionTypeMap[newType] || "TEXT_INPUT";
-      if (instructionSelect && window.ReadingInstructions?.fillSelect) {
-        window.ReadingInstructions.fillSelect(instructionSelect, instructionType);
-      }
-      root.innerHTML = "";
-      AdminReading.loadQuestionUI(newType, root, null);
     });
+
+    window.__globalQuestionCounter = Math.max(nextNumber - 1, 0);
+
+    const publishWrap = document.getElementById("publish-wrap");
+    if (publishWrap) {
+      if (data.status === "published") {
+        publishWrap.innerHTML = `<button onclick="unpublishReading(${testId})">↩️ Unpublish</button>`;
+      } else {
+        publishWrap.innerHTML = `<button onclick="publishReading()">🚀 Publish</button>`;
+      }
+    }
+  } catch (error) {
+    console.error(error);
+    alert("Failed to load reading test");
   }
-
-  // 🔹 RESTORE QUESTION IMAGE
-  if (questionData.image_url) {
-    const imageWrap = block.querySelector(".image-attach-wrap");
-    imageWrap.dataset.imageUrl = questionData.image_url;
-
-    const preview = imageWrap.querySelector(".image-preview");
-    preview.innerHTML = `
-      <img src="${window.API + questionData.image_url}" 
-           style="
-             width:100%;
-             max-width:100%;
-             height:auto;
-             display:block;
-             margin:8px auto 0 auto;
-             border-radius:12px;
-           " />
-      <button type="button" onclick="removeImage(this)" style="margin-top:8px;">
-        ❌ Remove
-      </button>
-    `;
-  }
-
-});
-});
-// 🔹 sync counter safely
-const blockNums = Array.from(document.querySelectorAll(".question-block"))
-  .map(b => {
-    const start = parseInt(b.dataset.globalQ) || 0;
-    const generated = parseInt(b.dataset.generatedQuestions) || 1;
-    return start + generated - 1;
-  });
-
-const matchingNums = Array.from(document.querySelectorAll(".match-q-label"))
-  .map(el => parseInt(el.textContent.replace("Q", "")) || 0);
-
-const paragraphNums = Array.from(document.querySelectorAll(".paragraph-match-q-label"))
-  .map(el => parseInt(el.textContent.replace("Q", "")) || 0);
-
-const summaryNums = Array.from(document.querySelectorAll(".summary-blank-label"))
-  .map(el => {
-    const match = el.textContent.match(/Q(\d+)/);
-    return match ? parseInt(match[1], 10) : 0;
-  });
-
-const nums = [...blockNums, ...matchingNums, ...paragraphNums, ...summaryNums];
-
-window.__globalQuestionCounter = nums.length ? Math.max(...nums) : 0;
-
-// 🔹 publish/unpublish button
-const publishWrap = document.getElementById("publish-wrap");
-
-if (publishWrap) {
-  if (data.status === "published") {
-    publishWrap.innerHTML = `
-      <button onclick="unpublishReading(${testId})">↩️ Unpublish</button>
-    `;
-  } else {
-    publishWrap.innerHTML = `
-      <button onclick="publishReading()">🚀 Publish</button>
-    `;
-  }
-}
-} catch (e) {
-  console.error(e);
-  alert("Failed to load reading test");
-}
 };
+
 window.showPackReading = async function (packId) {
   window.__currentPackId = packId;
 
   try {
     const test = await apiGet(`/admin/mock-packs/${packId}/reading`);
-
     if (test && test.id) {
       window.__currentEditingTestId = test.id;
       openAdminReading(test.id);
       return;
     }
-  } catch (e) {
-    // no reading exists yet
+  } catch (_) {
+    // no reading linked yet
   }
 
   window.__currentEditingTestId = null;
-  window.showCreateReading(true);
+  showCreateReading(true);
 };

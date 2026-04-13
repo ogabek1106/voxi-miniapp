@@ -34,15 +34,3 @@
 .passage-body p:last-child {
   margin-bottom: 0;
 }
-
-.passage-image-wrap {
-  margin-top: 14px;
-}
-
-.passage-image {
-  width: 100%;
-  max-width: 100%;
-  height: auto;
-  display: block;
-  border-radius: 12px;
-}

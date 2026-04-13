@@ -50,9 +50,12 @@ UserReading.renderQuestionsForPassage = function (passage, passageIndex, startin
   if (!passage.questions || !passage.questions.length) return "";
 
   const groupedMatching = UserReading.groupMatchingQuestions(passage.questions);
-  const grouped = UserReading.groupSummaryQuestions
+  const groupedSummary = UserReading.groupSummaryQuestions
     ? UserReading.groupSummaryQuestions(groupedMatching)
     : groupedMatching;
+  const grouped = UserReading.groupImageQuestions
+    ? UserReading.groupImageQuestions(groupedSummary)
+    : groupedSummary;
   let currentNumber = startingQuestionNumber;
 
   return `
@@ -66,6 +69,12 @@ UserReading.renderQuestionsForPassage = function (passage, passageIndex, startin
 
         if (item.type === "SUMMARY_GROUP") {
           const block = UserReading.renderSummaryGroup(item, currentNumber);
+          currentNumber += item.questions.length;
+          return block;
+        }
+
+        if (item.type === "IMAGE_QUESTIONS_GROUP") {
+          const block = UserReading.renderImageQuestionsGroup(item, currentNumber);
           currentNumber += item.questions.length;
           return block;
         }
@@ -87,7 +96,6 @@ UserReading.renderSingleQuestion = function (q, questionIndex, passageIndex, dis
     questionIndex,
     order: displayOrder || q.order_index || questionIndex + 1,
     instruction: q.instruction,
-    image: q.image_url,
     meta: q.meta || {},
     content: q.content || {},
   };
@@ -112,15 +120,23 @@ UserReading.renderSingleQuestion = function (q, questionIndex, passageIndex, dis
       break;
 
     case "TEXT_INPUT":
-      inner = UserReading.isSummaryQuestion && UserReading.isSummaryQuestion(q)
-        ? UserReading.renderSummaryGroup({
-            type: "SUMMARY_GROUP",
-            group_id: q.question_group_id || q.id,
-            questions: [q],
-            meta: q.meta || {},
-            content: q.content || {}
-          }, base.order)
-        : UserReading.renderGap(q, base);
+      if (UserReading.isSummaryQuestion && UserReading.isSummaryQuestion(q)) {
+        inner = UserReading.renderSummaryGroup({
+          type: "SUMMARY_GROUP",
+          group_id: q.question_group_id || q.id,
+          questions: [q],
+          meta: q.meta || {},
+          content: q.content || {}
+        }, base.order);
+      } else if (UserReading.isImageQuestionsQuestion && UserReading.isImageQuestionsQuestion(q)) {
+        inner = UserReading.renderImageQuestionsGroup({
+          type: "IMAGE_QUESTIONS_GROUP",
+          group_id: q.question_group_id || q.id,
+          questions: [q]
+        }, base.order);
+      } else {
+        inner = UserReading.renderGap(q, base);
+      }
       break;
 
     case "MATCHING":
@@ -138,7 +154,11 @@ UserReading.renderSingleQuestion = function (q, questionIndex, passageIndex, dis
       inner = `<div>Unsupported question type: ${type}</div>`;
   }
 
-  if (UserReading.isMatchingType(type) || (UserReading.isSummaryQuestion && UserReading.isSummaryQuestion(q))) {
+  if (
+    UserReading.isMatchingType(type) ||
+    (UserReading.isSummaryQuestion && UserReading.isSummaryQuestion(q)) ||
+    (UserReading.isImageQuestionsQuestion && UserReading.isImageQuestionsQuestion(q))
+  ) {
     return inner;
   }
 
@@ -152,7 +172,6 @@ UserReading.renderSingleQuestion = function (q, questionIndex, passageIndex, dis
       ${UserReading.renderQuestionHeader(base)}
 
       ${inner}
-      ${UserReading.renderQuestionImage(base.image)}
     </div>
   `;
 };
@@ -171,16 +190,6 @@ UserReading.renderQuestionHeader = function (base) {
              </div>`
           : ""
       }
-    </div>
-  `;
-};
-
-UserReading.renderQuestionImage = function (imageUrl) {
-  if (!imageUrl) return "";
-
-  return `
-    <div class="question-image-wrap">
-      <img src="${window.API}${imageUrl}" class="question-image" alt="Question image" />
     </div>
   `;
 };

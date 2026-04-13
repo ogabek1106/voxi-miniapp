@@ -1,56 +1,28 @@
 // frontend/js/admin_reading/ui/images.js
 window.AdminReading = window.AdminReading || {};
-window.attachImage = function(btn) {
-  const wrap = btn.closest(".image-attach-wrap");
-  const input = wrap.querySelector(".hidden-image-input");
 
-  input.click();
+AdminReading.uploadImageFile = async function (file) {
+  const formData = new FormData();
+  formData.append("file", file);
 
-  input.onchange = async function() {
-    const file = input.files[0];
-    if (!file) return;
+  const response = await fetch(`${window.API}/admin/upload-image`, {
+    method: "POST",
+    body: formData
+  });
 
-    const formData = new FormData();
-    formData.append("file", file);
+  if (!response.ok) {
+    throw new Error(`Upload failed with status ${response.status}`);
+  }
 
-    try {
-      const res = await fetch(`${window.API}/admin/upload-image`, {
-        method: "POST",
-        body: formData
-      });
+  const data = await response.json();
+  const relativeUrl = String(data?.url || "").trim();
+  if (!relativeUrl) {
+    throw new Error("Upload API returned empty url");
+  }
 
-      const data = await res.json();
-      const fullUrl = window.API + data.url;
-
-      // store relative path in DB
-      wrap.dataset.imageUrl = data.url;
-
-      // preview with full URL
-      const preview = wrap.querySelector(".image-preview");
-      preview.innerHTML = `
-        <img src="${fullUrl}" 
-             style="
-               width:100%;
-               max-width:100%;
-               height:auto;
-               display:block;
-               margin:8px auto 0 auto;
-               border-radius:12px;
-             " />
-        <button type="button" onclick="removeImage(this)" style="margin-top:8px;">
-          ❌ Remove
-        </button>
-      `;
-
-    } catch (err) {
-      alert("Upload failed");
-      console.error(err);
-    }
+  const normalized = relativeUrl.startsWith("/") ? relativeUrl : `/${relativeUrl}`;
+  return {
+    relativeUrl: normalized,
+    fullUrl: `${window.API}${normalized}`
   };
-};
-
-window.removeImage = function(btn) {
-  const wrap = btn.closest(".image-attach-wrap");
-  wrap.dataset.imageUrl = "";
-  wrap.querySelector(".image-preview").innerHTML = "";
 };

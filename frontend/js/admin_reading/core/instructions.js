@@ -34,6 +34,11 @@ window.ReadingInstructions = (function () {
       "Write ONE WORD ONLY.",
       "Write NO MORE THAN TWO WORDS.",
       "Write NO MORE THAN THREE WORDS AND/OR A NUMBER."
+    ],
+
+    IMAGE_QUESTIONS: [
+      "Label the image. Write ONE WORD ONLY for each answer.",
+      "Complete each label with NO MORE THAN TWO WORDS."
     ]
   };
 

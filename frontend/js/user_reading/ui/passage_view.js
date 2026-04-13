@@ -3,16 +3,6 @@
 window.UserReading = window.UserReading || {};
 
 UserReading.renderPassageView = function (passage, passageIndex) {
-  const image = passage.image_url
-    ? `<div class="passage-image-wrap">
-         <img 
-           src="${window.API}${passage.image_url}" 
-           class="passage-image"
-           alt="Passage image"
-         />
-       </div>`
-    : "";
-
   return `
     <section class="passage-container" data-passage-index="${passageIndex}">
 
@@ -35,9 +25,6 @@ UserReading.renderPassageView = function (passage, passageIndex) {
       <div class="passage-body">
         ${UserReading.formatPassageText(passage.text)}
       </div>
-
-      <!-- IMAGE (OPTIONAL) -->
-      ${image}
 
     </section>
   `;
