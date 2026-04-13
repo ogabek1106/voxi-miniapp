@@ -39,18 +39,13 @@ UserReading.renderResultPage = function (container, data = {}) {
 
       <div class="reading-result-actions">
         <div class="result-action-item" id="result-share-btn">
-          <div class="result-action-circle">🔗</div>
+          <div class="result-action-circle">SH</div>
           <div class="result-action-label">Share</div>
         </div>
 
         <div class="result-action-item" id="result-story-btn">
-          <div class="result-action-circle">📸</div>
+          <div class="result-action-circle">ST</div>
           <div class="result-action-label">Story</div>
-        </div>
-
-        <div class="result-action-item" id="result-save-btn">
-          <div class="result-action-circle">⬇️</div>
-          <div class="result-action-label">Save</div>
         </div>
       </div>
     </div>
@@ -90,20 +85,49 @@ UserReading.animateBandValue = function (targetBand) {
 UserReading.initResultActions = function (data) {
   const shareBtn = document.getElementById("result-share-btn");
   const storyBtn = document.getElementById("result-story-btn");
-  const saveBtn = document.getElementById("result-save-btn");
 
   if (shareBtn) shareBtn.onclick = () => UserReading.shareResult(data);
-  if (storyBtn) storyBtn.onclick = () => UserReading.shareStoryResult();
-  if (saveBtn) saveBtn.onclick = () => UserReading.saveResultCard();
+  if (storyBtn) storyBtn.onclick = () => UserReading.shareStoryResult(data);
 };
 
-UserReading.shareStoryResult = function () {
+UserReading.shareStoryResult = async function ({ band, correct, total }) {
   const tg = window.Telegram?.WebApp;
-  if (tg && typeof tg.showAlert === "function") {
-    tg.showAlert("Story sharing will be enabled soon.");
+  if (!tg || typeof tg.shareToStory !== "function") {
+    alert("Story is not supported in this Telegram version.");
     return;
   }
-  alert("Story sharing will be enabled soon.");
+
+  const storyLabel = document.querySelector("#result-story-btn .result-action-label");
+  if (storyLabel) storyLabel.textContent = "Preparing...";
+
+  try {
+    const card = document.getElementById("reading-result-card");
+    const dateText = document.querySelector(".reading-result-date")?.textContent || "";
+    if (!card) throw new Error("Result card not found");
+
+    const blob = await UserReading.resultCardToBlob({
+      band: Number(band || card.dataset.band || 0).toFixed(1),
+      correct: Number(correct || card.dataset.correct || 0),
+      total: Number(total || card.dataset.total || 40),
+      dateText
+    });
+
+    const uploaded = await UserReading.uploadResultCardImage(blob);
+    const description = "I just completed an IELTS Reading practice with Voxi AI. Try yours now.";
+
+    tg.shareToStory(uploaded.url, {
+      text: description,
+      widget_link: {
+        url: "https://t.me/voxi_aibot",
+        name: "Try Voxi AI"
+      }
+    });
+  } catch (error) {
+    console.error("Failed to open story editor:", error);
+    alert("Failed to open story editor");
+  } finally {
+    if (storyLabel) storyLabel.textContent = "Story";
+  }
 };
 
 UserReading.shareResult = function ({ band, correct, total }) {
@@ -247,61 +271,4 @@ UserReading.showResultBadge = function (text = "Saved!", type = "success") {
   }, 1400);
 };
 
-UserReading.saveResultCard = async function () {
-  const saveLabel = document.querySelector("#result-save-btn .result-action-label");
-  const card = document.getElementById("reading-result-card");
-  if (!card) return;
-
-  const band = Number(card.dataset.band || 0).toFixed(1);
-  const correct = Number(card.dataset.correct || 0);
-  const total = Number(card.dataset.total || 40);
-  const dateText = document.querySelector(".reading-result-date")?.textContent || "";
-  const filename = `voxi-ielts-result-${Date.now()}.png`;
-
-  if (saveLabel) saveLabel.textContent = "Saving...";
-
-  try {
-    const blob = await UserReading.resultCardToBlob({ band, correct, total, dateText });
-    const uploaded = await UserReading.uploadResultCardImage(blob);
-    const tg = window.Telegram?.WebApp;
-    const remoteUrl = uploaded.url;
-    const remoteName = uploaded.fileName || filename;
-    let triggered = false;
-
-    if (tg && typeof tg.downloadFile === "function") {
-      try {
-        tg.downloadFile({
-          url: remoteUrl,
-          file_name: remoteName
-        });
-        triggered = true;
-      } catch (error) {
-        console.error("Telegram downloadFile failed:", error);
-      }
-    }
-
-    if (!triggered) {
-      const link = document.createElement("a");
-      link.href = remoteUrl;
-      link.download = remoteName;
-      link.rel = "noopener";
-      link.target = "_blank";
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      triggered = true;
-    }
-
-    if (triggered) {
-      UserReading.showResultBadge("Saved!", "success");
-      return;
-    }
-
-    throw new Error("Save trigger failed");
-  } catch (error) {
-    console.error("Failed to save result card:", error);
-    UserReading.showResultBadge("Save failed", "error");
-  } finally {
-    if (saveLabel) saveLabel.textContent = "Save";
-  }
-};
+// Save button intentionally removed for now.
