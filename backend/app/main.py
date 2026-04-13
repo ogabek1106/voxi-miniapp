@@ -24,6 +24,7 @@ from app.api import admin_mock_packs
 import os
 
 os.makedirs("media", exist_ok=True)
+os.makedirs("static/result_images", exist_ok=True)
 ensure_reading_progress_columns()
 ensure_mock_pack_column()
 ensure_question_group_column()
