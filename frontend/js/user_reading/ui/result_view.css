@@ -1,0 +1,43 @@
+.reading-result-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 24px 16px 40px;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.reading-result-title {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: #ffffff;
+}
+
+.reading-result-band-box {
+  width: 180px;
+  height: 180px;
+  border: 3px solid rgba(255,255,255,0.18);
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.04);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.28);
+}
+
+.reading-result-band-value {
+  font-size: 64px;
+  font-weight: 900;
+  line-height: 1;
+  color: #ffffff;
+}
+
+.reading-result-score {
+  font-size: 22px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.88);
+}
