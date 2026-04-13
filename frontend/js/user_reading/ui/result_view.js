@@ -98,6 +98,7 @@ UserReading.animateBandValue = function (targetBand) {
 UserReading.initResultActions = function (data) {
   const shareBtn = document.getElementById("result-share-btn");
   const storyBtn = document.getElementById("result-story-btn");
+  const saveBtn = document.getElementById("result-save-btn");
 
   if (shareBtn) {
     shareBtn.onclick = function () {
@@ -108,6 +109,12 @@ UserReading.initResultActions = function (data) {
   if (storyBtn) {
     storyBtn.onclick = function () {
       UserReading.shareStoryResult(data);
+    };
+  }
+
+  if (saveBtn) {
+    saveBtn.onclick = function () {
+      UserReading.saveResultCard();
     };
   }
 };
@@ -131,4 +138,28 @@ UserReading.shareResult = function ({ band, correct, total }) {
   const url = `https://t.me/share/url?url=${encodeURIComponent(botLink)}&text=${encodeURIComponent(text)}`;
 
   window.open(url, "_blank");
+};
+
+UserReading.saveResultCard = async function () {
+  const card = document.getElementById("reading-result-card");
+  if (!card || typeof html2canvas !== "function") {
+    alert("Save is not available.");
+    return;
+  }
+
+  try {
+    const canvas = await html2canvas(card, {
+      backgroundColor: null,
+      scale: 2,
+      useCORS: true
+    });
+
+    const link = document.createElement("a");
+    link.href = canvas.toDataURL("image/png");
+    link.download = "voxi-ielts-result.png";
+    link.click();
+  } catch (error) {
+    console.error("Failed to save result card:", error);
+    alert("Failed to save image.");
+  }
 };
