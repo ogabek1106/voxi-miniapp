@@ -17,6 +17,8 @@ const formattedDate = today.toLocaleDateString("en-GB", {
 
 container.innerHTML = `
   <div class="reading-result-page">
+
+  <div class="reading-result-card-wrapper">
     <div class="reading-result-card" id="reading-result-card">
       <div class="reading-result-card-type">IELTS Reading</div>
 
@@ -29,24 +31,27 @@ container.innerHTML = `
       <div class="reading-result-date">${formattedDate}</div>
 
       <div class="reading-result-brand">Powered by EBAI Academy</div>
-      <div class="reading-result-actions">
-  <div class="result-action-item" id="result-share-btn">
-    <div class="result-action-circle">🔗</div>
-    <div class="result-action-label">Share</div>
-  </div>
-
-  <div class="result-action-item" id="result-story-btn">
-    <div class="result-action-circle">📸</div>
-    <div class="result-action-label">Story</div>
-  </div>
-
-  <div class="result-action-item" id="result-save-btn">
-    <div class="result-action-circle">⬇️</div>
-    <div class="result-action-label">Save</div>
-  </div>
-</div>
     </div>
   </div>
+
+  <div class="reading-result-actions">
+    <div class="result-action-item" id="result-share-btn">
+      <div class="result-action-circle">🔗</div>
+      <div class="result-action-label">Share</div>
+    </div>
+
+    <div class="result-action-item" id="result-story-btn">
+      <div class="result-action-circle">📸</div>
+      <div class="result-action-label">Story</div>
+    </div>
+
+    <div class="result-action-item" id="result-save-btn">
+      <div class="result-action-circle">⬇️</div>
+      <div class="result-action-label">Save</div>
+    </div>
+  </div>
+
+</div>
 `;
   UserReading.animateBandValue(band);
 };
