@@ -195,6 +195,21 @@ def _build_submitted_start_response(progress: ReadingProgress, result: SubmitRes
     }
 
 
+@router.post("/{mock_id}/reading/entry-check")
+def reading_entry_check(mock_id: int, payload: ReadingEntryCheckIn, db: Session = Depends(get_db)):
+    test = _get_test_for_mock(db, mock_id)
+    access_result = check_reading_access(payload.init_data)
+
+    if not access_result.get("ok"):
+        return access_result
+
+    return {
+        "ok": True,
+        "mock_id": mock_id,
+        "test_id": test.id,
+        "telegram_user_id": access_result.get("telegram_user_id"),
+    }
+
 @router.get("/{mock_id}/reading/start")
 def start_reading_test(mock_id: int, telegram_id: int, db: Session = Depends(get_db)):
     test = _get_test_for_mock(db, mock_id)
