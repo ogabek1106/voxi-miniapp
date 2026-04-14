@@ -367,7 +367,7 @@ window.showSubscribeGate = function (mockId = null) {
     <span>❤️</span>
   </div>
 
-  <span style="
+  <span class="subscribe-btn-label" style="
     position:relative;
     z-index:2;
   ">Subscribe</span>
@@ -401,13 +401,19 @@ window.showSubscribeGate = function (mockId = null) {
   }
 };
 window.openChannel = function () {
-  window.open("https://t.me/IELTSforeverybody", "_blank");
+  const tg = window.Telegram?.WebApp;
+  const channelUrl = "https://t.me/IELTSforeverybody";
+  if (tg && typeof tg.openTelegramLink === "function") {
+    tg.openTelegramLink(channelUrl);
+  } else {
+    window.open(channelUrl, "_blank");
+  }
 
   const mockId = window.__subGateMockId;
   if (!mockId || !window.TelegramSubGate?.startEntryRecheck) return;
 
   const subscribeBtn = document.getElementById("subscribe-btn");
-  const subscribeLabel = subscribeBtn?.querySelector("span:last-child");
+  const subscribeLabel = subscribeBtn?.querySelector(".subscribe-btn-label");
   if (subscribeBtn) {
     subscribeBtn.disabled = true;
     subscribeBtn.style.opacity = "0.85";
@@ -438,7 +444,7 @@ window.openChannel = function () {
     },
     onTimeout: function () {
       const btn = document.getElementById("subscribe-btn");
-      const label = btn?.querySelector("span:last-child");
+      const label = btn?.querySelector(".subscribe-btn-label");
       if (btn) {
         btn.disabled = false;
         btn.style.opacity = "1";
