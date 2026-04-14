@@ -94,10 +94,6 @@ TelegramSubGate.startEntryRecheck = function (mockId, callbacks = {}) {
       return;
     }
 
-    alert(
-      "RECHECK FAILED\n" +
-      "reason: " + (result?.reason || "unknown")
-    );
   };
 
   // Start with one immediate check, then periodic checks.
