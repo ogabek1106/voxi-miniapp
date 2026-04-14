@@ -1,6 +1,6 @@
 # backend/app/api/mock_tests.py
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.config import ADMIN_IDS
 from app.deps import get_db
 from app.models import ReadingPassage, ReadingProgress, ReadingQuestion, ReadingTest, User
-from app.services.telegram_sub_gate import check_reading_access
+from app.services.telegram_sub_gate import check_reading_access, check_channel_membership
 
 router = APIRouter(prefix="/mock-tests", tags=["mock-tests"])
 
@@ -36,7 +36,8 @@ class ReadingSaveIn(BaseModel):
     answers: Dict[str, dict] = Field(default_factory=dict)
 
 class ReadingEntryCheckIn(BaseModel):
-    init_data: str
+    init_data: str = ""
+    telegram_id: Optional[int] = None
 
 
 def _get_test_for_mock(db: Session, mock_id: int) -> ReadingTest:
@@ -201,7 +202,16 @@ def reading_entry_check(mock_id: int, payload: ReadingEntryCheckIn, db: Session 
     access_result = check_reading_access(payload.init_data)
 
     if not access_result.get("ok"):
-        return access_result
+        # Fallback path: if init_data validation fails on some clients,
+        # check membership directly by telegram_id.
+        if payload.telegram_id and check_channel_membership(int(payload.telegram_id)):
+            access_result = {
+                "ok": True,
+                "telegram_user_id": int(payload.telegram_id),
+                "fallback": "telegram_id_membership"
+            }
+        else:
+            return access_result
 
     return {
         "ok": True,

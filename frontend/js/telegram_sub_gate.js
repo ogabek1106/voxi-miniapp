@@ -10,8 +10,9 @@ TelegramSubGate.getInitData = function () {
 
 TelegramSubGate.checkReadingEntry = async function (mockId) {
   const initData = TelegramSubGate.getInitData();
+  const telegramId = window.getTelegramId ? window.getTelegramId() : null;
 
-  if (!initData) {
+  if (!initData && !telegramId) {
     return { ok: false, reason: "no_init_data" };
   }
 
@@ -22,7 +23,8 @@ TelegramSubGate.checkReadingEntry = async function (mockId) {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        init_data: initData
+        init_data: initData || "",
+        telegram_id: telegramId || null
       })
     });
 
