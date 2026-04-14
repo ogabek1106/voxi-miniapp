@@ -1,6 +1,9 @@
 # backend/app/services/telegram_sub_gate.py
 import os
-
+import json
+import hmac
+import hashlib
+from urllib.parse import parse_qsl
 
 def get_bot_token():
     return os.getenv("BOT_TOKEN")
