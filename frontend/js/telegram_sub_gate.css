@@ -24,17 +24,24 @@
 
 @keyframes fallHeart {
   0% {
-    transform: translateY(-18px);
+    transform: translate(0px, -18px) rotate(0deg);
     opacity: 0;
   }
   15% {
     opacity: 0.5;
   }
-  85% {
+  30% {
+    transform: translate(-3px, 12px) rotate(-8deg);
+  }
+  55% {
+    transform: translate(4px, 32px) rotate(10deg);
+  }
+  80% {
+    transform: translate(-2px, 52px) rotate(-6deg);
     opacity: 0.5;
   }
   100% {
-    transform: translateY(70px);
+    transform: translate(3px, 70px) rotate(8deg);
     opacity: 0;
   }
 }
