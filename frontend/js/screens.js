@@ -345,16 +345,30 @@ window.showSubscribeGate = function () {
       </div>
 
       <button onclick="openChannel()" style="
-        width:100%;
-        height:52px;
-        border-radius:12px;
-        font-weight:700;
-        font-size:16px;
-        background: #ffe4e6;
-        color:#000;
-      ">
-        ❤️ Subscribe ❤️
-      </button>
+  position: relative;
+  width:100%;
+  height:52px;
+  border-radius:12px;
+  font-weight:700;
+  font-size:16px;
+  background:#ffe4e6;
+  color:#000;
+  overflow:hidden;
+">
+  <div class="subscribe-hearts">
+    <span>❤️</span>
+    <span>❤️</span>
+    <span>❤️</span>
+    <span>❤️</span>
+    <span>❤️</span>
+    <span>❤️</span>
+  </div>
+
+  <span style="
+    position:relative;
+    z-index:2;
+  ">Subscribe ❤️</span>
+</button>
 
       <button onclick="goHome()" style="
         width:100%;
