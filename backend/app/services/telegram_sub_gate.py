@@ -14,7 +14,36 @@ def get_required_channel():
 
 
 def validate_telegram_init_data(init_data: str):
-    pass
+    data_pairs = dict(parse_qsl(init_data, keep_blank_values=True))
+    received_hash = data_pairs.pop("hash", None)
+
+    if not received_hash:
+        return None
+
+    bot_token = get_bot_token()
+    if not bot_token:
+        return None
+
+    data_check_string = "\n".join(
+        f"{key}={value}" for key, value in sorted(data_pairs.items())
+    )
+
+    secret_key = hmac.new(
+        b"WebAppData",
+        bot_token.encode(),
+        hashlib.sha256
+    ).digest()
+
+    calculated_hash = hmac.new(
+        secret_key,
+        data_check_string.encode(),
+        hashlib.sha256
+    ).hexdigest()
+
+    if not hmac.compare_digest(calculated_hash, received_hash):
+        return None
+
+    return data_pairs
 
 
 def extract_telegram_user_id(validated_data):
