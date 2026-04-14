@@ -17,62 +17,23 @@ TelegramSubGate.checkReadingEntry = async function (mockId) {
   }
 
   try {
-    const url = `/mock-tests/${mockId}/reading/entry-check`;
-    alert("ENTRY URL\n" + url);
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        init_data: initData || "",
-        telegram_id: telegramId || null
-      })
+    const data = await apiPost(`/mock-tests/${mockId}/reading/entry-check`, {
+      init_data: initData || "",
+      telegram_id: telegramId || null
     });
 
-    const rawText = await res.text();
-
-    if (!res.ok) {
-      alert(
-        "ENTRY HTTP ERROR\n" +
-        "status: " + res.status + "\n" +
-        "body: " + rawText
-      );
-      return {
-        ok: false,
-        reason: "http_error",
-        status: res.status,
-        body: rawText
-      };
-    }
-
-    try {
-      return JSON.parse(rawText);
-    } catch (e) {
-      alert(
-        "ENTRY JSON ERROR\n" +
-        "body: " + rawText
-      );
-      return {
-        ok: false,
-        reason: "invalid_json",
-        body: rawText
-      };
-    }
-
+    return data;
   } catch (err) {
-  alert(
-    "ENTRY FETCH ERROR\n" +
-    "message: " + (err?.message || "unknown") + "\n" +
-    "name: " + (err?.name || "unknown")
-  );
-  return {
-    ok: false,
-    reason: "network_error",
-    error_message: err?.message || "unknown",
-    error_name: err?.name || "unknown"
-  };
-}
+    alert(
+      "ENTRY API ERROR\n" +
+      "message: " + (err?.message || "unknown")
+    );
+    return {
+      ok: false,
+      reason: "api_error",
+      error_message: err?.message || "unknown"
+    };
+  }
 };
 
 TelegramSubGate.enterReadingWithGate = async function (mockId) {
