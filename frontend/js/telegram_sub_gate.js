@@ -24,10 +24,6 @@ TelegramSubGate.checkReadingEntry = async function (mockId) {
 
     return data;
   } catch (err) {
-    alert(
-      "ENTRY API ERROR\n" +
-      "message: " + (err?.message || "unknown")
-    );
     return {
       ok: false,
       reason: "api_error",

@@ -443,8 +443,6 @@ window.openChannel = function () {
       }
     },
     onTimeout: function () {
-      alert("RECHECK TIMEOUT: subscription was not confirmed in time.");
-
       const btn = document.getElementById("subscribe-btn");
       const label = btn?.querySelector(".subscribe-btn-label");
       if (btn) {
