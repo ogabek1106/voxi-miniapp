@@ -28,11 +28,46 @@ TelegramSubGate.checkReadingEntry = async function (mockId) {
       })
     });
 
-    const data = await res.json();
-    return data;
+    const rawText = await res.text();
+
+    if (!res.ok) {
+      alert(
+        "ENTRY HTTP ERROR\n" +
+        "status: " + res.status + "\n" +
+        "body: " + rawText
+      );
+      return {
+        ok: false,
+        reason: "http_error",
+        status: res.status,
+        body: rawText
+      };
+    }
+
+    try {
+      return JSON.parse(rawText);
+    } catch (e) {
+      alert(
+        "ENTRY JSON ERROR\n" +
+        "body: " + rawText
+      );
+      return {
+        ok: false,
+        reason: "invalid_json",
+        body: rawText
+      };
+    }
 
   } catch (err) {
-    return { ok: false, reason: "network_error" };
+    alert(
+      "ENTRY FETCH ERROR\n" +
+      "message: " + (err?.message || "unknown")
+    );
+    return {
+      ok: false,
+      reason: "network_error",
+      error_message: err?.message || "unknown"
+    };
   }
 };
 
