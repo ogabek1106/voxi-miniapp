@@ -34,6 +34,9 @@ class ReadingSaveIn(BaseModel):
     telegram_id: int
     answers: Dict[str, dict] = Field(default_factory=dict)
 
+class ReadingEntryCheckIn(BaseModel):
+    init_data: str
+
 
 def _get_test_for_mock(db: Session, mock_id: int) -> ReadingTest:
     test = (
