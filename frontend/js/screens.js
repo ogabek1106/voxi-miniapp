@@ -367,7 +367,7 @@ window.showSubscribeGate = function () {
   <span style="
     position:relative;
     z-index:2;
-  ">Subscribe ❤️</span>
+  ">Subscribe </span>
 </button>
 
       <button onclick="goHome()" style="
