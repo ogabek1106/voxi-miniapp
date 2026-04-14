@@ -89,7 +89,7 @@ window.showReadingEntry = async function () {
     const gateResult = await TelegramSubGate.enterReadingWithGate(mockId);
 
     if (!gateResult || !gateResult.ok) {
-      showSubscribeGate();
+      showSubscribeGate(mockId);
       return;
     }
 
@@ -318,7 +318,10 @@ function startReadingTimer(totalSeconds = 60 * 60) {
   }, 1000);
 }
 
-window.showSubscribeGate = function () {
+window.showSubscribeGate = function (mockId = null) {
+  if (window.TelegramSubGate?.stopEntryRecheck) {
+    window.TelegramSubGate.stopEntryRecheck();
+  }
   hideAllScreens();
   hideAnnouncement();
   setBottomNavVisible(false);
@@ -339,12 +342,12 @@ window.showSubscribeGate = function () {
       gap:16px;
     ">
       
-      <div style="font-size:16px; line-height:1.4;">
+      <div id="subscribe-gate-message" style="font-size:16px; line-height:1.4;">
         Ooops! Not subscribed yet.<br/>
         Subscribe to use the app ❤️
       </div>
 
-      <button onclick="openChannel()" style="
+      <button id="subscribe-btn" onclick="openChannel()" style="
   position: relative;
   width:100%;
   height:52px;
@@ -370,7 +373,7 @@ window.showSubscribeGate = function () {
   ">Subscribe</span>
 </button>
 
-      <button onclick="goHome()" style="
+      <button id="subscribe-back-btn" onclick="goHome()" style="
         width:100%;
         height:48px;
         border-radius:12px;
@@ -383,7 +386,64 @@ window.showSubscribeGate = function () {
 
     </div>
   `;
+
+  window.__subGateMockId = mockId;
+  window.__subGateCompleted = false;
+
+  const backBtn = document.getElementById("subscribe-back-btn");
+  if (backBtn) {
+    backBtn.onclick = function () {
+      if (window.TelegramSubGate?.stopEntryRecheck) {
+        window.TelegramSubGate.stopEntryRecheck();
+      }
+      goHome();
+    };
+  }
 };
 window.openChannel = function () {
   window.open("https://t.me/IELTSforeverybody", "_blank");
+
+  const mockId = window.__subGateMockId;
+  if (!mockId || !window.TelegramSubGate?.startEntryRecheck) return;
+
+  const subscribeBtn = document.getElementById("subscribe-btn");
+  const subscribeLabel = subscribeBtn?.querySelector("span:last-child");
+  if (subscribeBtn) {
+    subscribeBtn.disabled = true;
+    subscribeBtn.style.opacity = "0.85";
+  }
+  if (subscribeLabel) subscribeLabel.textContent = "Checking...";
+
+  window.TelegramSubGate.startEntryRecheck(mockId, {
+    onSuccess: function () {
+      window.__subGateCompleted = true;
+      const message = document.getElementById("subscribe-gate-message");
+      const backBtn = document.getElementById("subscribe-back-btn");
+      const mainBtn = document.getElementById("subscribe-btn");
+
+      if (message) {
+        message.innerHTML = `Wooo! You subscribed!<br/>Thank you! 🥳`;
+      }
+
+      if (mainBtn) {
+        mainBtn.remove();
+      }
+
+      if (backBtn) {
+        backBtn.textContent = "Back to The app";
+        backBtn.onclick = function () {
+          goHome();
+        };
+      }
+    },
+    onTimeout: function () {
+      const btn = document.getElementById("subscribe-btn");
+      const label = btn?.querySelector("span:last-child");
+      if (btn) {
+        btn.disabled = false;
+        btn.style.opacity = "1";
+      }
+      if (label) label.textContent = "Subscribe";
+    }
+  });
 };
