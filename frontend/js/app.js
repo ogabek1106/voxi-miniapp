@@ -1,5 +1,17 @@
 // frontend/js/app.js
 const tg = window.Telegram?.WebApp;
+const FORCE_LIGHT_THEME = true;
+
+function applyBaseLightTheme() {
+  document.documentElement.style.setProperty("--bg-color", "#ffffff");
+  document.documentElement.style.setProperty("--text-color", "#000000");
+  document.documentElement.style.setProperty("--card-bg", "#f4f4f6");
+  document.documentElement.style.setProperty("--border-color", "#e5e5ea");
+  document.documentElement.style.setProperty("--primary", "#4f46e5");
+
+  // Keep native controls and UA widgets in light appearance.
+  document.documentElement.style.colorScheme = "light";
+}
 
 window.getTelegramId = function () {
   const telegramId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
@@ -11,6 +23,11 @@ window.getTelegramId = function () {
 };
 
 function applyTelegramTheme() {
+  if (FORCE_LIGHT_THEME) {
+    applyBaseLightTheme();
+    return;
+  }
+
   if (!tg) return;
 
   const theme = tg.themeParams || {};
@@ -27,6 +44,8 @@ if (tg) {
   tg.expand();
   applyTelegramTheme();
   tg.onEvent("themeChanged", applyTelegramTheme);
+} else {
+  applyBaseLightTheme();
 }
 
 window.__isAdmin = false;
