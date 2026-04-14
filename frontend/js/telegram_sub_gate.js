@@ -32,5 +32,17 @@ TelegramSubGate.checkReadingEntry = async function (mockId) {
 };
 
 TelegramSubGate.enterReadingWithGate = async function (mockId) {
-  return null;
+  const result = await TelegramSubGate.checkReadingEntry(mockId);
+
+  if (!result || !result.ok) {
+    return {
+      ok: false,
+      reason: result?.reason || "entry_check_failed"
+    };
+  }
+
+  return {
+    ok: true,
+    data: result
+  };
 };
