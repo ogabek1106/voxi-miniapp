@@ -3,7 +3,8 @@ import os
 import json
 import hmac
 import hashlib
-import requests
+from urllib.parse import parse_qsl, urlencode
+from urllib.request import urlopen
 from urllib.parse import parse_qsl
 
 def get_bot_token():
