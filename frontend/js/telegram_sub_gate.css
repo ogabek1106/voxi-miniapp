@@ -1,0 +1,40 @@
+.subscribe-hearts {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 12px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.subscribe-hearts span {
+  position: absolute;
+  top: -18px;
+  font-size: 12px;
+  opacity: 0.55;
+  animation: fallHeart 3.8s linear infinite;
+}
+
+.subscribe-hearts span:nth-child(1) { left: 8%;  animation-delay: 0s; }
+.subscribe-hearts span:nth-child(2) { left: 24%; animation-delay: 0.8s; }
+.subscribe-hearts span:nth-child(3) { left: 39%; animation-delay: 1.6s; }
+.subscribe-hearts span:nth-child(4) { left: 56%; animation-delay: 0.4s; }
+.subscribe-hearts span:nth-child(5) { left: 73%; animation-delay: 1.2s; }
+.subscribe-hearts span:nth-child(6) { left: 88%; animation-delay: 2s; }
+
+@keyframes fallHeart {
+  0% {
+    transform: translateY(-18px);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.5;
+  }
+  85% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(70px);
+    opacity: 0;
+  }
+}
