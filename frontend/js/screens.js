@@ -89,10 +89,6 @@ window.showReadingEntry = async function () {
     const gateResult = await TelegramSubGate.enterReadingWithGate(mockId);
 
     if (!gateResult || !gateResult.ok) {
-      alert(
-        "ENTRY CHECK FAILED\n" +
-        "reason: " + (gateResult?.reason || "unknown")
-      );
       showSubscribeGate(mockId);
       return;
     }
