@@ -17,7 +17,9 @@ TelegramSubGate.checkReadingEntry = async function (mockId) {
   }
 
   try {
-    const res = await fetch(`/mock-tests/${mockId}/reading/entry-check`, {
+    const url = `/mock-tests/${mockId}/reading/entry-check`;
+    alert("ENTRY URL\n" + url);
+    const res = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -59,16 +61,18 @@ TelegramSubGate.checkReadingEntry = async function (mockId) {
     }
 
   } catch (err) {
-    alert(
-      "ENTRY FETCH ERROR\n" +
-      "message: " + (err?.message || "unknown")
-    );
-    return {
-      ok: false,
-      reason: "network_error",
-      error_message: err?.message || "unknown"
-    };
-  }
+  alert(
+    "ENTRY FETCH ERROR\n" +
+    "message: " + (err?.message || "unknown") + "\n" +
+    "name: " + (err?.name || "unknown")
+  );
+  return {
+    ok: false,
+    reason: "network_error",
+    error_message: err?.message || "unknown",
+    error_name: err?.name || "unknown"
+  };
+}
 };
 
 TelegramSubGate.enterReadingWithGate = async function (mockId) {
