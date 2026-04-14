@@ -89,7 +89,7 @@ window.showReadingEntry = async function () {
     const gateResult = await TelegramSubGate.enterReadingWithGate(mockId);
 
     if (!gateResult || !gateResult.ok) {
-      alert("Please subscribe first to enter Reading.");
+      showSubscribeGate();
       return;
     }
 
@@ -317,3 +317,59 @@ function startReadingTimer(totalSeconds = 60 * 60) {
     }
   }, 1000);
 }
+
+window.showSubscribeGate = function () {
+  hideAllScreens();
+  hideAnnouncement();
+  setBottomNavVisible(false);
+
+  if (!screenReading) return;
+
+  screenReading.style.display = "block";
+
+  screenReading.innerHTML = `
+    <div style="
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      height:100%;
+      text-align:center;
+      padding:20px;
+      gap:16px;
+    ">
+      
+      <div style="font-size:16px; line-height:1.4;">
+        Ooops! Not subscribed yet.<br/>
+        Subscribe to use the app ❤️
+      </div>
+
+      <button onclick="openChannel()" style="
+        width:100%;
+        height:52px;
+        border-radius:12px;
+        font-weight:700;
+        font-size:16px;
+        background: #ffe4e6;
+        color:#000;
+      ">
+        ❤️ Subscribe ❤️
+      </button>
+
+      <button onclick="goHome()" style="
+        width:100%;
+        height:48px;
+        border-radius:12px;
+        background:#eee;
+        color:#000;
+        font-weight:500;
+      ">
+        Cancel
+      </button>
+
+    </div>
+  `;
+};
+window.openChannel = function () {
+  window.open("https://t.me/IELTSforeverybody", "_blank");
+};
