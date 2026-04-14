@@ -3,6 +3,7 @@ import os
 import json
 import hmac
 import hashlib
+import requests
 from urllib.parse import parse_qsl
 
 def get_bot_token():
@@ -63,8 +64,42 @@ def extract_telegram_user_id(validated_data):
 
 
 def check_channel_membership(telegram_user_id: int):
-    pass
+    bot_token = get_bot_token()
+    required_channel = get_required_channel()
+
+    if not bot_token or not required_channel or not telegram_user_id:
+        return False
+
+    url = f"https://api.telegram.org/bot{bot_token}/getChatMember"
+    params = {
+        "chat_id": required_channel,
+        "user_id": telegram_user_id,
+    }
+
+    try:
+        response = requests.get(url, params=params, timeout=10)
+        data = response.json()
+    except Exception:
+        return False
+
+    if not data.get("ok"):
+        return False
+
+    status = data.get("result", {}).get("status")
+    return status in {"creator", "administrator", "member", "restricted"}
 
 
 def check_reading_access(init_data: str):
-    pass
+    validated_data = validate_telegram_init_data(init_data)
+    if not validated_data:
+        return {"ok": False, "reason": "invalid_init_data"}
+
+    telegram_user_id = extract_telegram_user_id(validated_data)
+    if not telegram_user_id:
+        return {"ok": False, "reason": "user_not_found"}
+
+    is_member = check_channel_membership(telegram_user_id)
+    if not is_member:
+        return {"ok": False, "reason": "not_subscribed"}
+
+    return {"ok": True, "telegram_user_id": telegram_user_id}
