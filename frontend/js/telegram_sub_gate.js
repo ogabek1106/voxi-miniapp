@@ -42,7 +42,8 @@ TelegramSubGate.enterReadingWithGate = async function (mockId) {
   if (!result || !result.ok) {
     return {
       ok: false,
-      reason: result?.reason || "entry_check_failed"
+      reason: result?.reason || "entry_check_failed",
+      raw: result || null
     };
   }
 
@@ -86,10 +87,17 @@ TelegramSubGate.startEntryRecheck = function (mockId, callbacks = {}) {
     onProgress(elapsed);
 
     const result = await TelegramSubGate.checkReadingEntry(mockId);
+
     if (result && result.ok) {
       TelegramSubGate.stopEntryRecheck();
       onSuccess(result);
+      return;
     }
+
+    alert(
+      "RECHECK FAILED\n" +
+      "reason: " + (result?.reason || "unknown")
+    );
   };
 
   // Start with one immediate check, then periodic checks.
