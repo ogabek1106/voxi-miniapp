@@ -85,7 +85,15 @@ window.showReadingEntry = async function () {
       return;
     }
 
-    startMock(mocks[0].id);
+    const mockId = mocks[0].id;
+    const gateResult = await TelegramSubGate.enterReadingWithGate(mockId);
+
+    if (!gateResult || !gateResult.ok) {
+      alert("Please subscribe first to enter Reading.");
+      return;
+    }
+
+    startMock(mockId);
   } catch (error) {
     console.error("Reading quick entry error:", error);
     alert("Failed to open reading.");
