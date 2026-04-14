@@ -89,6 +89,10 @@ window.showReadingEntry = async function () {
     const gateResult = await TelegramSubGate.enterReadingWithGate(mockId);
 
     if (!gateResult || !gateResult.ok) {
+      alert(
+        "ENTRY CHECK FAILED\n" +
+        "reason: " + (gateResult?.reason || "unknown")
+      );
       showSubscribeGate(mockId);
       return;
     }
@@ -443,6 +447,8 @@ window.openChannel = function () {
       }
     },
     onTimeout: function () {
+      alert("RECHECK TIMEOUT: subscription was not confirmed in time.");
+
       const btn = document.getElementById("subscribe-btn");
       const label = btn?.querySelector(".subscribe-btn-label");
       if (btn) {
