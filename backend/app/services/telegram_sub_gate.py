@@ -47,7 +47,19 @@ def validate_telegram_init_data(init_data: str):
 
 
 def extract_telegram_user_id(validated_data):
-    pass
+    if not validated_data:
+        return None
+
+    user_raw = validated_data.get("user")
+    if not user_raw:
+        return None
+
+    try:
+        user_data = json.loads(user_raw)
+    except (json.JSONDecodeError, TypeError):
+        return None
+
+    return user_data.get("id")
 
 
 def check_channel_membership(telegram_user_id: int):
