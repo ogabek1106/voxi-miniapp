@@ -77,12 +77,12 @@ def check_channel_membership(telegram_user_id: int):
         "user_id": telegram_user_id,
     }
 
-        try:
-            query_string = urlencode(params)
-            with urlopen(f"{url}?{query_string}", timeout=10) as response:
-                data = json.loads(response.read().decode("utf-8"))
-        except Exception:
-            return False
+    try:
+        query_string = urlencode(params)
+        with urlopen(f"{url}?{query_string}", timeout=10) as response:
+            data = json.loads(response.read().decode("utf-8"))
+    except Exception:
+        return False
 
     if not data.get("ok"):
         return False
