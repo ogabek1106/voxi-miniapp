@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.config import ADMIN_IDS
 from app.deps import get_db
 from app.models import ReadingPassage, ReadingProgress, ReadingQuestion, ReadingTest, User
+from app.services.telegram_sub_gate import check_reading_access
 
 router = APIRouter(prefix="/mock-tests", tags=["mock-tests"])
 
