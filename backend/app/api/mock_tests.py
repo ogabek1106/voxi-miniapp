@@ -171,6 +171,26 @@ def _query_questions_for_test(db: Session, test_id: int) -> List[ReadingQuestion
     )
 
 
+def _build_submitted_start_response(progress: ReadingProgress, result: SubmitResultOut, mock_id: int, test: ReadingTest) -> Dict[str, Any]:
+    return {
+        "already_submitted": True,
+        "mock_id": mock_id,
+        "test_id": test.id,
+        "title": test.title,
+        "result": {
+            "score": result.score,
+            "total": result.total,
+            "band": result.band
+        },
+        "timer": {
+            "started_at": progress.started_at.isoformat() if progress.started_at else None,
+            "ends_at": progress.ends_at.isoformat() if progress.ends_at else None,
+            "duration_seconds": max(int(test.time_limit_minutes or 60), 1) * 60
+        },
+        "passages": []
+    }
+
+
 @router.get("/{mock_id}/reading/start")
 def start_reading_test(mock_id: int, telegram_id: int, db: Session = Depends(get_db)):
     test = _get_test_for_mock(db, mock_id)
@@ -185,7 +205,9 @@ def start_reading_test(mock_id: int, telegram_id: int, db: Session = Depends(get
     )
 
     if progress and progress.is_submitted and not is_admin:
-        raise HTTPException(status_code=400, detail="Reading test already submitted")
+        questions = _query_questions_for_test(db, test.id)
+        result = _evaluate_reading(questions, progress.answers or {})
+        return _build_submitted_start_response(progress, result, mock_id, test)
 
     if not progress:
         progress = ReadingProgress(
@@ -224,10 +246,11 @@ def start_reading_test(mock_id: int, telegram_id: int, db: Session = Depends(get
 
             if _is_time_up(progress.ends_at, now):
                 questions = _query_questions_for_test(db, test.id)
-                _finalize_progress(progress, questions, now)
+                result = _finalize_progress(progress, questions, now)
                 db.add(progress)
                 db.commit()
-                raise HTTPException(status_code=400, detail="Time is up. Reading was auto-submitted.")
+                db.refresh(progress)
+                return _build_submitted_start_response(progress, result, mock_id, test)
 
             db.add(progress)
             db.commit()

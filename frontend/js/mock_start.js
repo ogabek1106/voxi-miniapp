@@ -45,6 +45,15 @@ window.startMock = async function (mockId) {
     const telegramId = window.getTelegramId();
     const data = await apiGet(`/mock-tests/${mockId}/reading/start?telegram_id=${telegramId}`);
 
+    if (data?.already_submitted) {
+      UserReading.showResultScreen({
+        band: data?.result?.band ?? 0,
+        correct: data?.result?.score ?? 0,
+        total: data?.result?.total ?? 40
+      });
+      return;
+    }
+
     if (!data || !data.passages) {
       UserReading.renderError(screenReading, `Invalid API response\n${JSON.stringify(data, null, 2)}`);
       return;
@@ -53,14 +62,7 @@ window.startMock = async function (mockId) {
     UserReading.renderTest(screenReading, data);
 
   } catch (e) {
-    const message = String(e?.message || e || "");
     console.error(e);
-
-    if (message.includes("already submitted") || message.includes("auto-submitted") || message.includes("Time is up")) {
-      alert("This reading test is already completed.");
-      showMockList();
-      return;
-    }
 
     UserReading.renderError(screenReading, e);
 

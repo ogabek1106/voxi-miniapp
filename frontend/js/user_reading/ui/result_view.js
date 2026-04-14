@@ -48,6 +48,10 @@ UserReading.renderResultPage = function (container, data = {}) {
           <div class="result-action-label">Story</div>
         </div>
       </div>
+
+      <button type="button" class="reading-result-home-link" id="result-home-link">
+        Home Page
+      </button>
     </div>
   `;
 
@@ -85,9 +89,11 @@ UserReading.animateBandValue = function (targetBand) {
 UserReading.initResultActions = function (data) {
   const shareBtn = document.getElementById("result-share-btn");
   const storyBtn = document.getElementById("result-story-btn");
+  const homeLink = document.getElementById("result-home-link");
 
   if (shareBtn) shareBtn.onclick = () => UserReading.shareResult(data);
   if (storyBtn) storyBtn.onclick = () => UserReading.shareStoryResult(data);
+  if (homeLink) homeLink.onclick = () => goHome();
 };
 
 UserReading.shareStoryResult = async function ({ band, correct, total }) {

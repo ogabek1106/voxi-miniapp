@@ -78,11 +78,6 @@ window.showMocksEntry = function () {
 };
 
 window.showReadingEntry = async function () {
-  if (!window.__isAdmin) {
-    alert("WILL BE SOON!");
-    return;
-  }
-
   try {
     const mocks = await apiGet("/mock/list");
     if (!Array.isArray(mocks) || !mocks.length) {

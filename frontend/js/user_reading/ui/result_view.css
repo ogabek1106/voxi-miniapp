@@ -119,3 +119,15 @@
   color: #6b7280;
   letter-spacing: 0.2px;
 }
+
+.reading-result-home-link {
+  margin-top: 26px;
+  border: 0;
+  background: transparent;
+  color: #9ca3af;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  text-decoration: none;
+}
