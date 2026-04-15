@@ -192,7 +192,7 @@ async function renderProfile() {
     const surname = me.surname || "";
 
     screenProfile.innerHTML = `
-      <div style="display:flex; flex-direction:column; align-items:center; gap:16px;">
+      <div style="display:flex; flex-direction:column; align-items:center; gap:16px; width:100%;">
         <div style="
           width:96px; height:96px;
           border-radius:50%;
@@ -203,10 +203,10 @@ async function renderProfile() {
           🦊
         </div>
 
-        <div style="width:100%; margin: 0 auto;">
+        <div style="width:100%; margin:0;">
           <div style="
             width:100%;
-            max-width: 300px; 
+            max-width: 100%; 
             margin: 0 auto; 
             box-sizing: border-box;
             background: var(--card-bg);
