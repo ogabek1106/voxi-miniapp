@@ -15,18 +15,15 @@ ProfileUI.renderLastActivity = function (activity) {
   if (!activity) {
     return `
       <div style="
-        width:100%;
-        max-width:100%;
-margin:0;
-padding:16px 10px;
+        width:calc(100% + 24px);
+        max-width:none;
+        margin:0 -12px;
         box-sizing:border-box;
         background:var(--card-bg);
         border:none;
         box-shadow:0 2px 8px rgba(0,0,0,0.12);
         border-radius:16px;
         padding:16px 14px;
-        padding-left:6px;
-padding-right:6px;
         text-align:left;
       ">
         <div style="
@@ -56,18 +53,15 @@ padding-right:6px;
 
   return `
     <div style="
-      width:100%;
-      max-width:100%;
-margin:0;
-padding:16px 10px;
+      width:calc(100% + 24px);
+      max-width:none;
+      margin:0 -12px;
       box-sizing:border-box;
       background:var(--card-bg);
       border:none;
       box-shadow:0 2px 8px rgba(0,0,0,0.12);
       border-radius:16px;
       padding:16px 14px;
-      padding-left:6px;
-padding-right:6px;
       text-align:left;
     ">
       <div style="
