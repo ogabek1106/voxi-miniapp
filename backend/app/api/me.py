@@ -3,9 +3,9 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from app.deps import get_db
-from app.models import User
+from app.models import User, ReadingProgress, ReadingTest
 from app.config import ADMIN_IDS
-from app.models import ReadingProgress, ReadingTest
+
 router = APIRouter()
 
 class ProfileUpdate(BaseModel):
@@ -27,9 +27,9 @@ def get_me(telegram_id: int, db: Session = Depends(get_db)):
         db.query(ReadingProgress)
         .filter(
             ReadingProgress.user_id == user.id,
-            ReadingProgress.finished_at != None
+            ReadingProgress.submitted_at != None
         )
-        .order_by(ReadingProgress.finished_at.desc())
+        .order_by(ReadingProgress.submitted_at.desc())
         .first()
     )
 
@@ -38,14 +38,15 @@ def get_me(telegram_id: int, db: Session = Depends(get_db)):
     if last:
         test = db.query(ReadingTest).filter(ReadingTest.id == last.test_id).first()
 
-        score = f"{last.score}/{last.total}" if last.score is not None else None
+        score = None
+        if last.raw_score is not None and last.max_score is not None:
+            score = f"{last.raw_score}/{last.max_score}"
 
         last_activity = {
             "reading_title": test.title if test else "Reading",
             "score": score,
-            "band": last.band
+            "band": last.band_score
         }
-
     return {
         "name": user.name,
         "surname": user.surname,
