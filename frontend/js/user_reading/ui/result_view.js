@@ -7,6 +7,7 @@ UserReading.renderResultPage = function (container, data = {}) {
   const band = Number(data.band ?? 0).toFixed(1);
   const correct = Number(data.correct ?? 0);
   const total = Number(data.total ?? 40);
+  const isProfileBack = data.backTarget === "profile";
 
   const today = new Date();
   const formattedDate = today.toLocaleDateString("en-GB", {
@@ -50,13 +51,13 @@ UserReading.renderResultPage = function (container, data = {}) {
       </div>
 
       <button type="button" class="reading-result-home-link" id="result-home-link">
-        Home Page
+        ${isProfileBack ? "Back to Profile" : "Home Page"}
       </button>
     </div>
   `;
 
   UserReading.animateBandValue(Number(band));
-  UserReading.initResultActions({ band, correct, total });
+  UserReading.initResultActions({ band, correct, total, backTarget: data.backTarget });
 };
 
 UserReading.animateBandValue = function (targetBand) {
@@ -90,10 +91,11 @@ UserReading.initResultActions = function (data) {
   const shareBtn = document.getElementById("result-share-btn");
   const storyBtn = document.getElementById("result-story-btn");
   const homeLink = document.getElementById("result-home-link");
+  const goBackToProfile = data?.backTarget === "profile";
 
   if (shareBtn) shareBtn.onclick = () => UserReading.shareResult(data);
   if (storyBtn) storyBtn.onclick = () => UserReading.shareStoryResult(data);
-  if (homeLink) homeLink.onclick = () => goHome();
+  if (homeLink) homeLink.onclick = () => (goBackToProfile ? goProfile() : goHome());
 };
 
 UserReading.shareStoryResult = async function ({ band, correct, total }) {

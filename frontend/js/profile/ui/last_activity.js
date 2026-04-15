@@ -47,7 +47,8 @@ ProfileUI.openLastActivityResult = function (index) {
     window.UserReading.showResultScreen({
       band: Number.isFinite(band) ? band : 0,
       correct: parsed.correct,
-      total: parsed.total
+      total: parsed.total,
+      backTarget: "profile"
     });
   }
 };

@@ -238,6 +238,7 @@ UserReading.showResultScreen = function (data = {}) {
   UserReading.renderResultPage(container, {
     band: data.band ?? "0.0",
     correct: data.correct ?? 0,
-    total: data.total ?? 40
+    total: data.total ?? 40,
+    backTarget: data.backTarget === "profile" ? "profile" : "home"
   });
 };
