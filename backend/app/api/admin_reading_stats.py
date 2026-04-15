@@ -5,6 +5,7 @@ from datetime import timezone
 from app.config import ADMIN_IDS
 from app.deps import get_db
 from app.models import ReadingProgress, ReadingTest, User
+from app.api.mock_tests import _finalize_progress, _is_time_up, _query_questions_for_test, _utcnow
 
 router = APIRouter(prefix="/__admin", tags=["admin-reading-stats"])
 
@@ -34,6 +35,33 @@ def _finish_type(progress: ReadingProgress) -> str | None:
 def list_reading_stats(telegram_id: int, db: Session = Depends(get_db)):
     if telegram_id not in ADMIN_IDS:
         raise HTTPException(status_code=403, detail="Admin only")
+
+    # Auto-submit expired unfinished attempts so stats stay accurate,
+    # even if a user left and never returned.
+    now = _utcnow()
+    unfinished = (
+        db.query(ReadingProgress, User)
+        .join(User, ReadingProgress.user_id == User.id)
+        .filter(
+            ReadingProgress.is_submitted == False,
+            ReadingProgress.ends_at != None
+        )
+        .all()
+    )
+    changed = False
+    questions_cache = {}
+    for progress, user in unfinished:
+        if int(user.telegram_id) in ADMIN_IDS:
+            continue
+        if not _is_time_up(progress.ends_at, now):
+            continue
+        if progress.test_id not in questions_cache:
+            questions_cache[progress.test_id] = _query_questions_for_test(db, progress.test_id)
+        _finalize_progress(progress, questions_cache[progress.test_id], now)
+        db.add(progress)
+        changed = True
+    if changed:
+        db.commit()
 
     rows = (
         db.query(ReadingProgress, User, ReadingTest)

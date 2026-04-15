@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.deps import get_db
 from app.models import User, ReadingProgress, ReadingTest
 from app.config import ADMIN_IDS
+from app.api.mock_tests import _finalize_progress, _is_time_up, _query_questions_for_test, _utcnow
 
 router = APIRouter()
 
@@ -21,6 +22,30 @@ def get_me(telegram_id: int, db: Session = Depends(get_db)):
         db.add(user)
         db.commit()
         db.refresh(user)
+
+    # Auto-submit expired unfinished attempts for this user.
+    now = _utcnow()
+    open_attempts = (
+        db.query(ReadingProgress)
+        .filter(
+            ReadingProgress.user_id == user.id,
+            ReadingProgress.is_submitted == False,
+            ReadingProgress.ends_at != None
+        )
+        .all()
+    )
+    changed = False
+    questions_cache = {}
+    for progress in open_attempts:
+        if not _is_time_up(progress.ends_at, now):
+            continue
+        if progress.test_id not in questions_cache:
+            questions_cache[progress.test_id] = _query_questions_for_test(db, progress.test_id)
+        _finalize_progress(progress, questions_cache[progress.test_id], now)
+        db.add(progress)
+        changed = True
+    if changed:
+        db.commit()
 
     # get last finished reading attempt
     last = (
