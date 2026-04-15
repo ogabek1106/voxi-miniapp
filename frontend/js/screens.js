@@ -186,6 +186,7 @@ async function renderProfile() {
 
   try {
     const me = await apiGet(`/me?telegram_id=${telegramId}`);
+    const lastActivityHtml = window.ProfileUI?.renderLastActivity(me.last_activity) || "";
 
     const name = me.name || "";
     const surname = me.surname || "";
@@ -237,6 +238,8 @@ async function renderProfile() {
           padding:0;
           cursor:pointer;
         ">Edit profile</button>
+
+        ${lastActivityHtml}
       </div>
     `;
   } catch (e) {
