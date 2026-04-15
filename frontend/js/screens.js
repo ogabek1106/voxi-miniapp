@@ -49,7 +49,7 @@ window.goProfile = function () {
     screenProfile.style.display = "block";
     renderProfile();
   }
-  setBottomNavVisible(false);
+  setBottomNavVisible(true);
   setActiveNav(1);
 };
 function setActiveNav(index) {
