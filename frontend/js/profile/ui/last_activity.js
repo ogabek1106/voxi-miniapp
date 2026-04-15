@@ -11,8 +11,55 @@ ProfileUI.escapeHtml = function (value) {
     .replace(/'/g, "&#039;");
 };
 
+ProfileUI.__lastActivities = [];
+
+ProfileUI.parseScore = function (scoreValue) {
+  const text = String(scoreValue ?? "").trim();
+  const match = text.match(/^(\d+)\s*\/\s*(\d+)$/);
+  if (match) {
+    return {
+      correct: Number(match[1] || 0),
+      total: Number(match[2] || 40)
+    };
+  }
+
+  const correct = Number(text || 0);
+  return {
+    correct: Number.isFinite(correct) ? correct : 0,
+    total: 40
+  };
+};
+
+ProfileUI.openLastActivityResult = function (index) {
+  const item = (ProfileUI.__lastActivities || [])[Number(index)];
+  if (!item) return;
+
+  const parsed = ProfileUI.parseScore(item.score);
+  const band = Number(item.band || 0);
+
+  const nav = document.querySelector(".bottom-nav");
+  if (nav) nav.style.display = "none";
+
+  const announcement = document.getElementById("announcement");
+  if (announcement) announcement.style.display = "none";
+
+  if (window.UserReading?.showResultScreen) {
+    window.UserReading.showResultScreen({
+      band: Number.isFinite(band) ? band : 0,
+      correct: parsed.correct,
+      total: parsed.total
+    });
+  }
+};
+
 ProfileUI.renderLastActivity = function (activity) {
-  if (!activity) {
+  const list = Array.isArray(activity)
+    ? activity.filter(Boolean)
+    : (activity ? [activity] : []);
+
+  ProfileUI.__lastActivities = list;
+
+  if (!list.length) {
     return `
       <div style="
         width:calc(100% + 24px);
@@ -47,9 +94,39 @@ ProfileUI.renderLastActivity = function (activity) {
     `;
   }
 
-  const readingTitle = ProfileUI.escapeHtml(activity.reading_title || "");
-  const score = ProfileUI.escapeHtml(activity.score || "");
-  const band = ProfileUI.escapeHtml(activity.band || "");
+  const rowsHtml = list.map((item, index) => {
+    const readingTitle = ProfileUI.escapeHtml(item.reading_title || "");
+    const score = ProfileUI.escapeHtml(item.score || "");
+    const band = ProfileUI.escapeHtml(item.band || "");
+
+    return `
+      <tr
+        onclick="ProfileUI.openLastActivityResult(${index})"
+        style="cursor:pointer;"
+      >
+        <td style="
+          padding:10px 6px;
+          border-bottom:1px solid rgba(255,255,255,0.06);
+          vertical-align:top;
+          min-width:140px;
+        ">${readingTitle || "&nbsp;"}</td>
+
+        <td style="
+          padding:10px 6px;
+          border-bottom:1px solid rgba(255,255,255,0.06);
+          vertical-align:top;
+          white-space:nowrap;
+        ">${score || "&nbsp;"}</td>
+
+        <td style="
+          padding:10px 6px;
+          border-bottom:1px solid rgba(255,255,255,0.06);
+          vertical-align:top;
+          white-space:nowrap;
+        ">${band || "&nbsp;"}</td>
+      </tr>
+    `;
+  }).join("");
 
   return `
     <div style="
@@ -111,28 +188,7 @@ ProfileUI.renderLastActivity = function (activity) {
           </thead>
 
           <tbody>
-            <tr>
-              <td style="
-                padding:10px 6px;
-                border-bottom:1px solid rgba(255,255,255,0.06);
-                vertical-align:top;
-                min-width:140px;
-              ">${readingTitle || "&nbsp;"}</td>
-
-              <td style="
-                padding:10px 6px;
-                border-bottom:1px solid rgba(255,255,255,0.06);
-                vertical-align:top;
-                white-space:nowrap;
-              ">${score || "&nbsp;"}</td>
-
-              <td style="
-                padding:10px 6px;
-                border-bottom:1px solid rgba(255,255,255,0.06);
-                vertical-align:top;
-                white-space:nowrap;
-              ">${band || "&nbsp;"}</td>
-            </tr>
+            ${rowsHtml}
           </tbody>
         </table>
       </div>
