@@ -25,6 +25,8 @@ padding:16px 10px;
         box-shadow:0 2px 8px rgba(0,0,0,0.12);
         border-radius:16px;
         padding:16px 14px;
+        padding-left:6px;
+padding-right:6px;
         text-align:left;
       ">
         <div style="
@@ -64,6 +66,8 @@ padding:16px 10px;
       box-shadow:0 2px 8px rgba(0,0,0,0.12);
       border-radius:16px;
       padding:16px 14px;
+      padding-left:6px;
+padding-right:6px;
       text-align:left;
     ">
       <div style="
