@@ -16,8 +16,9 @@ ProfileUI.renderLastActivity = function (activity) {
     return `
       <div style="
         width:100%;
-        max-width:300px;
-        margin:0 auto;
+        max-width:100%;
+margin:0;
+padding:16px 10px;
         box-sizing:border-box;
         background:var(--card-bg);
         border:none;
@@ -54,8 +55,9 @@ ProfileUI.renderLastActivity = function (activity) {
   return `
     <div style="
       width:100%;
-      max-width:300px;
-      margin:0 auto;
+      max-width:100%;
+margin:0;
+padding:16px 10px;
       box-sizing:border-box;
       background:var(--card-bg);
       border:none;
