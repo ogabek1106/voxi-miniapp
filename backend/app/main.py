@@ -11,6 +11,7 @@ from app.api.mock_tests import router as mock_tests_router
 from app.api.me import router as me_router
 from app.api import mock_list
 from app.api.admin import router as admin_router
+from app.api.admin_reading_stats import router as admin_reading_stats_router
 from app.api.admin_reading import router as admin_reading_router
 from .db import (
     ensure_reading_progress_columns,
@@ -36,6 +37,7 @@ app.include_router(admin_reading_router)
 app.include_router(mock_tests_router)
 app.include_router(me_router)
 app.include_router(admin_router)
+app.include_router(admin_reading_stats_router)
 app.include_router(admin_mock_packs.router)
 app.include_router(result_images_router)
 app.mount("/media", StaticFiles(directory="/data/media"), name="media")
