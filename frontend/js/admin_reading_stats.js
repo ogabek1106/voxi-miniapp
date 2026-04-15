@@ -122,7 +122,7 @@ window.showAdminReadingStats = async function () {
     screen.innerHTML = `
       <div style="display:flex; flex-direction:column; gap:10px;">
         <h3 style="margin:0;">Reading Stats</h3>
-        <p style="margin:0; color:#dc2626;">Failed to load reading stats.</p>
+        <p style="margin:0; color:#dc2626;">${String(error?.message || "Failed to load reading stats.")}</p>
         <button onclick="showAdminPanel()">⬅ Back</button>
       </div>
     `;

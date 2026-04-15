@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from datetime import timezone
 
 from app.config import ADMIN_IDS
 from app.deps import get_db
@@ -8,11 +9,24 @@ from app.models import ReadingProgress, ReadingTest, User
 router = APIRouter(prefix="/__admin", tags=["admin-reading-stats"])
 
 
+def _to_utc(value):
+    if value is None:
+        return None
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
+
+
 def _finish_type(progress: ReadingProgress) -> str | None:
     if not progress.is_submitted or not progress.submitted_at:
         return None
-    if progress.ends_at and progress.submitted_at >= progress.ends_at:
-        return "auto"
+    if progress.ends_at:
+        try:
+            if _to_utc(progress.submitted_at) >= _to_utc(progress.ends_at):
+                return "auto"
+        except Exception:
+            # Keep stats endpoint resilient even if there are legacy datetime rows.
+            return "manual"
     return "manual"
 
 
@@ -25,12 +39,7 @@ def list_reading_stats(telegram_id: int, db: Session = Depends(get_db)):
         db.query(ReadingProgress, User, ReadingTest)
         .join(User, ReadingProgress.user_id == User.id)
         .join(ReadingTest, ReadingProgress.test_id == ReadingTest.id)
-        .order_by(
-            ReadingProgress.submitted_at.is_(None).asc(),
-            ReadingProgress.submitted_at.desc(),
-            ReadingProgress.updated_at.is_(None).asc(),
-            ReadingProgress.updated_at.desc()
-        )
+        .order_by(ReadingProgress.submitted_at.desc(), ReadingProgress.updated_at.desc())
         .all()
     )
 
