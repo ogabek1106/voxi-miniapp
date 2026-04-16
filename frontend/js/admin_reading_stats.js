@@ -18,12 +18,29 @@
 
     const btn = document.createElement("button");
     btn.setAttribute("onclick", "showAdminReadingStats()");
-    btn.textContent = "📖 Reading Stats";
+    btn.textContent = "Reading Stats";
     dbButton.insertAdjacentElement("afterend", btn);
   };
 })();
 
 window.showAdminReadingStats = async function () {
+  const parseApiDate = (value) => {
+    if (!value) return null;
+    const raw = String(value).trim();
+    if (!raw) return null;
+
+    const hasTimezone = /([zZ]|[+\-]\d{2}:\d{2})$/.test(raw);
+    const normalized = hasTimezone ? raw : `${raw}Z`;
+    const dt = new Date(normalized);
+    if (Number.isNaN(dt.getTime())) return null;
+    return dt;
+  };
+
+  const formatApiDate = (value) => {
+    const dt = parseApiDate(value);
+    return dt ? dt.toLocaleString() : "—";
+  };
+
   const telegramId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
   if (!telegramId) {
     alert("Open inside Telegram");
@@ -42,15 +59,15 @@ window.showAdminReadingStats = async function () {
     <div style="display:flex; flex-direction:column; height:100%;">
       <h3 style="margin:0 0 10px 0;">Reading Stats</h3>
       <div style="opacity:0.7; font-size:13px; margin-bottom:8px;">Loading...</div>
-      <button style="margin-top:12px;" onclick="showAdminPanel()">⬅ Back</button>
+      <button style="margin-top:12px;" onclick="showAdminPanel()">Back</button>
     </div>
   `;
 
   try {
     const data = await apiGet(`/__admin/reading-stats?telegram_id=${telegramId}`);
     const rows = (data?.items || []).map((item) => {
-      const startedAt = item.started_at ? new Date(item.started_at).toLocaleString() : "—";
-      const finishedAt = item.finished_at ? new Date(item.finished_at).toLocaleString() : "—";
+      const startedAt = formatApiDate(item.started_at);
+      const finishedAt = formatApiDate(item.finished_at);
       const finishType = item.finish_type || "—";
       const score = item.score || "—";
       const band = item.band == null ? "—" : Number(item.band).toFixed(1);
@@ -114,7 +131,7 @@ window.showAdminReadingStats = async function () {
           </table>
         </div>
 
-        <button style="margin-top:12px;" onclick="showAdminPanel()">⬅ Back</button>
+        <button style="margin-top:12px;" onclick="showAdminPanel()">Back</button>
       </div>
     `;
   } catch (error) {
@@ -123,8 +140,9 @@ window.showAdminReadingStats = async function () {
       <div style="display:flex; flex-direction:column; gap:10px;">
         <h3 style="margin:0;">Reading Stats</h3>
         <p style="margin:0; color:#dc2626;">${String(error?.message || "Failed to load reading stats.")}</p>
-        <button onclick="showAdminPanel()">⬅ Back</button>
+        <button onclick="showAdminPanel()">Back</button>
       </div>
     `;
   }
 };
+
