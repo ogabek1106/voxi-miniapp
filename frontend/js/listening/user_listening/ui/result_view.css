@@ -1,0 +1,133 @@
+/* ===== frontend/js/user_reading/ui/result_view.css ===== */
+.reading-result-page,
+.reading-result-page * {
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.reading-result-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px 40px;
+  box-sizing: border-box;
+  background: #f3f4f6;
+}
+
+.reading-result-card-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.reading-result-card {
+  width: 100%;
+  max-width: 320px;
+  border-radius: 28px;
+  box-shadow: 0 14px 40px rgba(0,0,0,0.10);
+  padding: 26px 20px 20px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: #ffffff;
+}
+
+.reading-result-card-type {
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  color: #00baff;
+  margin-bottom: 16px;
+}
+
+.reading-result-band-box {
+  width: 180px;
+  height: 180px;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #00baff;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  margin-bottom: 16px;
+}
+
+.reading-result-band-value {
+  font-size: 64px;
+  font-weight: 900;
+  line-height: 1;
+  color: #ffffff;
+}
+
+.reading-result-score {
+  font-size: 22px;
+  font-weight: 800;
+  color: #00baff;
+  margin-bottom: 10px;
+  letter-spacing: 0.2px;
+}
+
+.reading-result-date {
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 18px;
+}
+
+.reading-result-brand {
+  font-size: 13px;
+  font-weight: 800;
+  color: #9ca3af;
+  letter-spacing: 0.4px;
+}
+
+.reading-result-actions {
+  width: 100%;
+  max-width: 320px;
+  margin-top: 90px;
+  display: flex;
+  justify-content: center;
+  gap: 48px;
+}
+
+.result-action-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.result-action-circle {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: #00baff;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+}
+
+.result-action-label {
+  font-size: 12px;
+  font-weight: 800;
+  color: #6b7280;
+  letter-spacing: 0.2px;
+}
+
+.reading-result-home-link {
+  margin-top: 26px;
+  border: 0;
+  background: transparent;
+  color: #9ca3af;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  text-decoration: none;
+}

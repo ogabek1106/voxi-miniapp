@@ -1,0 +1,42 @@
+/* ===== GAP QUESTION TYPE ===== */
+
+.question-text {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 15.5px;
+  line-height: 1.7;
+  text-align: justify;
+}
+
+.gap-input {
+  display: inline-block;
+  width: 90px !important;
+  margin: 0 4px;
+  margin-top: 0 !important;
+  padding: 0 0 2px !important;
+  border: none !important;
+  border-bottom: 2px solid #000 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 15px;
+  text-align: center;
+  outline: none;
+}
+
+.gap-input:focus {
+  border-bottom: 2px solid #000 !important;
+}
+
+.gap-input:-webkit-autofill {
+  box-shadow: 0 0 0 1000px white inset;
+  -webkit-text-fill-color: #000;
+}
+
+.question-text .gap-input + .gap-input {
+  margin-left: 6px;
+}
+
+.question-text span {
+  word-break: break-word;
+}
