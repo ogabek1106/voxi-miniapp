@@ -100,6 +100,41 @@ window.showReadingEntry = async function () {
   }
 };
 
+window.showListeningEntry = async function () {
+  if (!window.__isAdmin) {
+    alert("WILL BE SOON!");
+    return;
+  }
+
+  try {
+    const packs = await apiGet("/admin/mock-packs");
+    if (!Array.isArray(packs) || !packs.length) {
+      alert("No mock packs available.");
+      return;
+    }
+
+    const packId = Number(packs[0]?.id || 0);
+    if (!packId) {
+      alert("No listening pack found.");
+      return;
+    }
+
+    if (typeof window.showPackListening === "function") {
+      window.showPackListening(packId);
+      return;
+    }
+
+    if (typeof window.openMockPack === "function") {
+      window.openMockPack(packId);
+      return;
+    }
+  } catch (error) {
+    console.error("Listening quick entry error:", error);
+  }
+
+  alert("Failed to open listening.");
+};
+
 function render(html) {
   if (!screenMocks) return;
   screenMocks.innerHTML = html;

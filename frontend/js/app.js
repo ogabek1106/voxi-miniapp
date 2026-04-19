@@ -50,6 +50,34 @@ if (tg) {
 
 window.__isAdmin = false;
 
+function ensureListeningHomeButton(visible) {
+  const home = document.getElementById("screen-home");
+  if (!home) return;
+
+  let btn = document.getElementById("listeningHomeBtn");
+  if (!btn) {
+    btn = document.createElement("button");
+    btn.id = "listeningHomeBtn";
+    btn.className = "primary-btn";
+    btn.textContent = "🎧 Listening";
+    btn.style.display = "none";
+    btn.onclick = function () {
+      if (typeof window.showListeningEntry === "function") {
+        window.showListeningEntry();
+      }
+    };
+
+    const mockBtn = home.querySelector('button[onclick="showMocksEntry()"]');
+    if (mockBtn) {
+      home.insertBefore(btn, mockBtn);
+    } else {
+      home.appendChild(btn);
+    }
+  }
+
+  btn.style.display = visible ? "block" : "none";
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   goHome();
   loadMe();
@@ -101,6 +129,7 @@ async function loadMe() {
     if (adminBtn) {
       adminBtn.style.display = "block";
     }
+    ensureListeningHomeButton(true);
 
     return;
   }
@@ -112,12 +141,14 @@ async function loadMe() {
     if (adminBtn) {
       adminBtn.style.display = window.__isAdmin ? "block" : "none";
     }
+    ensureListeningHomeButton(window.__isAdmin);
   } catch (e) {
     window.__isAdmin = false;
 
     if (adminBtn) {
       adminBtn.style.display = "none";
     }
+    ensureListeningHomeButton(false);
 
     console.error("Failed to load /me", e);
   }
