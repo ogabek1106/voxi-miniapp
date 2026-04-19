@@ -107,25 +107,20 @@ window.showListeningEntry = async function () {
   }
 
   try {
-    const packs = await apiGet("/admin/mock-packs");
-    if (!Array.isArray(packs) || !packs.length) {
-      alert("No mock packs available.");
+    const mocks = await apiGet("/mock/list");
+    if (!Array.isArray(mocks) || !mocks.length) {
+      alert("No listening mocks available.");
       return;
     }
 
-    const packId = Number(packs[0]?.id || 0);
-    if (!packId) {
-      alert("No listening pack found.");
+    const mockId = Number(mocks[0]?.id || 0);
+    if (!mockId) {
+      alert("No listening mock found.");
       return;
     }
 
-    if (typeof window.showPackListening === "function") {
-      window.showPackListening(packId);
-      return;
-    }
-
-    if (typeof window.openMockPack === "function") {
-      window.openMockPack(packId);
+    if (typeof window.startListeningMock === "function") {
+      window.startListeningMock(mockId);
       return;
     }
   } catch (error) {
