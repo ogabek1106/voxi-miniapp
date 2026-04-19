@@ -83,7 +83,9 @@ window.AdminListeningState = window.AdminListeningState || {};
       name: file.name || "audio",
       size: file.size || 0,
       type: file.type || "",
-      preview_url: URL.createObjectURL(file)
+      preview_url: URL.createObjectURL(file),
+      file,
+      url: null
     };
   };
 
@@ -151,7 +153,9 @@ window.AdminListeningState = window.AdminListeningState || {};
       name: file.name || "image",
       size: file.size || 0,
       type: file.type || "",
-      preview_url: URL.createObjectURL(file)
+      preview_url: URL.createObjectURL(file),
+      file,
+      url: null
     };
   };
 
@@ -184,5 +188,77 @@ window.AdminListeningState = window.AdminListeningState || {};
   AdminListeningState.sync = function () {
     normalize();
   };
-})();
 
+  AdminListeningState.setState = function (nextState) {
+    state = nextState || initialState();
+    normalize();
+  };
+
+  AdminListeningState.buildFromApi = function (payload) {
+    const base = {
+      id: AdminListeningUtils.makeId("listening_test"),
+      title: AdminListeningUtils.safeString(payload?.title),
+      audio: payload?.audio_url
+        ? {
+            name: String(payload.audio_url).split("/").pop() || "audio",
+            size: 0,
+            type: "",
+            preview_url: payload.audio_url,
+            url: payload.audio_url
+          }
+        : null,
+      time_limit_minutes: Number(payload?.time_limit_minutes || 60),
+      question_count: 0,
+      sections: []
+    };
+
+    const sections = Array.isArray(payload?.sections) ? payload.sections : [];
+    base.sections = sections.map((section, sIndex) => {
+      const blocks = Array.isArray(section?.blocks) ? section.blocks : [];
+      return {
+        id: AdminListeningUtils.makeId("listening_section"),
+        order_index: Number(section?.order_index || sIndex + 1),
+        instructions: AdminListeningUtils.safeString(section?.instructions),
+        blocks: blocks.map((block, bIndex) => {
+          const questions = Array.isArray(block?.questions) ? block.questions : [];
+          return {
+            id: AdminListeningUtils.makeId("listening_block"),
+            order_index: Number(block?.order_index || bIndex + 1),
+            type: block?.block_type || "form_completion",
+            instructions: AdminListeningUtils.safeString(block?.instruction),
+            start_time: AdminListeningUtils.formatSecondsToTime(block?.start_time_seconds),
+            end_time: AdminListeningUtils.formatSecondsToTime(block?.end_time_seconds),
+            image: block?.image_url
+              ? {
+                  name: String(block.image_url).split("/").pop() || "image",
+                  size: 0,
+                  type: "",
+                  preview_url: block.image_url,
+                  url: block.image_url
+                }
+              : null,
+            questions: questions.map((q, qIndex) => ({
+              id: AdminListeningUtils.makeId("listening_q"),
+              number: Number(q?.question_number || 0),
+              order_index: Number(q?.order_index || qIndex + 1),
+              content: (q?.content && typeof q.content === "object" && "text" in q.content)
+                ? q.content.text
+                : (q?.content ?? ""),
+              correct_answer: (q?.correct_answer && typeof q.correct_answer === "object" && "text" in q.correct_answer)
+                ? q.correct_answer.text
+                : (q?.correct_answer ?? ""),
+              meta: q?.meta || {}
+            })),
+            meta: block?.meta || {}
+          };
+        })
+      };
+    });
+
+    if (!base.sections.length) {
+      base.sections = [defaultSection()];
+    }
+
+    return base;
+  };
+})();

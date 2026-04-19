@@ -119,3 +119,78 @@ class MockPack(Base):
         backref="mock_pack",
         cascade="all, delete-orphan"
     )
+
+
+class ListeningTest(Base):
+    __tablename__ = "listening_tests"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=True)
+    audio_url = Column(Text, nullable=True)
+    time_limit_minutes = Column(Integer, default=60, nullable=False)
+    status = Column(String, default="draft", nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=True)
+
+    sections = relationship(
+        "ListeningSection",
+        back_populates="test",
+        cascade="all, delete-orphan",
+        passive_deletes=True
+    )
+
+
+class ListeningSection(Base):
+    __tablename__ = "listening_sections"
+
+    id = Column(Integer, primary_key=True, index=True)
+    test_id = Column(Integer, ForeignKey("listening_tests.id", ondelete="CASCADE"), nullable=False)
+    section_number = Column(Integer, nullable=False)
+    instructions = Column(Text, nullable=True)
+    order_index = Column(Integer, nullable=False, default=0)
+
+    test = relationship("ListeningTest", back_populates="sections")
+    blocks = relationship(
+        "ListeningBlock",
+        back_populates="section",
+        cascade="all, delete-orphan",
+        passive_deletes=True
+    )
+
+
+class ListeningBlock(Base):
+    __tablename__ = "listening_blocks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    section_id = Column(Integer, ForeignKey("listening_sections.id", ondelete="CASCADE"), nullable=False)
+    order_index = Column(Integer, nullable=False, default=0)
+    block_type = Column(String, nullable=False)
+    title = Column(String, nullable=True)
+    instruction = Column(Text, nullable=True)
+    image_url = Column(Text, nullable=True)
+    start_time_seconds = Column(Integer, nullable=True)
+    end_time_seconds = Column(Integer, nullable=True)
+    meta = Column(JSON, nullable=True)
+
+    section = relationship("ListeningSection", back_populates="blocks")
+    questions = relationship(
+        "ListeningQuestion",
+        back_populates="block",
+        cascade="all, delete-orphan",
+        passive_deletes=True
+    )
+
+
+class ListeningQuestion(Base):
+    __tablename__ = "listening_questions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    block_id = Column(Integer, ForeignKey("listening_blocks.id", ondelete="CASCADE"), nullable=False)
+    order_index = Column(Integer, nullable=False, default=0)
+    question_number = Column(Integer, nullable=False)
+    type = Column(String, nullable=True)
+    content = Column(JSON, nullable=True)
+    correct_answer = Column(JSON, nullable=True)
+    meta = Column(JSON, nullable=True)
+
+    block = relationship("ListeningBlock", back_populates="questions")

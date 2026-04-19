@@ -11,6 +11,12 @@ AdminListeningStatic.renderShell = function (container) {
         <button type="button" onclick="openMockPack(window.__currentListeningPackId || window.__currentPackId || 0)">⬅ Back to Mock Pack</button>
       </div>
 
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button id="listening-save-btn" type="button">💾 Save Listening</button>
+        <button id="listening-reload-btn" type="button">↻ Reload</button>
+        <div id="listening-save-status" style="font-size:12px; opacity:0.75;"></div>
+      </div>
+
       <div style="display:flex; flex-direction:column; gap:8px; background:var(--card-bg); border-radius:10px; padding:10px;">
         <label style="font-size:13px; opacity:0.8;">Name of Listening (optional)</label>
         <input id="listening-test-title" type="text" placeholder="Listening title" style="width:100%; padding:10px; box-sizing:border-box;" />

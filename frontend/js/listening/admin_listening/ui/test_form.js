@@ -31,6 +31,18 @@ AdminListeningTestForm.bind = function (onChange) {
     } else {
       audioMeta.textContent = "No audio selected yet.";
     }
+
+    const oldPlayer = document.getElementById("listening-audio-player");
+    if (oldPlayer) oldPlayer.remove();
+    const audioSrc = state.audio?.preview_url || state.audio?.url;
+    if (audioSrc && audioMeta.parentNode) {
+      const player = document.createElement("audio");
+      player.id = "listening-audio-player";
+      player.controls = true;
+      player.src = audioSrc;
+      player.style.width = "100%";
+      audioMeta.parentNode.appendChild(player);
+    }
   }
 
   if (audioInput) {

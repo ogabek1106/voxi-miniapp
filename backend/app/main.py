@@ -13,6 +13,7 @@ from app.api import mock_list
 from app.api.admin import router as admin_router
 from app.api.admin_reading_stats import router as admin_reading_stats_router
 from app.api.admin_reading import router as admin_reading_router
+from app.api.admin_listening import router as admin_listening_router
 from .db import (
     ensure_reading_progress_columns,
     ensure_mock_pack_column,
@@ -34,6 +35,7 @@ app = FastAPI(title="Voxi Mini App API")
 app.include_router(mock_list.router)
 app.include_router(admin_upload_router)
 app.include_router(admin_reading_router)
+app.include_router(admin_listening_router)
 app.include_router(mock_tests_router)
 app.include_router(me_router)
 app.include_router(admin_router)

@@ -33,7 +33,7 @@ window.AdminListeningLoader = window.AdminListeningLoader || {};
     };
   }
 
-  window.showAdminListeningEditor = function () {
+  window.showAdminListeningEditor = async function () {
     if (typeof hideAllScreens === "function") hideAllScreens();
     if (typeof hideAnnouncement === "function") hideAnnouncement();
     if (typeof setBottomNavVisible === "function") setBottomNavVisible(false);
@@ -41,13 +41,26 @@ window.AdminListeningLoader = window.AdminListeningLoader || {};
     const screen = document.getElementById("screen-mocks");
     if (!screen) return;
     screen.style.display = "block";
+    screen.innerHTML = `<p style="opacity:0.7;">Loading listening editor...</p>`;
 
-    const state = AdminListeningState.get();
-    if (!state || !state.sections?.length) {
+    const packId = Number(window.__currentListeningPackId || window.__currentPackId || 0) || null;
+
+    try {
+      if (packId) {
+        const loaded = await AdminListeningApi.loadDraft(packId);
+        AdminListeningState.setState(loaded);
+      } else {
+        const state = AdminListeningState.get();
+        if (!state || !state.sections?.length) {
+          AdminListeningState.init();
+        }
+      }
+    } catch (error) {
+      console.error("Listening load error:", error);
       AdminListeningState.init();
     }
 
-    AdminListeningDynamic.mount(screen);
+    AdminListeningDynamic.mount(screen, { packId });
   };
 
   AdminListeningLoader.init = function () {
@@ -61,4 +74,3 @@ window.AdminListeningLoader = window.AdminListeningLoader || {};
     AdminListeningLoader.init();
   });
 })();
-

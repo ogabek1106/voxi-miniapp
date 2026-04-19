@@ -68,6 +68,7 @@ window.openMockPack = function (packId) {
 };
 
 window.showPackListening = function (packId) {
+  window.__currentPackId = packId;
   window.__currentListeningPackId = packId;
   if (typeof window.showAdminListeningEditor === "function") {
     window.showAdminListeningEditor();

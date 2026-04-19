@@ -36,3 +36,35 @@ AdminListeningUtils.safeString = function (value) {
   return value == null ? "" : String(value);
 };
 
+AdminListeningUtils.parseTimeToSeconds = function (raw) {
+  const text = AdminListeningUtils.safeString(raw).trim();
+  if (!text) return null;
+  if (/^\d+$/.test(text)) return Number(text);
+
+  const parts = text.split(":").map((p) => p.trim());
+  if (parts.length === 2) {
+    const mm = Number(parts[0]);
+    const ss = Number(parts[1]);
+    if (Number.isFinite(mm) && Number.isFinite(ss)) return mm * 60 + ss;
+  }
+  if (parts.length === 3) {
+    const hh = Number(parts[0]);
+    const mm = Number(parts[1]);
+    const ss = Number(parts[2]);
+    if (Number.isFinite(hh) && Number.isFinite(mm) && Number.isFinite(ss)) {
+      return hh * 3600 + mm * 60 + ss;
+    }
+  }
+  return null;
+};
+
+AdminListeningUtils.formatSecondsToTime = function (value) {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n < 0) return "";
+  const sec = Math.floor(n % 60).toString().padStart(2, "0");
+  const minTotal = Math.floor(n / 60);
+  const min = Math.floor(minTotal % 60).toString().padStart(2, "0");
+  const hrs = Math.floor(minTotal / 60);
+  if (hrs > 0) return `${hrs}:${min}:${sec}`;
+  return `${min}:${sec}`;
+};
