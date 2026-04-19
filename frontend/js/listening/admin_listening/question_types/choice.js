@@ -10,6 +10,7 @@ AdminListeningTypeChoice.render = function (ctx) {
   const block = ctx.block;
   const sectionIndex = ctx.sectionIndex;
   const blockIndex = ctx.blockIndex;
+  const onRebuild = ctx.onRebuild || ctx.onChange;
   const isMulti = block.type === "mcq_multiple";
 
   (block.questions || []).forEach((q, qIndex) => {
@@ -99,7 +100,7 @@ AdminListeningTypeChoice.render = function (ctx) {
       const nextOptions = [...options, ""];
       const nextMeta = { ...(q.meta || {}), options: nextOptions };
       AdminListeningState.updateQuestion(sectionIndex, blockIndex, qIndex, { meta: nextMeta });
-      ctx.onChange();
+      onRebuild();
     };
     controls.appendChild(addOpt);
 
@@ -121,7 +122,7 @@ AdminListeningTypeChoice.render = function (ctx) {
         meta: nextMeta,
         correct_answer: nextAnswer
       });
-      ctx.onChange();
+      onRebuild();
     };
     controls.appendChild(removeOpt);
     card.appendChild(controls);
@@ -131,4 +132,3 @@ AdminListeningTypeChoice.render = function (ctx) {
 
   return wrap;
 };
-

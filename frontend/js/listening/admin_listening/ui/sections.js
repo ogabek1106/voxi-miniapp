@@ -1,7 +1,9 @@
 // frontend/js/listening/admin_listening/ui/sections.js
 window.AdminListeningSections = window.AdminListeningSections || {};
 
-AdminListeningSections.render = function (root, onChange) {
+AdminListeningSections.render = function (root, handlers) {
+  const onChange = handlers?.onChange || function () {};
+  const onRebuild = handlers?.onRebuild || function () {};
   if (!root) return;
   root.innerHTML = "";
 
@@ -39,7 +41,7 @@ AdminListeningSections.render = function (root, onChange) {
     addBlock.textContent = "Add block";
     addBlock.onclick = () => {
       AdminListeningState.addBlock(sectionIndex);
-      onChange();
+      onRebuild();
     };
     sectionControls.appendChild(addBlock);
 
@@ -48,7 +50,7 @@ AdminListeningSections.render = function (root, onChange) {
     removeBlock.textContent = "Remove last block";
     removeBlock.onclick = () => {
       AdminListeningState.removeLastBlock(sectionIndex);
-      onChange();
+      onRebuild();
     };
     sectionControls.appendChild(removeBlock);
     card.appendChild(sectionControls);
@@ -63,7 +65,8 @@ AdminListeningSections.render = function (root, onChange) {
         sectionIndex,
         blockIndex,
         block,
-        onChange
+        onChange,
+        onRebuild
       });
       blocksWrap.appendChild(blockEl);
     });
@@ -72,4 +75,3 @@ AdminListeningSections.render = function (root, onChange) {
     root.appendChild(card);
   });
 };
-

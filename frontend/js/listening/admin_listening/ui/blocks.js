@@ -6,6 +6,7 @@ AdminListeningBlocks.renderBlock = function (ctx) {
   const blockIndex = ctx.blockIndex;
   const block = ctx.block;
   const onChange = ctx.onChange;
+  const onRebuild = ctx.onRebuild || onChange;
 
   const card = document.createElement("div");
   card.style.border = "1px solid var(--border-color)";
@@ -33,7 +34,7 @@ AdminListeningBlocks.renderBlock = function (ctx) {
   });
   typeSelect.onchange = () => {
     AdminListeningState.setBlockType(sectionIndex, blockIndex, typeSelect.value);
-    onChange();
+    onRebuild();
   };
   card.appendChild(typeSelect);
 
@@ -88,7 +89,7 @@ AdminListeningBlocks.renderBlock = function (ctx) {
   imageInput.onchange = () => {
     const file = imageInput.files?.[0] || null;
     AdminListeningState.setBlockImage(sectionIndex, blockIndex, file);
-    onChange();
+    onRebuild();
   };
   imageRow.appendChild(imageInput);
   if (block.image?.name) {
@@ -108,7 +109,8 @@ AdminListeningBlocks.renderBlock = function (ctx) {
     block,
     sectionIndex,
     blockIndex,
-    onChange
+    onChange,
+    onRebuild
   });
   if (typeEditor) typeEditorHost.appendChild(typeEditor);
   card.appendChild(typeEditorHost);
@@ -123,7 +125,7 @@ AdminListeningBlocks.renderBlock = function (ctx) {
   addQ.textContent = "Add question";
   addQ.onclick = () => {
     AdminListeningState.addQuestion(sectionIndex, blockIndex);
-    onChange();
+    onRebuild();
   };
   controls.appendChild(addQ);
 
@@ -132,7 +134,7 @@ AdminListeningBlocks.renderBlock = function (ctx) {
   removeQ.textContent = "Remove last question";
   removeQ.onclick = () => {
     AdminListeningState.removeLastQuestion(sectionIndex, blockIndex);
-    onChange();
+    onRebuild();
   };
   controls.appendChild(removeQ);
 
@@ -141,11 +143,10 @@ AdminListeningBlocks.renderBlock = function (ctx) {
   removeBlock.textContent = "Remove block";
   removeBlock.onclick = () => {
     AdminListeningState.removeBlock(sectionIndex, blockIndex);
-    onChange();
+    onRebuild();
   };
   controls.appendChild(removeBlock);
 
   card.appendChild(controls);
   return card;
 };
-

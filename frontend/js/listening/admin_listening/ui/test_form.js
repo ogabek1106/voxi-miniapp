@@ -37,8 +37,10 @@ AdminListeningTestForm.bind = function (onChange) {
     audioInput.onchange = () => {
       const file = audioInput.files?.[0] || null;
       AdminListeningState.setAudioFile(file);
+      if (audioMeta) {
+        audioMeta.textContent = file ? `Selected audio: ${file.name}` : "No audio selected yet.";
+      }
       onChange();
     };
   }
 };
-
