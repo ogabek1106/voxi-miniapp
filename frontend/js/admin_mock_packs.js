@@ -8,12 +8,12 @@ window.showAdminMockPacks = function () {
 
   screen.style.display = "block";
   screen.innerHTML = `
-    <h3>MOCK Packs</h3>
+    <h3>📦 MOCK Packs</h3>
     <div id="mock-pack-list">
       <p style="opacity:0.6;">Loading...</p>
     </div>
-    <button onclick="createMockPack()">Create New Pack</button>
-    <button onclick="showAdminPanel()" style="margin-top:12px;">Back</button>
+    <button onclick="createMockPack()">➕ Create New Pack</button>
+    <button onclick="showAdminPanel()" style="margin-top:12px;">⬅ Back</button>
   `;
 
   loadMockPacks();
@@ -29,7 +29,7 @@ window.loadMockPacks = async function () {
       ? packs.map((p) => `
           <div style="display:flex; gap:6px; margin-bottom:8px;">
             <button style="flex:1;" onclick="openMockPack(${p.id})">
-              ${p.title} ${p.status === "published" ? "published" : "draft"}
+              📦 ${p.title} ${p.status === "published" ? "🟢" : "⚪"}
             </button>
             <button onclick="toggleMockPack(${p.id})" style="width:70px;">
               ${p.status === "published" ? "Unpub" : "Publish"}
@@ -38,7 +38,7 @@ window.loadMockPacks = async function () {
               onclick="deleteMockPack(${p.id})"
               style="width:42px; padding:0; display:flex; align-items:center; justify-content:center;"
             >
-              Del
+              🗑
             </button>
           </div>
         `).join("")
@@ -58,12 +58,12 @@ window.openMockPack = function (packId) {
   screen.style.display = "block";
 
   screen.innerHTML = `
-    <h3>Mock Pack #${packId}</h3>
-    <button onclick="showPackReading(${packId})">Reading</button>
-    <button onclick="alert('Writing coming')">Writing</button>
-    <button onclick="showPackListening(${packId})">Listening</button>
-    <button onclick="alert('Speaking coming')">Speaking</button>
-    <button onclick="showAdminMockPacks()" style="margin-top:12px;">Back</button>
+    <h3>📦 Mock Pack #${packId}</h3>
+    <button onclick="showPackReading(${packId})">📖 Reading</button>
+    <button onclick="alert('Writing coming')">✍️ Writing</button>
+    <button onclick="showPackListening(${packId})">🎧 Listening</button>
+    <button onclick="alert('Speaking coming')">🗣 Speaking</button>
+    <button onclick="showAdminMockPacks()" style="margin-top:12px;">⬅ Back</button>
   `;
 };
 
@@ -111,4 +111,3 @@ window.toggleMockPack = async function (packId) {
     alert("Failed to change publish state");
   }
 };
-

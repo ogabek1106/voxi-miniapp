@@ -8,7 +8,7 @@ AdminListeningStatic.renderShell = function (container) {
     <div class="listening-admin-shell" style="display:flex; flex-direction:column; gap:12px; text-align:left;">
       <h3 style="margin:0;">Listening Editor</h3>
       <div>
-        <button type="button" onclick="openMockPack(window.__currentListeningPackId || window.__currentPackId || 0)">Back to Mock Pack</button>
+        <button type="button" onclick="openMockPack(window.__currentListeningPackId || window.__currentPackId || 0)">⬅ Back to Mock Pack</button>
       </div>
 
       <div style="display:flex; flex-direction:column; gap:8px; background:var(--card-bg); border-radius:10px; padding:10px;">
