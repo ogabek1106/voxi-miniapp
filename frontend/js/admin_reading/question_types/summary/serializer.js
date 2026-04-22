@@ -6,7 +6,10 @@ AdminReading.Summary = AdminReading.Summary || {};
 AdminReading.serializeSummary = function(block, groupId = null, startOrderIndex = 1) {
 
   const text = block.querySelector(".summary-text")?.value?.trim();
-  const instruction = block.querySelector(".q-instruction-select")?.value?.trim() || null;
+  const instruction =
+    (window.getInstructionValueFromBlock
+      ? window.getInstructionValueFromBlock(block)
+      : block.querySelector(".q-instruction-select")?.value?.trim()) || null;
   const wordLimit = parseInt(block.querySelector(".summary-word-limit")?.value || "0", 10);
 
   const wordBankRaw = block.querySelector(".summary-word-bank")?.value || "";

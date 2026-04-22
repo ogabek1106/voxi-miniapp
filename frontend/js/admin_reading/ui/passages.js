@@ -144,6 +144,12 @@ window.renderAdminQuestionBlock = function (qNum) {
           <select class="q-instruction-select" style="width:100%; height:36px;">
             <option value="">Select instruction</option>
           </select>
+          <input
+            type="text"
+            class="q-instruction-custom"
+            placeholder="Type new instruction and press Enter"
+            style="width:100%; height:36px; margin-top:6px; display:none;"
+          />
         </div>
       </div>
 
@@ -156,12 +162,32 @@ window.renderAdminQuestionBlock = function (qNum) {
   `;
 };
 
+window.getInstructionValueFromBlock = function (block) {
+  if (!block) return null;
+
+  const select = block.querySelector(".q-instruction-select");
+  const customInput = block.querySelector(".q-instruction-custom");
+  if (!select) return null;
+
+  if (
+    select.value === window.ReadingInstructions?.ADD_OPTION_VALUE &&
+    customInput
+  ) {
+    const typed = String(customInput.value || "").trim();
+    return typed || null;
+  }
+
+  const selected = String(select.value || "").trim();
+  return selected || null;
+};
+
 window.wireAdminQuestionBlock = function (block, initialType = "matching") {
   if (!block) return;
 
   const root = block.querySelector(".q-type-root");
   const select = block.querySelector(".q-type-select");
   const instructionSelect = block.querySelector(".q-instruction-select");
+  const instructionCustom = block.querySelector(".q-instruction-custom");
   const header = block.querySelector(".q-header");
 
   if (!root || !select || !instructionSelect) return;
@@ -169,12 +195,41 @@ window.wireAdminQuestionBlock = function (block, initialType = "matching") {
   select.value = initialType;
   block.dataset.type = initialType;
 
-  if (window.ReadingInstructions?.fillSelect) {
+  function hideCustomInput() {
+    if (!instructionCustom) return;
+    instructionCustom.style.display = "none";
+    instructionCustom.value = "";
+  }
+
+  function showCustomInput() {
+    if (!instructionCustom) return;
+    instructionCustom.style.display = "block";
+    instructionCustom.focus();
+  }
+
+  function bindInstructionSelect(type, selectedValue = "") {
+    if (!window.ReadingInstructions?.fillSelect) return;
     window.ReadingInstructions.fillSelect(
       instructionSelect,
-      getInstructionTypeForEditor(initialType)
+      getInstructionTypeForEditor(type),
+      selectedValue
     );
   }
+
+  function commitCustomInstruction(type) {
+    if (!instructionCustom || !window.ReadingInstructions?.add) return;
+
+    const value = String(instructionCustom.value || "").trim();
+    if (!value) return;
+
+    const instructionType = getInstructionTypeForEditor(type);
+    window.ReadingInstructions.add(instructionType, value);
+    bindInstructionSelect(type, value);
+    hideCustomInput();
+  }
+
+  bindInstructionSelect(initialType);
+  hideCustomInput();
 
   if (header) {
     header.style.opacity = initialType === "matching" ? "0.3" : "1";
@@ -182,16 +237,36 @@ window.wireAdminQuestionBlock = function (block, initialType = "matching") {
 
   AdminReading.loadQuestionUI(initialType, root);
 
+  instructionSelect.addEventListener("change", () => {
+    const currentType = select.value;
+    const value = instructionSelect.value;
+    if (value === window.ReadingInstructions?.ADD_OPTION_VALUE) {
+      showCustomInput();
+      return;
+    }
+    hideCustomInput();
+    commitCustomInstruction(currentType);
+  });
+
+  if (instructionCustom) {
+    instructionCustom.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        commitCustomInstruction(select.value);
+      }
+    });
+
+    instructionCustom.addEventListener("blur", () => {
+      commitCustomInstruction(select.value);
+    });
+  }
+
   select.addEventListener("change", () => {
     const nextType = select.value;
     block.dataset.type = nextType;
 
-    if (window.ReadingInstructions?.fillSelect) {
-      window.ReadingInstructions.fillSelect(
-        instructionSelect,
-        getInstructionTypeForEditor(nextType)
-      );
-    }
+    bindInstructionSelect(nextType);
+    hideCustomInput();
 
     if (header) {
       header.style.opacity = nextType === "matching" ? "0.3" : "1";

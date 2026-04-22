@@ -76,7 +76,10 @@ window.createPassagesAndQuestions = async function (testId) {
     for (let qi = 0; qi < blocks.length; qi++) {
       const block = blocks[qi];
       const type = block.querySelector(".q-type-select")?.value || "matching";
-      const instruction = block.querySelector(".q-instruction-select")?.value?.trim() || null;
+      const instruction =
+        (window.getInstructionValueFromBlock
+          ? window.getInstructionValueFromBlock(block)
+          : block.querySelector(".q-instruction-select")?.value?.trim()) || null;
 
       if (type === "matching") {
         const groupId = groupCounter++;

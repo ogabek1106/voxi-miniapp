@@ -8,7 +8,10 @@ AdminReading.serializeYNNG = function (block, orderIndex) {
   const text = block.querySelector(".ynng-question")?.value?.trim();
   const correct = block.querySelector(".ynng-correct")?.value;
 
-  const instruction = block.querySelector(".q-instruction-select")?.value?.trim() || null;
+  const instruction =
+    (window.getInstructionValueFromBlock
+      ? window.getInstructionValueFromBlock(block)
+      : block.querySelector(".q-instruction-select")?.value?.trim()) || null;
 
   if (!text) return null;
 

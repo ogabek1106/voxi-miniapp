@@ -5,7 +5,10 @@ AdminReading.serializeParagraphMatching = function(block, groupId, orderIndex = 
 
   const wrap = block.querySelector(".paragraph-matching-editor");
   if (!wrap) return [];
-  const instruction = block.querySelector(".q-instruction-select")?.value?.trim() || null;
+  const instruction =
+    (window.getInstructionValueFromBlock
+      ? window.getInstructionValueFromBlock(block)
+      : block.querySelector(".q-instruction-select")?.value?.trim()) || null;
   const paragraphCount = Math.max(
     parseInt(block.querySelector(".paragraph-match-count")?.value || "0", 10) || 0,
     1

@@ -5,7 +5,10 @@ AdminReading.Gap = AdminReading.Gap || {};
 
 AdminReading.serializeGap = function (block, groupId, startOrder) {
 
-  const instruction = block.querySelector(".q-instruction-select")?.value?.trim() || null;
+  const instruction =
+    (window.getInstructionValueFromBlock
+      ? window.getInstructionValueFromBlock(block)
+      : block.querySelector(".q-instruction-select")?.value?.trim()) || null;
 
   const text = block.querySelector(".gap-text")?.value?.trim() || "";
 

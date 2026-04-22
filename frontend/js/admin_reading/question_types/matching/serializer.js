@@ -7,7 +7,10 @@ AdminReading.serializeMatching = function (block, groupId, startOrder) {
   const wrap = block.querySelector(".matching-editor");
   if (!wrap) return [];
 
-  const instruction = block.querySelector(".q-instruction-select")?.value?.trim() || null;
+  const instruction =
+    (window.getInstructionValueFromBlock
+      ? window.getInstructionValueFromBlock(block)
+      : block.querySelector(".q-instruction-select")?.value?.trim()) || null;
 
   const options = [];
   wrap.querySelectorAll(".match-option").forEach(opt => {

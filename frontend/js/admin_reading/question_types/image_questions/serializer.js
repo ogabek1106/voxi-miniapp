@@ -2,7 +2,10 @@
 window.AdminReading = window.AdminReading || {};
 
 AdminReading.serializeImageQuestions = function (block, groupId, startOrder) {
-  const instruction = block.querySelector(".q-instruction-select")?.value?.trim() || null;
+  const instruction =
+    (window.getInstructionValueFromBlock
+      ? window.getInstructionValueFromBlock(block)
+      : block.querySelector(".q-instruction-select")?.value?.trim()) || null;
   const uploadWrap = block.querySelector(".image-questions-upload-wrap");
   const imageUrl = uploadWrap?.dataset?.imageUrl?.trim() || null;
 
