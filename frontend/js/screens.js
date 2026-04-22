@@ -85,7 +85,20 @@ window.showReadingEntry = async function () {
       return;
     }
 
-    const mockId = mocks[0].id;
+    const latestPublishedMock = mocks
+      .map((item) => ({
+        id: Number(item?.id || 0),
+        title: item?.title || ""
+      }))
+      .filter((item) => item.id > 0)
+      .sort((a, b) => b.id - a.id)[0];
+
+    const mockId = Number(latestPublishedMock?.id || 0);
+    if (!mockId) {
+      alert("No reading mocks available.");
+      return;
+    }
+
     const gateResult = await TelegramSubGate.enterReadingWithGate(mockId);
 
     if (!gateResult || !gateResult.ok) {
