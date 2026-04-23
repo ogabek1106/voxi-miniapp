@@ -5,7 +5,7 @@ from datetime import timezone
 from app.config import ADMIN_IDS
 from app.deps import get_db
 from app.models import ReadingProgress, ReadingTest, User
-from app.api.mock_tests import _finalize_progress, _is_time_up, _query_questions_for_test, _utcnow
+from app.api.mock_tests import _auto_submitted_at, _finalize_progress, _is_time_up, _query_questions_for_test, _utcnow
 
 router = APIRouter(prefix="/__admin", tags=["admin-reading-stats"])
 
@@ -57,7 +57,7 @@ def list_reading_stats(telegram_id: int, db: Session = Depends(get_db)):
             continue
         if progress.test_id not in questions_cache:
             questions_cache[progress.test_id] = _query_questions_for_test(db, progress.test_id)
-        _finalize_progress(progress, questions_cache[progress.test_id], now)
+        _finalize_progress(progress, questions_cache[progress.test_id], _auto_submitted_at(progress.ends_at, now))
         db.add(progress)
         changed = True
     if changed:

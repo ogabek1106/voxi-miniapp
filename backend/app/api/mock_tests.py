@@ -87,6 +87,13 @@ def _is_time_up(ends_at: datetime | None, now: datetime | None = None) -> bool:
     deadline = _to_utc(ends_at)
     return current >= deadline
 
+def _auto_submitted_at(ends_at: datetime | None, now: datetime | None = None) -> datetime:
+    current = _to_utc(now or _utcnow())
+    deadline = _to_utc(ends_at)
+    if deadline is None:
+        return current
+    return deadline if deadline <= current else current
+
 
 def _normalize_string(value: Any) -> str:
     return str(value if value is not None else "").strip().lower()
@@ -275,7 +282,7 @@ def start_reading_test(mock_id: int, telegram_id: int, db: Session = Depends(get
 
             if _is_time_up(progress.ends_at, now):
                 questions = _query_questions_for_test(db, test.id)
-                result = _finalize_progress(progress, questions, now)
+                result = _finalize_progress(progress, questions, _auto_submitted_at(progress.ends_at, now))
                 db.add(progress)
                 db.commit()
                 db.refresh(progress)
@@ -432,7 +439,7 @@ def save_reading_progress(mock_id: int, payload: ReadingSaveIn, db: Session = De
 
     if _is_time_up(progress.ends_at, now):
         questions = _query_questions_for_test(db, test.id)
-        _finalize_progress(progress, questions, now)
+        _finalize_progress(progress, questions, _auto_submitted_at(progress.ends_at, now))
         db.add(progress)
         db.commit()
         return {"status": "auto_submitted"}
@@ -471,7 +478,7 @@ def resume_reading_progress(mock_id: int, telegram_id: int, db: Session = Depend
 
     if not progress.is_submitted and _is_time_up(progress.ends_at, now):
         questions = _query_questions_for_test(db, test.id)
-        _finalize_progress(progress, questions, now)
+        _finalize_progress(progress, questions, _auto_submitted_at(progress.ends_at, now))
         db.add(progress)
         db.commit()
         db.refresh(progress)
