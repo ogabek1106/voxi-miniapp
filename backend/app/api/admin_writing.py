@@ -22,7 +22,7 @@ class WritingTaskIn(BaseModel):
 
 class WritingTestSaveIn(BaseModel):
     id: Optional[int] = None
-    title: str
+    title: Optional[str] = None
     time_limit_minutes: int = 60
     status: str = "draft"
     mock_pack_id: Optional[int] = None
@@ -47,6 +47,13 @@ def list_writing_tests(db: Session = Depends(get_db)):
 @router.post("/tests")
 def save_writing_test(payload: WritingTestSaveIn, db: Session = Depends(get_db)):
     try:
+        safe_title = str(payload.title or "").strip()
+        if not safe_title:
+            if payload.mock_pack_id:
+                safe_title = f"Writing Pack {int(payload.mock_pack_id)}"
+            else:
+                safe_title = "Untitled Writing"
+
         test = None
         if payload.id:
             test = db.query(WritingTest).filter(WritingTest.id == payload.id).first()
@@ -63,7 +70,7 @@ def save_writing_test(payload: WritingTestSaveIn, db: Session = Depends(get_db))
             db.add(test)
             db.flush()
 
-        test.title = payload.title
+        test.title = safe_title
         test.time_limit_minutes = max(int(payload.time_limit_minutes or 60), 1)
         test.status = (
             WritingTestStatus.published

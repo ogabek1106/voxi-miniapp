@@ -66,8 +66,10 @@ AdminWritingEditor.render = function (payload = {}) {
 AdminWritingEditor.collectPayload = function (status = "draft") {
   const state = AdminWritingState.get();
   const testId = Number(state.currentTestId || 0) || null;
-  const packId = Number(state.currentPackId || 0) || null;
-  const title = String(document.getElementById("writing-title")?.value || "").trim();
+  const fallbackPackId = Number(window.__currentPackId || 0) || null;
+  const packId = Number(state.currentPackId || fallbackPackId || 0) || null;
+  const rawTitle = String(document.getElementById("writing-title")?.value || "").trim();
+  const title = rawTitle || (packId ? `Writing Pack ${packId}` : "Untitled Writing");
   const timeLimit = Math.max(1, Number(document.getElementById("writing-time")?.value || 60));
 
   const taskCards = Array.from(document.querySelectorAll(".writing-task-card"));
@@ -95,10 +97,6 @@ AdminWritingEditor.save = async function (status = "draft", button = null) {
 
   try {
     const payload = AdminWritingEditor.collectPayload(status);
-    if (!payload.title) {
-      alert("Writing name is required");
-      return;
-    }
 
     const saved = await AdminWritingApi.save(payload);
     const testId = Number(saved?.id || 0);
