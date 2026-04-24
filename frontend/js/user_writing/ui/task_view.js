@@ -47,11 +47,20 @@ UserWritingUI.renderError = function (container, error) {
   }
 };
 
+UserWritingUI.normalizePromptText = function (value) {
+  return String(value || "")
+    .split("\n")
+    .map((line) => line.replace(/\s+/g, " ").trim())
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+};
+
 UserWritingUI.renderTaskCard = function (task, progress = {}) {
   const number = Number(task?.task_number || 0) || 1;
-  const instruction = String(task?.instruction_template || "").trim();
-  const questionText = String(task?.question_text || "").trim();
-  const prompt = String(task?.instruction || "").trim();
+  const instruction = UserWritingUI.normalizePromptText(task?.instruction_template || "");
+  const questionText = UserWritingUI.normalizePromptText(task?.question_text || "");
+  const prompt = UserWritingUI.normalizePromptText(task?.instruction || "");
   const imageUrl = String(task?.image_url || "").trim();
 
   const textValue = String(progress[`task${number}_text`] || "");

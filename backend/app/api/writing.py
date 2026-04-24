@@ -125,6 +125,7 @@ def _serialize_progress(progress: WritingProgress | None):
 def start_writing(mock_id: int, payload: WritingStartIn, db: Session = Depends(get_db)):
     test = _resolve_test_for_mock(db, mock_id, payload.telegram_id)
     now = _utcnow()
+    is_admin = int(payload.telegram_id) in ADMIN_IDS
 
     progress = (
         db.query(WritingProgress)
@@ -134,6 +135,23 @@ def start_writing(mock_id: int, payload: WritingStartIn, db: Session = Depends(g
         )
         .first()
     )
+
+    if progress and progress.is_submitted and not is_admin:
+        deadline = _writing_deadline(progress, test)
+        return {
+            "mock_id": mock_id,
+            "test_id": test.id,
+            "title": test.title,
+            "time_limit_minutes": test.time_limit_minutes,
+            "already_submitted": True,
+            "timer": {
+                "started_at": _to_utc(progress.started_at).isoformat() if progress.started_at else None,
+                "ends_at": deadline.isoformat() if deadline else None,
+                "duration_seconds": max(int(test.time_limit_minutes or 60), 1) * 60
+            },
+            "tasks": _serialize_tasks(db, test.id),
+            "progress": _serialize_progress(progress)
+        }
 
     if not progress:
         progress = WritingProgress(
@@ -147,11 +165,34 @@ def start_writing(mock_id: int, payload: WritingStartIn, db: Session = Depends(g
         db.add(progress)
         db.commit()
         db.refresh(progress)
-    elif not progress.is_submitted and _is_time_up(progress, test, now):
-        _finalize(progress, test, "auto", now)
-        db.add(progress)
-        db.commit()
-        db.refresh(progress)
+    else:
+        if is_admin:
+            if progress.is_submitted:
+                progress.task1_text = ""
+                progress.task1_image_url = None
+                progress.task2_text = ""
+                progress.task2_image_url = None
+                progress.started_at = now
+                progress.updated_at = now
+                progress.submitted_at = None
+                progress.is_submitted = False
+                progress.finish_type = None
+                db.add(progress)
+                db.commit()
+                db.refresh(progress)
+        else:
+            if not progress.started_at:
+                progress.started_at = now
+            if _is_time_up(progress, test, now):
+                _finalize(progress, test, "auto", now)
+                db.add(progress)
+                db.commit()
+                db.refresh(progress)
+            else:
+                progress.updated_at = now
+                db.add(progress)
+                db.commit()
+                db.refresh(progress)
 
     deadline = _writing_deadline(progress, test)
     duration_seconds = max(int(test.time_limit_minutes or 60), 1) * 60
@@ -161,7 +202,7 @@ def start_writing(mock_id: int, payload: WritingStartIn, db: Session = Depends(g
         "test_id": test.id,
         "title": test.title,
         "time_limit_minutes": test.time_limit_minutes,
-        "already_submitted": bool(progress.is_submitted),
+        "already_submitted": bool(progress.is_submitted and not is_admin),
         "timer": {
             "started_at": _to_utc(progress.started_at).isoformat() if progress.started_at else None,
             "ends_at": deadline.isoformat() if deadline else None,
