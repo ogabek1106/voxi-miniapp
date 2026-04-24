@@ -20,7 +20,8 @@ from .db import (
     ensure_reading_progress_columns,
     ensure_mock_pack_column,
     ensure_question_group_column,
-    ensure_reading_question_type_values
+    ensure_reading_question_type_values,
+    ensure_writing_schema
 )
 from app.api.admin_upload import router as admin_upload_router
 from app.api.result_images import router as result_images_router
@@ -33,6 +34,7 @@ ensure_reading_progress_columns()
 ensure_mock_pack_column()
 ensure_question_group_column()
 ensure_reading_question_type_values()
+ensure_writing_schema()
 app = FastAPI(title="Voxi Mini App API")
 app.include_router(mock_list.router)
 app.include_router(admin_upload_router)
@@ -51,8 +53,14 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 # ✅ CORS FIX (required for Telegram Mini App)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # lock down later
-    allow_credentials=True,
+    allow_origins=[
+        "https://cooperative-endurance-production.up.railway.app",
+        "https://voxi-miniapp-production.up.railway.app",
+        "https://web.telegram.org",
+        "https://web.telegram.org/a"
+    ],
+    allow_origin_regex=r"https://.*\.railway\.app",
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

@@ -4,6 +4,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.deps import get_db
 from app.models import WritingTask, WritingTest, WritingTestStatus
@@ -45,55 +46,59 @@ def list_writing_tests(db: Session = Depends(get_db)):
 
 @router.post("/tests")
 def save_writing_test(payload: WritingTestSaveIn, db: Session = Depends(get_db)):
-    test = None
-    if payload.id:
-        test = db.query(WritingTest).filter(WritingTest.id == payload.id).first()
+    try:
+        test = None
+        if payload.id:
+            test = db.query(WritingTest).filter(WritingTest.id == payload.id).first()
 
-    if not test and payload.mock_pack_id:
-        test = (
-            db.query(WritingTest)
-            .filter(WritingTest.mock_pack_id == payload.mock_pack_id)
-            .first()
+        if not test and payload.mock_pack_id:
+            test = (
+                db.query(WritingTest)
+                .filter(WritingTest.mock_pack_id == payload.mock_pack_id)
+                .first()
+            )
+
+        if not test:
+            test = WritingTest(created_at=datetime.utcnow())
+            db.add(test)
+            db.flush()
+
+        test.title = payload.title
+        test.time_limit_minutes = max(int(payload.time_limit_minutes or 60), 1)
+        test.status = (
+            WritingTestStatus.published
+            if str(payload.status or "draft").lower() == "published"
+            else WritingTestStatus.draft
         )
+        test.mock_pack_id = payload.mock_pack_id
+        test.updated_at = datetime.utcnow()
 
-    if not test:
-        test = WritingTest(created_at=datetime.utcnow())
-        db.add(test)
+        existing_tasks = db.query(WritingTask).filter(WritingTask.test_id == test.id).all()
+        for task in existing_tasks:
+            db.delete(task)
         db.flush()
 
-    test.title = payload.title
-    test.time_limit_minutes = max(int(payload.time_limit_minutes or 60), 1)
-    test.status = (
-        WritingTestStatus.published
-        if str(payload.status or "draft").lower() == "published"
-        else WritingTestStatus.draft
-    )
-    test.mock_pack_id = payload.mock_pack_id
-    test.updated_at = datetime.utcnow()
-
-    existing_tasks = db.query(WritingTask).filter(WritingTask.test_id == test.id).all()
-    for task in existing_tasks:
-        db.delete(task)
-    db.flush()
-
-    tasks = sorted(
-        payload.tasks or [],
-        key=lambda t: (int(t.order_index or 0), int(t.task_number or 0))
-    )
-    for idx, task_in in enumerate(tasks, start=1):
-        task = WritingTask(
-            test_id=test.id,
-            task_number=int(task_in.task_number or idx),
-            instruction_template=task_in.instruction_template,
-            question_text=task_in.question_text,
-            image_url=task_in.image_url,
-            order_index=int(task_in.order_index or idx)
+        tasks = sorted(
+            payload.tasks or [],
+            key=lambda t: (int(t.order_index or 0), int(t.task_number or 0))
         )
-        db.add(task)
+        for idx, task_in in enumerate(tasks, start=1):
+            task = WritingTask(
+                test_id=test.id,
+                task_number=int(task_in.task_number or idx),
+                instruction_template=task_in.instruction_template,
+                question_text=task_in.question_text,
+                image_url=task_in.image_url,
+                order_index=int(task_in.order_index or idx)
+            )
+            db.add(task)
 
-    db.commit()
-    db.refresh(test)
-    return {"ok": True, "id": test.id}
+        db.commit()
+        db.refresh(test)
+        return {"ok": True, "id": test.id}
+    except SQLAlchemyError as error:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Writing save failed: {str(error)}")
 
 
 @router.get("/tests/{test_id}")

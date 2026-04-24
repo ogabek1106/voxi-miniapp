@@ -91,7 +91,7 @@ def get_mock_pack_writing(pack_id: int, db: Session = Depends(get_db)):
     )
 
     if not test:
-        raise HTTPException(status_code=404, detail="Writing not found")
+        return None
 
     tasks = (
         db.query(WritingTask)

@@ -27,11 +27,15 @@ AdminWritingApi.uploadImageFile = async function (file) {
 };
 
 AdminWritingApi.loadByPack = async function (packId) {
-  try {
-    return await apiGet(`/admin/mock-packs/${packId}/writing`);
-  } catch (error) {
-    return null;
+  const response = await fetch(`${window.API}/admin/mock-packs/${packId}/writing`);
+  if (response.status === 404) return null;
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || "Failed to load writing for mock pack");
   }
+  const text = await response.text();
+  if (!text) return null;
+  return JSON.parse(text);
 };
 
 AdminWritingApi.loadById = async function (testId) {
