@@ -30,9 +30,15 @@ AdminWritingEditor.render = function (payload = {}) {
 
     <hr style="margin:16px 0;" />
 
-    <button id="btn-writing-save">💾 Save Draft</button>
-    <button id="btn-writing-publish" style="margin-top:8px;">🚀 Publish</button>
-    <button style="margin-top:8px;" onclick="openMockPack(${Number(AdminWritingState.get().currentPackId || 0)})">⬅ Back</button>
+    <button id="btn-writing-save" type="button">💾 Save Draft</button>
+    <button id="btn-writing-publish" type="button" style="margin-top:8px;">🚀 Publish</button>
+    <button
+      type="button"
+      style="margin-top:8px;"
+      onclick="openMockPack(${Number(AdminWritingState.get().currentPackId || 0)})"
+    >
+      ⬅ Back
+    </button>
   `;
 
   const taskCards = Array.from(screen.querySelectorAll(".writing-task-card"));
@@ -44,12 +50,17 @@ AdminWritingEditor.render = function (payload = {}) {
   const saveBtn = document.getElementById("btn-writing-save");
   const publishBtn = document.getElementById("btn-writing-publish");
 
-  saveBtn.onclick = async () => {
-    await AdminWritingEditor.save("draft", saveBtn);
-  };
-  publishBtn.onclick = async () => {
-    await AdminWritingEditor.save("published", publishBtn);
-  };
+  if (saveBtn) {
+    saveBtn.onclick = async () => {
+      await AdminWritingEditor.save("draft", saveBtn);
+    };
+  }
+
+  if (publishBtn) {
+    publishBtn.onclick = async () => {
+      await AdminWritingEditor.save("published", publishBtn);
+    };
+  }
 };
 
 AdminWritingEditor.collectPayload = function (status = "draft") {

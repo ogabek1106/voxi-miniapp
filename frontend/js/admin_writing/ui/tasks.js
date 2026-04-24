@@ -97,9 +97,9 @@ AdminWritingUI.renderTaskCard = function (taskNumber, taskData = {}) {
   const preview = imageUrl ? `${window.API}${imageUrl}` : "";
 
   return `
-    <div class="question-block writing-task-card" data-task-number="${taskNumber}" style="text-align:left;">
-      <div class="question-header">
-        <div class="question-number">Task ${taskNumber}</div>
+    <div class="writing-task-card" data-task-number="${taskNumber}" style="text-align:left;">
+      <div class="writing-task-header">
+        <div class="writing-task-number">Task ${taskNumber}</div>
       </div>
 
       <label>Instruction template</label>

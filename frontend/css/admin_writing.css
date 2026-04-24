@@ -13,3 +13,15 @@
   max-width: 100%;
   width: 100%;
 }
+
+.writing-task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.writing-task-number {
+  font-weight: 700;
+  font-size: 20px;
+}
