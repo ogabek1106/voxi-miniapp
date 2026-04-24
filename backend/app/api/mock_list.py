@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.deps import get_db
-from app.models import MockPack, MockPackStatus, WritingTest, WritingTestStatus
+from app.models import MockPack, MockPackStatus, WritingTest
 
 router = APIRouter(prefix="/mock", tags=["mock"])
 
@@ -33,17 +33,14 @@ def get_writing_mock_list(db: Session = Depends(get_db)):
         db.query(MockPack)
         .join(WritingTest, WritingTest.mock_pack_id == MockPack.id)
         .filter(
-            MockPack.status == MockPackStatus.published,
-            WritingTest.status == WritingTestStatus.published
+            MockPack.status == MockPackStatus.published
         )
         .order_by(MockPack.id.desc())
         .all()
     )
 
-    return [
-        {
-            "id": p.id,
-            "title": p.title
-        }
-        for p in packs
-    ]
+    unique = {}
+    for p in packs:
+        if p.id not in unique:
+            unique[p.id] = {"id": p.id, "title": p.title}
+    return list(unique.values())

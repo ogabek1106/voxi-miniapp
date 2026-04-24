@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.config import ADMIN_IDS
 from app.deps import get_db
-from app.models import WritingProgress, WritingTask, WritingTest, WritingTestStatus
+from app.models import WritingProgress, WritingTask, WritingTest
 
 router = APIRouter(prefix="/mock-tests", tags=["writing"])
 
@@ -81,9 +81,6 @@ def _resolve_test_for_mock(db: Session, mock_id: int, telegram_id: int) -> Writi
     if not test:
         raise HTTPException(status_code=404, detail="Writing test not found for this mock")
 
-    is_admin = int(telegram_id) in ADMIN_IDS
-    if not is_admin and str(test.status.value if hasattr(test.status, "value") else test.status) != WritingTestStatus.published.value:
-        raise HTTPException(status_code=404, detail="Writing test not found for this mock")
     return test
 
 
