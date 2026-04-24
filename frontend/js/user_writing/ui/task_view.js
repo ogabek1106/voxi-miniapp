@@ -49,6 +49,8 @@ UserWritingUI.renderError = function (container, error) {
 
 UserWritingUI.renderTaskCard = function (task, progress = {}) {
   const number = Number(task?.task_number || 0) || 1;
+  const instruction = String(task?.instruction_template || "").trim();
+  const questionText = String(task?.question_text || "").trim();
   const prompt = String(task?.instruction || "").trim();
   const imageUrl = String(task?.image_url || "").trim();
 
@@ -63,23 +65,49 @@ UserWritingUI.renderTaskCard = function (task, progress = {}) {
         <div class="question-number">Task ${number}</div>
       </div>
 
-      <div class="question-text" style="white-space:pre-wrap;">${UserWritingUI.escapeHtml(prompt)}</div>
+      ${instruction ? `
+        <div class="writing-task-instruction">${UserWritingUI.escapeHtml(instruction)}</div>
+      ` : ""}
+
+      <div class="writing-task-question" style="white-space:pre-wrap;">
+        ${UserWritingUI.escapeHtml(questionText || prompt)}
+      </div>
 
       ${questionImage ? `
-        <div style="margin-bottom:10px;">
-          <img src="${UserWritingUI.escapeHtml(questionImage)}" alt="Task ${number} image" style="width:100%; border-radius:10px;" />
+        <div class="writing-task-image-wrap">
+          <img
+            src="${UserWritingUI.escapeHtml(questionImage)}"
+            alt="Task ${number} image"
+            class="writing-zoomable-image"
+            data-full-image-src="${UserWritingUI.escapeHtml(questionImage)}"
+            onclick="UserWritingUI.openImageViewer(this.getAttribute('data-full-image-src'))"
+          />
         </div>
       ` : ""}
 
-      <textarea class="writing-answer-text" rows="8" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc; box-sizing:border-box;" placeholder="Write your answer here or upload a photo of your handwritten response.">${UserWritingUI.escapeHtml(textValue)}</textarea>
+      <div class="writing-answer-box">
+        <textarea
+          class="writing-answer-text"
+          rows="8"
+          placeholder="Write your answer here."
+        >${UserWritingUI.escapeHtml(textValue)}</textarea>
 
-      <div class="writing-answer-upload" data-image-url="${UserWritingUI.escapeHtml(answerImage)}" style="margin-top:10px;">
-        <button type="button" class="writing-answer-upload-btn">Upload photo</button>
-        <input type="file" class="writing-answer-upload-input" accept="image/*" style="display:none;" />
-        <div class="writing-answer-preview" style="margin-top:8px; ${answerImageFull ? "" : "display:none;"}">
-          <img src="${UserWritingUI.escapeHtml(answerImageFull)}" alt="Answer upload" style="width:100%; border-radius:10px;" />
+        <div class="writing-answer-upload" data-image-url="${UserWritingUI.escapeHtml(answerImage)}">
+          <div class="writing-answer-upload-hint">or upload a photo of your handwritten response</div>
+          <button type="button" class="writing-answer-upload-btn">Upload a photo</button>
+          <input type="file" class="writing-answer-upload-input" accept="image/*" style="display:none;" />
         </div>
       </div>
+
+      <div class="writing-answer-preview" style="${answerImageFull ? "" : "display:none;"}">
+        <img
+          src="${UserWritingUI.escapeHtml(answerImageFull)}"
+          alt="Answer upload"
+          class="writing-zoomable-image"
+          data-full-image-src="${UserWritingUI.escapeHtml(answerImageFull)}"
+          onclick="UserWritingUI.openImageViewer(this.getAttribute('data-full-image-src'))"
+        />
+        </div>
     </div>
   `;
 };
@@ -137,4 +165,54 @@ UserWritingUI.setLocked = function (locked) {
     if (el.id === "writing-back-btn") return;
     el.disabled = !!locked;
   });
+};
+
+UserWritingUI.ensureImageViewer = function () {
+  if (document.getElementById("writing-image-viewer")) return;
+
+  const viewer = document.createElement("div");
+  viewer.id = "writing-image-viewer";
+  viewer.className = "writing-image-viewer";
+  viewer.innerHTML = `
+    <div class="writing-image-viewer-backdrop" onclick="UserWritingUI.closeImageViewer()"></div>
+    <div class="writing-image-viewer-content">
+      <button type="button" class="writing-image-viewer-close" onclick="UserWritingUI.closeImageViewer()">✕</button>
+      <div class="writing-image-viewer-scroll">
+        <img id="writing-image-viewer-img" class="writing-image-viewer-img" alt="Writing image zoom view" />
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(viewer);
+
+  const img = viewer.querySelector("#writing-image-viewer-img");
+  if (img) {
+    img.addEventListener("click", () => {
+      img.classList.toggle("zoomed");
+    });
+  }
+};
+
+UserWritingUI.openImageViewer = function (src) {
+  if (!src) return;
+  UserWritingUI.ensureImageViewer();
+
+  const viewer = document.getElementById("writing-image-viewer");
+  const img = document.getElementById("writing-image-viewer-img");
+  if (!viewer || !img) return;
+
+  img.src = src;
+  img.classList.remove("zoomed");
+  viewer.classList.add("open");
+  document.body.style.overflow = "hidden";
+};
+
+UserWritingUI.closeImageViewer = function () {
+  const viewer = document.getElementById("writing-image-viewer");
+  const img = document.getElementById("writing-image-viewer-img");
+  if (!viewer || !img) return;
+
+  viewer.classList.remove("open");
+  img.classList.remove("zoomed");
+  document.body.style.overflow = "";
 };

@@ -23,7 +23,15 @@ UserWritingUI.bindAnswerUpload = function (taskCard) {
       const uploaded = await UserWritingApi.uploadImage(file);
       wrap.dataset.imageUrl = uploaded.relativeUrl;
       preview.style.display = "block";
-      preview.innerHTML = `<img src="${uploaded.fullUrl}" alt="Answer image" style="width:100%; border-radius:10px;" />`;
+      preview.innerHTML = `
+        <img
+          src="${uploaded.fullUrl}"
+          alt="Answer image"
+          class="writing-zoomable-image"
+          data-full-image-src="${uploaded.fullUrl}"
+          onclick="UserWritingUI.openImageViewer(this.getAttribute('data-full-image-src'))"
+        />
+      `;
       UserWritingState.set({ autoSaveDirty: true });
     } catch (error) {
       console.error("Writing answer upload failed:", error);

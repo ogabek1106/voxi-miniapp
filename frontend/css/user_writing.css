@@ -11,8 +11,144 @@
   font-weight: 800;
 }
 
-.writing-user-shell .question-text {
+.writing-user-shell .writing-task-instruction {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+.writing-user-shell .writing-task-question {
+  font-family: Georgia, "Times New Roman", serif;
   font-size: 15.5px;
-  line-height: 1.6;
+  line-height: 1.7;
   margin-bottom: 10px;
+  text-align: justify;
+}
+
+.writing-task-image-wrap {
+  margin-bottom: 10px;
+}
+
+.writing-answer-box {
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.writing-answer-text {
+  width: 100%;
+  border: 0;
+  border-radius: 0;
+  padding: 10px;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 170px;
+  font-size: 15px;
+  line-height: 1.5;
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.writing-answer-upload {
+  border-top: 1px solid #e5e5ea;
+  padding: 8px 10px 12px;
+  text-align: center;
+}
+
+.writing-answer-upload-hint {
+  font-size: 11.5px;
+  line-height: 1.35;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.writing-answer-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  min-width: 132px;
+  height: 34px;
+  border: 0;
+  border-radius: 10px;
+  background: #111827;
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 700;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.16);
+  cursor: pointer;
+  margin: 0 auto;
+  padding: 0 14px;
+}
+
+.writing-answer-preview {
+  margin-top: 10px;
+}
+
+.writing-zoomable-image {
+  width: 100%;
+  border-radius: 10px;
+  cursor: zoom-in;
+}
+
+.writing-image-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: none;
+}
+
+.writing-image-viewer.open {
+  display: block;
+}
+
+.writing-image-viewer-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.78);
+}
+
+.writing-image-viewer-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 14px;
+}
+
+.writing-image-viewer-close {
+  align-self: flex-end;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 20px;
+  line-height: 1;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+.writing-image-viewer-scroll {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.writing-image-viewer-img {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 10px;
+  transition: transform 0.2s ease;
+  cursor: zoom-in;
+}
+
+.writing-image-viewer-img.zoomed {
+  transform: scale(1.8);
+  cursor: zoom-out;
 }
