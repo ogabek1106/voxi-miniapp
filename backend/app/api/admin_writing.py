@@ -68,7 +68,6 @@ def save_writing_test(payload: WritingTestSaveIn, db: Session = Depends(get_db))
         if not test:
             test = WritingTest(created_at=datetime.utcnow())
             db.add(test)
-            db.flush()
 
         test.title = safe_title
         test.time_limit_minutes = max(int(payload.time_limit_minutes or 60), 1)
@@ -79,6 +78,7 @@ def save_writing_test(payload: WritingTestSaveIn, db: Session = Depends(get_db))
         )
         test.mock_pack_id = payload.mock_pack_id
         test.updated_at = datetime.utcnow()
+        db.flush()
 
         existing_tasks = db.query(WritingTask).filter(WritingTask.test_id == test.id).all()
         for task in existing_tasks:
