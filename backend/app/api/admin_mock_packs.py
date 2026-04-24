@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from app.deps import get_db
 from app.models import MockPack
 from app.models import ReadingTest
+from app.models import WritingTest, WritingTask
 from fastapi import HTTPException
 from app.models import MockPackStatus
 
@@ -77,6 +78,43 @@ def get_mock_pack_reading(pack_id: int, db: Session = Depends(get_db)):
                 ]
             }
             for p in sorted(test.passages, key=lambda x: x.order_index)
+        ]
+    }
+
+
+@router.get("/{pack_id}/writing")
+def get_mock_pack_writing(pack_id: int, db: Session = Depends(get_db)):
+    test = (
+        db.query(WritingTest)
+        .filter(WritingTest.mock_pack_id == pack_id)
+        .first()
+    )
+
+    if not test:
+        raise HTTPException(status_code=404, detail="Writing not found")
+
+    tasks = (
+        db.query(WritingTask)
+        .filter(WritingTask.test_id == test.id)
+        .order_by(WritingTask.order_index.asc(), WritingTask.task_number.asc())
+        .all()
+    )
+
+    return {
+        "id": test.id,
+        "title": test.title,
+        "time_limit_minutes": test.time_limit_minutes,
+        "status": test.status.value if hasattr(test.status, "value") else str(test.status),
+        "tasks": [
+            {
+                "id": task.id,
+                "task_number": task.task_number,
+                "instruction_template": task.instruction_template,
+                "question_text": task.question_text,
+                "image_url": task.image_url,
+                "order_index": task.order_index
+            }
+            for task in tasks
         ]
     }
 

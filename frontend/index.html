@@ -12,6 +12,8 @@
   <link rel="stylesheet" href="js/user_reading/question_types/summary.css">
   <link rel="stylesheet" href="js/user_reading/question_types/image_questions.css">
   <link rel="stylesheet" href="js/telegram_sub_gate.css">
+  <link rel="stylesheet" href="css/user_writing.css">
+  <link rel="stylesheet" href="css/admin_writing.css">
   <title>Voxi Mini App</title>
   
   <style>
@@ -188,13 +190,15 @@ input, button {
   transform: scale(1.1);
 }
 
-#screen-reading {
+#screen-reading,
+#screen-writing {
   max-width: 100% !important;
   width: 100% !important;
   padding: 0 !important;
 }
 
-#screen-reading.container {
+#screen-reading.container,
+#screen-writing.container {
   max-width: 100% !important;
   width: 100% !important;
 }
@@ -211,7 +215,8 @@ input, button {
   width: 100% !important;
 }
 
-#screen-reading {
+#screen-reading,
+#screen-writing {
   max-width: 100% !important;
   width: 100% !important;
   padding: 0 !important;
@@ -259,7 +264,7 @@ button {
 
       <div class="container" id="screen-home">
         <button class="primary-btn" onclick="showReadingEntry()">📖 Reading</button>
-
+        <button class="primary-btn" onclick="showWritingEntry()">✍️ Writing</button>
         <button class="primary-btn" onclick="showMocksEntry()">🧠 IELTS Mock Test</button>
 
         <button class="primary-btn" id="adminBtn" style="display:none; margin-top:12px;" onclick="showAdminPanel()">
@@ -286,6 +291,7 @@ button {
       </div>
       
       <div class="container" id="screen-reading" style="display:none;"></div>
+      <div class="container" id="screen-writing" style="display:none;"></div>
 
 
     </div>
@@ -339,6 +345,12 @@ button {
   <script src="js/listening/user_listening/core/answers.js"></script>
   <script src="js/listening/user_listening/api/progress.js"></script>
   <script src="js/listening/user_listening/dynamic.js"></script>
+  <script src="js/user_writing/core/state.js"></script>
+  <script src="js/user_writing/api/writing_api.js"></script>
+  <script src="js/user_writing/ui/header.js"></script>
+  <script src="js/user_writing/ui/task_view.js"></script>
+  <script src="js/user_writing/ui/upload.js"></script>
+  <script src="js/user_writing/loader/writing_loader.js"></script>
   <script src="js/mock_start.js"></script>
   <script src="./js/admin_mock_packs.js?v=1"></script>
   <script src="/js/admin_reading/core/state.js"></script>
@@ -399,6 +411,11 @@ button {
   <script src="/js/listening/admin_listening/ui/sections.js"></script>
   <script src="/js/listening/admin_listening/ui/dynamic.js"></script>
   <script src="/js/listening/admin_listening/loader/editor_loader.js"></script>
+  <script src="/js/admin_writing/core/state.js"></script>
+  <script src="/js/admin_writing/api/writing_api.js"></script>
+  <script src="/js/admin_writing/ui/tasks.js"></script>
+  <script src="/js/admin_writing/ui/editor.js"></script>
+  <script src="/js/admin_writing/loader/editor_loader.js"></script>
   <script src="./js/admin_mock.js?v=1"></script>
   <script src="./js/app.js"></script>
 

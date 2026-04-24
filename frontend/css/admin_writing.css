@@ -1,0 +1,9 @@
+.writing-task-card label {
+  font-size: 13px;
+  color: #555;
+}
+
+.writing-task-card textarea,
+.writing-task-card select {
+  font-family: system-ui, -apple-system, sans-serif;
+}

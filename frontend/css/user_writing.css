@@ -1,0 +1,18 @@
+.writing-user-shell .question-block {
+  margin: 18px 0;
+  padding: 14px 12px;
+  border-radius: 12px;
+  background: var(--card-bg, #f4f4f6);
+  box-sizing: border-box;
+}
+
+.writing-user-shell .question-number {
+  text-align: left;
+  font-weight: 800;
+}
+
+.writing-user-shell .question-text {
+  font-size: 15.5px;
+  line-height: 1.6;
+  margin-bottom: 10px;
+}

@@ -60,7 +60,7 @@ window.openMockPack = function (packId) {
   screen.innerHTML = `
     <h3>📦 Mock Pack #${packId}</h3>
     <button onclick="showPackReading(${packId})">📖 Reading</button>
-    <button onclick="alert('Writing coming')">✍️ Writing</button>
+    <button onclick="showPackWriting(${packId})">✍️ Writing</button>
     <button onclick="showPackListening(${packId})">🎧 Listening</button>
     <button onclick="alert('Speaking coming')">🗣 Speaking</button>
     <button onclick="showAdminMockPacks()" style="margin-top:12px;">⬅ Back</button>

@@ -4,6 +4,7 @@ let screenHome;
 let screenMocks;
 let screenProfile;
 let screenReading;
+let screenWriting;
 
 document.addEventListener("DOMContentLoaded", () => {
   screenName = document.getElementById("screen-name");
@@ -11,6 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
   screenMocks = document.getElementById("screen-mocks");
   screenProfile = document.getElementById("screen-profile");
   screenReading = document.getElementById("screen-reading");
+  screenWriting = document.getElementById("screen-writing");
 
   const btnHome = document.getElementById("btn-home");
   const btnProfile = document.getElementById("btn-profile");
@@ -27,6 +29,7 @@ function hideAllScreens() {
   if (screenMocks) screenMocks.style.display = "none";
   if (screenProfile) screenProfile.style.display = "none";
   if (screenReading) screenReading.style.display = "none";
+  if (screenWriting) screenWriting.style.display = "none";
 }
 function setBottomNavVisible(visible) {
   const nav = document.querySelector(".bottom-nav");
@@ -110,6 +113,40 @@ window.showReadingEntry = async function () {
   } catch (error) {
     console.error("Reading quick entry error:", error);
     alert("Failed to open reading.");
+  }
+};
+
+window.showWritingEntry = async function () {
+  try {
+    const mocks = await apiGet("/mock/writing-list");
+    if (!Array.isArray(mocks) || !mocks.length) {
+      alert("No writing mocks available.");
+      return;
+    }
+
+    const latestPublishedMock = mocks
+      .map((item) => ({
+        id: Number(item?.id || 0),
+        title: item?.title || ""
+      }))
+      .filter((item) => item.id > 0)
+      .sort((a, b) => b.id - a.id)[0];
+
+    const mockId = Number(latestPublishedMock?.id || 0);
+    if (!mockId) {
+      alert("No writing mocks available.");
+      return;
+    }
+
+    if (typeof window.startWritingMock === "function") {
+      window.startWritingMock(mockId);
+      return;
+    }
+
+    alert("Writing module is not loaded.");
+  } catch (error) {
+    console.error("Writing quick entry error:", error);
+    alert("Failed to open writing.");
   }
 };
 

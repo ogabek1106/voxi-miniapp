@@ -70,6 +70,27 @@ window.startMock = async function (mockId) {
 
 };
 
+window.startWritingMock = async function (mockId) {
+  hideAllScreens();
+  hideAnnouncement();
+  if (typeof setBottomNavVisible === "function") {
+    setBottomNavVisible(false);
+  }
+
+  const content = document.getElementById("content");
+  if (content) content.style.padding = "2px 2px";
+
+  if (!screenWriting) return;
+  screenWriting.style.display = "block";
+
+  if (!window.UserWritingLoader?.start) {
+    screenWriting.innerHTML = "<p>Writing module is not loaded.</p>";
+    return;
+  }
+
+  await window.UserWritingLoader.start(mockId, screenWriting);
+};
+
 window.startListeningMock = async function (mockId) {
   hideAllScreens();
   hideAnnouncement();

@@ -119,6 +119,11 @@ class MockPack(Base):
         backref="mock_pack",
         cascade="all, delete-orphan"
     )
+    writings = relationship(
+        "WritingTest",
+        backref="mock_pack",
+        cascade="all, delete-orphan"
+    )
 
 
 class ListeningTest(Base):
@@ -194,3 +199,58 @@ class ListeningQuestion(Base):
     meta = Column(JSON, nullable=True)
 
     block = relationship("ListeningBlock", back_populates="questions")
+
+
+class WritingTestStatus(enum.Enum):
+    draft = "draft"
+    published = "published"
+
+
+class WritingTest(Base):
+    __tablename__ = "writing_tests"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=False)
+    time_limit_minutes = Column(Integer, default=60, nullable=False)
+    status = Column(Enum(WritingTestStatus), default=WritingTestStatus.draft, nullable=False)
+    mock_pack_id = Column(Integer, ForeignKey("mock_packs.id", ondelete="CASCADE"), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=True)
+
+    tasks = relationship(
+        "WritingTask",
+        back_populates="test",
+        cascade="all, delete-orphan",
+        passive_deletes=True
+    )
+
+
+class WritingTask(Base):
+    __tablename__ = "writing_tasks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    test_id = Column(Integer, ForeignKey("writing_tests.id", ondelete="CASCADE"), nullable=False)
+    task_number = Column(Integer, nullable=False)  # 1 or 2
+    instruction_template = Column(Text, nullable=True)
+    question_text = Column(Text, nullable=True)
+    image_url = Column(String, nullable=True)
+    order_index = Column(Integer, nullable=False, default=0)
+
+    test = relationship("WritingTest", back_populates="tasks")
+
+
+class WritingProgress(Base):
+    __tablename__ = "writing_progress"
+
+    id = Column(Integer, primary_key=True, index=True)
+    test_id = Column(Integer, ForeignKey("writing_tests.id", ondelete="CASCADE"), nullable=False)
+    telegram_id = Column(BigInteger, index=True, nullable=False)
+    task1_text = Column(Text, nullable=True)
+    task1_image_url = Column(String, nullable=True)
+    task2_text = Column(Text, nullable=True)
+    task2_image_url = Column(String, nullable=True)
+    started_at = Column(DateTime(timezone=True), nullable=True)
+    updated_at = Column(DateTime(timezone=True), nullable=True)
+    submitted_at = Column(DateTime(timezone=True), nullable=True)
+    is_submitted = Column(Boolean, nullable=False, default=False)
+    finish_type = Column(String, nullable=True)  # manual / auto
