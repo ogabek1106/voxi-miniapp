@@ -1,3 +1,11 @@
+.writing-task-card {
+  overflow: hidden;
+}
+
+.writing-task-card * {
+  box-sizing: border-box;
+}
+
 .writing-task-card label {
   font-size: 13px;
   color: #555;
@@ -6,4 +14,6 @@
 .writing-task-card textarea,
 .writing-task-card select {
   font-family: system-ui, -apple-system, sans-serif;
+  max-width: 100%;
+  width: 100%;
 }

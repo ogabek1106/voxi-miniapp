@@ -36,7 +36,10 @@ AdminWritingEditor.render = function (payload = {}) {
   `;
 
   const taskCards = Array.from(screen.querySelectorAll(".writing-task-card"));
-  taskCards.forEach((card) => AdminWritingUI.bindTaskUpload(card));
+  taskCards.forEach((card) => {
+    AdminWritingUI.bindTaskUpload(card);
+    AdminWritingUI.bindInstructionPicker(card);
+  });
 
   const saveBtn = document.getElementById("btn-writing-save");
   const publishBtn = document.getElementById("btn-writing-publish");
