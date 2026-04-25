@@ -6,8 +6,10 @@ UserWritingUI.bindAnswerUpload = function (taskCard) {
   const uploadBtn = taskCard.querySelector(".writing-answer-upload-btn");
   const uploadInput = taskCard.querySelector(".writing-answer-upload-input");
   const wrap = taskCard.querySelector(".writing-answer-upload");
-  const preview = taskCard.querySelector(".writing-answer-preview");
-  if (!uploadBtn || !uploadInput || !wrap || !preview) return;
+  const answerBox = taskCard.querySelector(".writing-answer-box");
+  const preview = taskCard.querySelector(".writing-answer-preview-inline");
+  const textArea = taskCard.querySelector(".writing-answer-text");
+  if (!uploadBtn || !uploadInput || !wrap || !answerBox || !preview) return;
 
   uploadBtn.onclick = () => uploadInput.click();
 
@@ -22,12 +24,16 @@ UserWritingUI.bindAnswerUpload = function (taskCard) {
     try {
       const uploaded = await UserWritingApi.uploadImage(file);
       wrap.dataset.imageUrl = uploaded.relativeUrl;
+      if (textArea) {
+        textArea.value = "";
+      }
+      answerBox.classList.add("image-mode");
       preview.style.display = "block";
       preview.innerHTML = `
         <img
           src="${uploaded.fullUrl}"
           alt="Answer image"
-          class="writing-zoomable-image"
+          class="writing-zoomable-image writing-answer-inline-image"
           data-full-image-src="${uploaded.fullUrl}"
           onclick="UserWritingUI.openImageViewer(this.getAttribute('data-full-image-src'))"
         />

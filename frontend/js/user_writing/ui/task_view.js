@@ -95,6 +95,7 @@ UserWritingUI.renderTaskCard = function (task, progress = {}) {
   const answerImage = String(progress[`task${number}_image_url`] || "").trim();
   const questionImage = imageUrl ? `${window.API}${imageUrl}` : "";
   const answerImageFull = answerImage ? `${window.API}${answerImage}` : "";
+  const hasAnswerImage = !!answerImageFull;
 
   return `
     <div class="question-block writing-user-task" data-task-number="${number}" style="text-align:left;">
@@ -122,29 +123,29 @@ UserWritingUI.renderTaskCard = function (task, progress = {}) {
         </div>
       ` : ""}
 
-      <div class="writing-answer-box">
+      <div class="writing-answer-box ${hasAnswerImage ? "image-mode" : ""}">
         <textarea
           class="writing-answer-text"
           rows="8"
           placeholder="Write your answer here."
         >${UserWritingUI.escapeHtml(textValue)}</textarea>
 
+        <div class="writing-answer-preview-inline" style="${hasAnswerImage ? "" : "display:none;"}">
+          <img
+            src="${UserWritingUI.escapeHtml(answerImageFull)}"
+            alt="Answer upload"
+            class="writing-zoomable-image writing-answer-inline-image"
+            data-full-image-src="${UserWritingUI.escapeHtml(answerImageFull)}"
+            onclick="UserWritingUI.openImageViewer(this.getAttribute('data-full-image-src'))"
+          />
+        </div>
+
         <div class="writing-answer-upload" data-image-url="${UserWritingUI.escapeHtml(answerImage)}">
-          <div class="writing-answer-upload-hint">or upload a photo of your handwritten response</div>
+          <div class="writing-answer-upload-hint">Upload a photo of your handwritten response</div>
           <button type="button" class="writing-answer-upload-btn">Upload a photo</button>
           <input type="file" class="writing-answer-upload-input" accept="image/*" style="display:none;" />
         </div>
       </div>
-
-      <div class="writing-answer-preview" style="${answerImageFull ? "" : "display:none;"}">
-        <img
-          src="${UserWritingUI.escapeHtml(answerImageFull)}"
-          alt="Answer upload"
-          class="writing-zoomable-image"
-          data-full-image-src="${UserWritingUI.escapeHtml(answerImageFull)}"
-          onclick="UserWritingUI.openImageViewer(this.getAttribute('data-full-image-src'))"
-        />
-        </div>
     </div>
   `;
 };
@@ -184,7 +185,8 @@ UserWritingUI.readAnswers = function () {
     const taskNumber = Number(card.dataset.taskNumber || 0);
     if (![1, 2].includes(taskNumber)) return;
 
-    const text = String(card.querySelector(".writing-answer-text")?.value || "");
+    const hasImage = !!String(card.querySelector(".writing-answer-upload")?.dataset?.imageUrl || "").trim();
+    const text = hasImage ? "" : String(card.querySelector(".writing-answer-text")?.value || "");
     const imageUrl = String(card.querySelector(".writing-answer-upload")?.dataset?.imageUrl || "").trim();
 
     out[`task${taskNumber}_text`] = text;
