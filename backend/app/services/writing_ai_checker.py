@@ -1,5 +1,7 @@
 import json
 import os
+import base64
+from pathlib import Path
 from typing import Any, Dict, List
 
 from fastapi import HTTPException
@@ -136,6 +138,40 @@ def _extract_output_text(response: Any) -> str:
     return "\n".join(chunks).strip()
 
 
+def _resolve_media_file_path(image_url: str) -> Path | None:
+    raw = str(image_url or "").strip()
+    if not raw:
+        return None
+
+    # Expected stored form: /media/<filename>
+    if raw.startswith("/media/"):
+        file_name = raw.replace("/media/", "", 1).strip()
+        if not file_name:
+            return None
+        return Path("/data/media") / file_name
+
+    # Fallback: when only file name is stored
+    if "/" not in raw:
+        return Path("/data/media") / raw
+
+    return None
+
+
+def _file_to_data_url(path: Path) -> str:
+    suffix = path.suffix.lower()
+    mime = "image/jpeg"
+    if suffix == ".png":
+        mime = "image/png"
+    elif suffix == ".webp":
+        mime = "image/webp"
+    elif suffix == ".gif":
+        mime = "image/gif"
+
+    with path.open("rb") as fh:
+        encoded = base64.b64encode(fh.read()).decode("ascii")
+    return f"data:{mime};base64,{encoded}"
+
+
 def call_openai(task_number: int, user_prompt: str) -> Dict[str, Any]:
     api_key = os.getenv("OPENAI_API_KEY", "").strip()
     if not api_key:
@@ -170,6 +206,57 @@ def call_openai(task_number: int, user_prompt: str) -> Dict[str, Any]:
     return json.loads(raw_text)
 
 
+def _ocr_image_text(image_url: str) -> str:
+    file_path = _resolve_media_file_path(image_url)
+    if not file_path or not file_path.exists() or not file_path.is_file():
+        return ""
+
+    api_key = os.getenv("OPENAI_API_KEY", "").strip()
+    if not api_key:
+        raise HTTPException(status_code=500, detail="OPENAI_API_KEY is not configured")
+
+    model = os.getenv("OPENAI_WRITING_MODEL", "").strip() or "gpt-4o-mini"
+    client = OpenAI(api_key=api_key)
+    data_url = _file_to_data_url(file_path)
+
+    response = client.responses.create(
+        model=model,
+        temperature=0,
+        input=[
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "input_text",
+                        "text": (
+                            "Extract all readable text from this IELTS Writing answer image. "
+                            "Return ONLY plain extracted text. "
+                            "No explanation, no markdown, no labels."
+                        ),
+                    },
+                    {
+                        "type": "input_image",
+                        "image_url": data_url,
+                    },
+                ],
+            }
+        ],
+    )
+
+    return _extract_output_text(response).strip()
+
+
+def _merge_answer_sources(answer_text: str, image_url: str | None) -> str:
+    typed = str(answer_text or "").strip()
+    ocr_text = _ocr_image_text(image_url or "").strip() if image_url else ""
+
+    if typed and ocr_text:
+        return f"{typed}\n\n{ocr_text}".strip()
+    if typed:
+        return typed
+    return ocr_text
+
+
 def parse_and_validate(task_number: int, payload: Dict[str, Any]) -> Dict[str, Any]:
     if not isinstance(payload, dict):
         raise ValueError("AI response is not an object")
@@ -199,8 +286,11 @@ def parse_and_validate(task_number: int, payload: Dict[str, Any]) -> Dict[str, A
     }
 
 
-def check_task(task_number: int, instruction: str, question: str, answer_text: str) -> Dict[str, Any]:
+def check_task(task_number: int, instruction: str, question: str, answer_text: str, image_url: str | None = None) -> Dict[str, Any]:
+    combined_answer = _merge_answer_sources(answer_text, image_url)
     prompt = build_prompt(task_number, instruction, question, answer_text)
+    if combined_answer != answer_text:
+        prompt = build_prompt(task_number, instruction, question, combined_answer)
 
     first_error = None
     for _ in range(2):  # retry once on invalid response
@@ -225,12 +315,14 @@ def check_writing_progress(db, progress, tasks: List[Any]) -> Dict[str, Any]:
         getattr(task1, "instruction_template", "") or "",
         getattr(task1, "question_text", "") or "",
         getattr(progress, "task1_text", "") or "",
+        getattr(progress, "task1_image_url", None),
     )
     task2_result = check_task(
         2,
         getattr(task2, "instruction_template", "") or "",
         getattr(task2, "question_text", "") or "",
         getattr(progress, "task2_text", "") or "",
+        getattr(progress, "task2_image_url", None),
     )
 
     final_band = round_band((task1_result["overall_band"] + task2_result["overall_band"] * 2.0) / 3.0)
