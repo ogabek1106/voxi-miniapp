@@ -345,3 +345,239 @@ def ensure_writing_schema():
             "END "
             "$$;"
         ))
+
+
+def ensure_speaking_schema():
+    with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+        conn.execute(text(
+            "DO $$ "
+            "BEGIN "
+            "IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'speakingteststatus') THEN "
+            "CREATE TYPE speakingteststatus AS ENUM ('draft', 'published'); "
+            "END IF; "
+            "END "
+            "$$;"
+        ))
+
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS speaking_tests ("
+            "id SERIAL PRIMARY KEY, "
+            "title VARCHAR NOT NULL DEFAULT '', "
+            "time_limit_minutes INTEGER NOT NULL DEFAULT 18, "
+            "status speakingteststatus NOT NULL DEFAULT 'draft', "
+            "mock_pack_id INTEGER NULL, "
+            "created_at TIMESTAMP NULL, "
+            "updated_at TIMESTAMP NULL"
+            ");"
+        ))
+        conn.execute(text(
+            "ALTER TABLE speaking_tests "
+            "ADD COLUMN IF NOT EXISTS title VARCHAR;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE speaking_tests "
+            "ADD COLUMN IF NOT EXISTS time_limit_minutes INTEGER;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE speaking_tests "
+            "ADD COLUMN IF NOT EXISTS status speakingteststatus;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE speaking_tests "
+            "ADD COLUMN IF NOT EXISTS mock_pack_id INTEGER;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE speaking_tests "
+            "ADD COLUMN IF NOT EXISTS created_at TIMESTAMP;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE speaking_tests "
+            "ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP;"
+        ))
+        conn.execute(text(
+            "DO $$ "
+            "BEGIN "
+            "IF NOT EXISTS ("
+            "SELECT 1 FROM information_schema.table_constraints "
+            "WHERE constraint_name = 'speaking_tests_mock_pack_id_fkey'"
+            ") THEN "
+            "ALTER TABLE speaking_tests "
+            "ADD CONSTRAINT speaking_tests_mock_pack_id_fkey "
+            "FOREIGN KEY (mock_pack_id) "
+            "REFERENCES mock_packs(id) "
+            "ON DELETE CASCADE; "
+            "END IF; "
+            "END "
+            "$$;"
+        ))
+
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS speaking_parts ("
+            "id SERIAL PRIMARY KEY, "
+            "test_id INTEGER NOT NULL, "
+            "part_number INTEGER NOT NULL, "
+            "instruction TEXT NULL, "
+            "question TEXT NULL, "
+            "order_index INTEGER NOT NULL DEFAULT 0"
+            ");"
+        ))
+        conn.execute(text(
+            "ALTER TABLE speaking_parts "
+            "ADD COLUMN IF NOT EXISTS test_id INTEGER;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE speaking_parts "
+            "ADD COLUMN IF NOT EXISTS part_number INTEGER;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE speaking_parts "
+            "ADD COLUMN IF NOT EXISTS instruction TEXT;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE speaking_parts "
+            "ADD COLUMN IF NOT EXISTS question TEXT;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE speaking_parts "
+            "ADD COLUMN IF NOT EXISTS order_index INTEGER;"
+        ))
+        conn.execute(text(
+            "DO $$ "
+            "BEGIN "
+            "IF NOT EXISTS ("
+            "SELECT 1 FROM information_schema.table_constraints "
+            "WHERE constraint_name = 'speaking_parts_test_id_fkey'"
+            ") THEN "
+            "ALTER TABLE speaking_parts "
+            "ADD CONSTRAINT speaking_parts_test_id_fkey "
+            "FOREIGN KEY (test_id) "
+            "REFERENCES speaking_tests(id) "
+            "ON DELETE CASCADE; "
+            "END IF; "
+            "END "
+            "$$;"
+        ))
+
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS speaking_progress ("
+            "id SERIAL PRIMARY KEY, "
+            "test_id INTEGER NOT NULL, "
+            "telegram_id BIGINT NOT NULL, "
+            "part1_audio_url VARCHAR NULL, "
+            "part2_audio_url VARCHAR NULL, "
+            "part3_audio_url VARCHAR NULL, "
+            "started_at TIMESTAMPTZ NULL, "
+            "submitted_at TIMESTAMPTZ NULL, "
+            "is_submitted BOOLEAN NOT NULL DEFAULT FALSE"
+            ");"
+        ))
+        conn.execute(text(
+            "ALTER TABLE speaking_progress "
+            "ADD COLUMN IF NOT EXISTS test_id INTEGER;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE speaking_progress "
+            "ADD COLUMN IF NOT EXISTS telegram_id BIGINT;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE speaking_progress "
+            "ADD COLUMN IF NOT EXISTS part1_audio_url VARCHAR;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE speaking_progress "
+            "ADD COLUMN IF NOT EXISTS part2_audio_url VARCHAR;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE speaking_progress "
+            "ADD COLUMN IF NOT EXISTS part3_audio_url VARCHAR;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE speaking_progress "
+            "ADD COLUMN IF NOT EXISTS started_at TIMESTAMPTZ;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE speaking_progress "
+            "ADD COLUMN IF NOT EXISTS submitted_at TIMESTAMPTZ;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE speaking_progress "
+            "ADD COLUMN IF NOT EXISTS is_submitted BOOLEAN NOT NULL DEFAULT FALSE;"
+        ))
+        conn.execute(text(
+            "DO $$ "
+            "BEGIN "
+            "IF NOT EXISTS ("
+            "SELECT 1 FROM information_schema.table_constraints "
+            "WHERE constraint_name = 'speaking_progress_test_id_fkey'"
+            ") THEN "
+            "ALTER TABLE speaking_progress "
+            "ADD CONSTRAINT speaking_progress_test_id_fkey "
+            "FOREIGN KEY (test_id) "
+            "REFERENCES speaking_tests(id) "
+            "ON DELETE CASCADE; "
+            "END IF; "
+            "END "
+            "$$;"
+        ))
+
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS speaking_results ("
+            "id SERIAL PRIMARY KEY, "
+            "progress_id INTEGER NOT NULL UNIQUE, "
+            "overall_band DOUBLE PRECISION NOT NULL, "
+            "fluency_band DOUBLE PRECISION NOT NULL, "
+            "lexical_band DOUBLE PRECISION NOT NULL, "
+            "grammar_band DOUBLE PRECISION NOT NULL, "
+            "pronunciation_band DOUBLE PRECISION NOT NULL, "
+            "raw_json JSON NOT NULL, "
+            "created_at TIMESTAMP NULL"
+            ");"
+        ))
+        conn.execute(text(
+            "ALTER TABLE speaking_results "
+            "ADD COLUMN IF NOT EXISTS progress_id INTEGER;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE speaking_results "
+            "ADD COLUMN IF NOT EXISTS overall_band DOUBLE PRECISION;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE speaking_results "
+            "ADD COLUMN IF NOT EXISTS fluency_band DOUBLE PRECISION;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE speaking_results "
+            "ADD COLUMN IF NOT EXISTS lexical_band DOUBLE PRECISION;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE speaking_results "
+            "ADD COLUMN IF NOT EXISTS grammar_band DOUBLE PRECISION;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE speaking_results "
+            "ADD COLUMN IF NOT EXISTS pronunciation_band DOUBLE PRECISION;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE speaking_results "
+            "ADD COLUMN IF NOT EXISTS raw_json JSON;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE speaking_results "
+            "ADD COLUMN IF NOT EXISTS created_at TIMESTAMP;"
+        ))
+        conn.execute(text(
+            "DO $$ "
+            "BEGIN "
+            "IF NOT EXISTS ("
+            "SELECT 1 FROM information_schema.table_constraints "
+            "WHERE constraint_name = 'speaking_results_progress_id_fkey'"
+            ") THEN "
+            "ALTER TABLE speaking_results "
+            "ADD CONSTRAINT speaking_results_progress_id_fkey "
+            "FOREIGN KEY (progress_id) "
+            "REFERENCES speaking_progress(id) "
+            "ON DELETE CASCADE; "
+            "END IF; "
+            "END "
+            "$$;"
+        ))

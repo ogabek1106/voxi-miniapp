@@ -16,12 +16,14 @@ from app.api.admin_reading import router as admin_reading_router
 from app.api.admin_listening import router as admin_listening_router
 from app.api.admin_writing import router as admin_writing_router
 from app.api.writing import router as writing_router
+from app.api.speaking import router as speaking_router
 from .db import (
     ensure_reading_progress_columns,
     ensure_mock_pack_column,
     ensure_question_group_column,
     ensure_reading_question_type_values,
-    ensure_writing_schema
+    ensure_writing_schema,
+    ensure_speaking_schema
 )
 from app.api.admin_upload import router as admin_upload_router
 from app.api.result_images import router as result_images_router
@@ -35,6 +37,7 @@ ensure_mock_pack_column()
 ensure_question_group_column()
 ensure_reading_question_type_values()
 ensure_writing_schema()
+ensure_speaking_schema()
 app = FastAPI(title="Voxi Mini App API")
 app.include_router(mock_list.router)
 app.include_router(admin_upload_router)
@@ -43,6 +46,7 @@ app.include_router(admin_listening_router)
 app.include_router(admin_writing_router)
 app.include_router(mock_tests_router)
 app.include_router(writing_router)
+app.include_router(speaking_router)
 app.include_router(me_router)
 app.include_router(admin_router)
 app.include_router(admin_reading_stats_router)

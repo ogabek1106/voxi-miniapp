@@ -5,6 +5,7 @@ let screenMocks;
 let screenProfile;
 let screenReading;
 let screenWriting;
+let screenSpeaking;
 
 document.addEventListener("DOMContentLoaded", () => {
   screenName = document.getElementById("screen-name");
@@ -13,6 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
   screenProfile = document.getElementById("screen-profile");
   screenReading = document.getElementById("screen-reading");
   screenWriting = document.getElementById("screen-writing");
+  screenSpeaking = document.getElementById("screen-speaking");
 
   const btnHome = document.getElementById("btn-home");
   const btnProfile = document.getElementById("btn-profile");
@@ -30,6 +32,7 @@ function hideAllScreens() {
   if (screenProfile) screenProfile.style.display = "none";
   if (screenReading) screenReading.style.display = "none";
   if (screenWriting) screenWriting.style.display = "none";
+  if (screenSpeaking) screenSpeaking.style.display = "none";
 }
 function setBottomNavVisible(visible) {
   const nav = document.querySelector(".bottom-nav");
@@ -147,6 +150,40 @@ window.showWritingEntry = async function () {
   } catch (error) {
     console.error("Writing quick entry error:", error);
     alert("Failed to open writing.");
+  }
+};
+
+window.showSpeakingEntry = async function () {
+  try {
+    const mocks = await apiGet("/mock/speaking-list");
+    if (!Array.isArray(mocks) || !mocks.length) {
+      alert("No speaking mocks available.");
+      return;
+    }
+
+    const latestPublishedMock = mocks
+      .map((item) => ({
+        id: Number(item?.id || 0),
+        title: item?.title || ""
+      }))
+      .filter((item) => item.id > 0)
+      .sort((a, b) => b.id - a.id)[0];
+
+    const mockId = Number(latestPublishedMock?.id || 0);
+    if (!mockId) {
+      alert("No speaking mocks available.");
+      return;
+    }
+
+    if (typeof window.startSpeakingMock === "function") {
+      window.startSpeakingMock(mockId);
+      return;
+    }
+
+    alert("Speaking module is not loaded.");
+  } catch (error) {
+    console.error("Speaking quick entry error:", error);
+    alert("Failed to open speaking.");
   }
 };
 

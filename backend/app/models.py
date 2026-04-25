@@ -124,6 +124,11 @@ class MockPack(Base):
         backref="mock_pack",
         cascade="all, delete-orphan"
     )
+    speakings = relationship(
+        "SpeakingTest",
+        backref="mock_pack",
+        cascade="all, delete-orphan"
+    )
 
 
 class ListeningTest(Base):
@@ -260,3 +265,68 @@ class WritingProgress(Base):
     ai_task2_band = Column(Float, nullable=True)
     ai_task1_result = Column(JSON, nullable=True)
     ai_task2_result = Column(JSON, nullable=True)
+
+
+class SpeakingTestStatus(enum.Enum):
+    draft = "draft"
+    published = "published"
+
+
+class SpeakingTest(Base):
+    __tablename__ = "speaking_tests"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=False)
+    time_limit_minutes = Column(Integer, default=18, nullable=False)
+    status = Column(Enum(SpeakingTestStatus), default=SpeakingTestStatus.draft, nullable=False)
+    mock_pack_id = Column(Integer, ForeignKey("mock_packs.id", ondelete="CASCADE"), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=True)
+
+    parts = relationship(
+        "SpeakingPart",
+        back_populates="test",
+        cascade="all, delete-orphan",
+        passive_deletes=True
+    )
+
+
+class SpeakingPart(Base):
+    __tablename__ = "speaking_parts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    test_id = Column(Integer, ForeignKey("speaking_tests.id", ondelete="CASCADE"), nullable=False)
+    part_number = Column(Integer, nullable=False)
+    instruction = Column(Text, nullable=True)
+    question = Column(Text, nullable=True)
+    order_index = Column(Integer, nullable=False, default=0)
+
+    test = relationship("SpeakingTest", back_populates="parts")
+
+
+class SpeakingProgress(Base):
+    __tablename__ = "speaking_progress"
+
+    id = Column(Integer, primary_key=True, index=True)
+    test_id = Column(Integer, ForeignKey("speaking_tests.id", ondelete="CASCADE"), nullable=False)
+    telegram_id = Column(BigInteger, index=True, nullable=False)
+    part1_audio_url = Column(String, nullable=True)
+    part2_audio_url = Column(String, nullable=True)
+    part3_audio_url = Column(String, nullable=True)
+    started_at = Column(DateTime(timezone=True), nullable=True)
+    submitted_at = Column(DateTime(timezone=True), nullable=True)
+    is_submitted = Column(Boolean, nullable=False, default=False)
+
+
+class SpeakingResult(Base):
+    __tablename__ = "speaking_results"
+
+    id = Column(Integer, primary_key=True, index=True)
+    progress_id = Column(Integer, ForeignKey("speaking_progress.id", ondelete="CASCADE"), nullable=False, unique=True)
+    overall_band = Column(Float, nullable=False)
+    fluency_band = Column(Float, nullable=False)
+    lexical_band = Column(Float, nullable=False)
+    grammar_band = Column(Float, nullable=False)
+    pronunciation_band = Column(Float, nullable=False)
+    raw_json = Column(JSON, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=True)

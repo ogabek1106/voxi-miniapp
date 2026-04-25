@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="js/user_reading/question_types/image_questions.css">
   <link rel="stylesheet" href="js/telegram_sub_gate.css">
   <link rel="stylesheet" href="css/user_writing.css">
+  <link rel="stylesheet" href="css/user_speaking.css">
   <link rel="stylesheet" href="css/admin_writing.css">
   <title>Voxi Mini App</title>
   
@@ -191,14 +192,16 @@ input, button {
 }
 
 #screen-reading,
-#screen-writing {
+#screen-writing,
+#screen-speaking {
   max-width: 100% !important;
   width: 100% !important;
   padding: 0 !important;
 }
 
 #screen-reading.container,
-#screen-writing.container {
+#screen-writing.container,
+#screen-speaking.container {
   max-width: 100% !important;
   width: 100% !important;
 }
@@ -216,7 +219,8 @@ input, button {
 }
 
 #screen-reading,
-#screen-writing {
+#screen-writing,
+#screen-speaking {
   max-width: 100% !important;
   width: 100% !important;
   padding: 0 !important;
@@ -265,6 +269,7 @@ button {
       <div class="container" id="screen-home">
         <button class="primary-btn" onclick="showReadingEntry()">📖 Reading</button>
         <button class="primary-btn" onclick="showWritingEntry()">✍️ Writing</button>
+        <button class="primary-btn" onclick="showSpeakingEntry()">🎙️ Speaking</button>
         <button class="primary-btn" onclick="showMocksEntry()">🧠 IELTS Mock Test</button>
 
         <button class="primary-btn" id="adminBtn" style="display:none; margin-top:12px;" onclick="showAdminPanel()">
@@ -292,6 +297,7 @@ button {
       
       <div class="container" id="screen-reading" style="display:none;"></div>
       <div class="container" id="screen-writing" style="display:none;"></div>
+      <div class="container" id="screen-speaking" style="display:none;"></div>
 
 
     </div>
@@ -351,6 +357,13 @@ button {
   <script src="js/user_writing/ui/task_view.js"></script>
   <script src="js/user_writing/ui/upload.js"></script>
   <script src="js/user_writing/loader/writing_loader.js"></script>
+  <script src="js/user_speaking/core/state.js"></script>
+  <script src="js/user_speaking/api/speaking_api.js"></script>
+  <script src="js/user_speaking/ui/header.js"></script>
+  <script src="js/user_speaking/ui/speaking_view.js"></script>
+  <script src="js/user_speaking/ui/recorder.js"></script>
+  <script src="js/user_speaking/ui/transitions.js"></script>
+  <script src="js/user_speaking/loader/speaking_loader.js"></script>
   <script src="js/mock_start.js"></script>
   <script src="./js/admin_mock_packs.js?v=1"></script>
   <script src="/js/admin_reading/core/state.js"></script>

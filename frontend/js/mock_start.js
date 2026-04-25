@@ -211,3 +211,24 @@ window.startListeningMock = async function (mockId) {
     UserListening.renderError(screenReading, e);
   }
 };
+
+window.startSpeakingMock = async function (mockId) {
+  hideAllScreens();
+  hideAnnouncement();
+  if (typeof setBottomNavVisible === "function") {
+    setBottomNavVisible(false);
+  }
+
+  const content = document.getElementById("content");
+  if (content) content.style.padding = "2px 2px";
+
+  if (!screenSpeaking) return;
+  screenSpeaking.style.display = "block";
+
+  if (!window.UserSpeakingLoader?.start) {
+    screenSpeaking.innerHTML = "<p>Speaking module is not loaded.</p>";
+    return;
+  }
+
+  await window.UserSpeakingLoader.start(mockId, screenSpeaking);
+};
