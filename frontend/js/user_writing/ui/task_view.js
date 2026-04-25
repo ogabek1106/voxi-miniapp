@@ -198,6 +198,13 @@ UserWritingUI.ensureImageViewer = function () {
   if (img) {
     img.addEventListener("click", () => {
       img.classList.toggle("zoomed");
+      const scrollWrap = viewer.querySelector(".writing-image-viewer-scroll");
+      if (scrollWrap && img.classList.contains("zoomed")) {
+        requestAnimationFrame(() => {
+          scrollWrap.scrollLeft = Math.max(0, (scrollWrap.scrollWidth - scrollWrap.clientWidth) / 2);
+          scrollWrap.scrollTop = Math.max(0, (scrollWrap.scrollHeight - scrollWrap.clientHeight) / 2);
+        });
+      }
     });
   }
 };
@@ -214,6 +221,12 @@ UserWritingUI.openImageViewer = function (src) {
   img.classList.remove("zoomed");
   viewer.classList.add("open");
   document.body.style.overflow = "hidden";
+
+  const scrollWrap = viewer.querySelector(".writing-image-viewer-scroll");
+  if (scrollWrap) {
+    scrollWrap.scrollLeft = 0;
+    scrollWrap.scrollTop = 0;
+  }
 };
 
 UserWritingUI.closeImageViewer = function () {
