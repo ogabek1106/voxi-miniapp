@@ -78,11 +78,11 @@ window.showPackListening = function (packId) {
 };
 
 window.showPackSpeaking = function (packId) {
-  if (typeof window.startSpeakingMock === "function") {
-    window.startSpeakingMock(Number(packId));
+  if (typeof window.showPackSpeakingEditor === "function") {
+    window.showPackSpeakingEditor(Number(packId));
     return;
   }
-  alert("Speaking module is not loaded.");
+  alert("Speaking editor is not loaded.");
 };
 
 window.createMockPack = async function () {

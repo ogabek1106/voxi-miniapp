@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from app.deps import get_db
-from app.models import MockPack, MockPackStatus, SpeakingTest, WritingTest
+from app.models import MockPack, MockPackStatus, SpeakingTest, SpeakingTestStatus, WritingTest
 
 router = APIRouter(prefix="/mock", tags=["mock"])
 
@@ -52,6 +52,7 @@ def get_speaking_mock_list(db: Session = Depends(get_db)):
         db.query(MockPack)
         .join(SpeakingTest, SpeakingTest.mock_pack_id == MockPack.id)
         .filter(MockPack.status == MockPackStatus.published)
+        .filter(SpeakingTest.status == SpeakingTestStatus.published)
         .order_by(MockPack.id.desc())
         .all()
     )

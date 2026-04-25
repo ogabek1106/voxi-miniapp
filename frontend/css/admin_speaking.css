@@ -1,0 +1,28 @@
+.speaking-part-card * {
+  box-sizing: border-box;
+}
+
+.speaking-part-card label {
+  font-size: 13px;
+  color: #555;
+}
+
+.speaking-part-card textarea,
+.speaking-part-card select,
+.speaking-part-card input {
+  font-family: system-ui, -apple-system, sans-serif;
+  max-width: 100%;
+  width: 100%;
+}
+
+.speaking-part-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.speaking-part-number {
+  font-weight: 700;
+  font-size: 20px;
+}

@@ -6,6 +6,7 @@ from app.deps import get_db
 from app.models import MockPack
 from app.models import ReadingTest
 from app.models import WritingTest, WritingTask
+from app.models import SpeakingTest, SpeakingPart
 from fastapi import HTTPException
 from app.models import MockPackStatus
 
@@ -115,6 +116,42 @@ def get_mock_pack_writing(pack_id: int, db: Session = Depends(get_db)):
                 "order_index": task.order_index
             }
             for task in tasks
+        ]
+    }
+
+
+@router.get("/{pack_id}/speaking")
+def get_mock_pack_speaking(pack_id: int, db: Session = Depends(get_db)):
+    test = (
+        db.query(SpeakingTest)
+        .filter(SpeakingTest.mock_pack_id == pack_id)
+        .first()
+    )
+
+    if not test:
+        return None
+
+    parts = (
+        db.query(SpeakingPart)
+        .filter(SpeakingPart.test_id == test.id)
+        .order_by(SpeakingPart.order_index.asc(), SpeakingPart.part_number.asc())
+        .all()
+    )
+
+    return {
+        "id": test.id,
+        "title": test.title,
+        "time_limit_minutes": test.time_limit_minutes,
+        "status": test.status.value if hasattr(test.status, "value") else str(test.status),
+        "parts": [
+            {
+                "id": part.id,
+                "part_number": part.part_number,
+                "instruction": part.instruction,
+                "question": part.question,
+                "order_index": part.order_index
+            }
+            for part in parts
         ]
     }
 

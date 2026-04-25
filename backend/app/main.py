@@ -15,6 +15,7 @@ from app.api.admin_reading_stats import router as admin_reading_stats_router
 from app.api.admin_reading import router as admin_reading_router
 from app.api.admin_listening import router as admin_listening_router
 from app.api.admin_writing import router as admin_writing_router
+from app.api.admin_speaking import router as admin_speaking_router
 from app.api.writing import router as writing_router
 from app.api.speaking import router as speaking_router
 from .db import (
@@ -44,6 +45,7 @@ app.include_router(admin_upload_router)
 app.include_router(admin_reading_router)
 app.include_router(admin_listening_router)
 app.include_router(admin_writing_router)
+app.include_router(admin_speaking_router)
 app.include_router(mock_tests_router)
 app.include_router(writing_router)
 app.include_router(speaking_router)
