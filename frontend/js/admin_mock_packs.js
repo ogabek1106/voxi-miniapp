@@ -62,7 +62,7 @@ window.openMockPack = function (packId) {
     <button onclick="showPackReading(${packId})">📖 Reading</button>
     <button onclick="showPackWriting(${packId})">✍️ Writing</button>
     <button onclick="showPackListening(${packId})">🎧 Listening</button>
-    <button onclick="alert('Speaking coming')">🗣 Speaking</button>
+    <button onclick="showPackSpeaking(${packId})">🗣 Speaking</button>
     <button onclick="showAdminMockPacks()" style="margin-top:12px;">⬅ Back</button>
   `;
 };
@@ -75,6 +75,14 @@ window.showPackListening = function (packId) {
     return;
   }
   alert("Listening editor is not loaded.");
+};
+
+window.showPackSpeaking = function (packId) {
+  if (typeof window.startSpeakingMock === "function") {
+    window.startSpeakingMock(Number(packId));
+    return;
+  }
+  alert("Speaking module is not loaded.");
 };
 
 window.createMockPack = async function () {
