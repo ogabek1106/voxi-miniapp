@@ -1,11 +1,5 @@
 window.UserSpeakingLoader = window.UserSpeakingLoader || {};
 
-UserSpeakingLoader.PART_LIMITS = {
-  1: 25,
-  2: 120,
-  3: 40
-};
-
 UserSpeakingLoader.formatMMSS = function (seconds) {
   const safe = Math.max(0, Number(seconds || 0));
   const m = String(Math.floor(safe / 60)).padStart(2, "0");
@@ -16,6 +10,13 @@ UserSpeakingLoader.formatMMSS = function (seconds) {
 UserSpeakingLoader.getPartByIndex = function (index) {
   const state = UserSpeakingState.get();
   return state.parts[Number(index || 0)] || null;
+};
+
+UserSpeakingLoader.getPartTiming = function (partNumber) {
+  const key = Number(partNumber || 0);
+  const cfg = UserSpeakingState.TIMING?.[key];
+  if (cfg) return cfg;
+  return { prepSeconds: 10, maxRecordSeconds: 30 };
 };
 
 UserSpeakingLoader.resolveStartIndex = function () {
@@ -81,7 +82,10 @@ UserSpeakingLoader.startPrepPhase = function () {
     };
   }
 
-  const totalMs = 15000;
+  const currentPart = UserSpeakingLoader.getPartByIndex(state.partIndex);
+  const partNumber = Number(currentPart?.part_number || (state.partIndex + 1));
+  const timing = UserSpeakingLoader.getPartTiming(partNumber);
+  const totalMs = Number(timing.prepSeconds || 10) * 1000;
   const startedAt = performance.now();
 
   const tick = function (now) {
@@ -114,8 +118,9 @@ UserSpeakingLoader.startPrepPhase = function () {
 };
 
 UserSpeakingLoader.getPhase = function (elapsed, max) {
+  const heartbeatStart = Math.max(0, Number(max || 0) - 10);
+  if (elapsed >= heartbeatStart) return 3;
   const ratio = max > 0 ? elapsed / max : 0;
-  if (ratio >= 0.9) return 3;
   if (ratio >= 0.75) return 2;
   return 1;
 };
@@ -135,7 +140,8 @@ UserSpeakingLoader.startRecordingPhase = async function () {
   UserSpeakingUI.renderPart(part, "recording", "00:00");
 
   const partNumber = Number(part.part_number || (state.partIndex + 1));
-  const maxSec = Number(UserSpeakingLoader.PART_LIMITS[partNumber] || 40);
+  const timing = UserSpeakingLoader.getPartTiming(partNumber);
+  const maxSec = Number(timing.maxRecordSeconds || 30);
   const submitBtn = document.getElementById("speaking-action-btn");
   if (submitBtn) {
     submitBtn.onclick = function () {
@@ -263,14 +269,28 @@ UserSpeakingLoader.finishPart = async function (mode) {
 
     const nextIndex = state.partIndex + 1;
     if (nextIndex < 3) {
-      UserSpeakingTransitions.showPartSubmitted(`Part ${nextIndex + 1}`, function () {
-        UserSpeakingLoader.setPartIndex(nextIndex);
-        UserSpeakingLoader.renderCurrentPart();
+      if (mode === "auto") {
+        UserSpeakingTransitions.showAutoSubmitted(function () {
+          UserSpeakingLoader.setPartIndex(nextIndex);
+          UserSpeakingLoader.renderCurrentPart();
+        });
+      } else {
+        UserSpeakingTransitions.showPartSubmitted(`Part ${nextIndex + 1}`, function () {
+          UserSpeakingLoader.setPartIndex(nextIndex);
+          UserSpeakingLoader.renderCurrentPart();
+        });
+      }
+      return;
+    }
+
+    if (mode === "auto") {
+      UserSpeakingTransitions.showAutoSubmitted(function () {
+        UserSpeakingLoader.submitAll("auto");
       });
       return;
     }
 
-    await UserSpeakingLoader.submitAll(mode === "auto" ? "auto" : "manual");
+    await UserSpeakingLoader.submitAll("manual");
   } catch (error) {
     console.error("Speaking part submit failed:", error);
     alert("Failed to submit speaking part.");
@@ -401,6 +421,12 @@ UserSpeakingLoader.start = async function (mockId, container) {
 
   UserSpeakingUI.renderLoading(target);
   UserSpeakingState.reset();
+
+  const hasPermission = await UserSpeakingRecorder.requestPermissionAtStart();
+  if (!hasPermission) {
+    UserSpeakingUI.renderPermissionRequired(target);
+    return;
+  }
 
   try {
     const data = await UserSpeakingApi.start(mockId);

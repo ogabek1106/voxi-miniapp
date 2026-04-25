@@ -29,3 +29,20 @@ UserSpeakingTransitions.showChecking = function () {
     </div>
   `;
 };
+
+UserSpeakingTransitions.showAutoSubmitted = function (onDone) {
+  const content = document.getElementById("speaking-user-content");
+  if (!content) return;
+
+  content.innerHTML = `
+    <div class="question-block speaking-transition-card">
+      <div class="speaking-transition-title">Time is over.</div>
+      <div class="speaking-transition-text">Your answer has been submitted.</div>
+      <div class="speaking-transition-loader"></div>
+    </div>
+  `;
+
+  setTimeout(() => {
+    if (typeof onDone === "function") onDone();
+  }, 5000);
+};

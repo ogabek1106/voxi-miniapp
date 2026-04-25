@@ -1,5 +1,11 @@
 window.UserSpeakingState = window.UserSpeakingState || {};
 
+UserSpeakingState.TIMING = {
+  1: { prepSeconds: 10, maxRecordSeconds: 30 },
+  2: { prepSeconds: 65, maxRecordSeconds: 125 },
+  3: { prepSeconds: 15, maxRecordSeconds: 45 }
+};
+
 UserSpeakingState._state = {
   mockId: null,
   testId: null,
@@ -21,6 +27,7 @@ UserSpeakingState._state = {
   intervals: {
     globalTimer: null,
     prepCountdown: null,
+    prepRaf: null,
     recordTick: null
   },
   recorder: null,
@@ -45,6 +52,9 @@ UserSpeakingState.reset = function () {
   Object.values(state.intervals || {}).forEach((timerId) => {
     if (timerId) clearInterval(timerId);
   });
+  if (state.intervals?.prepRaf) {
+    cancelAnimationFrame(state.intervals.prepRaf);
+  }
 
   if (state.recorder && typeof state.recorder.cleanup === "function") {
     state.recorder.cleanup();
@@ -79,6 +89,7 @@ UserSpeakingState.reset = function () {
     intervals: {
       globalTimer: null,
       prepCountdown: null,
+      prepRaf: null,
       recordTick: null
     },
     recorder: null,

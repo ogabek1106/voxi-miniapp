@@ -24,6 +24,16 @@ UserSpeakingRecorder.ensureStream = async function () {
   return stream;
 };
 
+UserSpeakingRecorder.requestPermissionAtStart = async function () {
+  try {
+    await UserSpeakingRecorder.ensureStream();
+    return true;
+  } catch (error) {
+    console.error("Microphone permission denied:", error);
+    return false;
+  }
+};
+
 UserSpeakingRecorder.create = async function (opts = {}) {
   const stream = await UserSpeakingRecorder.ensureStream();
   const mimeType = UserSpeakingRecorder.getSupportedMimeType();

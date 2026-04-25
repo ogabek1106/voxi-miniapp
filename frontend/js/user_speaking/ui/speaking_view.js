@@ -47,6 +47,18 @@ UserSpeakingUI.renderError = function (container, error) {
   }
 };
 
+UserSpeakingUI.renderPermissionRequired = function (container) {
+  UserSpeakingUI.renderShell(container);
+  const content = document.getElementById("speaking-user-content");
+  if (!content) return;
+  content.innerHTML = `
+    <div class="question-block speaking-transition-card">
+      <div class="speaking-transition-title">Microphone Required</div>
+      <div class="speaking-transition-text">Microphone permission is required to take the Speaking test.</div>
+    </div>
+  `;
+};
+
 UserSpeakingUI.renderPart = function (part, stage, elapsedText) {
   const content = document.getElementById("speaking-user-content");
   if (!content) return;
