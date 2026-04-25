@@ -56,6 +56,15 @@ UserWritingApi.submit = async function (mockId, payload, finishType = "manual") 
   });
 };
 
+UserWritingApi.check = async function (mockId) {
+  const telegramId = UserWritingApi.getTelegramUserId();
+  if (!telegramId || !mockId) throw new Error("Missing telegram_id or mock id");
+
+  return await apiPost(`/mock-tests/${mockId}/writing/check`, {
+    telegram_id: telegramId
+  });
+};
+
 UserWritingApi.resume = async function (mockId) {
   const telegramId = UserWritingApi.getTelegramUserId();
   if (!telegramId || !mockId) return null;

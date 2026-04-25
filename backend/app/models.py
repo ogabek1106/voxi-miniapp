@@ -254,3 +254,9 @@ class WritingProgress(Base):
     submitted_at = Column(DateTime(timezone=True), nullable=True)
     is_submitted = Column(Boolean, nullable=False, default=False)
     finish_type = Column(String, nullable=True)  # manual / auto
+    ai_checked_at = Column(DateTime(timezone=True), nullable=True)
+    ai_overall_band = Column(Float, nullable=True)
+    ai_task1_band = Column(Float, nullable=True)
+    ai_task2_band = Column(Float, nullable=True)
+    ai_task1_result = Column(JSON, nullable=True)
+    ai_task2_result = Column(JSON, nullable=True)

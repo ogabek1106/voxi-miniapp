@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.config import ADMIN_IDS
 from app.deps import get_db
 from app.models import WritingProgress, WritingTask, WritingTest
+from app.services.writing_ai_checker import check_writing_progress
 
 router = APIRouter(prefix="/mock-tests", tags=["writing"])
 
@@ -26,6 +27,10 @@ class WritingSaveIn(BaseModel):
 
 class WritingSubmitIn(WritingSaveIn):
     finish_type: str = "manual"
+
+
+class WritingCheckIn(BaseModel):
+    telegram_id: int
 
 
 def _utcnow() -> datetime:
@@ -117,7 +122,9 @@ def _serialize_progress(progress: WritingProgress | None):
         "updated_at": _to_utc(progress.updated_at).isoformat() if progress.updated_at else None,
         "submitted_at": _to_utc(progress.submitted_at).isoformat() if progress.submitted_at else None,
         "is_submitted": bool(progress.is_submitted),
-        "finish_type": progress.finish_type
+        "finish_type": progress.finish_type,
+        "ai_checked_at": _to_utc(progress.ai_checked_at).isoformat() if progress.ai_checked_at else None,
+        "ai_overall_band": progress.ai_overall_band
     }
 
 
@@ -160,7 +167,13 @@ def start_writing(mock_id: int, payload: WritingStartIn, db: Session = Depends(g
             started_at=now,
             updated_at=now,
             is_submitted=False,
-            finish_type=None
+            finish_type=None,
+            ai_checked_at=None,
+            ai_overall_band=None,
+            ai_task1_band=None,
+            ai_task2_band=None,
+            ai_task1_result=None,
+            ai_task2_result=None
         )
         db.add(progress)
         db.commit()
@@ -177,6 +190,12 @@ def start_writing(mock_id: int, payload: WritingStartIn, db: Session = Depends(g
                 progress.submitted_at = None
                 progress.is_submitted = False
                 progress.finish_type = None
+                progress.ai_checked_at = None
+                progress.ai_overall_band = None
+                progress.ai_task1_band = None
+                progress.ai_task2_band = None
+                progress.ai_task1_result = None
+                progress.ai_task2_result = None
                 db.add(progress)
                 db.commit()
                 db.refresh(progress)
@@ -245,6 +264,12 @@ def save_writing(mock_id: int, payload: WritingSaveIn, db: Session = Depends(get
         progress.submitted_at = None
         progress.finish_type = None
         progress.started_at = now
+        progress.ai_checked_at = None
+        progress.ai_overall_band = None
+        progress.ai_task1_band = None
+        progress.ai_task2_band = None
+        progress.ai_task1_result = None
+        progress.ai_task2_result = None
 
     progress.task1_text = payload.task1_text
     progress.task1_image_url = payload.task1_image_url
@@ -294,6 +319,12 @@ def submit_writing(mock_id: int, payload: WritingSubmitIn, db: Session = Depends
         progress.submitted_at = None
         progress.finish_type = None
         progress.started_at = now
+        progress.ai_checked_at = None
+        progress.ai_overall_band = None
+        progress.ai_task1_band = None
+        progress.ai_task2_band = None
+        progress.ai_task1_result = None
+        progress.ai_task2_result = None
 
     progress.task1_text = payload.task1_text
     progress.task1_image_url = payload.task1_image_url
@@ -303,6 +334,12 @@ def submit_writing(mock_id: int, payload: WritingSubmitIn, db: Session = Depends
 
     mode = "auto" if str(payload.finish_type or "").lower() == "auto" or _is_time_up(progress, test, now) else "manual"
     _finalize(progress, test, mode, now)
+    progress.ai_checked_at = None
+    progress.ai_overall_band = None
+    progress.ai_task1_band = None
+    progress.ai_task2_band = None
+    progress.ai_task1_result = None
+    progress.ai_task2_result = None
     db.add(progress)
     db.commit()
     db.refresh(progress)
@@ -341,4 +378,56 @@ def resume_writing(mock_id: int, telegram_id: int, db: Session = Depends(get_db)
             "duration_seconds": max(int(test.time_limit_minutes or 60), 1) * 60
         },
         "progress": _serialize_progress(progress)
+    }
+
+
+@router.post("/{mock_id}/writing/check")
+def check_writing(mock_id: int, payload: WritingCheckIn, db: Session = Depends(get_db)):
+    test = _resolve_test_for_mock(db, mock_id, payload.telegram_id)
+    progress = (
+        db.query(WritingProgress)
+        .filter(
+            WritingProgress.test_id == test.id,
+            WritingProgress.telegram_id == payload.telegram_id
+        )
+        .first()
+    )
+    if not progress:
+        raise HTTPException(status_code=404, detail="Writing progress not found")
+    if not progress.is_submitted:
+        raise HTTPException(status_code=422, detail="Writing is not submitted yet")
+
+    if (
+        progress.ai_overall_band is not None
+        and isinstance(progress.ai_task1_result, dict)
+        and isinstance(progress.ai_task2_result, dict)
+    ):
+        return {
+            "overall_writing_band": float(progress.ai_overall_band),
+            "task1": progress.ai_task1_result,
+            "task2": progress.ai_task2_result,
+        }
+
+    tasks = (
+        db.query(WritingTask)
+        .filter(WritingTask.test_id == test.id)
+        .order_by(WritingTask.task_number.asc(), WritingTask.order_index.asc())
+        .all()
+    )
+    result = check_writing_progress(db, progress, tasks)
+
+    progress.ai_checked_at = _utcnow()
+    progress.ai_overall_band = float(result["overall_writing_band"])
+    progress.ai_task1_result = result["task1"]
+    progress.ai_task2_result = result["task2"]
+    progress.ai_task1_band = float(result["task1"]["overall_band"])
+    progress.ai_task2_band = float(result["task2"]["overall_band"])
+    progress.updated_at = _utcnow()
+    db.add(progress)
+    db.commit()
+
+    return {
+        "overall_writing_band": float(result["overall_writing_band"]),
+        "task1": result["task1"],
+        "task2": result["task2"],
     }

@@ -306,6 +306,30 @@ def ensure_writing_schema():
             "ADD COLUMN IF NOT EXISTS finish_type VARCHAR;"
         ))
         conn.execute(text(
+            "ALTER TABLE writing_progress "
+            "ADD COLUMN IF NOT EXISTS ai_checked_at TIMESTAMPTZ;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE writing_progress "
+            "ADD COLUMN IF NOT EXISTS ai_overall_band DOUBLE PRECISION;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE writing_progress "
+            "ADD COLUMN IF NOT EXISTS ai_task1_band DOUBLE PRECISION;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE writing_progress "
+            "ADD COLUMN IF NOT EXISTS ai_task2_band DOUBLE PRECISION;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE writing_progress "
+            "ADD COLUMN IF NOT EXISTS ai_task1_result JSON;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE writing_progress "
+            "ADD COLUMN IF NOT EXISTS ai_task2_result JSON;"
+        ))
+        conn.execute(text(
             "DO $$ "
             "BEGIN "
             "IF NOT EXISTS ("

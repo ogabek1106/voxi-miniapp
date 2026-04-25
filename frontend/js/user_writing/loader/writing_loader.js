@@ -129,7 +129,16 @@ UserWritingLoader.submit = async function (finishType = "manual") {
     const answers = UserWritingUI.readAnswers();
     await UserWritingApi.save(state.mockId, answers);
     await UserWritingApi.submit(state.mockId, answers, finishType);
-    UserWritingLoader.markSubmitted();
+    UserWritingLoader.markSubmitted(false);
+    try {
+      await UserWritingLoader.runAiCheckAndShowResult(state.mockId);
+    } catch (checkError) {
+      console.error("Writing AI check failed:", checkError);
+      alert("Writing submitted. Result is still being checked.");
+      if (typeof window.goHome === "function") {
+        window.goHome();
+      }
+    }
   } catch (error) {
     console.error("Writing submit failed:", error);
     alert("Failed to submit writing");
@@ -140,7 +149,7 @@ UserWritingLoader.submit = async function (finishType = "manual") {
   }
 };
 
-UserWritingLoader.markSubmitted = function () {
+UserWritingLoader.markSubmitted = function (showAlert = true) {
   const state = UserWritingState.get();
   if (state.autoSaveInterval) {
     clearInterval(state.autoSaveInterval);
@@ -174,7 +183,35 @@ UserWritingLoader.markSubmitted = function () {
     submitBtn.style.opacity = "0.7";
     submitBtn.style.cursor = "not-allowed";
   }
-  alert("Writing submitted.");
+  if (showAlert) {
+    alert("Writing submitted.");
+  }
+};
+
+UserWritingLoader.runAiCheckAndShowResult = async function (mockId) {
+  const target = document.getElementById("screen-writing");
+  if (!target) return;
+
+  UserWritingUI.renderChecking(target);
+
+  const result = await UserWritingApi.check(mockId);
+  const band = Number(result?.overall_writing_band || 0);
+
+  if (window.UserReading?.renderResultPage) {
+    target.innerHTML = "";
+    window.UserReading.renderResultPage(target, {
+      band,
+      correct: 0,
+      total: 40,
+      backTarget: "home"
+    });
+    return;
+  }
+
+  alert(`Writing Band: ${band.toFixed(1)}`);
+  if (typeof window.goHome === "function") {
+    window.goHome();
+  }
 };
 
 UserWritingLoader.start = async function (mockId, container) {
@@ -192,6 +229,11 @@ UserWritingLoader.start = async function (mockId, container) {
       autoSaveDirty: false,
       autoSaveInFlight: false
     });
+    if (data?.already_submitted) {
+      await UserWritingLoader.runAiCheckAndShowResult(Number(mockId));
+      return;
+    }
+
     UserWritingLoader.mount(target, data || {});
   } catch (error) {
     console.error(error);

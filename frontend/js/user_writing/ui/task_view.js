@@ -47,6 +47,34 @@ UserWritingUI.renderError = function (container, error) {
   }
 };
 
+UserWritingUI.renderChecking = function (container) {
+  if (!container) return;
+  container.innerHTML = `
+    <div style="
+      min-height:70vh;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:12px;
+      padding:20px;
+      box-sizing:border-box;
+      text-align:center;
+    ">
+      <div style="
+        width:34px;
+        height:34px;
+        border:4px solid #d1d5db;
+        border-top-color:#111827;
+        border-radius:999px;
+        animation: writing-check-spin 0.8s linear infinite;
+      "></div>
+      <div style="font-size:18px; font-weight:700;">Your answers are being checked</div>
+      <div style="font-size:13px; color:#666;">Please wait a moment.</div>
+    </div>
+  `;
+};
+
 UserWritingUI.normalizePromptText = function (value) {
   return String(value || "")
     .split("\n")
