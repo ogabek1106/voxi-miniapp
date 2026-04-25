@@ -25,6 +25,7 @@
   font-size: 18px;
   line-height: 1.6;
   text-align: left;
+  white-space: pre-line;
   margin-bottom: 18px;
 }
 
