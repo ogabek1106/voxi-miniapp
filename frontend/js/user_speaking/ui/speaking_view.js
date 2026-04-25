@@ -59,7 +59,6 @@ UserSpeakingUI.renderPart = function (part, stage, elapsedText) {
   const stageHtml = stage === "recording"
     ? `
       <div class="speaking-recording-zone">
-        ${isAdmin ? `<button type="button" id="speaking-submit-btn" class="speaking-submit-btn">Submit</button>` : ""}
         <div id="speaking-recording-timer" class="speaking-recording-timer">${UserSpeakingUI.escapeHtml(elapsedText || "00:00")}</div>
       </div>
     `
@@ -81,28 +80,27 @@ UserSpeakingUI.renderPart = function (part, stage, elapsedText) {
       <div class="speaking-part-question">${UserSpeakingUI.escapeHtml(question)}</div>
       ${stageHtml}
       <div id="speaking-stage-message" class="speaking-stage-message"></div>
+      ${isAdmin ? `
+        <div class="speaking-admin-controls">
+          <button type="button" id="speaking-admin-submit-btn" class="speaking-submit-btn speaking-admin-btn">Submit</button>
+          <button type="button" id="speaking-admin-continue-btn" class="speaking-submit-btn speaking-admin-btn">Continue</button>
+        </div>
+      ` : ""}
     </div>
   `;
 };
 
-UserSpeakingUI.setPrepRingProgress = function (leftSeconds, totalSeconds = 15) {
-  const ring = document.querySelector(".speaking-mic-ring");
-  if (!ring) return;
-  const safeTotal = Math.max(1, Number(totalSeconds || 15));
-  const left = Math.max(0, Math.min(safeTotal, Number(leftSeconds || 0)));
-  const progress = left / safeTotal;
-  ring.style.setProperty("--ring-progress", String(progress));
-};
-
 UserSpeakingUI.setRecordingPhase = function (phase) {
   const timerEl = document.getElementById("speaking-recording-timer");
-  const submitBtn = document.getElementById("speaking-submit-btn");
-  if (!timerEl || !submitBtn) return;
+  const submitBtn = document.getElementById("speaking-admin-submit-btn");
+  if (!timerEl) return;
 
   timerEl.classList.remove("phase-1", "phase-2", "phase-3");
-  submitBtn.classList.remove("phase-1", "phase-2", "phase-3");
   timerEl.classList.add(`phase-${phase}`);
-  submitBtn.classList.add(`phase-${phase}`);
+  if (submitBtn) {
+    submitBtn.classList.remove("phase-1", "phase-2", "phase-3");
+    submitBtn.classList.add(`phase-${phase}`);
+  }
 };
 
 UserSpeakingUI.updateRecordingTimer = function (value) {
@@ -112,7 +110,7 @@ UserSpeakingUI.updateRecordingTimer = function (value) {
 };
 
 UserSpeakingUI.setPulseLevel = function (active) {
-  const submitBtn = document.getElementById("speaking-submit-btn");
+  const submitBtn = document.getElementById("speaking-admin-submit-btn");
   if (!submitBtn) return;
   submitBtn.classList.toggle("speaking-audio-active", !!active);
 };
@@ -126,4 +124,23 @@ UserSpeakingUI.setStageMessage = function (text) {
 UserSpeakingUI.bindBack = function (onBack) {
   const backBtn = document.getElementById("speaking-back-btn");
   if (backBtn) backBtn.onclick = onBack;
+};
+
+UserSpeakingUI.mixColor = function (fromRgb, toRgb, ratio) {
+  const clamped = Math.max(0, Math.min(1, ratio));
+  const r = Math.round(fromRgb[0] + (toRgb[0] - fromRgb[0]) * clamped);
+  const g = Math.round(fromRgb[1] + (toRgb[1] - fromRgb[1]) * clamped);
+  const b = Math.round(fromRgb[2] + (toRgb[2] - fromRgb[2]) * clamped);
+  return `rgb(${r}, ${g}, ${b})`;
+};
+
+UserSpeakingUI.setPrepRingProgress = function (progressRatio) {
+  const ring = document.querySelector(".speaking-mic-ring");
+  if (!ring) return;
+
+  const ratio = Math.max(0, Math.min(1, Number(progressRatio || 0)));
+  const elapsed = 1 - ratio;
+  const color = UserSpeakingUI.mixColor([34, 197, 94], [220, 38, 38], elapsed);
+  ring.style.setProperty("--ring-progress", String(ratio));
+  ring.style.setProperty("--ring-color", color);
 };
