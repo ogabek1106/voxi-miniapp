@@ -83,11 +83,25 @@
   border-radius: 999px;
   background: #111827;
   color: #fff;
-  font-size: 17px;
+  font-size: 15px;
+  line-height: 1.15;
   font-weight: 900;
   cursor: pointer;
   box-shadow: 0 5px 14px rgba(0, 0, 0, 0.16);
   transition: transform 0.2s ease, background 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 8px;
+  box-sizing: border-box;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.speaking-submit-btn.is-busy {
+  font-size: 12px;
+  line-height: 1.2;
 }
 
 .speaking-admin-controls {

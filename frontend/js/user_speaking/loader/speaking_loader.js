@@ -244,6 +244,7 @@ UserSpeakingLoader.finishPart = async function (mode) {
   const submitBtn = document.getElementById("speaking-action-btn");
   if (submitBtn) {
     submitBtn.disabled = true;
+    submitBtn.classList.add("is-busy");
     submitBtn.textContent = mode === "auto" ? "Auto submitting..." : "Submitting...";
   }
 
@@ -296,6 +297,7 @@ UserSpeakingLoader.finishPart = async function (mode) {
     alert("Failed to submit speaking part.");
     if (submitBtn) {
       submitBtn.disabled = false;
+      submitBtn.classList.remove("is-busy");
       submitBtn.textContent = "Submit";
     }
   }
