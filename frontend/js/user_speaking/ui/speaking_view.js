@@ -54,17 +54,18 @@ UserSpeakingUI.renderPart = function (part, stage, elapsedText) {
   const partNo = Number(part?.part_number || 1);
   const instruction = String(part?.instruction || "").trim();
   const question = String(part?.question || "").trim();
-
   const isAdmin = !!UserSpeakingState.get()?.isAdmin;
+
   const stageHtml = stage === "recording"
     ? `
       <div class="speaking-recording-zone">
+        <button type="button" id="speaking-action-btn" class="speaking-submit-btn" aria-label="Submit part">Submit</button>
         <div id="speaking-recording-timer" class="speaking-recording-timer">${UserSpeakingUI.escapeHtml(elapsedText || "00:00")}</div>
       </div>
     `
     : `
       <div class="speaking-prep-zone">
-        <button type="button" id="speaking-mic-btn" class="speaking-mic-btn" aria-label="Start recording">
+        <button type="button" id="speaking-action-btn" class="speaking-mic-btn" aria-label="Start recording">
           <span class="speaking-mic-ring"></span>
           <span class="speaking-mic-core">🎤</span>
         </button>
@@ -82,8 +83,7 @@ UserSpeakingUI.renderPart = function (part, stage, elapsedText) {
       <div id="speaking-stage-message" class="speaking-stage-message"></div>
       ${isAdmin ? `
         <div class="speaking-admin-controls">
-          <button type="button" id="speaking-admin-submit-btn" class="speaking-submit-btn speaking-admin-btn">Submit</button>
-          <button type="button" id="speaking-admin-continue-btn" class="speaking-submit-btn speaking-admin-btn">Continue</button>
+          <button type="button" id="speaking-force-submit-btn" class="speaking-force-btn">Force Submit</button>
         </div>
       ` : ""}
     </div>
@@ -92,7 +92,7 @@ UserSpeakingUI.renderPart = function (part, stage, elapsedText) {
 
 UserSpeakingUI.setRecordingPhase = function (phase) {
   const timerEl = document.getElementById("speaking-recording-timer");
-  const submitBtn = document.getElementById("speaking-admin-submit-btn");
+  const submitBtn = document.getElementById("speaking-action-btn");
   if (!timerEl) return;
 
   timerEl.classList.remove("phase-1", "phase-2", "phase-3");
@@ -110,7 +110,7 @@ UserSpeakingUI.updateRecordingTimer = function (value) {
 };
 
 UserSpeakingUI.setPulseLevel = function (active) {
-  const submitBtn = document.getElementById("speaking-admin-submit-btn");
+  const submitBtn = document.getElementById("speaking-action-btn");
   if (!submitBtn) return;
   submitBtn.classList.toggle("speaking-audio-active", !!active);
 };

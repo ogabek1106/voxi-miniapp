@@ -73,9 +73,8 @@ UserSpeakingLoader.startPrepPhase = function () {
   if (state.intervals.prepRaf) {
     cancelAnimationFrame(state.intervals.prepRaf);
   }
-  UserSpeakingState.set({ adminPartReadyToContinue: false });
 
-  const micBtn = document.getElementById("speaking-mic-btn");
+  const micBtn = document.getElementById("speaking-action-btn");
   if (micBtn) {
     micBtn.onclick = function () {
       UserSpeakingLoader.startRecordingPhase();
@@ -111,7 +110,7 @@ UserSpeakingLoader.startPrepPhase = function () {
       prepRaf: rafId
     }
   });
-  UserSpeakingLoader.bindAdminControls("prep");
+  UserSpeakingLoader.bindForceSubmitButton();
 };
 
 UserSpeakingLoader.getPhase = function (elapsed, max) {
@@ -137,9 +136,13 @@ UserSpeakingLoader.startRecordingPhase = async function () {
 
   const partNumber = Number(part.part_number || (state.partIndex + 1));
   const maxSec = Number(UserSpeakingLoader.PART_LIMITS[partNumber] || 40);
-
-  const isAdmin = !!state.isAdmin;
-  UserSpeakingLoader.bindAdminControls("recording");
+  const submitBtn = document.getElementById("speaking-action-btn");
+  if (submitBtn) {
+    submitBtn.onclick = function () {
+      UserSpeakingLoader.finishPart("manual");
+    };
+  }
+  UserSpeakingLoader.bindForceSubmitButton();
 
   let elapsed = 0;
   UserSpeakingUI.setRecordingPhase(1);
@@ -160,7 +163,7 @@ UserSpeakingLoader.startRecordingPhase = async function () {
       const phase = UserSpeakingLoader.getPhase(elapsed, maxSec);
       UserSpeakingUI.setRecordingPhase(phase);
 
-      if (!isAdmin && elapsed >= maxSec) {
+      if (elapsed >= maxSec) {
         clearInterval(interval);
         UserSpeakingLoader.finishPart("auto");
       }
@@ -183,9 +186,47 @@ UserSpeakingLoader.finishPart = async function (mode) {
   const state = UserSpeakingState.get();
   const part = UserSpeakingLoader.getPartByIndex(state.partIndex);
   if (!part) return;
+  const isForce = mode === "force" && !!state.isAdmin;
 
   if (state.intervals.recordTick) {
     clearInterval(state.intervals.recordTick);
+  }
+
+  const partNumber = Number(part.part_number || (state.partIndex + 1));
+  if (isForce) {
+    try {
+      if (state.recorder && typeof state.recorder.cleanup === "function") {
+        state.recorder.cleanup();
+      }
+      await UserSpeakingApi.savePart(state.mockId, partNumber, null);
+
+      const nextProgress = { ...state.progress };
+      nextProgress[`part${partNumber}_audio_url`] = null;
+      UserSpeakingState.set({
+        progress: nextProgress,
+        recorder: null,
+        intervals: {
+          ...state.intervals,
+          recordTick: null,
+          prepRaf: null,
+          prepCountdown: null
+        }
+      });
+
+      const nextIndex = state.partIndex + 1;
+      if (nextIndex < 3) {
+        UserSpeakingLoader.setPartIndex(nextIndex);
+        UserSpeakingLoader.renderCurrentPart();
+        return;
+      }
+
+      await UserSpeakingLoader.submitAll("manual");
+      return;
+    } catch (error) {
+      console.error("Force submit failed:", error);
+      alert("Force submit failed.");
+      return;
+    }
   }
 
   const recorder = state.recorder;
@@ -194,7 +235,7 @@ UserSpeakingLoader.finishPart = async function (mode) {
     return;
   }
 
-  const submitBtn = document.getElementById("speaking-admin-submit-btn");
+  const submitBtn = document.getElementById("speaking-action-btn");
   if (submitBtn) {
     submitBtn.disabled = true;
     submitBtn.textContent = mode === "auto" ? "Auto submitting..." : "Submitting...";
@@ -202,7 +243,6 @@ UserSpeakingLoader.finishPart = async function (mode) {
 
   try {
     const result = await recorder.stop();
-    const partNumber = Number(part.part_number || (state.partIndex + 1));
     const ext = (result.blob?.type || "").includes("mp4") ? "m4a" : "webm";
     const fileName = `speaking_part${partNumber}.${ext}`;
     const audioUrl = await UserSpeakingApi.uploadAudio(result.blob, fileName);
@@ -213,7 +253,6 @@ UserSpeakingLoader.finishPart = async function (mode) {
     UserSpeakingState.set({
       progress: nextProgress,
       recorder: null,
-      adminPartReadyToContinue: !!state.isAdmin,
       intervals: {
         ...state.intervals,
         recordTick: null,
@@ -221,12 +260,6 @@ UserSpeakingLoader.finishPart = async function (mode) {
         prepCountdown: null
       }
     });
-
-    if (state.isAdmin) {
-      UserSpeakingUI.setStageMessage("Submitted. Tap Continue.");
-      UserSpeakingLoader.bindAdminControls("submitted");
-      return;
-    }
 
     const nextIndex = state.partIndex + 1;
     if (nextIndex < 3) {
@@ -263,7 +296,6 @@ UserSpeakingLoader.submitAll = async function (finishType = "manual") {
 
 UserSpeakingLoader.onGlobalTimeExpire = async function () {
   const state = UserSpeakingState.get();
-  if (state.isAdmin) return;
   if (state.isSubmitted) return;
 
   const recorder = state.recorder;
@@ -340,8 +372,7 @@ UserSpeakingLoader.mount = function (container, data) {
     isSubmitted: false,
     timer: {
       startedAt: data?.timer?.started_at || null,
-      endsAt: isAdmin ? null : timerEndsAt,
-      unlimited: isAdmin,
+      endsAt: timerEndsAt,
       durationSeconds: timerDuration
     }
   });
@@ -353,57 +384,15 @@ UserSpeakingLoader.mount = function (container, data) {
   UserSpeakingLoader.renderCurrentPart();
 };
 
-UserSpeakingLoader.bindAdminControls = function (stage) {
+UserSpeakingLoader.bindForceSubmitButton = function () {
   const state = UserSpeakingState.get();
   if (!state.isAdmin) return;
 
-  const submitBtn = document.getElementById("speaking-admin-submit-btn");
-  const continueBtn = document.getElementById("speaking-admin-continue-btn");
-  if (!submitBtn || !continueBtn) return;
-
-  if (stage === "prep") {
-    submitBtn.disabled = true;
-    submitBtn.style.opacity = "0.45";
-    continueBtn.disabled = false;
-    continueBtn.style.opacity = "1";
-    submitBtn.onclick = null;
-    continueBtn.onclick = function () {
-      UserSpeakingLoader.startRecordingPhase();
-    };
-    return;
-  }
-
-  if (stage === "recording") {
-    submitBtn.disabled = false;
-    submitBtn.style.opacity = "1";
-    continueBtn.disabled = true;
-    continueBtn.style.opacity = "0.45";
-    submitBtn.textContent = "Submit";
-    submitBtn.onclick = function () {
-      UserSpeakingLoader.finishPart("manual");
-    };
-    continueBtn.onclick = null;
-    return;
-  }
-
-  if (stage === "submitted") {
-    submitBtn.disabled = true;
-    submitBtn.style.opacity = "0.45";
-    submitBtn.textContent = "Submitted";
-    continueBtn.disabled = false;
-    continueBtn.style.opacity = "1";
-    continueBtn.onclick = function () {
-      const latest = UserSpeakingState.get();
-      if (!latest.adminPartReadyToContinue) return;
-      const nextIndex = latest.partIndex + 1;
-      if (nextIndex < 3) {
-        UserSpeakingLoader.setPartIndex(nextIndex);
-        UserSpeakingLoader.renderCurrentPart();
-        return;
-      }
-      UserSpeakingLoader.submitAll("manual");
-    };
-  }
+  const forceBtn = document.getElementById("speaking-force-submit-btn");
+  if (!forceBtn) return;
+  forceBtn.onclick = function () {
+    UserSpeakingLoader.finishPart("force");
+  };
 };
 
 UserSpeakingLoader.start = async function (mockId, container) {

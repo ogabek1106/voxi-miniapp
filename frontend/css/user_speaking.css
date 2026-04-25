@@ -61,6 +61,7 @@
   -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 7px), #000 calc(100% - 7px));
   mask: radial-gradient(farthest-side, transparent calc(100% - 7px), #000 calc(100% - 7px));
   box-sizing: border-box;
+  transition: background 0.06s linear;
 }
 
 .speaking-mic-core {
@@ -76,8 +77,8 @@
 }
 
 .speaking-submit-btn {
-  width: 100px;
-  height: 100px;
+  width: 106px;
+  height: 106px;
   border: 0;
   border-radius: 999px;
   background: #111827;
@@ -94,11 +95,22 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 14px;
+  gap: 10px;
 }
 
-.speaking-admin-btn {
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+.speaking-force-btn {
+  width: auto;
+  min-width: 128px;
+  height: 40px;
+  border: 0;
+  border-radius: 999px;
+  background: #dc2626;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  padding: 0 16px;
+  box-shadow: 0 6px 14px rgba(220, 38, 38, 0.25);
 }
 
 .speaking-recording-timer {
