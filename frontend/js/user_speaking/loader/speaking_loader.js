@@ -79,8 +79,10 @@ UserSpeakingLoader.startPrepPhase = function () {
   }
 
   let left = 15;
+  UserSpeakingUI.setPrepRingProgress(left, 15);
   const interval = setInterval(() => {
     left -= 1;
+    UserSpeakingUI.setPrepRingProgress(left, 15);
     if (left <= 0) {
       clearInterval(interval);
       UserSpeakingLoader.startRecordingPhase();
@@ -116,8 +118,9 @@ UserSpeakingLoader.startRecordingPhase = async function () {
   const partNumber = Number(part.part_number || (state.partIndex + 1));
   const maxSec = Number(UserSpeakingLoader.PART_LIMITS[partNumber] || 40);
 
+  const isAdmin = !!state.isAdmin;
   const submitBtn = document.getElementById("speaking-submit-btn");
-  if (submitBtn) {
+  if (isAdmin && submitBtn) {
     submitBtn.onclick = function () {
       UserSpeakingLoader.finishPart("manual");
     };
@@ -142,7 +145,7 @@ UserSpeakingLoader.startRecordingPhase = async function () {
       const phase = UserSpeakingLoader.getPhase(elapsed, maxSec);
       UserSpeakingUI.setRecordingPhase(phase);
 
-      if (elapsed >= maxSec) {
+      if (!isAdmin && elapsed >= maxSec) {
         clearInterval(interval);
         UserSpeakingLoader.finishPart("auto");
       }
@@ -236,6 +239,7 @@ UserSpeakingLoader.submitAll = async function (finishType = "manual") {
 
 UserSpeakingLoader.onGlobalTimeExpire = async function () {
   const state = UserSpeakingState.get();
+  if (state.isAdmin) return;
   if (state.isSubmitted) return;
 
   const recorder = state.recorder;
@@ -294,6 +298,7 @@ UserSpeakingLoader.runCheckAndShowResult = async function () {
 UserSpeakingLoader.mount = function (container, data) {
   UserSpeakingUI.renderShell(container);
 
+  const isAdmin = !!(data?.is_admin || window.__isAdmin);
   const timerDuration = Number(data?.timer?.duration_seconds || Number(data?.time_limit_minutes || 18) * 60);
   const timerEndsAt = data?.timer?.ends_at ? new Date(data.timer.ends_at).getTime() : (Date.now() + timerDuration * 1000);
 
@@ -307,10 +312,12 @@ UserSpeakingLoader.mount = function (container, data) {
       part2_audio_url: data?.progress?.part2_audio_url || null,
       part3_audio_url: data?.progress?.part3_audio_url || null
     },
+    isAdmin,
     isSubmitted: false,
     timer: {
       startedAt: data?.timer?.started_at || null,
-      endsAt: timerEndsAt,
+      endsAt: isAdmin ? null : timerEndsAt,
+      unlimited: isAdmin,
       durationSeconds: timerDuration
     }
   });

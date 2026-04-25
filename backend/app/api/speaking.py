@@ -182,6 +182,7 @@ def start_speaking(mock_id: int, payload: SpeakingStartIn, db: Session = Depends
                 if existing_result
                 else None
             ),
+            "is_admin": bool(is_admin),
         }
 
     if not progress:
@@ -205,7 +206,7 @@ def start_speaking(mock_id: int, payload: SpeakingStartIn, db: Session = Depends
             db.add(progress)
             db.commit()
             db.refresh(progress)
-        elif _is_time_up(progress, test, now):
+        elif (not is_admin) and _is_time_up(progress, test, now):
             progress.is_submitted = True
             progress.submitted_at = _deadline(progress, test) or now
             db.add(progress)
@@ -225,6 +226,7 @@ def start_speaking(mock_id: int, payload: SpeakingStartIn, db: Session = Depends
         },
         "parts": _serialize_parts(db, test.id),
         "progress": _serialize_progress(progress),
+        "is_admin": bool(is_admin),
     }
 
 
@@ -261,7 +263,7 @@ def save_speaking(mock_id: int, payload: SpeakingSaveIn, db: Session = Depends(g
 
     _apply_part_audio(progress, payload.part_number, payload.audio_url)
 
-    if _is_time_up(progress, test, now):
+    if (not is_admin) and _is_time_up(progress, test, now):
         progress.is_submitted = True
         progress.submitted_at = _deadline(progress, test) or now
         db.add(progress)

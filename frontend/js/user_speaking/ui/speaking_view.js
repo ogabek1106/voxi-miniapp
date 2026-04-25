@@ -55,10 +55,11 @@ UserSpeakingUI.renderPart = function (part, stage, elapsedText) {
   const instruction = String(part?.instruction || "").trim();
   const question = String(part?.question || "").trim();
 
+  const isAdmin = !!UserSpeakingState.get()?.isAdmin;
   const stageHtml = stage === "recording"
     ? `
       <div class="speaking-recording-zone">
-        <button type="button" id="speaking-submit-btn" class="speaking-submit-btn">Submit</button>
+        ${isAdmin ? `<button type="button" id="speaking-submit-btn" class="speaking-submit-btn">Submit</button>` : ""}
         <div id="speaking-recording-timer" class="speaking-recording-timer">${UserSpeakingUI.escapeHtml(elapsedText || "00:00")}</div>
       </div>
     `
@@ -82,6 +83,15 @@ UserSpeakingUI.renderPart = function (part, stage, elapsedText) {
       <div id="speaking-stage-message" class="speaking-stage-message"></div>
     </div>
   `;
+};
+
+UserSpeakingUI.setPrepRingProgress = function (leftSeconds, totalSeconds = 15) {
+  const ring = document.querySelector(".speaking-mic-ring");
+  if (!ring) return;
+  const safeTotal = Math.max(1, Number(totalSeconds || 15));
+  const left = Math.max(0, Math.min(safeTotal, Number(leftSeconds || 0)));
+  const progress = left / safeTotal;
+  ring.style.setProperty("--ring-progress", String(progress));
 };
 
 UserSpeakingUI.setRecordingPhase = function (phase) {

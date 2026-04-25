@@ -94,7 +94,17 @@ UserSpeakingUI.initTimer = function (timer, onExpire) {
     clearInterval(state.intervals.globalTimer);
   }
 
+  const isUnlimited = !!timer?.unlimited;
   const duration = Number(timer?.durationSeconds || 18 * 60);
+
+  if (isUnlimited) {
+    text.textContent = "∞";
+    fill.style.width = "100%";
+    fill.style.background = "rgb(34, 197, 94)";
+    text.style.color = "#ffffff";
+    return;
+  }
+
   const endsAt = Number(timer?.endsAt || (Date.now() + duration * 1000));
 
   const tick = function () {
