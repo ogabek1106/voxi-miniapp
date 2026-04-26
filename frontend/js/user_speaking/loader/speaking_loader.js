@@ -433,6 +433,10 @@ UserSpeakingLoader.bindForceSubmitButton = function () {
 };
 
 UserSpeakingLoader.start = async function (mockId, container) {
+  window.MockDebug?.log?.("Speaking.start.enter", {
+    mockId,
+    hasContainer: !!container
+  });
   const target = container || document.getElementById("screen-speaking");
   if (!target) return;
 
@@ -440,14 +444,17 @@ UserSpeakingLoader.start = async function (mockId, container) {
   UserSpeakingState.reset();
 
   const hasPermission = await UserSpeakingRecorder.requestPermissionAtStart();
+  window.MockDebug?.log?.("Speaking.start.permissionResult", { hasPermission });
   if (!hasPermission) {
     UserSpeakingUI.renderPermissionRequired(target);
     const grantBtn = document.getElementById("speaking-grant-access-btn");
     if (grantBtn) {
       grantBtn.onclick = async function () {
+        window.MockDebug?.log?.("Speaking.start.grantButton.click");
         grantBtn.disabled = true;
         grantBtn.textContent = "Requesting...";
         const granted = await UserSpeakingRecorder.requestPermissionAtStart();
+        window.MockDebug?.log?.("Speaking.start.grantButton.result", { granted });
         if (!granted) {
           grantBtn.disabled = false;
           grantBtn.textContent = "Grant access";
@@ -460,7 +467,12 @@ UserSpeakingLoader.start = async function (mockId, container) {
   }
 
   try {
+    window.MockDebug?.log?.("Speaking.start.api.start", { mockId });
     const data = await UserSpeakingApi.start(mockId);
+    window.MockDebug?.log?.("Speaking.start.api.done", {
+      hasData: !!data,
+      alreadySubmitted: !!data?.already_submitted
+    });
     UserSpeakingState.set({
       mockId: Number(data?.mock_id || mockId || 0) || null
     });

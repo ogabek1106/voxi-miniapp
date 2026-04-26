@@ -4,15 +4,32 @@ window.MockFlow = window.MockFlow || {
   mockId: null
 };
 
+window.MockDebug = window.MockDebug || {};
+MockDebug.enabled = true;
+MockDebug.seq = 0;
+MockDebug.log = function (tag, payload) {
+  if (!MockDebug.enabled) return;
+  MockDebug.seq += 1;
+  const ts = new Date().toISOString();
+  if (payload === undefined) {
+    console.log(`[MockDebug#${MockDebug.seq}] ${ts} ${tag}`);
+    return;
+  }
+  console.log(`[MockDebug#${MockDebug.seq}] ${ts} ${tag}`, payload);
+};
+
 MockFlow.activate = function (mockId) {
   MockFlow.active = true;
   MockFlow.mockId = Number(mockId || 0) || null;
+  MockDebug.log("MockFlow.activate", { mockId: MockFlow.mockId });
 };
 
 MockFlow.deactivate = function () {
+  MockDebug.log("MockFlow.deactivate", { mockId: MockFlow.mockId });
   MockFlow.active = false;
   MockFlow.mockId = null;
   if (window.MockTransitionPage?.cleanup) {
+    MockDebug.log("MockFlow.deactivate.cleanupTransition");
     window.MockTransitionPage.cleanup();
   }
 };
@@ -23,7 +40,12 @@ MockFlow.isActive = function (mockId) {
 };
 
 MockFlow.goToNextPart = function (currentPart, mockId, container) {
+  MockDebug.log("MockFlow.goToNextPart.enter", { currentPart, mockId, active: MockFlow.active, flowMockId: MockFlow.mockId });
   if (!MockFlow.isActive(mockId) || !window.MockTransitionPage?.show) {
+    MockDebug.log("MockFlow.goToNextPart.skip", {
+      isActive: MockFlow.isActive(mockId),
+      hasTransition: !!window.MockTransitionPage?.show
+    });
     return false;
   }
 
@@ -44,21 +66,25 @@ MockFlow.goToNextPart = function (currentPart, mockId, container) {
     currentPart: partLabel,
     nextPart: nextLabel,
     durationSeconds: 60,
-    onReady: function () {
+    onReady: async function () {
+      MockDebug.log("MockFlow.goToNextPart.onReady", { next, mockId: MockFlow.mockId });
       if (next === "reading") {
-        window.startMock(MockFlow.mockId, { fromFlow: true });
+        await window.startMock(MockFlow.mockId, { fromFlow: true });
         return;
       }
       if (next === "writing") {
-        window.startWritingMock(MockFlow.mockId, { fromFlow: true });
+        await window.startWritingMock(MockFlow.mockId, { fromFlow: true });
         return;
       }
       if (next === "speaking") {
-        window.startSpeakingMock(MockFlow.mockId, { fromFlow: true });
+        await window.startSpeakingMock(MockFlow.mockId, { fromFlow: true });
+        return;
       }
+      MockDebug.log("MockFlow.goToNextPart.onReady.unknownNext", { next });
     }
   });
 
+  MockDebug.log("MockFlow.goToNextPart.transitionShown", { from: current, to: next, mockId });
   return true;
 };
 
@@ -142,11 +168,13 @@ window.openMockWarning = function (packId, title) {
 };
 
 window.startFullMock = async function (mockId) {
+  MockDebug.log("startFullMock.enter", { mockId });
   MockFlow.activate(mockId);
   await window.startListeningMock(mockId, { fromFlow: true });
 };
 
 window.startMock = async function (mockId, options = {}) {
+  MockDebug.log("startMock.enter", { mockId, options });
   if (!options.fromFlow) {
     MockFlow.deactivate();
   }
@@ -168,6 +196,7 @@ window.startMock = async function (mockId, options = {}) {
   try {
 
     const telegramId = window.getTelegramId();
+    MockDebug.log("startMock.api.startReading", { mockId, telegramId });
     const data = await apiGet(`/mock-tests/${mockId}/reading/start?telegram_id=${telegramId}`);
 
     if (data?.already_submitted) {
@@ -185,9 +214,11 @@ window.startMock = async function (mockId, options = {}) {
     }
 
     UserReading.renderTest(screenReading, data);
+    MockDebug.log("startMock.renderedReading", { mockId });
 
   } catch (e) {
     console.error(e);
+    MockDebug.log("startMock.error", { message: e?.message || String(e) });
 
     UserReading.renderError(screenReading, e);
 
@@ -196,6 +227,7 @@ window.startMock = async function (mockId, options = {}) {
 };
 
 window.startWritingMock = async function (mockId, options = {}) {
+  MockDebug.log("startWritingMock.enter", { mockId, options });
   if (!options.fromFlow) {
     MockFlow.deactivate();
   }
@@ -213,14 +245,17 @@ window.startWritingMock = async function (mockId, options = {}) {
   screenWriting.style.display = "block";
 
   if (!window.UserWritingLoader?.start) {
+    MockDebug.log("startWritingMock.loaderMissing");
     screenWriting.innerHTML = "<p>Writing module is not loaded.</p>";
     return;
   }
 
   await window.UserWritingLoader.start(mockId, screenWriting);
+  MockDebug.log("startWritingMock.loaderDone", { mockId });
 };
 
 window.startListeningMock = async function (mockId, options = {}) {
+  MockDebug.log("startListeningMock.enter", { mockId, options });
   if (!options.fromFlow) {
     MockFlow.deactivate();
   }
@@ -330,6 +365,7 @@ window.startListeningMock = async function (mockId, options = {}) {
   }
 
   try {
+    MockDebug.log("startListeningMock.api.loadAdminListening", { mockId });
     const dataRaw = await apiGet(`/admin/listening/mock-packs/${mockId}`);
     const data = normalizeListeningStartPayload(dataRaw, mockId);
 
@@ -339,13 +375,16 @@ window.startListeningMock = async function (mockId, options = {}) {
     }
 
     UserListening.renderTest(screenReading, data);
+    MockDebug.log("startListeningMock.renderedListening", { mockId, sections: Array.isArray(data.sections) ? data.sections.length : 0 });
   } catch (e) {
     console.error(e);
+    MockDebug.log("startListeningMock.error", { message: e?.message || String(e) });
     UserListening.renderError(screenReading, e);
   }
 };
 
 window.startSpeakingMock = async function (mockId, options = {}) {
+  MockDebug.log("startSpeakingMock.enter", { mockId, options });
   if (!options.fromFlow) {
     MockFlow.deactivate();
   }
@@ -363,9 +402,11 @@ window.startSpeakingMock = async function (mockId, options = {}) {
   screenSpeaking.style.display = "block";
 
   if (!window.UserSpeakingLoader?.start) {
+    MockDebug.log("startSpeakingMock.loaderMissing");
     screenSpeaking.innerHTML = "<p>Speaking module is not loaded.</p>";
     return;
   }
 
   await window.UserSpeakingLoader.start(mockId, screenSpeaking);
+  MockDebug.log("startSpeakingMock.loaderDone", { mockId });
 };

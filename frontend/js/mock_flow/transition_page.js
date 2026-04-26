@@ -95,6 +95,11 @@ MockTransitionPage.ensureStyles = function () {
 };
 
 MockTransitionPage.cleanup = function () {
+  if (window.MockDebug?.log) {
+    window.MockDebug.log("Transition.cleanup.enter", {
+      hasActive: !!MockTransitionPage._active
+    });
+  }
   const active = MockTransitionPage._active;
   if (!active) return;
 
@@ -111,9 +116,20 @@ MockTransitionPage.cleanup = function () {
     active.readyBtn.removeEventListener("click", active.readyHandler);
   }
   MockTransitionPage._active = null;
+  if (window.MockDebug?.log) {
+    window.MockDebug.log("Transition.cleanup.done");
+  }
 };
 
 MockTransitionPage.show = function (config = {}) {
+  if (window.MockDebug?.log) {
+    window.MockDebug.log("Transition.show.enter", {
+      currentPart: config?.currentPart,
+      nextPart: config?.nextPart,
+      durationSeconds: config?.durationSeconds,
+      isFinal: !!config?.isFinal
+    });
+  }
   MockTransitionPage.cleanup();
   MockTransitionPage.ensureStyles();
 
@@ -146,6 +162,9 @@ MockTransitionPage.show = function (config = {}) {
       : "";
 
   if (isFinal) {
+    if (window.MockDebug?.log) {
+      window.MockDebug.log("Transition.show.final.rendered", { durationSeconds });
+    }
     container.innerHTML = `
       <div class="mock-flow-transition-wrap">
         <div class="mock-flow-transition-card">
@@ -181,6 +200,12 @@ MockTransitionPage.show = function (config = {}) {
   const readyBtn = document.getElementById("mock-flow-transition-ready");
   const readyLoader = document.getElementById("mock-flow-transition-ready-loader");
   const finishWithLoading = function () {
+    if (window.MockDebug?.log) {
+      window.MockDebug.log("Transition.finishWithLoading.called", {
+        done,
+        nextPart
+      });
+    }
     if (done) return;
     done = true;
 
@@ -193,10 +218,18 @@ MockTransitionPage.show = function (config = {}) {
     }
 
     MockTransitionPage.cleanup();
+    if (window.MockDebug?.log) {
+      window.MockDebug.log("Transition.finishWithLoading.onReady");
+    }
     onReady();
   };
 
   const readyHandler = function () {
+    if (window.MockDebug?.log) {
+      window.MockDebug.log("Transition.ready.clicked", {
+        currentText: countdownEl?.textContent || null
+      });
+    }
     finishWithLoading();
   };
   if (readyBtn) {
@@ -204,6 +237,7 @@ MockTransitionPage.show = function (config = {}) {
   }
 
   const endAtMs = Date.now() + durationSeconds * 1000;
+  let lastLoggedLeft = null;
   MockTransitionPage._active = {
     intervalId: null,
     tickTimeoutId: null,
@@ -217,7 +251,16 @@ MockTransitionPage.show = function (config = {}) {
     if (countdownEl) {
       countdownEl.textContent = String(left);
     }
+    if (window.MockDebug?.log && left !== lastLoggedLeft) {
+      if (left === durationSeconds || left % 5 === 0 || left <= 5) {
+        window.MockDebug.log("Transition.tick", { left, nextPart });
+      }
+      lastLoggedLeft = left;
+    }
     if (left <= 0) {
+      if (window.MockDebug?.log) {
+        window.MockDebug.log("Transition.tick.reachedZero");
+      }
       finishWithLoading();
       return;
     }

@@ -118,6 +118,9 @@ UserWritingLoader.initAutoSave = function (data) {
 };
 
 UserWritingLoader.submit = async function (finishType = "manual") {
+  window.MockDebug?.log?.("Writing.submit.enter", {
+    finishType
+  });
   const submitBtn = document.getElementById("writing-submit-btn");
   if (submitBtn) {
     submitBtn.disabled = true;
@@ -127,18 +130,32 @@ UserWritingLoader.submit = async function (finishType = "manual") {
   try {
     const state = UserWritingState.get();
     const answers = UserWritingUI.readAnswers();
+    window.MockDebug?.log?.("Writing.submit.state", {
+      mockId: state?.mockId,
+      isSubmitted: state?.isSubmitted
+    });
 
     const isFullMockFlow = !!window.MockFlow?.isActive?.(state.mockId);
+    window.MockDebug?.log?.("Writing.submit.isFullMockFlow", {
+      isFullMockFlow,
+      mockId: state?.mockId
+    });
     if (isFullMockFlow) {
       UserWritingLoader.markSubmitted(false);
+      window.MockDebug?.log?.("Writing.submit.markSubmittedForFlow");
 
       // Do not block transition UI on backend latency.
       (async function submitInBackground() {
         try {
+          window.MockDebug?.log?.("Writing.submit.background.start");
           await UserWritingApi.save(state.mockId, answers);
           await UserWritingApi.submit(state.mockId, answers, finishType);
+          window.MockDebug?.log?.("Writing.submit.background.done");
         } catch (backgroundError) {
           console.error("Writing background submit failed:", backgroundError);
+          window.MockDebug?.log?.("Writing.submit.background.error", {
+            message: backgroundError?.message || String(backgroundError)
+          });
         }
       })();
 
@@ -147,6 +164,7 @@ UserWritingLoader.submit = async function (finishType = "manual") {
         state.mockId,
         document.getElementById("screen-writing")
       );
+      window.MockDebug?.log?.("Writing.submit.goToNextPart.result", { flowMoved });
       if (flowMoved) {
         return;
       }
@@ -157,6 +175,7 @@ UserWritingLoader.submit = async function (finishType = "manual") {
     await UserWritingApi.save(state.mockId, answers);
     await UserWritingApi.submit(state.mockId, answers, finishType);
     UserWritingLoader.markSubmitted(false);
+    window.MockDebug?.log?.("Writing.submit.nonFlow.submitDone");
 
     const flowMoved = window.MockFlow?.goToNextPart?.(
       "writing",
@@ -178,6 +197,9 @@ UserWritingLoader.submit = async function (finishType = "manual") {
     }
   } catch (error) {
     console.error("Writing submit failed:", error);
+    window.MockDebug?.log?.("Writing.submit.error", {
+      message: error?.message || String(error)
+    });
     alert("Failed to submit writing");
     if (submitBtn) {
       submitBtn.disabled = false;
