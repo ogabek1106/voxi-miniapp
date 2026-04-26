@@ -85,23 +85,59 @@ window.openMockWarning = function (packId, title) {
   if (!screenMocks) return;
 
   screenMocks.innerHTML = `
-    <h3>${title}</h3>
+    <div style="
+      width:100%;
+      box-sizing:border-box;
+      text-align:left;
+      background: var(--card-bg, #f4f4f6);
+      border-radius:16px;
+      padding:16px 14px;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    ">
+      <div style="
+        font-size:20px;
+        font-weight:800;
+        color:#111827;
+        margin-bottom:4px;
+      ">${title}</div>
 
-    <h4>IELTS Mock Test Warning</h4>
+      <div style="
+        font-size:14px;
+        font-weight:700;
+        color:#111827;
+        margin-bottom:10px;
+      ">Full IELTS Mock Test Warning</div>
 
-    <p style="text-align:left; line-height:1.5;">
-      - The timer will start immediately<br>
-      - Do not refresh the page<br>
-      - Complete all sections in order
-    </p>
+      <div style="
+        font-size:13px;
+        line-height:1.55;
+        color:#374151;
+      ">
+        This full mock simulates real exam pressure. Please read before you start:
+      </div>
 
-    <button onclick="startFullMock(${packId})">
-      Start Test
-    </button>
+      <ul style="
+        margin:10px 0 0 18px;
+        padding:0;
+        color:#374151;
+        font-size:13px;
+        line-height:1.6;
+      ">
+        <li>The test starts from Listening and continues in fixed order: Reading, Writing, Speaking.</li>
+        <li>After each part, you get a short transition timer to prepare for the next part.</li>
+        <li>Do not refresh or close the app during the test.</li>
+        <li>If you leave, your timer does not pause and exam pressure is preserved.</li>
+        <li>You should not exit the test until all parts are completed.</li>
+      </ul>
 
-    <button onclick="showMockList()" style="margin-top:10px;">
-      Back
-    </button>
+      <button onclick="startFullMock(${packId})" style="margin-top:14px;">
+        Start Full Mock
+      </button>
+
+      <button onclick="showMockList()" style="margin-top:8px; background:#e5e7eb; color:#111827;">
+        Back
+      </button>
+    </div>
   `;
 };
 
