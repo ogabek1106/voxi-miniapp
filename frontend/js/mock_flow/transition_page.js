@@ -64,6 +64,11 @@ MockTransitionPage.ensureStyles = function () {
       margin-top: 6px;
     }
 
+    .mock-flow-transition-ready[disabled] {
+      opacity: 0.75;
+      cursor: not-allowed;
+    }
+
     .mock-flow-transition-loader {
       width: 28px;
       height: 28px;
@@ -163,6 +168,7 @@ MockTransitionPage.show = function (config = {}) {
         <div class="mock-flow-transition-text">You have ${durationSeconds} seconds to prepare.</div>
         <div id="mock-flow-transition-countdown" class="mock-flow-transition-countdown">${left}</div>
         <button type="button" id="mock-flow-transition-ready" class="mock-flow-transition-ready">Ready</button>
+        <div id="mock-flow-transition-ready-loader" class="mock-flow-transition-loader" style="display:none;"></div>
         ${tipHtml}
       </div>
     </div>
@@ -170,22 +176,40 @@ MockTransitionPage.show = function (config = {}) {
 
   const countdownEl = document.getElementById("mock-flow-transition-countdown");
   const readyBtn = document.getElementById("mock-flow-transition-ready");
+  const readyLoader = document.getElementById("mock-flow-transition-ready-loader");
+  const finishWithLoading = function () {
+    if (done) return;
+    done = true;
+
+    if (readyBtn) {
+      readyBtn.disabled = true;
+      readyBtn.textContent = `Opening ${nextPart}...`;
+    }
+    if (readyLoader) {
+      readyLoader.style.display = "block";
+    }
+
+    MockTransitionPage.cleanup();
+    onReady();
+  };
+
   const readyHandler = function () {
-    finish();
+    finishWithLoading();
   };
   if (readyBtn) {
     readyBtn.addEventListener("click", readyHandler);
   }
 
+  const endAtMs = Date.now() + durationSeconds * 1000;
   const intervalId = setInterval(() => {
-    left -= 1;
+    left = Math.max(0, Math.ceil((endAtMs - Date.now()) / 1000));
     if (countdownEl) {
-      countdownEl.textContent = String(Math.max(0, left));
+      countdownEl.textContent = String(left);
     }
     if (left <= 0) {
-      finish();
+      finishWithLoading();
     }
-  }, 1000);
+  }, 250);
 
   MockTransitionPage._active = {
     intervalId,
