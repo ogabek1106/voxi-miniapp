@@ -75,6 +75,7 @@ def get_me(telegram_id: int, db: Session = Depends(get_db)):
     return {
         "name": user.name,
         "surname": user.surname,
+        "v_coins": int(user.v_coins or 0),
         "is_admin": user.telegram_id in ADMIN_IDS,
         "last_activity": last_activity
     }

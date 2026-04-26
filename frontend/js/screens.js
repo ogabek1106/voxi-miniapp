@@ -310,6 +310,7 @@ async function renderProfile() {
 
     const name = me.name || "";
     const surname = me.surname || "";
+    const vCoins = Number(me.v_coins || 0);
 
     screenProfile.innerHTML = `
       <div style="display:flex; flex-direction:column; align-items:center; gap:16px; width:100%;">
@@ -358,6 +359,19 @@ async function renderProfile() {
           padding:0;
           cursor:pointer;
         ">Edit profile</button>
+
+        <div style="
+          width:100%;
+          box-sizing:border-box;
+          background:var(--card-bg);
+          border-radius:14px;
+          padding:14px;
+          font-size:16px;
+          font-weight:700;
+          text-align:center;
+        ">
+          V-Coin balance: ${vCoins}
+        </div>
 
         ${lastActivityHtml}
       </div>

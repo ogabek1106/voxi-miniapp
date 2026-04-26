@@ -13,6 +13,7 @@ class User(Base):
     telegram_id = Column(BigInteger, unique=True, index=True, nullable=False)
     name = Column(String, nullable=True)
     surname = Column(String, nullable=True)
+    v_coins = Column(Integer, nullable=False, default=0)
 
 
 class ReadingTestStatus(enum.Enum):

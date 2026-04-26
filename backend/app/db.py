@@ -676,3 +676,67 @@ def ensure_full_mock_results_schema():
             "END "
             "$$;"
         ))
+
+
+def ensure_vcoin_schema():
+    with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+        conn.execute(text(
+            "ALTER TABLE users "
+            "ADD COLUMN IF NOT EXISTS v_coins INTEGER NOT NULL DEFAULT 0;"
+        ))
+
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS payment_requests ("
+            "id SERIAL PRIMARY KEY, "
+            "telegram_id BIGINT NOT NULL, "
+            "package_code VARCHAR NULL, "
+            "expected_price VARCHAR NULL, "
+            "coins_to_add INTEGER NOT NULL, "
+            "receipt_file_id TEXT NULL, "
+            "receipt_image_hash VARCHAR NULL, "
+            "status VARCHAR NOT NULL DEFAULT 'pending', "
+            "created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), "
+            "confirmed_at TIMESTAMPTZ NULL, "
+            "rejected_at TIMESTAMPTZ NULL, "
+            "admin_id BIGINT NULL, "
+            "reject_reason TEXT NULL, "
+            "raw_payload JSON NULL"
+            ");"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_payment_requests_telegram_id "
+            "ON payment_requests (telegram_id);"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_payment_requests_receipt_image_hash "
+            "ON payment_requests (receipt_image_hash);"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_payment_requests_status "
+            "ON payment_requests (status);"
+        ))
+
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS coin_ledger ("
+            "id SERIAL PRIMARY KEY, "
+            "telegram_id BIGINT NOT NULL, "
+            "delta INTEGER NOT NULL, "
+            "reason VARCHAR NOT NULL, "
+            "reference_type VARCHAR NULL, "
+            "reference_id VARCHAR NULL, "
+            "balance_after INTEGER NOT NULL, "
+            "created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()"
+            ");"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_coin_ledger_telegram_id "
+            "ON coin_ledger (telegram_id);"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_coin_ledger_reason "
+            "ON coin_ledger (reason);"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_coin_ledger_reference_id "
+            "ON coin_ledger (reference_id);"
+        ))

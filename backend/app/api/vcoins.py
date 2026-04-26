@@ -1,0 +1,105 @@
+import os
+from typing import Any, Dict, Optional
+
+from fastapi import APIRouter, Body, Depends, Header, HTTPException, Query
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
+
+from app.deps import get_db
+from app.services.payment_service import (
+    confirm_payment,
+    create_payment_request,
+    reject_payment,
+)
+from app.services.vcoin_service import get_balance
+
+
+router = APIRouter(prefix="/vcoins", tags=["vcoins"])
+
+
+class PaymentRequestIn(BaseModel):
+    telegram_id: int
+    package_code: Optional[str] = None
+    coins: int
+    price: Optional[str] = None
+    receipt_file_id: Optional[str] = None
+    receipt_image_hash: Optional[str] = None
+    submitted_at: Optional[str] = None
+
+    class Config:
+        extra = "allow"
+
+
+class PaymentActionIn(BaseModel):
+    admin_id: Optional[int] = None
+    admin_telegram_id: Optional[int] = None
+    reject_reason: Optional[str] = None
+    reason: Optional[str] = None
+
+
+def require_backend_token(authorization: str = Header(default="")):
+    expected = os.getenv("VCOIN_BACKEND_TOKEN", "")
+    if not expected:
+        raise HTTPException(status_code=503, detail="vcoin_backend_token_not_configured")
+
+    prefix = "Bearer "
+    if not authorization.startswith(prefix) or authorization[len(prefix):] != expected:
+        raise HTTPException(status_code=401, detail="invalid_vcoin_backend_token")
+
+
+@router.post("/payment-requests")
+def create_vcoin_payment_request(
+    payload: PaymentRequestIn,
+    db: Session = Depends(get_db),
+    _: None = Depends(require_backend_token),
+):
+    data: Dict[str, Any] = payload.model_dump()
+    payment = create_payment_request(db, data)
+    duplicate = payment.status == "duplicate_suspected"
+    return {
+        "ok": True,
+        "payment_id": payment.id,
+        "status": payment.status,
+        "duplicate_suspected": duplicate,
+        "telegram_id": payment.telegram_id,
+    }
+
+
+@router.post("/payment-requests/{payment_id}/confirm")
+def confirm_vcoin_payment(
+    payment_id: int,
+    payload: PaymentActionIn = Body(default_factory=PaymentActionIn),
+    db: Session = Depends(get_db),
+    _: None = Depends(require_backend_token),
+):
+    admin_id = payload.admin_id if payload.admin_id is not None else payload.admin_telegram_id
+    return confirm_payment(db, payment_id, admin_id=admin_id)
+
+
+@router.post("/payment-requests/{payment_id}/reject")
+def reject_vcoin_payment(
+    payment_id: int,
+    payload: PaymentActionIn = Body(default_factory=PaymentActionIn),
+    db: Session = Depends(get_db),
+    _: None = Depends(require_backend_token),
+):
+    admin_id = payload.admin_id if payload.admin_id is not None else payload.admin_telegram_id
+    reason = payload.reject_reason or payload.reason
+    return reject_payment(db, payment_id, admin_id=admin_id, reason=reason)
+
+
+@router.get("/balance")
+def get_vcoin_balance(telegram_id: int = Query(...), db: Session = Depends(get_db)):
+    return {
+        "telegram_id": int(telegram_id),
+        "v_coins": get_balance(db, telegram_id),
+    }
+
+
+@router.get("/balance/{telegram_id}")
+def get_vcoin_balance_by_path(telegram_id: int, db: Session = Depends(get_db)):
+    return {
+        "telegram_id": int(telegram_id),
+        "v_coins": get_balance(db, telegram_id),
+        "balance": get_balance(db, telegram_id),
+    }
