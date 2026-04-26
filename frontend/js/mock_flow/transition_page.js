@@ -169,6 +169,7 @@ MockTransitionPage.show = function (config = {}) {
   const tipTitle = String(config.tipTitle || "").trim();
   const tipText = String(config.tipText || "").trim();
   const tips = Array.isArray(config.tips) ? config.tips.filter(Boolean) : [];
+  const runId = ++MockTransitionPage._runSeq;
 
   let left = durationSeconds;
   let done = false;
@@ -213,22 +214,26 @@ MockTransitionPage.show = function (config = {}) {
         <div class="mock-flow-transition-title">You finished ${currentPart}</div>
         <div class="mock-flow-transition-text">Now you will be redirected to the next part: ${nextPart}</div>
         <div class="mock-flow-transition-text">You have ${durationSeconds} seconds to prepare.</div>
-        <div id="mock-flow-transition-countdown" class="mock-flow-transition-countdown">${left}</div>
+        <div id="mock-flow-transition-countdown-${runId}" class="mock-flow-transition-countdown">${left}</div>
         <div class="mock-flow-transition-progress">
-          <div id="mock-flow-transition-progress-fill" class="mock-flow-transition-progress-fill"></div>
+          <div id="mock-flow-transition-progress-fill-${runId}" class="mock-flow-transition-progress-fill"></div>
         </div>
-        <button type="button" id="mock-flow-transition-ready" class="mock-flow-transition-ready">Ready</button>
-        <div id="mock-flow-transition-ready-loader" class="mock-flow-transition-loader" style="display:none;"></div>
+        <button type="button" id="mock-flow-transition-ready-${runId}" class="mock-flow-transition-ready">Ready</button>
+        <div id="mock-flow-transition-ready-loader-${runId}" class="mock-flow-transition-loader" style="display:none;"></div>
         ${tipHtml}
       </div>
     </div>
   `;
 
-  const countdownEl = container.querySelector("#mock-flow-transition-countdown");
-  const progressFillEl = container.querySelector("#mock-flow-transition-progress-fill");
-  const readyBtn = container.querySelector("#mock-flow-transition-ready");
-  const readyLoader = container.querySelector("#mock-flow-transition-ready-loader");
-  const runId = ++MockTransitionPage._runSeq;
+  const countdownNodeId = `mock-flow-transition-countdown-${runId}`;
+  const progressNodeId = `mock-flow-transition-progress-fill-${runId}`;
+  const readyBtnId = `mock-flow-transition-ready-${runId}`;
+  const readyLoaderId = `mock-flow-transition-ready-loader-${runId}`;
+
+  const countdownEl = document.getElementById(countdownNodeId);
+  const progressFillEl = document.getElementById(progressNodeId);
+  const readyBtn = document.getElementById(readyBtnId);
+  const readyLoader = document.getElementById(readyLoaderId);
 
   if (window.MockDebug?.log) {
     window.MockDebug.log("Transition.show.nodes", {
@@ -277,7 +282,7 @@ MockTransitionPage.show = function (config = {}) {
   };
 
   const containerClickHandler = function (event) {
-    const btn = event.target?.closest?.("#mock-flow-transition-ready");
+    const btn = event.target?.closest?.(".mock-flow-transition-ready");
     if (!btn) return;
     if (window.MockDebug?.log) {
       window.MockDebug.log("Transition.ready.delegatedClick", {
@@ -311,12 +316,36 @@ MockTransitionPage.show = function (config = {}) {
     if (!active || active.runId !== runId || done) return;
 
     left = Math.max(0, Math.ceil((endAtMs - Date.now()) / 1000));
-    if (countdownEl) {
-      countdownEl.textContent = String(left);
+    const value = String(left);
+    const ratio = Math.max(0, Math.min(1, left / durationSeconds));
+    const width = `${Math.round(ratio * 100)}%`;
+
+    // Update by id first (fast path).
+    const liveCountdownEl = document.getElementById(countdownNodeId) || countdownEl;
+    const liveProgressEl = document.getElementById(progressNodeId) || progressFillEl;
+    if (liveCountdownEl) {
+      liveCountdownEl.textContent = value;
+      liveCountdownEl.innerText = value;
+      liveCountdownEl.setAttribute("data-left", value);
     }
-    if (progressFillEl) {
-      const ratio = Math.max(0, Math.min(1, left / durationSeconds));
-      progressFillEl.style.width = `${Math.round(ratio * 100)}%`;
+    if (liveProgressEl) {
+      liveProgressEl.style.width = width;
+    }
+
+    // Also update all visible transition nodes in the active container.
+    // This protects against Telegram/WebView DOM swaps where the old id node
+    // is replaced but the visible class node remains.
+    if (active.container) {
+      const countdownNodes = active.container.querySelectorAll(".mock-flow-transition-countdown");
+      for (const node of countdownNodes) {
+        node.textContent = value;
+        node.innerText = value;
+        node.setAttribute("data-left", value);
+      }
+      const progressNodes = active.container.querySelectorAll(".mock-flow-transition-progress-fill");
+      for (const node of progressNodes) {
+        node.style.width = width;
+      }
     }
     if (window.MockDebug?.log) {
       if (left !== lastLoggedLeft) {
