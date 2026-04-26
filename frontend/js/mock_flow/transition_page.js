@@ -224,10 +224,10 @@ MockTransitionPage.show = function (config = {}) {
     </div>
   `;
 
-  const countdownEl = document.getElementById("mock-flow-transition-countdown");
-  const progressFillEl = document.getElementById("mock-flow-transition-progress-fill");
-  const readyBtn = document.getElementById("mock-flow-transition-ready");
-  const readyLoader = document.getElementById("mock-flow-transition-ready-loader");
+  const countdownEl = container.querySelector("#mock-flow-transition-countdown");
+  const progressFillEl = container.querySelector("#mock-flow-transition-progress-fill");
+  const readyBtn = container.querySelector("#mock-flow-transition-ready");
+  const readyLoader = container.querySelector("#mock-flow-transition-ready-loader");
   const runId = ++MockTransitionPage._runSeq;
 
   if (window.MockDebug?.log) {
