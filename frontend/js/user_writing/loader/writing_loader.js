@@ -127,6 +127,33 @@ UserWritingLoader.submit = async function (finishType = "manual") {
   try {
     const state = UserWritingState.get();
     const answers = UserWritingUI.readAnswers();
+
+    const isFullMockFlow = !!window.MockFlow?.isActive?.(state.mockId);
+    if (isFullMockFlow) {
+      UserWritingLoader.markSubmitted(false);
+
+      // Do not block transition UI on backend latency.
+      (async function submitInBackground() {
+        try {
+          await UserWritingApi.save(state.mockId, answers);
+          await UserWritingApi.submit(state.mockId, answers, finishType);
+        } catch (backgroundError) {
+          console.error("Writing background submit failed:", backgroundError);
+        }
+      })();
+
+      const flowMoved = window.MockFlow?.goToNextPart?.(
+        "writing",
+        state.mockId,
+        document.getElementById("screen-writing")
+      );
+      if (flowMoved) {
+        return;
+      }
+
+      return;
+    }
+
     await UserWritingApi.save(state.mockId, answers);
     await UserWritingApi.submit(state.mockId, answers, finishType);
     UserWritingLoader.markSubmitted(false);
