@@ -55,6 +55,9 @@ UserSpeakingUI.renderPermissionRequired = function (container) {
     <div class="question-block speaking-transition-card">
       <div class="speaking-transition-title">Microphone Required</div>
       <div class="speaking-transition-text">Microphone permission is required to take the Speaking test.</div>
+      <button type="button" id="speaking-grant-access-btn" class="speaking-submit-btn" style="width:160px; height:50px; font-size:14px; margin-top:8px;">
+        Grant access
+      </button>
     </div>
   `;
 };

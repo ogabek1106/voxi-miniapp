@@ -101,6 +101,9 @@ MockTransitionPage.cleanup = function () {
   if (active.intervalId) {
     clearInterval(active.intervalId);
   }
+  if (active.tickTimeoutId) {
+    clearTimeout(active.tickTimeoutId);
+  }
   if (active.timeoutId) {
     clearTimeout(active.timeoutId);
   }
@@ -201,19 +204,28 @@ MockTransitionPage.show = function (config = {}) {
   }
 
   const endAtMs = Date.now() + durationSeconds * 1000;
-  const intervalId = setInterval(() => {
+  MockTransitionPage._active = {
+    intervalId: null,
+    tickTimeoutId: null,
+    readyBtn,
+    readyHandler
+  };
+
+  const updateCountdown = function () {
+    if (done) return;
     left = Math.max(0, Math.ceil((endAtMs - Date.now()) / 1000));
     if (countdownEl) {
       countdownEl.textContent = String(left);
     }
     if (left <= 0) {
       finishWithLoading();
+      return;
     }
-  }, 250);
 
-  MockTransitionPage._active = {
-    intervalId,
-    readyBtn,
-    readyHandler
+    const tickTimeoutId = setTimeout(updateCountdown, 200);
+    if (MockTransitionPage._active) {
+      MockTransitionPage._active.tickTimeoutId = tickTimeoutId;
+    }
   };
+  updateCountdown();
 };

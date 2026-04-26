@@ -442,6 +442,20 @@ UserSpeakingLoader.start = async function (mockId, container) {
   const hasPermission = await UserSpeakingRecorder.requestPermissionAtStart();
   if (!hasPermission) {
     UserSpeakingUI.renderPermissionRequired(target);
+    const grantBtn = document.getElementById("speaking-grant-access-btn");
+    if (grantBtn) {
+      grantBtn.onclick = async function () {
+        grantBtn.disabled = true;
+        grantBtn.textContent = "Requesting...";
+        const granted = await UserSpeakingRecorder.requestPermissionAtStart();
+        if (!granted) {
+          grantBtn.disabled = false;
+          grantBtn.textContent = "Grant access";
+          return;
+        }
+        UserSpeakingLoader.start(mockId, target);
+      };
+    }
     return;
   }
 
