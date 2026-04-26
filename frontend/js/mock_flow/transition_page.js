@@ -1,6 +1,12 @@
 window.MockTransitionPage = window.MockTransitionPage || {};
 
 MockTransitionPage._active = null;
+MockTransitionPage._runSeq = 0;
+MockTransitionPage._readyFromInline = function () {
+  const active = MockTransitionPage._active;
+  if (!active || typeof active.finish !== "function") return;
+  active.finish("inline_click");
+};
 
 MockTransitionPage.ensureStyles = function () {
   if (document.getElementById("mock-flow-transition-styles")) return;
@@ -115,6 +121,9 @@ MockTransitionPage.cleanup = function () {
   if (active.readyBtn && active.readyHandler) {
     active.readyBtn.removeEventListener("click", active.readyHandler);
   }
+  if (active.container && active.containerClickHandler) {
+    active.container.removeEventListener("click", active.containerClickHandler);
+  }
   MockTransitionPage._active = null;
   if (window.MockDebug?.log) {
     window.MockDebug.log("Transition.cleanup.done");
@@ -199,11 +208,24 @@ MockTransitionPage.show = function (config = {}) {
   const countdownEl = document.getElementById("mock-flow-transition-countdown");
   const readyBtn = document.getElementById("mock-flow-transition-ready");
   const readyLoader = document.getElementById("mock-flow-transition-ready-loader");
-  const finishWithLoading = function () {
+  const runId = ++MockTransitionPage._runSeq;
+
+  if (window.MockDebug?.log) {
+    window.MockDebug.log("Transition.show.nodes", {
+      runId,
+      hasCountdown: !!countdownEl,
+      hasReadyBtn: !!readyBtn,
+      hasReadyLoader: !!readyLoader
+    });
+  }
+
+  const finishWithLoading = function (source = "unknown") {
     if (window.MockDebug?.log) {
       window.MockDebug.log("Transition.finishWithLoading.called", {
         done,
-        nextPart
+        nextPart,
+        source,
+        runId
       });
     }
     if (done) return;
@@ -226,49 +248,64 @@ MockTransitionPage.show = function (config = {}) {
 
   const readyHandler = function () {
     if (window.MockDebug?.log) {
-      window.MockDebug.log("Transition.ready.clicked", {
+      window.MockDebug.log("Transition.ready.nativeClick", {
+        runId,
         currentText: countdownEl?.textContent || null
       });
     }
-    finishWithLoading();
+    finishWithLoading("native_click");
   };
-  if (readyBtn) {
-    readyBtn.addEventListener("click", readyHandler);
-  }
+
+  const containerClickHandler = function (event) {
+    const btn = event.target?.closest?.("#mock-flow-transition-ready");
+    if (!btn) return;
+    if (window.MockDebug?.log) {
+      window.MockDebug.log("Transition.ready.delegatedClick", {
+        runId,
+        currentText: countdownEl?.textContent || null
+      });
+    }
+    finishWithLoading("delegated_click");
+  };
 
   const endAtMs = Date.now() + durationSeconds * 1000;
-  let lastLoggedLeft = null;
   MockTransitionPage._active = {
+    runId,
     intervalId: null,
     tickTimeoutId: null,
     readyBtn,
-    readyHandler
+    readyHandler,
+    container,
+    containerClickHandler,
+    finish: finishWithLoading
   };
 
+  if (readyBtn) {
+    readyBtn.addEventListener("click", readyHandler);
+  }
+  container.addEventListener("click", containerClickHandler);
+
   const updateCountdown = function () {
-    if (done) return;
+    const active = MockTransitionPage._active;
+    if (!active || active.runId !== runId || done) return;
+
     left = Math.max(0, Math.ceil((endAtMs - Date.now()) / 1000));
     if (countdownEl) {
       countdownEl.textContent = String(left);
     }
-    if (window.MockDebug?.log && left !== lastLoggedLeft) {
-      if (left === durationSeconds || left % 5 === 0 || left <= 5) {
-        window.MockDebug.log("Transition.tick", { left, nextPart });
-      }
-      lastLoggedLeft = left;
+    if (window.MockDebug?.log) {
+      window.MockDebug.log("Transition.tick", { runId, left, nextPart });
     }
     if (left <= 0) {
       if (window.MockDebug?.log) {
-        window.MockDebug.log("Transition.tick.reachedZero");
+        window.MockDebug.log("Transition.tick.reachedZero", { runId });
       }
-      finishWithLoading();
-      return;
-    }
-
-    const tickTimeoutId = setTimeout(updateCountdown, 200);
-    if (MockTransitionPage._active) {
-      MockTransitionPage._active.tickTimeoutId = tickTimeoutId;
+      finishWithLoading("timeout_zero");
     }
   };
   updateCountdown();
+  const intervalId = setInterval(updateCountdown, 250);
+  if (MockTransitionPage._active) {
+    MockTransitionPage._active.intervalId = intervalId;
+  }
 };
