@@ -57,6 +57,22 @@ MockTransitionPage.ensureStyles = function () {
       color: #111827;
     }
 
+    .mock-flow-transition-progress {
+      width: 100%;
+      height: 8px;
+      border-radius: 999px;
+      background: #e5e7eb;
+      overflow: hidden;
+      margin: 0 0 12px;
+    }
+
+    .mock-flow-transition-progress-fill {
+      height: 100%;
+      width: 100%;
+      background: #111827;
+      transition: width 0.2s linear;
+    }
+
     .mock-flow-transition-ready {
       width: 100%;
       height: 44px;
@@ -198,6 +214,9 @@ MockTransitionPage.show = function (config = {}) {
         <div class="mock-flow-transition-text">Now you will be redirected to the next part: ${nextPart}</div>
         <div class="mock-flow-transition-text">You have ${durationSeconds} seconds to prepare.</div>
         <div id="mock-flow-transition-countdown" class="mock-flow-transition-countdown">${left}</div>
+        <div class="mock-flow-transition-progress">
+          <div id="mock-flow-transition-progress-fill" class="mock-flow-transition-progress-fill"></div>
+        </div>
         <button type="button" id="mock-flow-transition-ready" class="mock-flow-transition-ready">Ready</button>
         <div id="mock-flow-transition-ready-loader" class="mock-flow-transition-loader" style="display:none;"></div>
         ${tipHtml}
@@ -206,6 +225,7 @@ MockTransitionPage.show = function (config = {}) {
   `;
 
   const countdownEl = document.getElementById("mock-flow-transition-countdown");
+  const progressFillEl = document.getElementById("mock-flow-transition-progress-fill");
   const readyBtn = document.getElementById("mock-flow-transition-ready");
   const readyLoader = document.getElementById("mock-flow-transition-ready-loader");
   const runId = ++MockTransitionPage._runSeq;
@@ -269,6 +289,7 @@ MockTransitionPage.show = function (config = {}) {
   };
 
   const endAtMs = Date.now() + durationSeconds * 1000;
+  let lastLoggedLeft = null;
   MockTransitionPage._active = {
     runId,
     intervalId: null,
@@ -293,8 +314,15 @@ MockTransitionPage.show = function (config = {}) {
     if (countdownEl) {
       countdownEl.textContent = String(left);
     }
+    if (progressFillEl) {
+      const ratio = Math.max(0, Math.min(1, left / durationSeconds));
+      progressFillEl.style.width = `${Math.round(ratio * 100)}%`;
+    }
     if (window.MockDebug?.log) {
-      window.MockDebug.log("Transition.tick", { runId, left, nextPart });
+      if (left !== lastLoggedLeft) {
+        window.MockDebug.log("Transition.tick", { runId, left, nextPart });
+        lastLoggedLeft = left;
+      }
     }
     if (left <= 0) {
       if (window.MockDebug?.log) {
