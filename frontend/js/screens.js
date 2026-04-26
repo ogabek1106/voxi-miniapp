@@ -26,6 +26,9 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function hideAllScreens() {
+  if (window.MockTransitionPage?.cleanup) {
+    window.MockTransitionPage.cleanup();
+  }
   if (screenName) screenName.style.display = "none";
   if (screenHome) screenHome.style.display = "none";
   if (screenMocks) screenMocks.style.display = "none";

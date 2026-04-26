@@ -313,6 +313,19 @@ UserSpeakingLoader.submitAll = async function (finishType = "manual") {
 
   await UserSpeakingApi.submit(state.mockId, payload, finishType);
   UserSpeakingState.set({ isSubmitted: true });
+
+  const handledByFlow = window.MockFlow?.showFinalTransition?.(
+    state.mockId,
+    document.getElementById("screen-speaking"),
+    function () {
+      UserSpeakingLoader.runCheckAndShowResult({ skipCheckingScreen: true });
+    }
+  );
+
+  if (handledByFlow) {
+    return;
+  }
+
   await UserSpeakingLoader.runCheckAndShowResult();
 };
 
@@ -348,9 +361,11 @@ UserSpeakingLoader.onGlobalTimeExpire = async function () {
   }
 };
 
-UserSpeakingLoader.runCheckAndShowResult = async function () {
+UserSpeakingLoader.runCheckAndShowResult = async function (options = {}) {
   const state = UserSpeakingState.get();
-  UserSpeakingTransitions.showChecking();
+  if (!options.skipCheckingScreen) {
+    UserSpeakingTransitions.showChecking();
+  }
 
   const result = await UserSpeakingApi.check(state.mockId);
   const band = Number(result?.overall_band || 0);

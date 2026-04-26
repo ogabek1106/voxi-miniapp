@@ -1083,6 +1083,17 @@ UserListening.submitReading = async function (options = {}) {
       const total = Number(result?.total || 40);
       const band = result?.band ?? "0.0";
 
+      const flowMoved = window.MockFlow?.goToNextPart?.(
+        "listening",
+        UserListening.__mockId,
+        document.getElementById("screen-reading")
+      );
+      if (flowMoved) {
+        UserListening.__isSubmitted = true;
+        UserListening.stopAutoSave?.();
+        return;
+      }
+
       UserListening.showResultScreen({
         band,
         correct: score,

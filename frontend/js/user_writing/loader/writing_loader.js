@@ -130,6 +130,16 @@ UserWritingLoader.submit = async function (finishType = "manual") {
     await UserWritingApi.save(state.mockId, answers);
     await UserWritingApi.submit(state.mockId, answers, finishType);
     UserWritingLoader.markSubmitted(false);
+
+    const flowMoved = window.MockFlow?.goToNextPart?.(
+      "writing",
+      state.mockId,
+      document.getElementById("screen-writing")
+    );
+    if (flowMoved) {
+      return;
+    }
+
     try {
       await UserWritingLoader.runAiCheckAndShowResult(state.mockId);
     } catch (checkError) {

@@ -1,4 +1,85 @@
 // frontend/js/mock_start.js
+window.MockFlow = window.MockFlow || {
+  active: false,
+  mockId: null
+};
+
+MockFlow.activate = function (mockId) {
+  MockFlow.active = true;
+  MockFlow.mockId = Number(mockId || 0) || null;
+};
+
+MockFlow.deactivate = function () {
+  MockFlow.active = false;
+  MockFlow.mockId = null;
+  if (window.MockTransitionPage?.cleanup) {
+    window.MockTransitionPage.cleanup();
+  }
+};
+
+MockFlow.isActive = function (mockId) {
+  const safeMockId = Number(mockId || 0) || null;
+  return !!MockFlow.active && !!MockFlow.mockId && MockFlow.mockId === safeMockId;
+};
+
+MockFlow.goToNextPart = function (currentPart, mockId, container) {
+  if (!MockFlow.isActive(mockId) || !window.MockTransitionPage?.show) {
+    return false;
+  }
+
+  const current = String(currentPart || "").toLowerCase();
+  const map = {
+    listening: "reading",
+    reading: "writing",
+    writing: "speaking"
+  };
+  const next = map[current];
+  if (!next) return false;
+
+  const partLabel = current.charAt(0).toUpperCase() + current.slice(1);
+  const nextLabel = next.charAt(0).toUpperCase() + next.slice(1);
+
+  window.MockTransitionPage.show({
+    container,
+    currentPart: partLabel,
+    nextPart: nextLabel,
+    durationSeconds: 60,
+    onReady: function () {
+      if (next === "reading") {
+        window.startMock(MockFlow.mockId, { fromFlow: true });
+        return;
+      }
+      if (next === "writing") {
+        window.startWritingMock(MockFlow.mockId, { fromFlow: true });
+        return;
+      }
+      if (next === "speaking") {
+        window.startSpeakingMock(MockFlow.mockId, { fromFlow: true });
+      }
+    }
+  });
+
+  return true;
+};
+
+MockFlow.showFinalTransition = function (mockId, container, onDone) {
+  if (!MockFlow.isActive(mockId) || !window.MockTransitionPage?.show) {
+    return false;
+  }
+
+  window.MockTransitionPage.show({
+    container,
+    isFinal: true,
+    durationSeconds: 4,
+    onReady: function () {
+      MockFlow.deactivate();
+      if (typeof onDone === "function") onDone();
+    }
+  });
+
+  return true;
+};
+
 window.openMockWarning = function (packId, title) {
 
   if (!screenMocks) return;
@@ -14,7 +95,7 @@ window.openMockWarning = function (packId, title) {
       - Complete all sections in order
     </p>
 
-    <button onclick="startMock(${packId})">
+    <button onclick="startFullMock(${packId})">
       Start Test
     </button>
 
@@ -24,7 +105,15 @@ window.openMockWarning = function (packId, title) {
   `;
 };
 
-window.startMock = async function (mockId) {
+window.startFullMock = async function (mockId) {
+  MockFlow.activate(mockId);
+  await window.startListeningMock(mockId, { fromFlow: true });
+};
+
+window.startMock = async function (mockId, options = {}) {
+  if (!options.fromFlow) {
+    MockFlow.deactivate();
+  }
 
   hideAllScreens();
   hideAnnouncement();
@@ -70,7 +159,11 @@ window.startMock = async function (mockId) {
 
 };
 
-window.startWritingMock = async function (mockId) {
+window.startWritingMock = async function (mockId, options = {}) {
+  if (!options.fromFlow) {
+    MockFlow.deactivate();
+  }
+
   hideAllScreens();
   hideAnnouncement();
   if (typeof setBottomNavVisible === "function") {
@@ -91,7 +184,11 @@ window.startWritingMock = async function (mockId) {
   await window.UserWritingLoader.start(mockId, screenWriting);
 };
 
-window.startListeningMock = async function (mockId) {
+window.startListeningMock = async function (mockId, options = {}) {
+  if (!options.fromFlow) {
+    MockFlow.deactivate();
+  }
+
   hideAllScreens();
   hideAnnouncement();
   if (typeof setBottomNavVisible === "function") {
@@ -212,7 +309,11 @@ window.startListeningMock = async function (mockId) {
   }
 };
 
-window.startSpeakingMock = async function (mockId) {
+window.startSpeakingMock = async function (mockId, options = {}) {
+  if (!options.fromFlow) {
+    MockFlow.deactivate();
+  }
+
   hideAllScreens();
   hideAnnouncement();
   if (typeof setBottomNavVisible === "function") {
