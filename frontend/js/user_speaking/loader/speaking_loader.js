@@ -367,24 +367,39 @@ UserSpeakingLoader.runCheckAndShowResult = async function (options = {}) {
     UserSpeakingTransitions.showChecking();
   }
 
-  const result = await UserSpeakingApi.check(state.mockId);
-  const band = Number(result?.overall_band || 0);
+  const speakingCheck = await UserSpeakingApi.check(state.mockId);
+  const fullResult = await UserSpeakingApi.getFullMockResult(state.mockId);
+  const fallbackBand = Number(speakingCheck?.overall_band || 0);
+  const overallBand = Number(fullResult?.overall_band ?? fallbackBand);
 
   const container = document.getElementById("screen-speaking");
   if (!container) return;
 
   if (window.UserReading?.renderResultPage) {
     container.innerHTML = "";
+
+    const pending = Array.isArray(fullResult?.pending_parts) ? fullResult.pending_parts : [];
+    if (pending.length) {
+      alert(`Final result is pending: ${pending.join(", ")}`);
+    }
+
     window.UserReading.renderResultPage(container, {
-      band,
+      band: overallBand,
       correct: 0,
       total: 40,
-      backTarget: "home"
+      backTarget: "home",
+      breakdown: {
+        listening: Number(fullResult?.listening_band ?? 0),
+        reading: Number(fullResult?.reading_band ?? 0),
+        writing: Number(fullResult?.writing_band ?? 0),
+        speaking: Number(fullResult?.speaking_band ?? fallbackBand)
+      },
+      overallLabel: "Overall IELTS Band"
     });
     return;
   }
 
-  alert(`Speaking Band: ${band.toFixed(1)}`);
+  alert(`Overall Band: ${overallBand.toFixed(1)}`);
   if (typeof window.goHome === "function") window.goHome();
 };
 

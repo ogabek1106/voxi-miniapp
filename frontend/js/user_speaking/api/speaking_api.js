@@ -45,6 +45,15 @@ UserSpeakingApi.check = async function (mockId) {
   });
 };
 
+UserSpeakingApi.getFullMockResult = async function (mockId) {
+  const telegramId = UserSpeakingApi.getTelegramUserId();
+  if (!telegramId || !mockId) throw new Error("Missing telegram_id or mock id");
+
+  return apiPost(`/mock-tests/${mockId}/full-result`, {
+    telegram_id: telegramId
+  });
+};
+
 UserSpeakingApi.uploadAudio = async function (blob, fileName = "speaking.webm") {
   const fd = new FormData();
   fd.append("file", new File([blob], fileName, { type: blob.type || "audio/webm" }));

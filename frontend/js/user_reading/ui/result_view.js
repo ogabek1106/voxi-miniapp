@@ -8,6 +8,17 @@ UserReading.renderResultPage = function (container, data = {}) {
   const correct = Number(data.correct ?? 0);
   const total = Number(data.total ?? 40);
   const isProfileBack = data.backTarget === "profile";
+  const overallLabel = String(data.overallLabel || "IELTS Reading");
+  const breakdown = data.breakdown && typeof data.breakdown === "object"
+    ? data.breakdown
+    : null;
+  const scoreHtml = breakdown ? "" : `<div class="reading-result-score">Score: ${correct}/${total}</div>`;
+  const detailsHtml = breakdown ? `
+          <div class="reading-result-score" style="margin-top:8px;">Listening: ${Number(breakdown.listening ?? 0).toFixed(1)}</div>
+          <div class="reading-result-score">Reading: ${Number(breakdown.reading ?? 0).toFixed(1)}</div>
+          <div class="reading-result-score">Writing: ${Number(breakdown.writing ?? 0).toFixed(1)}</div>
+          <div class="reading-result-score">Speaking: ${Number(breakdown.speaking ?? 0).toFixed(1)}</div>
+  ` : "";
 
   const today = new Date();
   const formattedDate = today.toLocaleDateString("en-GB", {
@@ -26,13 +37,14 @@ UserReading.renderResultPage = function (container, data = {}) {
           data-correct="${correct}"
           data-total="${total}"
         >
-          <div class="reading-result-card-type">IELTS Reading</div>
+          <div class="reading-result-card-type">${overallLabel}</div>
 
           <div class="reading-result-band-box">
             <div class="reading-result-band-value" id="reading-result-band-value">0.0</div>
           </div>
 
-          <div class="reading-result-score">Score: ${correct}/${total}</div>
+          ${scoreHtml}
+          ${detailsHtml}
           <div class="reading-result-date">${formattedDate}</div>
           <div class="reading-result-brand">Powered by EBAI Academy</div>
         </div>

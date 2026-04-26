@@ -330,3 +330,20 @@ class SpeakingResult(Base):
     pronunciation_band = Column(Float, nullable=False)
     raw_json = Column(JSON, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=True)
+
+
+class FullMockResult(Base):
+    __tablename__ = "full_mock_results"
+
+    id = Column(Integer, primary_key=True, index=True)
+    mock_pack_id = Column(Integer, ForeignKey("mock_packs.id", ondelete="CASCADE"), nullable=False, index=True)
+    telegram_id = Column(BigInteger, nullable=False, index=True)
+    listening_band = Column(Float, nullable=True)
+    reading_band = Column(Float, nullable=True)
+    writing_band = Column(Float, nullable=True)
+    speaking_band = Column(Float, nullable=True)
+    raw_average_band = Column(Float, nullable=True)
+    overall_band = Column(Float, nullable=True)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+    status = Column(String, nullable=False, default="pending")
+    updated_at = Column(DateTime(timezone=True), nullable=True)

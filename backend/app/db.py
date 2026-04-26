@@ -359,6 +359,101 @@ def ensure_speaking_schema():
             "$$;"
         ))
 
+
+def ensure_full_mock_results_schema():
+    with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS full_mock_results ("
+            "id SERIAL PRIMARY KEY, "
+            "mock_pack_id INTEGER NOT NULL, "
+            "telegram_id BIGINT NOT NULL, "
+            "listening_band DOUBLE PRECISION NULL, "
+            "reading_band DOUBLE PRECISION NULL, "
+            "writing_band DOUBLE PRECISION NULL, "
+            "speaking_band DOUBLE PRECISION NULL, "
+            "raw_average_band DOUBLE PRECISION NULL, "
+            "overall_band DOUBLE PRECISION NULL, "
+            "completed_at TIMESTAMPTZ NULL, "
+            "status VARCHAR NOT NULL DEFAULT 'pending', "
+            "updated_at TIMESTAMPTZ NULL"
+            ");"
+        ))
+
+        conn.execute(text(
+            "ALTER TABLE full_mock_results "
+            "ADD COLUMN IF NOT EXISTS mock_pack_id INTEGER;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE full_mock_results "
+            "ADD COLUMN IF NOT EXISTS telegram_id BIGINT;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE full_mock_results "
+            "ADD COLUMN IF NOT EXISTS listening_band DOUBLE PRECISION;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE full_mock_results "
+            "ADD COLUMN IF NOT EXISTS reading_band DOUBLE PRECISION;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE full_mock_results "
+            "ADD COLUMN IF NOT EXISTS writing_band DOUBLE PRECISION;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE full_mock_results "
+            "ADD COLUMN IF NOT EXISTS speaking_band DOUBLE PRECISION;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE full_mock_results "
+            "ADD COLUMN IF NOT EXISTS raw_average_band DOUBLE PRECISION;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE full_mock_results "
+            "ADD COLUMN IF NOT EXISTS overall_band DOUBLE PRECISION;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE full_mock_results "
+            "ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE full_mock_results "
+            "ADD COLUMN IF NOT EXISTS status VARCHAR;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE full_mock_results "
+            "ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ;"
+        ))
+
+        conn.execute(text(
+            "CREATE UNIQUE INDEX IF NOT EXISTS uq_full_mock_results_pack_user "
+            "ON full_mock_results (mock_pack_id, telegram_id);"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_full_mock_results_mock_pack_id "
+            "ON full_mock_results (mock_pack_id);"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_full_mock_results_telegram_id "
+            "ON full_mock_results (telegram_id);"
+        ))
+
+        conn.execute(text(
+            "DO $$ "
+            "BEGIN "
+            "IF NOT EXISTS ("
+            "SELECT 1 FROM information_schema.table_constraints "
+            "WHERE constraint_name = 'full_mock_results_mock_pack_id_fkey'"
+            ") THEN "
+            "ALTER TABLE full_mock_results "
+            "ADD CONSTRAINT full_mock_results_mock_pack_id_fkey "
+            "FOREIGN KEY (mock_pack_id) "
+            "REFERENCES mock_packs(id) "
+            "ON DELETE CASCADE; "
+            "END IF; "
+            "END "
+            "$$;"
+        ))
+
         conn.execute(text(
             "CREATE TABLE IF NOT EXISTS speaking_tests ("
             "id SERIAL PRIMARY KEY, "
