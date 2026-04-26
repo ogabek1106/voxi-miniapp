@@ -917,7 +917,6 @@ UserReading.ensureMarkerStyles = function () {
 };
 
 UserReading.handleSubmitAttempt = function () {
-  console.log("COLLECTED ANSWERS:", UserReading.collectAnswers());
   const questions = UserReading.__questionList || [];
 
   if (!questions.length) {
@@ -1075,7 +1074,6 @@ UserReading.submitReading = async function (options = {}) {
 
   try {
     if (UserReading.__mockId) {
-      console.log("SUBMIT MOCK ID:", UserReading.__mockId);
       await UserReading.saveProgress(UserReading.__mockId);
       const result = await UserReading.submitProgress(UserReading.__mockId);
 

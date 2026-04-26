@@ -917,7 +917,6 @@ UserListening.ensureMarkerStyles = function () {
 };
 
 UserListening.handleSubmitAttempt = function () {
-  console.log("COLLECTED ANSWERS:", UserListening.collectAnswers());
   const questions = UserListening.__questionList || [];
 
   if (!questions.length) {
@@ -1089,7 +1088,6 @@ UserListening.submitReading = async function (options = {}) {
     }
 
     if (UserListening.__mockId) {
-      console.log("SUBMIT MOCK ID:", UserListening.__mockId);
       await UserListening.saveProgress(UserListening.__mockId);
       const result = await UserListening.submitProgress(UserListening.__mockId);
 
