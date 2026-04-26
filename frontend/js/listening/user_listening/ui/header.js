@@ -1074,6 +1074,20 @@ UserListening.submitReading = async function (options = {}) {
   UserListening.setSubmitButtonLoading(true);
 
   try {
+    const forcedByFlow = window.MockFlow?.isActive?.(UserListening.__mockId);
+    if (forcedByFlow) {
+      const flowMoved = window.MockFlow?.goToNextPart?.(
+        "listening",
+        UserListening.__mockId,
+        document.getElementById("screen-reading")
+      );
+      if (flowMoved) {
+        UserListening.__isSubmitted = true;
+        UserListening.stopAutoSave?.();
+        return;
+      }
+    }
+
     if (UserListening.__mockId) {
       console.log("SUBMIT MOCK ID:", UserListening.__mockId);
       await UserListening.saveProgress(UserListening.__mockId);
