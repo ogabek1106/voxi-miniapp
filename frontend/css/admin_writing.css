@@ -4,14 +4,19 @@
 
 .writing-task-card label {
   font-size: 13px;
-  color: #555;
+  color: #607080;
+  font-family: Nunito, Manrope, system-ui, -apple-system, sans-serif;
+  font-weight: 700;
 }
 
 .writing-task-card textarea,
 .writing-task-card select {
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: Nunito, Manrope, system-ui, -apple-system, sans-serif;
   max-width: 100%;
   width: 100%;
+  border-radius: 12px;
+  border: 1px solid rgba(20,40,60,0.12);
+  background: #ffffff;
 }
 
 .writing-task-header {
@@ -22,6 +27,7 @@
 }
 
 .writing-task-number {
-  font-weight: 700;
+  font-weight: 900;
   font-size: 20px;
+  color: #17212B;
 }

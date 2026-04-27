@@ -2,9 +2,10 @@
 
 .question-block {
   margin: 18px 0;
-  padding: 14px 12px;
-  border-radius: 12px;
-  background: var(--card-bg, #f4f4f6);
+  padding: 16px 14px;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(20,40,60,0.08);
   box-sizing: border-box;
   text-align: left;
 }
@@ -20,10 +21,11 @@
 }
 
 .question-instruction {
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: Nunito, Manrope, system-ui, -apple-system, sans-serif;
   font-size: 13px;
   line-height: 1.4;
-  color: #555;
+  color: #607080;
+  font-weight: 700;
 }
 
 .question-text {
@@ -37,7 +39,7 @@
   align-items: flex-start;
   gap: 10px;
   margin: 6px 0;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: Nunito, Manrope, system-ui, -apple-system, sans-serif;
   font-size: 14px;
   cursor: pointer;
   text-align: left;
@@ -58,7 +60,7 @@
   width: 100%;
   padding: 10px;
   border-radius: 8px;
-  border: 1px solid #ccc;
+  border: 1px solid rgba(20,40,60,0.14);
   font-size: 14px;
   box-sizing: border-box;
 }
@@ -67,7 +69,7 @@
   width: 100%;
   padding: 10px;
   border-radius: 8px;
-  border: 1px solid #ccc;
+  border: 1px solid rgba(20,40,60,0.14);
   font-size: 14px;
   box-sizing: border-box;
 }
@@ -75,7 +77,7 @@
 .question-hint {
   margin-top: 6px;
   font-size: 12px;
-  color: #777;
+  color: #8A98A6;
 }
 
 .questions-container {

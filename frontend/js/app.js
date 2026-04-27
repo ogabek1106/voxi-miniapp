@@ -3,11 +3,11 @@ const tg = window.Telegram?.WebApp;
 const FORCE_LIGHT_THEME = true;
 
 function applyBaseLightTheme() {
-  document.documentElement.style.setProperty("--bg-color", "#ffffff");
-  document.documentElement.style.setProperty("--text-color", "#000000");
-  document.documentElement.style.setProperty("--card-bg", "#f4f4f6");
-  document.documentElement.style.setProperty("--border-color", "#e5e5ea");
-  document.documentElement.style.setProperty("--primary", "#4f46e5");
+  document.documentElement.style.setProperty("--bg-color", "#F5F9FC");
+  document.documentElement.style.setProperty("--text-color", "#17212B");
+  document.documentElement.style.setProperty("--card-bg", "#FFFFFF");
+  document.documentElement.style.setProperty("--border-color", "rgba(20,40,60,0.10)");
+  document.documentElement.style.setProperty("--primary", "#00BAFF");
 
   // Keep native controls and UA widgets in light appearance.
   document.documentElement.style.colorScheme = "light";

@@ -1,10 +1,13 @@
 .section-container {
-  padding: 12px 14px 20px 14px;
+  padding: 14px 14px 20px 14px;
   text-align: left;
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(20,40,60,0.08);
 }
 
 .section-number {
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: Nunito, Manrope, system-ui, -apple-system, sans-serif;
   font-size: 15px;
   font-weight: 700;
   text-align: left;
@@ -12,7 +15,7 @@
 }
 
 .section-title {
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: Nunito, Manrope, system-ui, -apple-system, sans-serif;
   font-size: 25px;
   font-weight: 700;
   text-align: left;
