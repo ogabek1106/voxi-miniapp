@@ -163,10 +163,11 @@
   }
 
   #screen-home {
-    margin: -16px;
-    padding: 16px;
+    margin: 0;
+    padding: 0;
     background: #F5F9FC;
     box-sizing: border-box;
+    min-height: 100%;
   }
 
   #screen-home .home-shell {
@@ -306,9 +307,11 @@
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background: radial-gradient(circle 140px at var(--x) var(--y), rgba(0,186,255,0.22), transparent 70%);
+    background:
+      radial-gradient(circle 88px at var(--x) var(--y), rgba(0,186,255,0.44) 0%, rgba(0,186,255,0.30) 34%, rgba(0,186,255,0.16) 58%, transparent 76%),
+      radial-gradient(circle 190px at var(--x) var(--y), rgba(0,186,255,0.18) 0%, rgba(0,186,255,0.10) 44%, transparent 78%);
     opacity: 0;
-    transition: opacity 220ms ease;
+    transition: opacity 180ms ease;
     z-index: 0;
   }
 
