@@ -124,8 +124,9 @@
     height: 56px;
     display: flex;
     align-items: center;
-    border-top: 1px solid rgba(0,186,255,0.18);
-    background: #101820;
+    border-top: 1px solid rgba(20,40,60,0.08);
+    box-shadow: 0 -4px 14px rgba(20,40,60,0.05);
+    background: #FFFFFF;
   }
 
   .nav-btn {
@@ -133,7 +134,7 @@
     height: 100%;
     border: none;
     background: transparent;
-    color: #6F8190;
+    color: #8A98A6;
     font-size: 18px;
     margin: 0;
     padding: 0;
@@ -146,7 +147,7 @@
   .divider {
     width: 1px;
     height: 60%;
-    background: rgba(0,186,255,0.18);
+    background: rgba(20,40,60,0.08);
   }
 
   .nav-icon {
@@ -161,11 +162,20 @@
     transform: scale(1.1);
   }
 
+  #screen-home {
+    margin: -16px;
+    padding: 16px;
+    background: #F5F9FC;
+    box-sizing: border-box;
+  }
+
   #screen-home .home-shell {
     width: 100%;
     display: flex;
     flex-direction: column;
     gap: 16px;
+    font-family: Nunito, Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: #17212B;
   }
 
   #screen-home .home-header {
@@ -174,30 +184,30 @@
     grid-template-columns: 1fr auto;
     align-items: center;
     gap: 12px;
+    padding: 0;
   }
 
   #screen-home .home-user {
     min-width: 0;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
   }
 
   #screen-home .home-avatar {
-    width: 34px;
-    height: 34px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
-    background: #162331;
-    border: 1px solid rgba(0,186,255,0.18);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    background: rgba(0,186,255,0.10);
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow: 0 8px 24px rgba(20,40,60,0.08);
   }
 
   #screen-home .home-avatar svg {
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
     color: #00BAFF;
   }
 
@@ -209,8 +219,8 @@
   #screen-home .home-user-name {
     margin: 0;
     font-size: 15px;
-    font-weight: 600;
-    color: #F3F8FC;
+    font-weight: 800;
+    color: #17212B;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -219,25 +229,24 @@
   #screen-home .home-user-level {
     margin-top: 2px;
     font-size: 11px;
-    font-weight: 500;
-    color: #A7B6C2;
+    font-weight: 700;
+    color: #607080;
   }
 
   #screen-home .home-balance {
     min-width: 92px;
-    height: 38px;
-    border-radius: 14px;
-    background: #162331;
-    border: 1px solid rgba(0,186,255,0.18);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-    display: flex;
+    height: 42px;
+    border-radius: 18px;
+    background: #FFFFFF;
+    box-shadow: 0 8px 24px rgba(20,40,60,0.08);
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    color: #F3F8FC;
-    font-size: 14px;
-    font-weight: 600;
-    padding: 8px 12px;
+    color: #17212B;
+    font-size: 15px;
+    font-weight: 800;
+    padding: 10px 14px;
   }
 
   #screen-home .home-balance svg {
@@ -247,18 +256,17 @@
   }
 
   #screen-home .home-announcement {
-    height: 48px;
-    border-radius: 16px;
-    background: #1B2B3A;
-    border: 1px solid rgba(0,186,255,0.18);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+    height: 50px;
+    border-radius: 20px;
+    background: rgba(0,186,255,0.06);
+    box-shadow: 0 8px 24px rgba(20,40,60,0.06);
     display: flex;
     align-items: center;
     gap: 10px;
     padding: 0 14px;
-    color: #A7B6C2;
-    font-size: 13px;
-    font-weight: 500;
+    color: #607080;
+    font-size: 14px;
+    font-weight: 800;
     text-align: left;
   }
 
@@ -276,28 +284,51 @@
   }
 
   #screen-home .home-card {
+    --x: 50%;
+    --y: 50%;
     position: relative;
-    border-radius: 22px;
-    background: #162331;
-    border: 1px solid rgba(0,186,255,0.18);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-    padding: 16px;
+    overflow: hidden;
+    border-radius: 24px;
+    background: #FFFFFF;
+    border: none;
+    box-shadow: 0 8px 24px rgba(20,40,60,0.08);
+    padding: 18px;
     text-align: left;
     cursor: pointer;
-    transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+    transition: transform 220ms ease, box-shadow 220ms ease;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
+    isolation: isolate;
+  }
+
+  #screen-home .home-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(circle 140px at var(--x) var(--y), rgba(0,186,255,0.22), transparent 70%);
+    opacity: 0;
+    transition: opacity 220ms ease;
+    z-index: 0;
+  }
+
+  #screen-home .home-card > * {
+    position: relative;
+    z-index: 1;
   }
 
   #screen-home .home-card:active {
     transform: scale(0.97);
   }
 
-  @media (hover: hover) and (pointer: fine) {
-    #screen-home .home-card:hover {
-      border-color: #00BAFF;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.25), 0 0 0 2px rgba(0,186,255,0.25);
-    }
+  #screen-home .home-card.is-interacting,
+  #screen-home .home-card:hover {
+    box-shadow: 0 10px 28px rgba(20,40,60,0.12);
+  }
+
+  #screen-home .home-card.is-interacting::before,
+  #screen-home .home-card:hover::before {
+    opacity: 1;
   }
 
   #screen-home .home-card--wide {
@@ -305,22 +336,21 @@
   }
 
   #screen-home .home-card--mock {
-    min-height: 124px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,186,255,0.2), 0 0 26px rgba(0,186,255,0.18);
+    min-height: 128px;
   }
 
   #screen-home .home-card--small {
-    min-height: 100px;
+    min-height: 108px;
   }
 
   #screen-home .home-card--speaking {
-    min-height: 100px;
+    min-height: 108px;
   }
 
   #screen-home .home-card-icon-wrap {
-    width: 28px;
-    height: 28px;
-    border-radius: 999px;
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
     background: rgba(0,186,255,0.12);
     display: inline-flex;
     align-items: center;
@@ -328,48 +358,54 @@
     margin-bottom: 10px;
   }
 
+  #screen-home .home-card--mock .home-card-icon-wrap {
+    width: 46px;
+    height: 46px;
+    border-radius: 16px;
+  }
+
   #screen-home .home-card-icon {
-    width: 16px;
-    height: 16px;
+    width: 20px;
+    height: 20px;
     color: #00BAFF;
   }
 
   #screen-home .home-card-title {
     margin: 0;
-    color: #F3F8FC;
-    font-size: 16px;
-    font-weight: 600;
-    line-height: 1.25;
+    color: #17212B;
+    font-size: 18px;
+    font-weight: 900;
+    line-height: 1.2;
   }
 
   #screen-home .home-card--mock .home-card-title {
-    font-size: 19px;
-    font-weight: 700;
+    font-size: 22px;
+    font-weight: 900;
   }
 
   #screen-home .home-card-subtitle {
     margin: 8px 0 0;
-    color: #A7B6C2;
-    font-size: 13px;
-    font-weight: 400;
+    color: #607080;
+    font-size: 14px;
+    font-weight: 700;
     line-height: 1.35;
   }
 
   #screen-home .home-card-meta {
     margin: 8px 0 0;
-    color: #6F8190;
+    color: #8A98A6;
     font-size: 12px;
-    font-weight: 500;
+    font-weight: 700;
     line-height: 1.2;
   }
 
   #screen-home .home-card-arrow {
     position: absolute;
-    top: 16px;
-    right: 16px;
+    top: 18px;
+    right: 18px;
     width: 18px;
     height: 18px;
-    color: #6F8190;
+    color: #8A98A6;
   }
 
   #screen-home .home-admin-actions {
@@ -379,21 +415,22 @@
   }
 
   #screen-home .home-admin-btn {
-    border-radius: 14px;
-    border: 1px solid rgba(0,186,255,0.18);
-    background: #162331;
-    color: #F3F8FC;
+    border-radius: 18px;
+    border: none;
+    background: #FFFFFF;
+    color: #17212B;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 800;
     height: 44px;
     padding: 0 14px;
     text-align: left;
     cursor: pointer;
     margin: 0;
+    box-shadow: 0 8px 24px rgba(20,40,60,0.08);
   }
 
   #screen-home .home-admin-btn:active {
-    transform: scale(0.98);
+    transform: scale(0.97);
   }
 
   #screen-reading,
@@ -427,9 +464,6 @@
   #screen-home {
     max-width: 100% !important;
     width: 100% !important;
-    padding: 0 !important;
-    box-sizing: border-box;
-    background: #101820;
   }
 
   #screen-reading,
@@ -714,6 +748,58 @@
   <script src="/js/admin_speaking/loader/editor_loader.js"></script>
   <script src="./js/admin_mock.js?v=1"></script>
   <script src="./js/app.js"></script>
+  <script>
+    (function setupHomeCardGlow() {
+      function updateCardPoint(card, clientX, clientY) {
+        const rect = card.getBoundingClientRect();
+        const x = Math.max(0, Math.min(rect.width, clientX - rect.left));
+        const y = Math.max(0, Math.min(rect.height, clientY - rect.top));
+        card.style.setProperty("--x", `${x}px`);
+        card.style.setProperty("--y", `${y}px`);
+      }
+
+      function attachGlow(card) {
+        if (!card || card.dataset.glowBound === "1") return;
+        card.dataset.glowBound = "1";
+
+        card.addEventListener("pointerenter", (event) => {
+          card.classList.add("is-interacting");
+          updateCardPoint(card, event.clientX, event.clientY);
+        });
+
+        card.addEventListener("pointermove", (event) => {
+          updateCardPoint(card, event.clientX, event.clientY);
+        });
+
+        card.addEventListener("pointerleave", () => {
+          card.classList.remove("is-interacting");
+        });
+
+        card.addEventListener("touchstart", (event) => {
+          const t = event.touches && event.touches[0];
+          if (!t) return;
+          card.classList.add("is-interacting");
+          updateCardPoint(card, t.clientX, t.clientY);
+        }, { passive: true });
+
+        card.addEventListener("touchmove", (event) => {
+          const t = event.touches && event.touches[0];
+          if (!t) return;
+          updateCardPoint(card, t.clientX, t.clientY);
+        }, { passive: true });
+
+        card.addEventListener("touchend", () => {
+          card.classList.remove("is-interacting");
+        }, { passive: true });
+
+        card.addEventListener("touchcancel", () => {
+          card.classList.remove("is-interacting");
+        }, { passive: true });
+      }
+
+      document.querySelectorAll("#screen-home .home-card").forEach(attachGlow);
+    })();
+  </script>
 
 </body>
 
