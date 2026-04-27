@@ -26,11 +26,6 @@
     overscroll-behavior: none;
   }
 
-  /* apply touch-action ONLY for mobile UI elements, not global */
-  .app {
-    touch-action: manipulation;
-  }
-
   :root {
     --bg-color: #ffffff;
     --text-color: #000000;
@@ -43,11 +38,20 @@
     display: flex;
     align-items: flex-start;
     justify-content: center;
-    font-family: system-ui, -apple-system, sans-serif;
-    background: var(--bg-color);
-    color: var(--text-color);
+    font-family: Inter, Manrope, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #0B0F14;
+    color: #E6EDF3;
   }
 
+  .app {
+    height: 100%;
+    width: 100%;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    touch-action: manipulation;
+    background: #0B0F14;
+  }
 
   .container {
     width: 100%;
@@ -56,9 +60,18 @@
     text-align: center;
     display: flex;
     flex-direction: column;
-    margin: 0 auto;         
+    margin: 0 auto;
     box-sizing: border-box;
   }
+
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 16px;
+    box-sizing: border-box;
+  }
+
   input {
     width: 100%;
     padding: 12px;
@@ -67,6 +80,7 @@
     border: none;
     outline: none;
     margin-top: 10px;
+    box-sizing: border-box;
   }
 
   button {
@@ -79,6 +93,19 @@
     cursor: pointer;
     background: var(--primary);
     color: var(--text-color);
+    box-sizing: border-box;
+  }
+
+  .primary-btn {
+    margin-top: 12px;
+    height: 52px;
+    font-size: 16px;
+    font-weight: 700;
+    border-radius: 14px;
+    background: #121821;
+    color: #E6EDF3;
+    border: 1px solid #1E2632;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.18);
   }
 
   #status {
@@ -87,174 +114,319 @@
     opacity: 0.85;
   }
 
-  .app {
-  height: 100%;
-  width: 100%;
-  max-width: 100%;
-  display: flex;
-  flex-direction: column;
-}
+  .form {
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto;
+  }
 
-.header {
-  height: 52px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  border-bottom: 1px solid var(--border-color);
-}
+  .bottom-nav {
+    height: 56px;
+    display: flex;
+    align-items: center;
+    border-top: 1px solid #1E2632;
+    background: #0B0F14;
+  }
 
-.announcement {
-  margin: 12px 0;
-  padding: 0;
-  background: transparent;
-  border: none;
-  border-radius: 16px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
+  .nav-btn {
+    flex: 1;
+    height: 100%;
+    border: none;
+    background: transparent;
+    color: #6B7280;
+    font-size: 18px;
+    margin: 0;
+    padding: 0;
+  }
 
-#announcement-img {
-  width: 100%;
-  height: 150px;
-  object-fit: cover;
-  border-radius: 16px;
-}
+  .nav-btn.active {
+    color: #3A8DFF;
+  }
 
-#announcement-text {
-  display: none;
-}
+  .divider {
+    width: 1px;
+    height: 60%;
+    background: #1E2632;
+  }
 
-.content {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;      
-  padding: 12px 16px;     
-  box-sizing: border-box; 
-}
-.primary-btn {
-  margin-top: 24px;
-  height: 56px;
-  font-size: 16px;
-  font-weight: 700;
-  border-radius: 14px;
-  background: #ffffff;
-  color: #000000;
-  border: 1.5px solid #e5e5ea;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-}
+  .nav-icon {
+    width: 22px;
+    height: 22px;
+    opacity: 0.7;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+  }
 
+  .nav-btn.active .nav-icon {
+    opacity: 1;
+    transform: scale(1.1);
+  }
 
-.bottom-nav {
-  height: 56px;
-  display: flex;
-  align-items: center;
-  border-top: 1px solid var(--border-color);
-  background: var(--bg-color);
-}
+  .home-shell {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
 
-.nav-btn {
-  flex: 1;
-  height: 100%;
-  border: none;
-  background: transparent;
-  color: white;
-  font-size: 18px;
-}
+  .home-header {
+    height: 72px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 12px;
+  }
 
-.nav-btn.active {
-  color: var(--primary);
-}
+  .home-user {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
 
-.divider {
-  width: 1px;
-  height: 60%;
-  background: var(--border-color);
-}
-.form {
-  width: 100%;
-  max-width: 320px;
-  margin: 0 auto;
-}
-input, button {
-  box-sizing: border-box;
-}
-.nav-icon {
-  width: 22px;
-  height: 22px;
-  opacity: 0.7;
-  transition: opacity 0.15s ease, transform 0.15s ease;
-}
+  .home-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #121821;
+    border: 1px solid #1E2632;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 
-.nav-btn.active .nav-icon {
-  opacity: 1;
-  transform: scale(1.1);
-}
+  .home-avatar svg {
+    width: 22px;
+    height: 22px;
+    color: #3A8DFF;
+  }
 
-#screen-reading,
-#screen-writing,
-#screen-speaking {
-  max-width: 100% !important;
-  width: 100% !important;
-  padding: 0 !important;
-}
+  .home-user-text {
+    min-width: 0;
+    text-align: left;
+  }
 
-#screen-reading.container,
-#screen-writing.container,
-#screen-speaking.container {
-  max-width: 100% !important;
-  width: 100% !important;
-}
+  .home-user-name {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: #E6EDF3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 
-#screen-profile {
-  max-width: 100% !important;
-  width: 100% !important;
-  padding: 0 !important;
-  box-sizing: border-box;
-}
+  .home-user-level {
+    margin-top: 2px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #9AA6B2;
+  }
 
-#screen-profile.container {
-  max-width: 100% !important;
-  width: 100% !important;
-}
+  .home-balance {
+    min-width: 92px;
+    height: 40px;
+    border-radius: 12px;
+    background: #121821;
+    border: 1px solid #1E2632;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #E6EDF3;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 0 10px;
+  }
 
-#screen-reading,
-#screen-writing,
-#screen-speaking {
-  max-width: 100% !important;
-  width: 100% !important;
-  padding: 0 !important;
-  padding-left: 2px;
-  padding-right: 2px;
-  box-sizing: border-box;
-}
-.header,
-.bottom-nav,
-.divider,
-.announcement,
-.primary-btn,
-button {
-  border: none !important;
-}
+  .home-balance svg {
+    width: 16px;
+    height: 16px;
+    color: #3A8DFF;
+  }
 
-* {
-  outline: none;
-}
+  .home-announcement {
+    height: 48px;
+    border-radius: 14px;
+    background: #121821;
+    border: 1px solid #1E2632;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.18);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 14px;
+    color: #9AA6B2;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: left;
+  }
 
-.primary-btn {
-  box-shadow: 0 4px 10px rgba(0,0,0,0.08) !important;
-}
-</style>
+  .home-announcement svg {
+    width: 16px;
+    height: 16px;
+    color: #3A8DFF;
+    flex: 0 0 auto;
+  }
+
+  .home-cards {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .home-card {
+    position: relative;
+    border-radius: 16px;
+    background: #121821;
+    border: 1px solid #1E2632;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.18);
+    padding: 16px;
+    text-align: left;
+    cursor: pointer;
+    transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .home-card:active {
+    transform: scale(0.98);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .home-card:hover {
+      border-color: #3A8DFF;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.18), 0 0 0 1px rgba(58,141,255,0.18);
+    }
+  }
+
+  .home-card--wide {
+    grid-column: 1 / -1;
+  }
+
+  .home-card--mock {
+    min-height: 116px;
+  }
+
+  .home-card--small {
+    min-height: 100px;
+  }
+
+  .home-card--speaking {
+    min-height: 102px;
+  }
+
+  .home-card-icon {
+    width: 20px;
+    height: 20px;
+    color: #3A8DFF;
+    margin-bottom: 10px;
+  }
+
+  .home-card-title {
+    margin: 0;
+    color: #E6EDF3;
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  .home-card--mock .home-card-title {
+    font-size: 19px;
+  }
+
+  .home-card-subtitle {
+    margin: 8px 0 0;
+    color: #9AA6B2;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.35;
+  }
+
+  .home-card-arrow {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 18px;
+    height: 18px;
+    color: #6B7280;
+  }
+
+  .home-admin-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .home-admin-btn {
+    border-radius: 14px;
+    border: 1px solid #1E2632;
+    background: #121821;
+    color: #E6EDF3;
+    font-size: 14px;
+    font-weight: 600;
+    height: 44px;
+    padding: 0 14px;
+    text-align: left;
+    cursor: pointer;
+    margin: 0;
+  }
+
+  .home-admin-btn:active {
+    transform: scale(0.98);
+  }
+
+  #screen-reading,
+  #screen-writing,
+  #screen-speaking {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+    box-sizing: border-box;
+  }
+
+  #screen-reading.container,
+  #screen-writing.container,
+  #screen-speaking.container {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  #screen-profile {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+    box-sizing: border-box;
+  }
+
+  #screen-profile.container {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  #screen-home {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+    box-sizing: border-box;
+  }
+
+  #screen-reading,
+  #screen-writing,
+  #screen-speaking {
+    padding-left: 2px;
+    padding-right: 2px;
+  }
+
+  * {
+    outline: none;
+  }
+  </style>
 
 </head>
 <body>
 
   <div class="app">
-
-    <div class="announcement" id="announcement" style="display:none;">
-      <img id="announcement-img" src="./assets/coming_soon.png" />
-    </div>
 
     <div class="content" id="content">
 
@@ -268,14 +440,88 @@ button {
       </div>
 
       <div class="container" id="screen-home">
-        <button class="primary-btn" onclick="showReadingEntry()">📖 Reading</button>
-        <button class="primary-btn" onclick="showWritingEntry()">✍️ Writing</button>
-        <button class="primary-btn" onclick="showSpeakingEntry()">🎙️ Speaking</button>
-        <button class="primary-btn" onclick="showMocksEntry()">🧠 IELTS Mock Test</button>
+        <div class="home-shell">
+          <div class="home-header">
+            <div class="home-user">
+              <div class="home-avatar" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.7"></circle>
+                  <path d="M5 19.2c1.5-3 4-4.7 7-4.7s5.5 1.7 7 4.7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path>
+                </svg>
+              </div>
+              <div class="home-user-text">
+                <p class="home-user-name" id="home-user-name">User Name</p>
+                <div class="home-user-level">Beginner</div>
+              </div>
+            </div>
+            <div class="home-balance">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.7"></circle>
+                <path d="M9.5 9.5h4a1.8 1.8 0 010 3.6h-3a1.8 1.8 0 000 3.6h4.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path>
+              </svg>
+              <span id="home-balance-value">0</span>
+            </div>
+          </div>
 
-        <button class="primary-btn" id="adminBtn" style="display:none; margin-top:12px;" onclick="showAdminPanel()">
-          🛠 Admin Panel
-        </button>
+          <div class="home-announcement" id="announcement" style="display:none;">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M5 10.5V13.5M9.5 8l8-2v12l-8-2-4 2V10l4-2z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+            <span>New modules are being prepared.</span>
+          </div>
+
+          <div class="home-cards">
+            <div class="home-card home-card--wide home-card--mock" onclick="showMocksEntry()" role="button" tabindex="0">
+              <svg class="home-card-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M4 7h16v10H4zM8 11h8M8 14h5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path>
+              </svg>
+              <h3 class="home-card-title">IELTS Mock Test</h3>
+              <p class="home-card-subtitle">Full real exam simulation</p>
+              <svg class="home-card-arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </div>
+
+            <div class="home-card home-card--small" onclick="showReadingEntry()" role="button" tabindex="0">
+              <svg class="home-card-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 5h10a2 2 0 012 2v10H8a2 2 0 00-2 2V5zM8 19h10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+              <h3 class="home-card-title">Reading</h3>
+              <p class="home-card-subtitle">Practice</p>
+              <svg class="home-card-arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </div>
+
+            <div class="home-card home-card--small" onclick="showWritingEntry()" role="button" tabindex="0">
+              <svg class="home-card-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M6 16l8-8 4 4-8 8H6zM13 7l3 3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+              <h3 class="home-card-title">Writing</h3>
+              <p class="home-card-subtitle">Tasks</p>
+              <svg class="home-card-arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </div>
+
+            <div class="home-card home-card--wide home-card--speaking" onclick="showSpeakingEntry()" role="button" tabindex="0">
+              <svg class="home-card-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="9" y="4" width="6" height="10" rx="3" stroke="currentColor" stroke-width="1.7"></rect>
+                <path d="M6.5 10.5a5.5 5.5 0 0011 0M12 16v3M9 19h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path>
+              </svg>
+              <h3 class="home-card-title">Speaking</h3>
+              <p class="home-card-subtitle">AI feedback</p>
+              <svg class="home-card-arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </div>
+          </div>
+
+          <div class="home-admin-actions" id="home-admin-actions">
+            <button class="home-admin-btn" id="listeningHomeBtn" style="display:none;" onclick="showListeningEntry()">Listening</button>
+            <button class="home-admin-btn" id="adminBtn" style="display:none;" onclick="showAdminPanel()">Admin Panel</button>
+          </div>
+        </div>
       </div>
 
 

@@ -50,7 +50,32 @@ if (tg) {
 
 window.__isAdmin = false;
 
+function renderHomeIdentity(me) {
+  const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user || {};
+  const homeName = document.getElementById("home-user-name");
+  const homeBalance = document.getElementById("home-balance-value");
+
+  if (homeName) {
+    const firstName = (me?.name || tgUser?.first_name || "").trim();
+    const lastName = (me?.surname || tgUser?.last_name || "").trim();
+    const fullName = `${firstName} ${lastName}`.trim();
+    homeName.textContent = fullName || "User";
+  }
+
+  if (homeBalance) {
+    const rawBalance = me?.v_coin_balance ?? me?.vcoin_balance ?? me?.v_coin ?? me?.balance ?? 0;
+    const parsed = Number(rawBalance);
+    homeBalance.textContent = Number.isFinite(parsed) ? String(Math.max(0, Math.floor(parsed))) : "0";
+  }
+}
+
 function ensureListeningHomeButton(visible) {
+  const existingBtn = document.getElementById("listeningHomeBtn");
+  if (existingBtn) {
+    existingBtn.style.display = visible ? "block" : "none";
+    return;
+  }
+
   const home = document.getElementById("screen-home");
   if (!home) return;
 
@@ -80,6 +105,7 @@ function ensureListeningHomeButton(visible) {
 
 document.addEventListener("DOMContentLoaded", () => {
   goHome();
+  renderHomeIdentity();
   loadMe();
   const btn = document.getElementById("saveBtn");
   const status = document.getElementById("status");
@@ -125,6 +151,7 @@ async function loadMe() {
   // hard fallback for your admin account
   if (telegramId === 1150875355) {
     window.__isAdmin = true;
+    renderHomeIdentity();
 
     if (adminBtn) {
       adminBtn.style.display = "block";
@@ -137,6 +164,7 @@ async function loadMe() {
   try {
     const me = await apiGet(`/me?telegram_id=${telegramId}`);
     window.__isAdmin = !!me.is_admin;
+    renderHomeIdentity(me);
 
     if (adminBtn) {
       adminBtn.style.display = window.__isAdmin ? "block" : "none";
@@ -144,6 +172,7 @@ async function loadMe() {
     ensureListeningHomeButton(window.__isAdmin);
   } catch (e) {
     window.__isAdmin = false;
+    renderHomeIdentity();
 
     if (adminBtn) {
       adminBtn.style.display = "none";
