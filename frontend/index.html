@@ -289,6 +289,55 @@
     flex: 0 0 auto;
   }
 
+  #screen-home .home-announcement.has-image {
+    height: auto;
+    padding: 8px;
+    align-items: stretch;
+  }
+
+  #screen-home .announcement-media {
+    width: 100%;
+    display: none;
+    border-radius: 16px;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  #screen-home .home-announcement.has-image .announcement-media {
+    display: block;
+  }
+
+  #screen-home .announcement-image {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 240px;
+    object-fit: contain;
+    border-radius: 16px;
+    background: rgba(0, 186, 255, 0.04);
+  }
+
+  #screen-home .announcement-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 34px;
+  }
+
+  #screen-home .home-announcement.has-image .announcement-row {
+    margin-top: 8px;
+    padding: 0 6px 2px;
+  }
+
+  #screen-home .announcement-text {
+    font-size: 14px;
+    font-weight: 800;
+    color: #607080;
+    line-height: 1.2;
+    text-align: left;
+  }
+
   #screen-home .home-cards {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -535,10 +584,15 @@
           </div>
 
           <div class="home-announcement" id="announcement" style="display:none;">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M5 10.5V13.5M9.5 8l8-2v12l-8-2-4 2V10l4-2z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>
-            </svg>
-            <span>New modules are being prepared.</span>
+            <div class="announcement-media" id="announcement-media">
+              <img id="announcement-image" class="announcement-image" alt="Announcement">
+            </div>
+            <div class="announcement-row">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M5 10.5V13.5M9.5 8l8-2v12l-8-2-4 2V10l4-2z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+              <span id="announcement-text" class="announcement-text">New modules are being prepared.</span>
+            </div>
           </div>
 
           <div class="home-cards">

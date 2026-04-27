@@ -225,14 +225,53 @@ function render(html) {
   screenMocks.innerHTML = html;
 }
 
-function showAnnouncement() {
-  const el = document.getElementById("announcement");
-  if (el) el.style.display = "flex";
-}
-
 function hideAnnouncement() {
   const el = document.getElementById("announcement");
-  if (el) el.style.display = "none";
+  if (!el) return;
+  el.style.display = "none";
+  el.classList.remove("has-image");
+}
+
+function renderAnnouncementData(data) {
+  const el = document.getElementById("announcement");
+  const textEl = document.getElementById("announcement-text");
+  const imageEl = document.getElementById("announcement-image");
+  const mediaEl = document.getElementById("announcement-media");
+  if (!el || !textEl || !imageEl || !mediaEl) return;
+
+  const text = (data?.text || "").trim();
+  const imageUrl = (data?.image_url || "").trim();
+  const hasContent = Boolean(text || imageUrl);
+
+  if (!hasContent) {
+    hideAnnouncement();
+    return;
+  }
+
+  textEl.textContent = text || "";
+  textEl.style.display = text ? "inline" : "none";
+
+  if (imageUrl) {
+    imageEl.src = imageUrl.startsWith("http") ? imageUrl : `${window.API}${imageUrl}`;
+    mediaEl.style.display = "block";
+    el.classList.add("has-image");
+  } else {
+    imageEl.removeAttribute("src");
+    mediaEl.style.display = "none";
+    el.classList.remove("has-image");
+  }
+
+  el.style.display = "flex";
+}
+
+async function showAnnouncement() {
+  try {
+    const data = await apiGet("/announcement");
+    renderAnnouncementData(data);
+  } catch (err) {
+    console.error("Failed to load announcement:", err);
+    hideAnnouncement();
+  }
 }
 
 window.showAdminPanel = function () {
@@ -245,9 +284,113 @@ window.showAdminPanel = function () {
   screenMocks.innerHTML = `
     <h3>🛠 Admin Panel</h3>
     <button onclick="showAdminMockPacks()">📦 MOCK Packs</button>
+    <button onclick="showAnnouncementAdmin()">📢 Announcement</button>
     <button onclick="showDbStats()">📊 Database Stats</button>
     <button onclick="goHome()">⬅ Back</button>
   `;
+};
+
+window.showAnnouncementAdmin = async function () {
+  const telegramId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+  if (!telegramId) return alert("Open inside Telegram");
+
+  hideAllScreens();
+  hideAnnouncement();
+  setBottomNavVisible(false);
+  if (!screenMocks) return;
+
+  let data = { text: "", image_url: "" };
+  try {
+    data = await apiGet(`/__admin/announcement?telegram_id=${telegramId}`);
+  } catch (e) {
+    console.error("Failed to load admin announcement:", e);
+  }
+
+  const currentText = data?.text || "";
+  const currentImage = data?.image_url || "";
+  const previewSrc = currentImage
+    ? (currentImage.startsWith("http") ? currentImage : `${window.API}${currentImage}`)
+    : "";
+
+  screenMocks.style.display = "block";
+  screenMocks.innerHTML = `
+    <div style="display:flex; flex-direction:column; gap:12px; text-align:left;">
+      <h3 style="margin:0;">📢 Announcement</h3>
+      <label style="font-size:13px; color:#607080; font-weight:700;">Text</label>
+      <textarea id="announcement-admin-text" placeholder="Announcement text..." style="width:100%; min-height:84px; box-sizing:border-box; border-radius:12px; border:1px solid rgba(20,40,60,0.12); padding:10px;">${currentText}</textarea>
+      <label style="font-size:13px; color:#607080; font-weight:700;">Image (optional)</label>
+      <input id="announcement-admin-file" type="file" accept="image/*" style="width:100%;">
+      <img id="announcement-admin-preview" src="${previewSrc}" style="display:${previewSrc ? "block" : "none"}; width:100%; max-height:220px; object-fit:contain; border-radius:12px; background:#fff; border:1px solid rgba(20,40,60,0.08);" />
+      <div style="display:flex; gap:10px;">
+        <button onclick="saveAnnouncementAdmin()" style="margin:0;">Save</button>
+        <button onclick="clearAnnouncementAdmin()" style="margin:0; background:#e5e7eb; color:#17212B;">Clear</button>
+      </div>
+      <button onclick="showAdminPanel()" style="margin:0; background:#eef2f7; color:#17212B;">⬅ Back</button>
+    </div>
+  `;
+
+  const previewEl = document.getElementById("announcement-admin-preview");
+  if (previewEl) {
+    previewEl.dataset.imageUrl = currentImage || "";
+  }
+};
+
+async function uploadAnnouncementImage(file) {
+  const fd = new FormData();
+  fd.append("file", file);
+  const res = await fetch(`${window.API}/admin/upload-image`, {
+    method: "POST",
+    body: fd
+  });
+  const text = await res.text();
+  if (!res.ok) throw new Error(text || "Upload failed");
+  return JSON.parse(text);
+}
+
+window.saveAnnouncementAdmin = async function () {
+  const telegramId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+  if (!telegramId) return alert("Open inside Telegram");
+
+  const textEl = document.getElementById("announcement-admin-text");
+  const fileEl = document.getElementById("announcement-admin-file");
+  const previewEl = document.getElementById("announcement-admin-preview");
+  if (!textEl || !fileEl || !previewEl) return;
+
+  try {
+    let imageUrl = previewEl.dataset.imageUrl || "";
+    const file = fileEl.files?.[0];
+    if (file) {
+      const up = await uploadAnnouncementImage(file);
+      imageUrl = up.url || "";
+    }
+
+    await apiPost(`/__admin/announcement?telegram_id=${telegramId}`, {
+      text: textEl.value.trim(),
+      image_url: imageUrl
+    });
+    alert("Announcement saved");
+    await showAnnouncementAdmin();
+  } catch (e) {
+    console.error("Save announcement failed:", e);
+    alert("Failed to save announcement");
+  }
+};
+
+window.clearAnnouncementAdmin = async function () {
+  const telegramId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+  if (!telegramId) return alert("Open inside Telegram");
+
+  try {
+    await apiPost(`/__admin/announcement?telegram_id=${telegramId}`, {
+      text: "",
+      image_url: ""
+    });
+    alert("Announcement cleared");
+    await showAnnouncementAdmin();
+  } catch (e) {
+    console.error("Clear announcement failed:", e);
+    alert("Failed to clear announcement");
+  }
 };
 
 window.showDbStats = async function () {

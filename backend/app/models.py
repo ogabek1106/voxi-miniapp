@@ -16,6 +16,15 @@ class User(Base):
     v_coins = Column(Integer, nullable=False, default=0)
 
 
+class AppAnnouncement(Base):
+    __tablename__ = "app_announcements"
+
+    id = Column(Integer, primary_key=True, index=True)
+    text = Column(Text, nullable=True)
+    image_url = Column(String, nullable=True)
+    updated_at = Column(DateTime(timezone=True), nullable=True)
+
+
 class ReadingTestStatus(enum.Enum):
     draft = "draft"
     published = "published"

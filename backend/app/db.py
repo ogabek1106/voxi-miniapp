@@ -740,3 +740,28 @@ def ensure_vcoin_schema():
             "CREATE INDEX IF NOT EXISTS ix_coin_ledger_reference_id "
             "ON coin_ledger (reference_id);"
         ))
+
+
+def ensure_announcement_schema():
+    with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS app_announcements ("
+            "id SERIAL PRIMARY KEY, "
+            "text TEXT NULL, "
+            "image_url VARCHAR NULL, "
+            "updated_at TIMESTAMPTZ NULL"
+            ");"
+        ))
+
+        conn.execute(text(
+            "ALTER TABLE app_announcements "
+            "ADD COLUMN IF NOT EXISTS text TEXT;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE app_announcements "
+            "ADD COLUMN IF NOT EXISTS image_url VARCHAR;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE app_announcements "
+            "ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ;"
+        ))
