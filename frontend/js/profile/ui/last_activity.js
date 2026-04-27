@@ -63,9 +63,9 @@ ProfileUI.renderLastActivity = function (activity) {
   if (!list.length) {
     return `
       <div style="
-        width:calc(100% + 24px);
-        max-width:none;
-        margin:0 -12px;
+        width:100%;
+        max-width:100%;
+        margin:0;
         box-sizing:border-box;
         background:var(--card-bg);
         border:none;
@@ -131,9 +131,9 @@ ProfileUI.renderLastActivity = function (activity) {
 
   return `
     <div style="
-      width:calc(100% + 24px);
-      max-width:none;
-      margin:0 -12px;
+      width:100%;
+      max-width:100%;
+      margin:0;
       box-sizing:border-box;
       background:var(--card-bg);
       border:none;
