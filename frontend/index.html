@@ -20,11 +20,13 @@
   
   <style>
   html, body {
+    width: 100%;
+    min-height: 100%;
     height: 100%;
     margin: 0;
     padding: 0;
     overscroll-behavior: none;
-    background: #F5F9FC;
+    background: #F5F9FC !important;
   }
 
   :root {
@@ -36,22 +38,22 @@
   }
 
   body {
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
+    display: block;
+    overflow: hidden;
     font-family: Inter, Manrope, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    background: #F5F9FC;
+    background: #F5F9FC !important;
     color: #17212B;
   }
 
   .app {
+    min-height: 100vh;
     height: 100%;
     width: 100%;
     max-width: 100%;
     display: flex;
     flex-direction: column;
     touch-action: manipulation;
-    background: #F5F9FC;
+    background: #F5F9FC !important;
   }
 
   .container {
@@ -67,11 +69,16 @@
 
   .content {
     flex: 1;
+    width: 100%;
     overflow-y: auto;
     overflow-x: hidden;
     padding: 16px;
     box-sizing: border-box;
-    background: #F5F9FC;
+    background: #F5F9FC !important;
+  }
+
+  #content {
+    background: #F5F9FC !important;
   }
 
   input {
@@ -128,7 +135,7 @@
     align-items: center;
     border-top: 1px solid rgba(20,40,60,0.08);
     box-shadow: 0 -4px 14px rgba(20,40,60,0.05);
-    background: #FFFFFF;
+    background: #FFFFFF !important;
   }
 
   .nav-btn {
@@ -167,7 +174,7 @@
   #screen-home {
     margin: 0;
     padding: 0;
-    background: #F5F9FC;
+    background: #F5F9FC !important;
     box-sizing: border-box;
     min-height: 100%;
   }

@@ -42,6 +42,17 @@ function applyTelegramTheme() {
 if (tg) {
   tg.ready();
   tg.expand();
+  if (window.Telegram && Telegram.WebApp) {
+    try {
+      Telegram.WebApp.setBackgroundColor("#F5F9FC");
+      Telegram.WebApp.setHeaderColor("#F5F9FC");
+      if (typeof Telegram.WebApp.setBottomBarColor === "function") {
+        Telegram.WebApp.setBottomBarColor("#FFFFFF");
+      }
+    } catch (e) {
+      console.warn("Failed to apply Telegram WebApp viewport colors:", e);
+    }
+  }
   applyTelegramTheme();
   tg.onEvent("themeChanged", applyTelegramTheme);
 } else {
