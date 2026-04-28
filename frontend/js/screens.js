@@ -82,11 +82,7 @@ window.showMocksScreen = function () {
 };
 
 window.showMocksEntry = function () {
-  if (window.__isAdmin) {
-    window.showMocksScreen();
-    return;
-  }
-  alert("WILL BE SOON!");
+  window.showMocksScreen();
 };
 
 window.showReadingEntry = async function () {
@@ -108,13 +104,6 @@ window.showReadingEntry = async function () {
     const mockId = Number(latestPublishedMock?.id || 0);
     if (!mockId) {
       alert("No reading mocks available.");
-      return;
-    }
-
-    const gateResult = await TelegramSubGate.enterReadingWithGate(mockId);
-
-    if (!gateResult || !gateResult.ok) {
-      showSubscribeGate(mockId);
       return;
     }
 
@@ -194,11 +183,6 @@ window.showSpeakingEntry = async function () {
 };
 
 window.showListeningEntry = async function () {
-  if (!window.__isAdmin) {
-    alert("WILL BE SOON!");
-    return;
-  }
-
   try {
     const mocks = await apiGet("/mock/list");
     if (!Array.isArray(mocks) || !mocks.length) {

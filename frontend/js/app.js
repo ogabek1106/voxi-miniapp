@@ -272,7 +272,7 @@ async function loadMe() {
     if (adminBtn) {
       adminBtn.style.display = window.__isAdmin ? "block" : "none";
     }
-    ensureListeningHomeButton(window.__isAdmin);
+    ensureListeningHomeButton(true);
   } catch (e) {
     window.__isAdmin = false;
     renderHomeIdentity();
@@ -280,7 +280,7 @@ async function loadMe() {
     if (adminBtn) {
       adminBtn.style.display = "none";
     }
-    ensureListeningHomeButton(false);
+    ensureListeningHomeButton(true);
 
     console.error("Failed to load /me", e);
   }
