@@ -186,6 +186,28 @@ window.VCoinUI = window.VCoinUI || {};
     return Array.isArray(data?.items) ? data.items : [];
   }
 
+  window.VCoinUI.openBuyVcoinBot = async function () {
+    try {
+      const data = await apiGet("/vcoins/buy-link");
+      const url = String(data?.url || "").trim();
+      if (!url) {
+        alert("Buy V-Coin bot link is not configured yet.");
+        return;
+      }
+
+      const tg = window.Telegram?.WebApp;
+      if (tg && typeof tg.openTelegramLink === "function") {
+        tg.openTelegramLink(url);
+        return;
+      }
+
+      window.location.href = url;
+    } catch (error) {
+      console.error("Failed to open V-Coin bot link", error);
+      alert("Could not open Buy V-Coin bot. Please try again.");
+    }
+  };
+
   window.VCoinUI.openBalanceSheet = async function () {
     ensureStyles();
     closeSheet();
@@ -228,9 +250,7 @@ window.VCoinUI = window.VCoinUI || {};
     document.body.appendChild(backdrop);
 
     document.getElementById("vcoin-close-btn").onclick = closeSheet;
-    document.getElementById("vcoin-buy-btn").onclick = function () {
-      alert("Buy V-Coin link will be connected here.");
-    };
+    document.getElementById("vcoin-buy-btn").onclick = window.VCoinUI.openBuyVcoinBot;
 
     try {
       const [balance, ledger] = await Promise.all([fetchBalance(), fetchLedger()]);
@@ -278,7 +298,7 @@ window.VCoinUI = window.VCoinUI || {};
       if (event.target === backdrop) closeSheet();
     });
     document.getElementById("vcoin-close-btn").onclick = closeSheet;
-    document.getElementById("vcoin-buy-btn").onclick = window.VCoinUI.openBalanceSheet;
+    document.getElementById("vcoin-buy-btn").onclick = window.VCoinUI.openBuyVcoinBot;
   };
 
   window.VCoinUI.ensureAccess = async function ({ contentType, referenceId, serviceName }) {

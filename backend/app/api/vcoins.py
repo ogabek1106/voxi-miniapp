@@ -44,6 +44,17 @@ class VCoinSpendIn(BaseModel):
     reference_id: str
 
 
+def _bot_buy_link() -> Optional[str]:
+    explicit = os.getenv("VOXI_BOT_BUY_LINK", "").strip()
+    if explicit:
+        return explicit
+
+    username = os.getenv("VOXI_BOT_USERNAME", "").strip().lstrip("@")
+    if not username:
+        return None
+    return f"https://t.me/{username}?start=buy_vcoin"
+
+
 def require_backend_token(authorization: str = Header(default="")):
     expected = os.getenv("VCOIN_BACKEND_TOKEN", "")
     if not expected:
@@ -100,6 +111,16 @@ def get_vcoin_balance(telegram_id: int = Query(...), db: Session = Depends(get_d
     return {
         "telegram_id": int(telegram_id),
         "v_coins": get_balance(db, telegram_id),
+    }
+
+
+@router.get("/buy-link")
+def get_vcoin_buy_link():
+    link = _bot_buy_link()
+    return {
+        "ok": bool(link),
+        "url": link,
+        "start_payload": "buy_vcoin",
     }
 
 
