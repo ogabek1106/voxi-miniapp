@@ -34,7 +34,7 @@ window.VCoinUI = window.VCoinUI || {};
       .vcoin-sheet {
         width: min(100%, 420px);
         max-height: 78vh;
-        overflow-y: auto;
+        overflow: hidden;
         box-sizing: border-box;
         border-radius: 24px 24px 0 0;
         background: #ffffff;
@@ -86,9 +86,55 @@ window.VCoinUI = window.VCoinUI || {};
         align-items: center;
         justify-content: space-between;
         gap: 12px;
+        min-height: 64px;
         padding: 10px 0;
+        box-sizing: border-box;
         border-bottom: 1px solid rgba(20,40,60,0.08);
         text-align: left;
+      }
+
+      .vcoin-history-list {
+        min-height: 180px;
+        max-height: 240px;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding-right: 2px;
+      }
+
+      .vcoin-history-empty {
+        min-height: 180px;
+        display: flex;
+        align-items: center;
+      }
+
+      .vcoin-history-skeleton {
+        height: 64px;
+        border-bottom: 1px solid rgba(20,40,60,0.08);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .vcoin-skeleton-line {
+        height: 12px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #eef2f7 0%, #f8fafc 48%, #eef2f7 100%);
+        background-size: 200% 100%;
+        animation: vcoinSkeleton 1s ease-in-out infinite;
+      }
+
+      .vcoin-skeleton-line.short {
+        width: 48%;
+      }
+
+      .vcoin-skeleton-line.long {
+        width: 72%;
+      }
+
+      @keyframes vcoinSkeleton {
+        0% { background-position: 100% 0; }
+        100% { background-position: -100% 0; }
       }
 
       .vcoin-muted {
@@ -153,7 +199,7 @@ window.VCoinUI = window.VCoinUI || {};
 
   function renderLedger(items) {
     if (!items.length) {
-      return `<div class="vcoin-muted" style="padding:10px 0;">No balance actions yet.</div>`;
+      return `<div class="vcoin-history-empty vcoin-muted">No balance actions yet.</div>`;
     }
 
     return items.map((item) => {
@@ -170,6 +216,23 @@ window.VCoinUI = window.VCoinUI || {};
         </div>
       `;
     }).join("");
+  }
+
+  function renderHistorySkeleton() {
+    return `
+      <div class="vcoin-history-skeleton">
+        <div class="vcoin-skeleton-line long"></div>
+        <div class="vcoin-skeleton-line short"></div>
+      </div>
+      <div class="vcoin-history-skeleton">
+        <div class="vcoin-skeleton-line long"></div>
+        <div class="vcoin-skeleton-line short"></div>
+      </div>
+      <div class="vcoin-history-skeleton">
+        <div class="vcoin-skeleton-line long"></div>
+        <div class="vcoin-skeleton-line short"></div>
+      </div>
+    `;
   }
 
   async function fetchBalance() {
@@ -234,7 +297,7 @@ window.VCoinUI = window.VCoinUI || {};
 
         <div style="margin-top:14px;">
           <div style="font-size:15px; font-weight:900; margin-bottom:2px;">Last balance actions</div>
-          <div id="vcoin-ledger-list"><div class="vcoin-muted" style="padding:10px 0;">Loading...</div></div>
+          <div class="vcoin-history-list" id="vcoin-ledger-list">${renderHistorySkeleton()}</div>
         </div>
 
         <div class="vcoin-sheet-actions">
