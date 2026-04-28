@@ -615,7 +615,7 @@
 
   .secondary-back {
     position: fixed;
-    left: max(16px, env(safe-area-inset-left, 0px));
+    left: max(calc(12px + env(safe-area-inset-left, 0px)), calc((100vw - 560px) / 2 + 12px));
     bottom: calc(28px + env(safe-area-inset-bottom, 0px));
     z-index: 140;
     width: auto;
