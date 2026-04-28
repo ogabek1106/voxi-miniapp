@@ -267,10 +267,17 @@
     box-shadow: 0 12px 30px rgba(0,186,255,0.18);
   }
 
-  #screen-home .home-balance svg {
-    width: 16px;
-    height: 16px;
-    color: #00BAFF;
+  .vcoin-icon {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    flex: 0 0 auto;
+  }
+
+  #screen-home .home-balance .vcoin-icon {
+    width: 22px;
+    height: 22px;
   }
 
   #screen-home .home-announcement {
@@ -744,10 +751,7 @@
               </div>
             </div>
             <div class="home-balance">
-              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.7"></circle>
-                <path d="M9.5 9.5h4a1.8 1.8 0 010 3.6h-3a1.8 1.8 0 000 3.6h4.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path>
-              </svg>
+              <img class="vcoin-icon" src="./assets/vcoin.png" alt="" aria-hidden="true">
               <span id="home-balance-value">0</span>
             </div>
           </div>

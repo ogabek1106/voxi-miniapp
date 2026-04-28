@@ -106,6 +106,18 @@ window.VCoinUI = window.VCoinUI || {};
         line-height: 1;
       }
 
+      .vcoin-sheet-balance-label,
+      .vcoin-price-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .vcoin-sheet .vcoin-icon {
+        width: 24px;
+        height: 24px;
+      }
+
       .vcoin-price-grid {
         flex: 0 0 auto;
         display: grid;
@@ -375,14 +387,17 @@ window.VCoinUI = window.VCoinUI || {};
         <div class="vcoin-sheet-balance">
           <div>
             <div class="vcoin-muted">You have</div>
-            <strong id="vcoin-sheet-balance-value">...</strong>
+            <div class="vcoin-sheet-balance-label">
+              <img class="vcoin-icon" src="./assets/vcoin.png" alt="" aria-hidden="true">
+              <strong id="vcoin-sheet-balance-value">...</strong>
+            </div>
           </div>
           <div class="vcoin-muted">V-Coins</div>
         </div>
 
         <div class="vcoin-price-grid">
-          <div class="vcoin-price-row"><span>Full Mock Test</span><strong>10 V-Coins</strong></div>
-          <div class="vcoin-price-row"><span>Single section</span><strong>3 V-Coins</strong></div>
+          <div class="vcoin-price-row"><span>Full Mock Test</span><strong class="vcoin-price-label">10 <img class="vcoin-icon" src="./assets/vcoin.png" alt="" aria-hidden="true"></strong></div>
+          <div class="vcoin-price-row"><span>Single section</span><strong class="vcoin-price-label">3 <img class="vcoin-icon" src="./assets/vcoin.png" alt="" aria-hidden="true"></strong></div>
         </div>
 
         <div class="vcoin-history-section">

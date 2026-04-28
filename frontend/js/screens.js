@@ -500,8 +500,13 @@ async function renderProfile() {
           font-weight:700;
           text-align:center;
           cursor:pointer;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          gap:8px;
         ">
-          V-Coin balance: ${vCoins}
+          <img class="vcoin-icon" src="./assets/vcoin.png" alt="" aria-hidden="true">
+          <span>V-Coin balance: ${vCoins}</span>
         </div>
 
         ${lastActivityHtml}
