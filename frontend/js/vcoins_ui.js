@@ -36,13 +36,15 @@ window.VCoinUI = window.VCoinUI || {};
       .vcoin-sheet {
         width: min(100%, 420px);
         max-height: 78vh;
-        overflow-y: auto;
+        overflow: hidden;
         box-sizing: border-box;
         border-radius: 24px;
         background: #ffffff;
         color: #17212B;
         padding: 16px 16px 20px;
         box-shadow: 0 -14px 40px rgba(20,40,60,0.20);
+        display: flex;
+        flex-direction: column;
         font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
       }
 
@@ -65,19 +67,34 @@ window.VCoinUI = window.VCoinUI || {};
 
       .vcoin-sheet-handle {
         width: 42px;
+        height: 22px;
+        flex: 0 0 auto;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        cursor: grab;
+        touch-action: none;
+        user-select: none;
+        margin: 0 auto 2px;
+      }
+
+      .vcoin-sheet-handle::before {
+        content: "";
+        width: 42px;
         height: 4px;
         border-radius: 999px;
         background: rgba(20,40,60,0.18);
-        margin: 0 auto 14px;
       }
 
       .vcoin-sheet-title {
+        flex: 0 0 auto;
         margin: 0;
         font-size: 20px;
         font-weight: 900;
       }
 
       .vcoin-sheet-balance {
+        flex: 0 0 auto;
         margin-top: 10px;
         padding: 14px;
         border-radius: 18px;
@@ -94,6 +111,7 @@ window.VCoinUI = window.VCoinUI || {};
       }
 
       .vcoin-price-grid {
+        flex: 0 0 auto;
         display: grid;
         gap: 8px;
         margin-top: 12px;
@@ -113,8 +131,8 @@ window.VCoinUI = window.VCoinUI || {};
       }
 
       .vcoin-history-list {
-        min-height: 180px;
-        max-height: 240px;
+        height: 180px;
+        min-height: 120px;
         overflow-y: auto;
         overscroll-behavior: contain;
         padding-right: 2px;
@@ -173,8 +191,7 @@ window.VCoinUI = window.VCoinUI || {};
       }
 
       .vcoin-sheet-actions {
-        position: sticky;
-        bottom: 0;
+        flex: 0 0 auto;
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 10px;
@@ -183,6 +200,12 @@ window.VCoinUI = window.VCoinUI || {};
         padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px));
         background: #ffffff;
         z-index: 1;
+      }
+
+      .vcoin-history-section {
+        flex: 1 1 auto;
+        min-height: 0;
+        margin-top: 14px;
       }
 
       .vcoin-sheet button {
@@ -209,6 +232,39 @@ window.VCoinUI = window.VCoinUI || {};
 
   function closeSheet() {
     document.getElementById("vcoin-sheet-backdrop")?.remove();
+  }
+
+  function bindSheetDragToClose(sheet) {
+    const handle = sheet?.querySelector(".vcoin-sheet-handle");
+    if (!handle) return;
+
+    let startY = 0;
+    let dragging = false;
+
+    handle.addEventListener("pointerdown", (event) => {
+      dragging = true;
+      startY = event.clientY;
+      handle.setPointerCapture?.(event.pointerId);
+    });
+
+    handle.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+      const deltaY = Math.max(0, event.clientY - startY);
+      sheet.style.transform = `translateY(${Math.min(deltaY, 90)}px)`;
+    });
+
+    function endDrag(event) {
+      if (!dragging) return;
+      dragging = false;
+      const deltaY = event.clientY - startY;
+      sheet.style.transform = "";
+      if (deltaY > 44) {
+        closeSheet();
+      }
+    }
+
+    handle.addEventListener("pointerup", endDrag);
+    handle.addEventListener("pointercancel", endDrag);
   }
 
   function formatReason(reason) {
@@ -320,7 +376,7 @@ window.VCoinUI = window.VCoinUI || {};
           <div class="vcoin-price-row"><span>Single section</span><strong>3 V-Coins</strong></div>
         </div>
 
-        <div style="margin-top:14px;">
+        <div class="vcoin-history-section">
           <div style="font-size:15px; font-weight:900; margin-bottom:2px;">Last balance actions</div>
           <div class="vcoin-history-list" id="vcoin-ledger-list">${renderHistorySkeleton()}</div>
         </div>
@@ -336,6 +392,7 @@ window.VCoinUI = window.VCoinUI || {};
       if (event.target === backdrop) closeSheet();
     });
     document.body.appendChild(backdrop);
+    bindSheetDragToClose(backdrop.querySelector(".vcoin-sheet"));
 
     document.getElementById("vcoin-close-btn").onclick = closeSheet;
     document.getElementById("vcoin-buy-btn").onclick = window.VCoinUI.openBuyVcoinBot;
@@ -382,6 +439,7 @@ window.VCoinUI = window.VCoinUI || {};
       </div>
     `;
     document.body.appendChild(backdrop);
+    bindSheetDragToClose(backdrop.querySelector(".vcoin-sheet"));
     backdrop.addEventListener("click", (event) => {
       if (event.target === backdrop) closeSheet();
     });
