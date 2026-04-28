@@ -169,6 +169,14 @@ window.openMockWarning = function (packId, title) {
 
 window.startFullMock = async function (mockId) {
   MockDebug.log("startFullMock.enter", { mockId });
+  if (window.VCoinUI?.ensureAccess) {
+    const allowed = await window.VCoinUI.ensureAccess({
+      contentType: "full_mock",
+      referenceId: mockId,
+      serviceName: "Full Mock Test"
+    });
+    if (!allowed) return;
+  }
   MockFlow.activate(mockId);
   await window.startListeningMock(mockId, { fromFlow: true });
 };
@@ -176,6 +184,14 @@ window.startFullMock = async function (mockId) {
 window.startMock = async function (mockId, options = {}) {
   MockDebug.log("startMock.enter", { mockId, options });
   if (!options.fromFlow) {
+    if (window.VCoinUI?.ensureAccess) {
+      const allowed = await window.VCoinUI.ensureAccess({
+        contentType: "separate_block",
+        referenceId: `reading:${mockId}`,
+        serviceName: "Reading section"
+      });
+      if (!allowed) return;
+    }
     MockFlow.deactivate();
   }
 
@@ -229,6 +245,14 @@ window.startMock = async function (mockId, options = {}) {
 window.startWritingMock = async function (mockId, options = {}) {
   MockDebug.log("startWritingMock.enter", { mockId, options });
   if (!options.fromFlow) {
+    if (window.VCoinUI?.ensureAccess) {
+      const allowed = await window.VCoinUI.ensureAccess({
+        contentType: "separate_block",
+        referenceId: `writing:${mockId}`,
+        serviceName: "Writing section"
+      });
+      if (!allowed) return;
+    }
     MockFlow.deactivate();
   }
 
@@ -257,6 +281,14 @@ window.startWritingMock = async function (mockId, options = {}) {
 window.startListeningMock = async function (mockId, options = {}) {
   MockDebug.log("startListeningMock.enter", { mockId, options });
   if (!options.fromFlow) {
+    if (window.VCoinUI?.ensureAccess) {
+      const allowed = await window.VCoinUI.ensureAccess({
+        contentType: "separate_block",
+        referenceId: `listening:${mockId}`,
+        serviceName: "Listening section"
+      });
+      if (!allowed) return;
+    }
     MockFlow.deactivate();
   }
 
@@ -386,6 +418,14 @@ window.startListeningMock = async function (mockId, options = {}) {
 window.startSpeakingMock = async function (mockId, options = {}) {
   MockDebug.log("startSpeakingMock.enter", { mockId, options });
   if (!options.fromFlow) {
+    if (window.VCoinUI?.ensureAccess) {
+      const allowed = await window.VCoinUI.ensureAccess({
+        contentType: "separate_block",
+        referenceId: `speaking:${mockId}`,
+        serviceName: "Speaking section"
+      });
+      if (!allowed) return;
+    }
     MockFlow.deactivate();
   }
 

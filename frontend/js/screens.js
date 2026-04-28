@@ -506,7 +506,7 @@ async function renderProfile() {
           cursor:pointer;
         ">Edit profile</button>
 
-        <div style="
+        <div data-vcoin-open="1" role="button" tabindex="0" style="
           width:100%;
           box-sizing:border-box;
           background:var(--card-bg);
@@ -515,6 +515,7 @@ async function renderProfile() {
           font-size:16px;
           font-weight:700;
           text-align:center;
+          cursor:pointer;
         ">
           V-Coin balance: ${vCoins}
         </div>

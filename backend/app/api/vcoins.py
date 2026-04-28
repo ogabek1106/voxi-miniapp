@@ -12,6 +12,7 @@ from app.services.payment_service import (
     reject_payment,
 )
 from app.services.vcoin_service import get_balance
+from app.services.vcoin_service import get_recent_ledger, spend_once_for_content
 
 
 router = APIRouter(prefix="/vcoins", tags=["vcoins"])
@@ -35,6 +36,12 @@ class PaymentActionIn(BaseModel):
     admin_telegram_id: Optional[int] = None
     reject_reason: Optional[str] = None
     reason: Optional[str] = None
+
+
+class VCoinSpendIn(BaseModel):
+    telegram_id: int
+    content_type: str
+    reference_id: str
 
 
 def require_backend_token(authorization: str = Header(default="")):
@@ -93,6 +100,50 @@ def get_vcoin_balance(telegram_id: int = Query(...), db: Session = Depends(get_d
     return {
         "telegram_id": int(telegram_id),
         "v_coins": get_balance(db, telegram_id),
+    }
+
+
+@router.get("/ledger")
+def get_vcoin_ledger(
+    telegram_id: int = Query(...),
+    limit: int = Query(4),
+    db: Session = Depends(get_db),
+):
+    entries = get_recent_ledger(db, telegram_id, limit=limit)
+    return {
+        "telegram_id": int(telegram_id),
+        "items": [
+            {
+                "id": item.id,
+                "delta": item.delta,
+                "reason": item.reason,
+                "reference_type": item.reference_type,
+                "reference_id": item.reference_id,
+                "balance_after": item.balance_after,
+                "created_at": item.created_at.isoformat() if item.created_at else None,
+            }
+            for item in entries
+        ],
+    }
+
+
+@router.post("/spend")
+def spend_vcoins(payload: VCoinSpendIn, db: Session = Depends(get_db)):
+    result = spend_once_for_content(
+        db=db,
+        telegram_id=payload.telegram_id,
+        content_type=payload.content_type,
+        reference_id=payload.reference_id,
+    )
+    db.commit()
+    return {
+        "ok": True,
+        "telegram_id": result.telegram_id,
+        "content_type": payload.content_type,
+        "reference_id": str(payload.reference_id),
+        "required": result.required,
+        "balance": result.balance,
+        "already_spent": result.reason == "already_spent",
     }
 
 
