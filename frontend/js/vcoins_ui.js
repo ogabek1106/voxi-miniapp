@@ -29,6 +29,8 @@ window.VCoinUI = window.VCoinUI || {};
         display: flex;
         align-items: flex-end;
         justify-content: center;
+        box-sizing: border-box;
+        padding: 0 12px calc(18px + env(safe-area-inset-bottom, 0px));
       }
 
       .vcoin-sheet {
@@ -36,12 +38,23 @@ window.VCoinUI = window.VCoinUI || {};
         max-height: 78vh;
         overflow: hidden;
         box-sizing: border-box;
-        border-radius: 24px 24px 0 0;
+        border-radius: 24px;
         background: #ffffff;
         color: #17212B;
-        padding: 16px;
+        padding: 16px 16px 20px;
         box-shadow: 0 -14px 40px rgba(20,40,60,0.20);
         font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+
+      @media (min-width: 700px) {
+        .vcoin-sheet-backdrop {
+          align-items: flex-end;
+          padding-bottom: max(96px, 12vh);
+        }
+
+        .vcoin-sheet {
+          max-height: min(680px, 72vh);
+        }
       }
 
       .vcoin-sheet-handle {
