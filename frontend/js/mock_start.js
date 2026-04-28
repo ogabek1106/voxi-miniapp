@@ -151,6 +151,7 @@ window.openMockWarning = function (packId, title) {
       ">
         <li>The test starts from Listening and continues in fixed order: Reading, Writing, Speaking.</li>
         <li>After each part, you get a short transition timer to prepare for the next part.</li>
+        <li>Starting this Full Mock will cost you 10 V-Coins.</li>
         <li>Do not refresh or close the app during the test.</li>
         <li>If you leave, your timer does not pause and exam pressure is preserved.</li>
         <li>You should not exit the test until all parts are completed.</li>

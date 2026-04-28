@@ -18,6 +18,7 @@ window.showMockList = async function () {
           <path d="M9 5L3.5 11L9 17" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path>
           <path d="M4.5 11H17.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"></path>
         </svg>
+        <span>Back</span>
       </button>
     </div>
   `;
