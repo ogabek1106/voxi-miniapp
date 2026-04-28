@@ -275,6 +275,18 @@ window.VCoinUI = window.VCoinUI || {};
     return labels[reason] || String(reason || "Balance update").replaceAll("_", " ");
   }
 
+  function formatLedgerTime(value) {
+    if (!value) return "Time unavailable";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "Time unavailable";
+
+    const pad = (part) => String(part).padStart(2, "0");
+    return [
+      `${pad(date.getHours())}:${pad(date.getMinutes())}`,
+      `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()}`
+    ].join(", ");
+  }
+
   function renderLedger(items) {
     if (!items.length) {
       return `<div class="vcoin-history-empty vcoin-muted">No balance actions yet.</div>`;
@@ -288,7 +300,7 @@ window.VCoinUI = window.VCoinUI || {};
         <div class="vcoin-ledger-row">
           <div>
             <div style="font-weight:800;">${formatReason(item?.reason)}</div>
-            <div class="vcoin-muted">Balance after: ${Number(item?.balance_after || 0)} V-Coins</div>
+            <div class="vcoin-muted">${formatLedgerTime(item?.created_at)}</div>
           </div>
           <div class="${klass}">${sign}${delta}</div>
         </div>
@@ -323,7 +335,7 @@ window.VCoinUI = window.VCoinUI || {};
   async function fetchLedger() {
     const id = telegramId();
     if (!id) return [];
-    const data = await apiGet(`/vcoins/ledger?telegram_id=${id}&limit=4`);
+    const data = await apiGet(`/vcoins/ledger?telegram_id=${id}`);
     return Array.isArray(data?.items) ? data.items : [];
   }
 
@@ -374,7 +386,7 @@ window.VCoinUI = window.VCoinUI || {};
         </div>
 
         <div class="vcoin-history-section">
-          <div style="font-size:15px; font-weight:900; margin-bottom:2px;">Last balance actions</div>
+          <div style="font-size:15px; font-weight:900; margin-bottom:2px;">Balance history</div>
           <div class="vcoin-history-list" id="vcoin-ledger-list">${renderHistorySkeleton()}</div>
         </div>
 

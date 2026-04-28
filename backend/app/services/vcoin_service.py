@@ -75,15 +75,15 @@ def write_ledger(
     return entry
 
 
-def get_recent_ledger(db: Session, telegram_id: int, limit: int = 4):
-    safe_limit = max(1, min(int(limit or 4), 20))
-    return (
+def get_recent_ledger(db: Session, telegram_id: int, limit: Optional[int] = None):
+    query = (
         db.query(CoinLedger)
         .filter(CoinLedger.telegram_id == int(telegram_id))
         .order_by(CoinLedger.created_at.desc(), CoinLedger.id.desc())
-        .limit(safe_limit)
-        .all()
     )
+    if limit:
+        query = query.limit(max(1, int(limit)))
+    return query.all()
 
 
 def add_coins(

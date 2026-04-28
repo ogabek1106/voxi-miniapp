@@ -1,4 +1,5 @@
 import os
+from datetime import timezone
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Body, Depends, Header, HTTPException, Query
@@ -65,6 +66,14 @@ def require_backend_token(authorization: str = Header(default="")):
         raise HTTPException(status_code=401, detail="invalid_vcoin_backend_token")
 
 
+def _serialize_datetime(value):
+    if not value:
+        return None
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc).isoformat()
+
+
 @router.post("/payment-requests")
 def create_vcoin_payment_request(
     payload: PaymentRequestIn,
@@ -127,7 +136,7 @@ def get_vcoin_buy_link():
 @router.get("/ledger")
 def get_vcoin_ledger(
     telegram_id: int = Query(...),
-    limit: int = Query(4),
+    limit: Optional[int] = Query(None),
     db: Session = Depends(get_db),
 ):
     entries = get_recent_ledger(db, telegram_id, limit=limit)
@@ -141,7 +150,7 @@ def get_vcoin_ledger(
                 "reference_type": item.reference_type,
                 "reference_id": item.reference_id,
                 "balance_after": item.balance_after,
-                "created_at": item.created_at.isoformat() if item.created_at else None,
+                "created_at": _serialize_datetime(item.created_at),
             }
             for item in entries
         ],
