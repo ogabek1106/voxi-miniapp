@@ -36,6 +36,7 @@ window.VCoinUI = window.VCoinUI || {};
       .vcoin-sheet {
         width: min(100%, 420px);
         max-height: 78vh;
+        height: min(620px, 78vh);
         overflow: hidden;
         box-sizing: border-box;
         border-radius: 24px;
@@ -43,8 +44,8 @@ window.VCoinUI = window.VCoinUI || {};
         color: #17212B;
         padding: 16px 16px 20px;
         box-shadow: 0 -14px 40px rgba(20,40,60,0.20);
-        display: flex;
-        flex-direction: column;
+        display: grid;
+        grid-template-rows: auto auto auto auto minmax(0, 1fr) auto;
         font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
       }
 
@@ -55,13 +56,8 @@ window.VCoinUI = window.VCoinUI || {};
         }
 
         .vcoin-sheet {
-          max-height: min(620px, 64vh);
-        }
-
-        .vcoin-history-list,
-        .vcoin-history-empty {
-          min-height: 132px;
-          max-height: 150px;
+          height: min(720px, 76vh);
+          max-height: min(720px, 76vh);
         }
       }
 
@@ -131,15 +127,17 @@ window.VCoinUI = window.VCoinUI || {};
       }
 
       .vcoin-history-list {
-        height: 180px;
-        min-height: 120px;
+        height: 100%;
+        min-height: 0;
+        max-height: none;
         overflow-y: auto;
         overscroll-behavior: contain;
         padding-right: 2px;
+        padding-bottom: 4px;
       }
 
       .vcoin-history-empty {
-        min-height: 180px;
+        min-height: 100%;
         display: flex;
         align-items: center;
       }
@@ -191,7 +189,6 @@ window.VCoinUI = window.VCoinUI || {};
       }
 
       .vcoin-sheet-actions {
-        flex: 0 0 auto;
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 10px;
@@ -199,12 +196,12 @@ window.VCoinUI = window.VCoinUI || {};
         padding-top: 12px;
         padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px));
         background: #ffffff;
-        z-index: 1;
+        z-index: 2;
       }
 
       .vcoin-history-section {
-        flex: 1 1 auto;
         min-height: 0;
+        overflow: hidden;
         margin-top: 14px;
       }
 
