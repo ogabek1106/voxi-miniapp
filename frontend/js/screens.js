@@ -49,6 +49,9 @@ window.goHome = function () {
   if (screenHome) screenHome.style.display = "block";
   setBottomNavVisible(true);
   setActiveNav(0);
+  if (typeof window.refreshVcoinBalance === "function") {
+    window.refreshVcoinBalance({ animate: true });
+  }
 };
 
 window.goProfile = function () {
