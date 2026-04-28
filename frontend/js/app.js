@@ -81,6 +81,10 @@ function renderHomeIdentity(me) {
 }
 
 function ensureListeningHomeButton(visible) {
+  const legacyBtn = document.getElementById("listeningHomeBtn");
+  if (legacyBtn) legacyBtn.remove();
+  return;
+
   const existingBtn = document.getElementById("listeningHomeBtn");
   if (existingBtn) {
     existingBtn.style.display = visible ? "block" : "none";
