@@ -21,7 +21,8 @@ def get_mock_list(db: Session = Depends(get_db)):
     return [
         {
             "id": p.id,
-            "title": p.title
+            "title": p.title,
+            "created_at": p.created_at.isoformat() if p.created_at else None,
         }
         for p in packs
     ]
