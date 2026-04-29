@@ -440,73 +440,42 @@ async function renderProfile() {
 
     const name = me.name || "";
     const surname = me.surname || "";
+    const fullName = [name, surname].filter(Boolean).join(" ") || "Profile";
+    const safeFullName = window.ProfileUI?.escapeHtml ? window.ProfileUI.escapeHtml(fullName) : fullName;
     const vCoins = Number(me.v_coins || 0);
 
     screenProfile.innerHTML = `
-      <div style="display:flex; flex-direction:column; align-items:center; gap:16px; width:100%;">
-        <div style="
-          width:96px; height:96px;
-          border-radius:50%;
-          background:#1f1f2a;
-          display:flex; align-items:center; justify-content:center;
-          font-size:40px;
-        ">
-          🦊
-        </div>
-
-        <div style="width:100%; margin:0;">
-          <div style="
-            width:100%;
-            max-width: 100%; 
-            margin: 0 auto; 
-            box-sizing: border-box;
-            background: var(--card-bg);
-            border: none;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-            border-radius:16px;
-            padding:16px 14px;
-            text-align:left;
-          ">
-            <div style="margin-bottom:16px; text-align:center;">
-              <div style="font-size:18px; font-weight:600;">${name || "&nbsp;"}</div>
-              <div style="height:1px; background:var(--border-color); opacity:0.6; margin-top:6px;"></div>
-              <div style="font-size:10px; opacity:0.45; margin-top:4px;">Your name</div>
-            </div>
-
-            <div style="text-align:center;">
-              <div style="font-size:18px; font-weight:600;">${surname || "&nbsp;"}</div>
-              <div style="height:1px; background:var(--border-color); opacity:0.6; margin-top:6px;"></div>
-              <div style="font-size:10px; opacity:0.45; margin-top:4px;">Your surname</div>
-            </div>
+      <div class="profile-shell">
+        <div class="profile-card profile-summary-card">
+          <div class="profile-avatar" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"></circle>
+              <path d="M5 19.2c1.5-3 4-4.7 7-4.7s5.5 1.7 7 4.7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+            </svg>
           </div>
+          <div>
+            <div class="profile-name">${safeFullName}</div>
+            <div class="profile-level">Beginner</div>
+          </div>
+          <button class="profile-edit-btn" onclick="editProfile()" aria-label="Edit profile">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M4 20h4.2L19 9.2a2.4 2.4 0 00-3.4-3.4L4.8 16.6 4 20z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+            </svg>
+            <span>Edit</span>
+          </button>
         </div>
 
-        <button onclick="editProfile()" style="
-          background:none;
-          border:none;
-          color: var(--primary);
-          font-size:14px;
-          padding:0;
-          cursor:pointer;
-        ">Edit profile</button>
-
-        <div data-vcoin-open="1" role="button" tabindex="0" style="
-          width:100%;
-          box-sizing:border-box;
-          background:var(--card-bg);
-          border-radius:14px;
-          padding:14px;
-          font-size:16px;
-          font-weight:700;
-          text-align:center;
-          cursor:pointer;
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          gap:8px;
-        ">
-          <img class="vcoin-icon" src="./assets/vcoin.png" alt="" aria-hidden="true">
-          <span>V-Coin balance: ${vCoins}</span>
+        <div class="profile-card profile-vcoin-card" data-vcoin-open="1" role="button" tabindex="0">
+          <div class="profile-icon-box" aria-hidden="true">
+            <img class="vcoin-icon" src="./assets/vcoin.png" alt="">
+          </div>
+          <div>
+            <div class="profile-card-title">V-Coin balance</div>
+            <div class="profile-card-subtitle">${vCoins} V-Coins</div>
+          </div>
+          <svg class="profile-chevron" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
         </div>
 
         ${lastActivityHtml}
