@@ -294,9 +294,29 @@
     width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 13px;
     font-family: Nunito, Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
     color: #17212B;
+  }
+
+  #screen-profile .profile-page-header {
+    padding: 4px 2px 0;
+  }
+
+  #screen-profile .profile-page-title {
+    margin: 0;
+    color: #17212B;
+    font-size: 24px;
+    font-weight: 900;
+    line-height: 1.15;
+  }
+
+  #screen-profile .profile-page-subtitle {
+    margin-top: 5px;
+    color: #607080;
+    font-size: 13px;
+    font-weight: 800;
+    line-height: 1.25;
   }
 
   #screen-profile .profile-card {
@@ -308,12 +328,20 @@
     padding: 16px;
   }
 
-  #screen-profile .profile-summary-card,
   #screen-profile .profile-vcoin-card {
     display: grid;
     grid-template-columns: 46px minmax(0, 1fr) auto;
     align-items: center;
     gap: 12px;
+  }
+
+  #screen-profile .profile-summary-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 10px;
+    padding: 18px 16px 16px;
   }
 
   #screen-profile .profile-avatar,
@@ -329,10 +357,16 @@
   }
 
   #screen-profile .profile-avatar {
+    width: 58px;
+    height: 58px;
     border-radius: 50%;
   }
 
-  #screen-profile .profile-avatar svg,
+  #screen-profile .profile-avatar svg {
+    width: 27px;
+    height: 27px;
+  }
+
   #screen-profile .profile-chevron {
     width: 20px;
     height: 20px;
@@ -347,7 +381,10 @@
     line-height: 1.2;
   }
 
-  #screen-profile .profile-level,
+  #screen-profile .profile-name {
+    font-size: 22px;
+  }
+
   #screen-profile .profile-card-subtitle,
   #screen-profile .profile-row-subtitle {
     margin-top: 4px;
@@ -357,14 +394,28 @@
     line-height: 1.25;
   }
 
+  #screen-profile .profile-level-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 26px;
+    padding: 0 12px;
+    border-radius: 999px;
+    background: rgba(0,186,255,0.12);
+    color: #00A6E6;
+    font-size: 12px;
+    font-weight: 900;
+    line-height: 1;
+  }
+
   #screen-profile .profile-edit-btn {
     width: auto;
-    height: 36px;
-    margin: 0;
-    padding: 0 12px;
-    border-radius: 14px;
-    background: rgba(0,186,255,0.10);
-    color: #00A6E6;
+    height: 30px;
+    margin: 2px 0 0;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: #F5F9FC;
+    color: #607080;
     box-shadow: none;
     display: inline-flex;
     align-items: center;
@@ -375,8 +426,36 @@
   }
 
   #screen-profile .profile-edit-btn svg {
-    width: 15px;
-    height: 15px;
+    width: 14px;
+    height: 14px;
+  }
+
+  #screen-profile .profile-stat-row {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 2px;
+  }
+
+  #screen-profile .profile-stat-chip {
+    min-height: 32px;
+    padding: 0 11px;
+    border-radius: 999px;
+    background: #F5F9FC;
+    color: #607080;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  #screen-profile .profile-stat-chip strong {
+    color: #17212B;
+    font-weight: 900;
   }
 
   #screen-profile .profile-vcoin-card {
@@ -434,6 +513,30 @@
     color: #17212B;
     font-size: 13px;
     font-weight: 900;
+  }
+
+  #screen-profile .profile-activity-heading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  #screen-profile .profile-reading-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 13px;
+    background: rgba(0,186,255,0.12);
+    color: #00BAFF;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+  }
+
+  #screen-profile .profile-reading-icon svg {
+    width: 18px;
+    height: 18px;
   }
 
   #screen-home .home-announcement {

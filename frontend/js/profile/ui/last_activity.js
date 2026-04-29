@@ -53,6 +53,12 @@ ProfileUI.openLastActivityResult = function (index) {
   }
 };
 
+ProfileUI.formatLastScore = function (item) {
+  if (!item) return "-";
+  const score = String(item.score ?? "").trim();
+  return score || "-";
+};
+
 ProfileUI.renderLastActivity = function (activity) {
   const list = Array.isArray(activity)
     ? activity.filter(Boolean)
@@ -63,7 +69,7 @@ ProfileUI.renderLastActivity = function (activity) {
   if (!list.length) {
     return `
       <div class="profile-card profile-activity-card">
-        <h3 class="profile-activity-title">Last Activity</h3>
+        <h3 class="profile-activity-title">Learning Activity</h3>
         <div class="profile-row-subtitle">No reading activity yet.</div>
       </div>
     `;
@@ -76,19 +82,26 @@ ProfileUI.renderLastActivity = function (activity) {
 
     return `
       <button class="profile-activity-row" onclick="ProfileUI.openLastActivityResult(${index})">
-        <div class="profile-row-title">IELTS Reading</div>
-        <div class="profile-row-subtitle">${readingTitle}</div>
-        <div class="profile-result-line">
-          <span>Score: ${score}</span>
-          <span>Band: ${band}</span>
+        <div class="profile-activity-heading">
+          <span class="profile-reading-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M5 5.5h6.5c1.4 0 2.5 1.1 2.5 2.5v10.5H7.5A2.5 2.5 0 015 16V5.5z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+              <path d="M14 8c0-1.4 1.1-2.5 2.5-2.5H19V18.5h-5V8z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+            </svg>
+          </span>
+          <span>
+            <div class="profile-row-title">IELTS Reading</div>
+            <div class="profile-row-subtitle">${readingTitle}</div>
+          </span>
         </div>
+        <div class="profile-result-line">Score ${score} · Band ${band}</div>
       </button>
     `;
   }).join("");
 
   return `
     <div class="profile-card profile-activity-card">
-      <h3 class="profile-activity-title">Last Activity</h3>
+      <h3 class="profile-activity-title">Learning Activity</h3>
       <div class="profile-activity-list">
         ${rowsHtml}
       </div>

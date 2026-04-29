@@ -443,9 +443,21 @@ async function renderProfile() {
     const fullName = [name, surname].filter(Boolean).join(" ") || "Profile";
     const safeFullName = window.ProfileUI?.escapeHtml ? window.ProfileUI.escapeHtml(fullName) : fullName;
     const vCoins = Number(me.v_coins || 0);
+    const activityList = Array.isArray(me.last_activity)
+      ? me.last_activity.filter(Boolean)
+      : (me.last_activity ? [me.last_activity] : []);
+    const lastScore = window.ProfileUI?.formatLastScore
+      ? window.ProfileUI.formatLastScore(activityList[0])
+      : "-";
+    const safeLastScore = window.ProfileUI?.escapeHtml ? window.ProfileUI.escapeHtml(lastScore) : lastScore;
 
     screenProfile.innerHTML = `
       <div class="profile-shell">
+        <div class="profile-page-header">
+          <h2 class="profile-page-title">Profile</h2>
+          <div class="profile-page-subtitle">Your learning account</div>
+        </div>
+
         <div class="profile-card profile-summary-card">
           <div class="profile-avatar" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none">
@@ -455,14 +467,19 @@ async function renderProfile() {
           </div>
           <div>
             <div class="profile-name">${safeFullName}</div>
-            <div class="profile-level">Beginner</div>
+            <div class="profile-level-badge">Beginner</div>
           </div>
           <button class="profile-edit-btn" onclick="editProfile()" aria-label="Edit profile">
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M4 20h4.2L19 9.2a2.4 2.4 0 00-3.4-3.4L4.8 16.6 4 20z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
             </svg>
-            <span>Edit</span>
+            <span>Edit profile</span>
           </button>
+          <div class="profile-stat-row">
+            <div class="profile-stat-chip">Level <strong>Beginner</strong></div>
+            <div class="profile-stat-chip">V-Coins <strong>${vCoins}</strong></div>
+            <div class="profile-stat-chip">Last score <strong>${safeLastScore}</strong></div>
+          </div>
         </div>
 
         <div class="profile-card profile-vcoin-card" data-vcoin-open="1" role="button" tabindex="0">
@@ -470,8 +487,8 @@ async function renderProfile() {
             <img class="vcoin-icon" src="./assets/vcoin.png" alt="">
           </div>
           <div>
-            <div class="profile-card-title">V-Coin balance</div>
-            <div class="profile-card-subtitle">${vCoins} V-Coins</div>
+            <div class="profile-card-title">Wallet</div>
+            <div class="profile-card-subtitle">${vCoins} V-Coins available</div>
           </div>
           <svg class="profile-chevron" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
