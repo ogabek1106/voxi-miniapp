@@ -1,68 +1,126 @@
 // frontend/js/listening/admin_listening/question_types/visual_labeling.js
 window.AdminListeningTypeVisualLabeling = window.AdminListeningTypeVisualLabeling || {};
 
-AdminListeningTypeVisualLabeling.render = function (ctx) {
-  const wrap = document.createElement("div");
-  wrap.style.display = "flex";
-  wrap.style.flexDirection = "column";
-  wrap.style.gap = "8px";
+(function () {
+  function hydrate(block) {
+    if (!block.meta) block.meta = {};
+    if (!block.meta.answer_mode) block.meta.answer_mode = "text";
+    AdminListeningUtils.ensureQuestionCount(block, Math.max(1, block.questions?.length || 1));
+  }
 
-  const block = ctx.block;
-  const sectionIndex = ctx.sectionIndex;
-  const blockIndex = ctx.blockIndex;
-  if (!block.meta) block.meta = {};
-  if (!block.meta.label_bank) block.meta.label_bank = "";
+  function labelForType(type) {
+    if (type === "diagram_label" || type === "diagram_labeling") return "diagram";
+    if (type === "plan_label") return "plan";
+    return "map";
+  }
 
-  const label = document.createElement("label");
-  label.textContent = "Shared label bank (optional, one label per line)";
-  label.style.fontSize = "12px";
-  label.style.opacity = "0.8";
-  wrap.appendChild(label);
+  AdminListeningTypeVisualLabeling.hydrate = hydrate;
 
-  const bank = document.createElement("textarea");
-  bank.rows = 3;
-  bank.value = block.meta.label_bank || "";
-  bank.oninput = () => {
-    block.meta.label_bank = bank.value;
-    ctx.onChange();
+  AdminListeningTypeVisualLabeling.render = function (ctx) {
+    const block = ctx.block;
+    hydrate(block);
+    const wrap = document.createElement("div");
+    wrap.className = "listening-type-panel";
+
+    const helper = document.createElement("div");
+    helper.className = "listening-help-text";
+    helper.textContent = `Upload a ${labelForType(block.type)} image in the static visual field, then add labels and answers here.`;
+    wrap.appendChild(helper);
+
+    const mode = document.createElement("select");
+    mode.className = "listening-editor-input";
+    ["text", "dropdown"].forEach((value) => {
+      const opt = document.createElement("option");
+      opt.value = value;
+      opt.textContent = value === "text" ? "Text answer mode" : "Dropdown option mode";
+      if (value === block.meta.answer_mode) opt.selected = true;
+      mode.appendChild(opt);
+    });
+    mode.onchange = () => {
+      block.meta.answer_mode = mode.value;
+      ctx.onChange();
+    };
+    wrap.appendChild(mode);
+
+    const list = document.createElement("div");
+    list.className = "listening-dynamic-list";
+    (block.questions || []).forEach((q, qIndex) => {
+      const row = document.createElement("div");
+      row.className = "listening-dynamic-row";
+      row.innerHTML = `<div class="listening-row-title">Label ${qIndex + 1}</div>`;
+
+      const marker = document.createElement("input");
+      marker.className = "listening-editor-input";
+      marker.type = "text";
+      marker.placeholder = "Label marker, e.g. Q1 or A";
+      marker.value = q.content || "";
+      marker.oninput = () => {
+        AdminListeningState.updateQuestion(ctx.sectionIndex, ctx.blockIndex, qIndex, { content: marker.value });
+        ctx.onChange();
+      };
+      row.appendChild(marker);
+
+      const answer = document.createElement("input");
+      answer.className = "listening-editor-input";
+      answer.type = "text";
+      answer.placeholder = "Correct answer";
+      answer.value = q.correct_answer || "";
+      answer.oninput = () => {
+        AdminListeningState.updateQuestion(ctx.sectionIndex, ctx.blockIndex, qIndex, { correct_answer: answer.value });
+        ctx.onChange();
+      };
+      row.appendChild(answer);
+
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "listening-secondary-btn";
+      remove.textContent = "Remove";
+      remove.disabled = (block.questions || []).length <= 1;
+      remove.onclick = () => {
+        AdminListeningState.removeQuestion(ctx.sectionIndex, ctx.blockIndex, qIndex);
+        ctx.onRebuild();
+      };
+      row.appendChild(remove);
+      list.appendChild(row);
+    });
+    wrap.appendChild(list);
+
+    const add = document.createElement("button");
+    add.type = "button";
+    add.className = "listening-secondary-btn";
+    add.textContent = "Add label";
+    add.onclick = () => {
+      AdminListeningState.addQuestion(ctx.sectionIndex, ctx.blockIndex);
+      ctx.onRebuild();
+    };
+    wrap.appendChild(add);
+    return wrap;
   };
-  wrap.appendChild(bank);
 
-  (block.questions || []).forEach((q, qIndex) => {
-    const row = document.createElement("div");
-    row.style.display = "grid";
-    row.style.gridTemplateColumns = "80px 1fr 1fr";
-    row.style.gap = "6px";
-    row.style.alignItems = "center";
+  AdminListeningTypeVisualLabeling.serialize = function (block) {
+    hydrate(block);
+    return (block.questions || []).map((q, index) => ({
+      order_index: index + 1,
+      question_number: Number(q.number || 0),
+      type: block.type,
+      content: { text: q.content || "" },
+      correct_answer: { text: q.correct_answer || "" },
+      meta: { ...(q.meta || {}), answer_mode: block.meta.answer_mode || "text" }
+    }));
+  };
 
-    const qLabel = document.createElement("div");
-    qLabel.textContent = `Q${q.number || "?"}`;
-    qLabel.style.fontWeight = "600";
-    row.appendChild(qLabel);
-
-    const target = document.createElement("input");
-    target.type = "text";
-    target.placeholder = "Target marker";
-    target.value = q.content || "";
-    target.oninput = () => {
-      AdminListeningState.updateQuestion(sectionIndex, blockIndex, qIndex, { content: target.value });
-      ctx.onChange();
-    };
-    row.appendChild(target);
-
-    const answer = document.createElement("input");
-    answer.type = "text";
-    answer.placeholder = "Correct label";
-    answer.value = q.correct_answer || "";
-    answer.oninput = () => {
-      AdminListeningState.updateQuestion(sectionIndex, blockIndex, qIndex, { correct_answer: answer.value });
-      ctx.onChange();
-    };
-    row.appendChild(answer);
-
-    wrap.appendChild(row);
-  });
-
-  return wrap;
-};
-
+  AdminListeningTypeVisualLabeling.validate = function (block) {
+    hydrate(block);
+    const errors = [];
+    if (!block.image?.file && !block.image?.url && !block.image?.preview_url) {
+      errors.push(block.type === "diagram_label" || block.type === "diagram_labeling"
+        ? "Upload an image for diagram labelling."
+        : "Upload an image for map labelling.");
+    }
+    (block.questions || []).forEach((q, index) => {
+      if (!String(q.content || "").trim()) errors.push(`Add label marker ${index + 1}.`);
+      if (!String(q.correct_answer || "").trim()) errors.push(`Add the correct answer for label ${index + 1}.`);
+    });
+    return errors;
+  };
+})();

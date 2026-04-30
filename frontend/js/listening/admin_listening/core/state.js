@@ -159,6 +159,16 @@ window.AdminListeningState = window.AdminListeningState || {};
     if (!block) return;
     block.type = type;
     block.meta = {};
+    block.questions = [];
+    block.dynamic_errors = [];
+    block.validation_errors = [];
+    if (window.AdminListeningTypeRegistry?.hydrateBlock) {
+      window.AdminListeningTypeRegistry.hydrateBlock(block);
+    }
+    if (!block.questions.length) {
+      block.questions = [defaultQuestion()];
+    }
+    normalize();
   };
 
   AdminListeningState.setBlockImage = function (sectionIndex, blockIndex, file) {
@@ -189,6 +199,13 @@ window.AdminListeningState = window.AdminListeningState || {};
     const block = AdminListeningState.get().sections?.[sectionIndex]?.blocks?.[blockIndex];
     if (!block || block.questions.length <= 1) return;
     block.questions.pop();
+    normalize();
+  };
+
+  AdminListeningState.removeQuestion = function (sectionIndex, blockIndex, questionIndex) {
+    const block = AdminListeningState.get().sections?.[sectionIndex]?.blocks?.[blockIndex];
+    if (!block || !Array.isArray(block.questions) || block.questions.length <= 1) return;
+    block.questions.splice(questionIndex, 1);
     normalize();
   };
 
@@ -265,8 +282,10 @@ window.AdminListeningState = window.AdminListeningState || {};
               content: (q?.content && typeof q.content === "object" && "text" in q.content)
                 ? q.content.text
                 : (q?.content ?? ""),
-              correct_answer: (q?.correct_answer && typeof q.correct_answer === "object" && "text" in q.correct_answer)
-                ? q.correct_answer.text
+              correct_answer: (q?.correct_answer && typeof q.correct_answer === "object")
+                ? ("values" in q.correct_answer
+                    ? q.correct_answer.values
+                    : ("text" in q.correct_answer ? q.correct_answer.text : q.correct_answer))
                 : (q?.correct_answer ?? ""),
               meta: q?.meta || {}
             })),
@@ -279,6 +298,14 @@ window.AdminListeningState = window.AdminListeningState || {};
     if (!base.sections.length) {
       base.sections = [defaultSection()];
     }
+
+    base.sections.forEach((section) => {
+      (section.blocks || []).forEach((block) => {
+        if (window.AdminListeningTypeRegistry?.hydrateBlock) {
+          window.AdminListeningTypeRegistry.hydrateBlock(block);
+        }
+      });
+    });
 
     return base;
   };

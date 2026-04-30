@@ -15,6 +15,50 @@ AdminListeningUtils.getTypeLabel = function (type) {
   return info ? info.label : type;
 };
 
+AdminListeningUtils.getTypeExplanation = function (type) {
+  const info = AdminListeningUtils.getTypeInfo(type);
+  return info?.explanation || "Configure the selected Listening question type.";
+};
+
+AdminListeningUtils.extractGapNumbers = function (text) {
+  const found = [];
+  const seen = new Set();
+  String(text || "").replace(/\[\[(\d+)\]\]/g, (_match, raw) => {
+    const n = Number(raw);
+    if (Number.isFinite(n) && n > 0 && !seen.has(n)) {
+      seen.add(n);
+      found.push(n);
+    }
+    return "";
+  });
+  return found.sort((a, b) => a - b);
+};
+
+AdminListeningUtils.letters = function (count) {
+  return Array.from({ length: Math.max(0, Number(count || 0)) }, (_v, index) =>
+    String.fromCharCode(65 + index)
+  );
+};
+
+AdminListeningUtils.ensureQuestionCount = function (block, count) {
+  if (!block) return;
+  const target = Math.max(0, Number(count || 0));
+  if (!Array.isArray(block.questions)) block.questions = [];
+  while (block.questions.length < target) {
+    block.questions.push({
+      id: AdminListeningUtils.makeId("listening_q"),
+      number: null,
+      order_index: block.questions.length + 1,
+      content: "",
+      correct_answer: "",
+      meta: {}
+    });
+  }
+  while (block.questions.length > target) {
+    block.questions.pop();
+  }
+};
+
 AdminListeningUtils.recalculateGlobalQuestionNumbers = function (state) {
   let nextNumber = 1;
   (state.sections || []).forEach((section, sectionIndex) => {

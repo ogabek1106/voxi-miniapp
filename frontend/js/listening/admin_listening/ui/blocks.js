@@ -44,7 +44,7 @@ AdminListeningBlocks.renderBlock = function (ctx) {
   const blockInstructions = document.createElement("textarea");
   blockInstructions.rows = 2;
   blockInstructions.className = "listening-editor-input";
-  blockInstructions.placeholder = "Question block instruction (optional)";
+  blockInstructions.placeholder = "Instructions for this block";
   blockInstructions.value = block.instructions || "";
   blockInstructions.oninput = () => {
     AdminListeningState.updateBlock(sectionIndex, blockIndex, { instructions: blockInstructions.value });
@@ -58,7 +58,7 @@ AdminListeningBlocks.renderBlock = function (ctx) {
   const startInput = document.createElement("input");
   startInput.type = "text";
   startInput.className = "listening-editor-input";
-  startInput.placeholder = "Start time (optional, e.g. 00:35)";
+  startInput.placeholder = "Audio starts at, e.g. 00:35";
   startInput.value = block.start_time || "";
   startInput.oninput = () => {
     AdminListeningState.updateBlock(sectionIndex, blockIndex, { start_time: startInput.value });
@@ -69,7 +69,7 @@ AdminListeningBlocks.renderBlock = function (ctx) {
   const endInput = document.createElement("input");
   endInput.type = "text";
   endInput.className = "listening-editor-input";
-  endInput.placeholder = "End time (optional, e.g. 02:10)";
+  endInput.placeholder = "Audio ends at, e.g. 02:10";
   endInput.value = block.end_time || "";
   endInput.oninput = () => {
     AdminListeningState.updateBlock(sectionIndex, blockIndex, { end_time: endInput.value });
@@ -81,7 +81,7 @@ AdminListeningBlocks.renderBlock = function (ctx) {
   const imageRow = document.createElement("div");
   imageRow.className = "listening-upload-field";
   const imageLabel = document.createElement("label");
-  imageLabel.textContent = "Question block image (optional)";
+  imageLabel.textContent = "Visual for this question block";
   imageLabel.className = "listening-field-label";
   imageRow.appendChild(imageLabel);
   const imageInput = document.createElement("input");
@@ -93,6 +93,10 @@ AdminListeningBlocks.renderBlock = function (ctx) {
     onRebuild();
   };
   imageRow.appendChild(imageInput);
+  const imageHelp = document.createElement("div");
+  imageHelp.className = "listening-help-text";
+  imageHelp.textContent = "Use this for maps, diagrams, tables, or picture-based questions.";
+  imageRow.appendChild(imageHelp);
   if (block.image?.name) {
     const imageMeta = document.createElement("div");
     imageMeta.textContent = `Selected image: ${block.image.name}`;

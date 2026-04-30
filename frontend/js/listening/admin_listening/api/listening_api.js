@@ -104,16 +104,16 @@ AdminListeningApi._serialize = function (state) {
         questions: []
       };
 
-      (block.questions || []).forEach((q, qIndex) => {
-        blockOut.questions.push({
-          order_index: qIndex + 1,
-          question_number: Number(q.number || 0),
-          type: null,
-          content: AdminListeningApi._normalizeJsonValue(q.content),
-          correct_answer: AdminListeningApi._normalizeJsonValue(q.correct_answer),
-          meta: q.meta || {}
-        });
-      });
+      blockOut.questions = window.AdminListeningTypeRegistry?.serializeBlock
+        ? AdminListeningTypeRegistry.serializeBlock(block, blockIndex)
+        : (block.questions || []).map((q, qIndex) => ({
+            order_index: qIndex + 1,
+            question_number: Number(q.number || 0),
+            type: block.type || null,
+            content: AdminListeningApi._normalizeJsonValue(q.content),
+            correct_answer: AdminListeningApi._normalizeJsonValue(q.correct_answer),
+            meta: q.meta || {}
+          }));
 
       sectionOut.blocks.push(blockOut);
     });
@@ -124,7 +124,27 @@ AdminListeningApi._serialize = function (state) {
   return payload;
 };
 
+AdminListeningApi.validateState = function (state) {
+  const errors = [];
+  (state.sections || []).forEach((section, sectionIndex) => {
+    (section.blocks || []).forEach((block, blockIndex) => {
+      const blockErrors = window.AdminListeningTypeRegistry?.validateBlock
+        ? AdminListeningTypeRegistry.validateBlock(block)
+        : [];
+      block.validation_errors = blockErrors;
+      blockErrors.forEach((message) => {
+        errors.push(`Part ${sectionIndex + 1}, question block ${blockIndex + 1}: ${message}`);
+      });
+    });
+  });
+  return errors;
+};
+
 AdminListeningApi.saveDraft = async function (packId, state) {
+  const errors = AdminListeningApi.validateState(state);
+  if (errors.length) {
+    throw new Error(errors.join("\n"));
+  }
   const prepared = await AdminListeningApi._prepareStateForSave(state);
   const payload = AdminListeningApi._serialize(prepared);
   return await apiPut(`/admin/listening/mock-packs/${packId}`, payload);

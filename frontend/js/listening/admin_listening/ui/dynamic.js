@@ -33,6 +33,7 @@ window.AdminListeningDynamic = window.AdminListeningDynamic || {};
         } catch (error) {
           console.error(error);
           if (statusEl) statusEl.textContent = `Save failed: ${error?.message || "error"}`;
+          rerender();
         } finally {
           saveBtn.disabled = false;
         }
