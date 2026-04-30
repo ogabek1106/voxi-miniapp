@@ -103,16 +103,20 @@ AdminListeningSections.render = function (root, handlers) {
     };
     card.appendChild(addQuestionBlock);
 
-    const globalInstruction2 = document.createElement("textarea");
-    globalInstruction2.rows = 2;
-    globalInstruction2.className = "listening-editor-input listening-global-between";
-    globalInstruction2.placeholder = "Add Global Instruction 2 (optional)";
-    globalInstruction2.value = section.global_instruction_2 || "";
-    globalInstruction2.oninput = () => {
-      AdminListeningState.updateSectionGlobalInstruction2(sectionIndex, globalInstruction2.value);
+    const globalInstructionAfter = document.createElement("textarea");
+    globalInstructionAfter.rows = 2;
+    globalInstructionAfter.className = "listening-editor-input listening-global-between";
+    globalInstructionAfter.placeholder = `Global Instruction ${sectionIndex + 2}: Example: You now have some time to look at the next questions.`;
+    globalInstructionAfter.value = section.global_instruction_after || section.global_instruction_2 || "";
+    globalInstructionAfter.oninput = () => {
+      AdminListeningState.updateSectionGlobalInstructionAfter(sectionIndex, globalInstructionAfter.value);
       onChange();
     };
-    card.appendChild(globalInstruction2);
+    const globalInstructionHelp = document.createElement("div");
+    globalInstructionHelp.className = "listening-help-text";
+    globalInstructionHelp.textContent = `This instruction stays after Part ${sectionIndex + 1}. It cannot be removed separately.`;
+    card.appendChild(globalInstructionAfter);
+    card.appendChild(globalInstructionHelp);
 
     root.appendChild(card);
   });

@@ -360,6 +360,18 @@ def ensure_speaking_schema():
         ))
 
 
+def ensure_listening_instruction_schema():
+    with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+        conn.execute(text(
+            "ALTER TABLE listening_tests "
+            "ADD COLUMN IF NOT EXISTS global_instruction_intro TEXT;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE listening_sections "
+            "ADD COLUMN IF NOT EXISTS global_instruction_after TEXT;"
+        ))
+
+
 def ensure_full_mock_results_schema():
     with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
         conn.execute(text(

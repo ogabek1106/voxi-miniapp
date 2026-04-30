@@ -28,6 +28,7 @@ from .db import (
     ensure_reading_question_type_values,
     ensure_writing_schema,
     ensure_speaking_schema,
+    ensure_listening_instruction_schema,
     ensure_full_mock_results_schema,
     ensure_vcoin_schema,
     ensure_announcement_schema
@@ -84,6 +85,7 @@ app.add_middleware(
 )
 
 Base.metadata.create_all(bind=engine)
+ensure_listening_instruction_schema()
 
 @app.get("/")
 async def root():

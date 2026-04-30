@@ -49,15 +49,6 @@ AdminListeningApi._prepareStateForSave = async function (state) {
   const next = JSON.parse(JSON.stringify(state || {}));
   const sections = Array.isArray(next.sections) ? next.sections : [];
 
-  if (next.audio?.file instanceof File) {
-    const uploadedAudio = await AdminListeningApi.uploadAudio(next.audio.file);
-    next.audio = {
-      ...next.audio,
-      url: uploadedAudio.raw_url,
-      preview_url: uploadedAudio.url
-    };
-  }
-
   for (const section of sections) {
     const blocks = Array.isArray(section.blocks) ? section.blocks : [];
     for (const block of blocks) {
@@ -77,7 +68,8 @@ AdminListeningApi._prepareStateForSave = async function (state) {
 AdminListeningApi._serialize = function (state) {
   const payload = {
     title: state.title || "",
-    audio_url: state.audio?.url || state.audio?.preview_url || null,
+    audio_url: null,
+    global_instruction_intro: state.global_instruction_1 || "",
     time_limit_minutes: Number(state.time_limit_minutes || 60),
     status: "draft",
     sections: []
@@ -88,6 +80,7 @@ AdminListeningApi._serialize = function (state) {
       order_index: sectionIndex + 1,
       section_number: sectionIndex + 1,
       instructions: section.instructions || "",
+      global_instruction_after: section.global_instruction_after || "",
       blocks: []
     };
 

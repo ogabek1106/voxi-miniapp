@@ -6,9 +6,7 @@ AdminListeningTestForm.bind = function (onChange) {
 
   const titleInput = document.getElementById("listening-test-title");
   const globalInstructionInput = document.getElementById("listening-global-instruction-1");
-  const audioInput = document.getElementById("listening-test-audio");
   const timeInput = document.getElementById("listening-time-limit");
-  const audioMeta = document.getElementById("listening-audio-meta");
 
   if (titleInput) {
     titleInput.value = state.title || "";
@@ -34,34 +32,4 @@ AdminListeningTestForm.bind = function (onChange) {
     };
   }
 
-  if (audioMeta) {
-    if (state.audio?.name) {
-      audioMeta.textContent = `Selected audio: ${state.audio.name}`;
-    } else {
-      audioMeta.textContent = "No audio selected yet.";
-    }
-
-    const oldPlayer = document.getElementById("listening-audio-player");
-    if (oldPlayer) oldPlayer.remove();
-    const audioSrc = state.audio?.preview_url || state.audio?.url;
-    if (audioSrc && audioMeta.parentNode) {
-      const player = document.createElement("audio");
-      player.id = "listening-audio-player";
-      player.controls = true;
-      player.src = audioSrc;
-      player.style.width = "100%";
-      audioMeta.parentNode.appendChild(player);
-    }
-  }
-
-  if (audioInput) {
-    audioInput.onchange = () => {
-      const file = audioInput.files?.[0] || null;
-      AdminListeningState.setAudioFile(file);
-      if (audioMeta) {
-        audioMeta.textContent = file ? `Selected audio: ${file.name}` : "No audio selected yet.";
-      }
-      onChange();
-    };
-  }
 };
