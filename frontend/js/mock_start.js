@@ -325,18 +325,23 @@ window.startListeningMock = async function (mockId, options = {}) {
   }
 
   function normalizeListeningStartPayload(raw, fallbackMockId) {
-    if (Array.isArray(raw?.passages) || Array.isArray(raw?.sections)) {
-      return {
-        mock_id: raw?.mock_id || raw?.id || fallbackMockId,
-        title: raw?.title || "Listening Test",
-        time_limit_minutes: Number(raw?.time_limit_minutes || 60),
-        timer: raw?.timer || null,
-        sections: raw?.sections || raw?.passages || []
-      };
-    }
-
     let syntheticId = 1;
-    const sections = (raw?.sections || []).map((section, sectionIndex) => {
+    const rawSections = raw?.sections || raw?.passages || [];
+    const sections = rawSections.map((section, sectionIndex) => {
+      if (Array.isArray(section?.questions) && !Array.isArray(section?.blocks)) {
+        return {
+          ...section,
+          id: section?.id || (sectionIndex + 1),
+          title: section?.title || `Section ${Number(section?.section_number || sectionIndex + 1)}`,
+          text: section?.text || buildSectionText(section),
+          audio_url: section?.audio_url || null,
+          audio_name: section?.audio_name || null,
+          global_instruction_after: section?.global_instruction_after || "",
+          global_instruction_after_audio_url: section?.global_instruction_after_audio_url || null,
+          global_instruction_after_audio_name: section?.global_instruction_after_audio_name || null
+        };
+      }
+
       const questions = [];
 
       (section?.blocks || []).forEach((block, blockIndex) => {
@@ -383,6 +388,11 @@ window.startListeningMock = async function (mockId, options = {}) {
         id: section?.id || (sectionIndex + 1),
         title: `Section ${Number(section?.section_number || sectionIndex + 1)}`,
         text: buildSectionText(section),
+        audio_url: section?.audio_url || null,
+        audio_name: section?.audio_name || null,
+        global_instruction_after: section?.global_instruction_after || "",
+        global_instruction_after_audio_url: section?.global_instruction_after_audio_url || null,
+        global_instruction_after_audio_name: section?.global_instruction_after_audio_name || null,
         image_url: null,
         questions
       };
@@ -391,8 +401,11 @@ window.startListeningMock = async function (mockId, options = {}) {
     return {
       mock_id: raw?.id || fallbackMockId,
       title: raw?.title || "Listening Test",
+      global_instruction_intro: raw?.global_instruction_intro || "",
+      global_instruction_intro_audio_url: raw?.global_instruction_intro_audio_url || null,
+      global_instruction_intro_audio_name: raw?.global_instruction_intro_audio_name || null,
       time_limit_minutes: Number(raw?.time_limit_minutes || 60),
-      timer: null,
+      timer: raw?.timer || null,
       sections
     };
   }
@@ -407,7 +420,7 @@ window.startListeningMock = async function (mockId, options = {}) {
       return;
     }
 
-    UserListening.renderTest(screenReading, data);
+    UserListening.renderReadiness(screenReading, data);
     MockDebug.log("startListeningMock.renderedListening", { mockId, sections: Array.isArray(data.sections) ? data.sections.length : 0 });
   } catch (e) {
     console.error(e);

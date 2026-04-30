@@ -1031,6 +1031,128 @@
     color: #D93030;
   }
 
+  .listening-ready-screen,
+  .listening-intro-screen {
+    min-height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 18px;
+    box-sizing: border-box;
+    background: #F2F7FB;
+  }
+
+  .listening-ready-card,
+  .listening-intro-card {
+    width: min(560px, 100%);
+    border-radius: 24px;
+    background: #FFFFFF;
+    padding: 24px;
+    box-shadow: 0 18px 45px rgba(20, 40, 60, 0.12);
+    color: #17212B;
+  }
+
+  .listening-ready-kicker {
+    margin-bottom: 8px;
+    color: #00A6E6;
+    font-size: 13px;
+    font-weight: 900;
+  }
+
+  .listening-ready-card h2,
+  .listening-intro-card h2 {
+    margin: 0 0 12px 0;
+    font-size: 28px;
+    line-height: 1.1;
+    font-weight: 900;
+  }
+
+  .listening-ready-card p,
+  .listening-intro-card p,
+  .listening-ready-card li {
+    color: #607080;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .listening-ready-card ul {
+    margin: 14px 0 0 18px;
+    padding: 0;
+  }
+
+  .listening-ready-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 22px;
+  }
+
+  .listening-ready-actions button {
+    height: 48px;
+    border: 0;
+    border-radius: 16px;
+    font-size: 15px;
+    font-weight: 900;
+    box-shadow: 0 8px 24px rgba(20,40,60,0.08);
+  }
+
+  #listening-sound-test-btn {
+    background: #F5F9FC;
+    color: #17212B;
+  }
+
+  #listening-ready-btn {
+    background: #00BAFF;
+    color: #FFFFFF;
+  }
+
+  .listening-audio-status,
+  .listening-audio-notice {
+    margin: 12px 0;
+    border-radius: 16px;
+    background: #EAF7FF;
+    color: #126C96;
+    padding: 12px 14px;
+    font-size: 14px;
+    font-weight: 800;
+  }
+
+  .listening-trackline {
+    position: sticky;
+    top: 38px;
+    z-index: 95;
+    margin: 0;
+    padding: 8px 12px 10px;
+    background: #FFFFFF;
+    border-bottom: 1px solid rgba(96, 112, 128, 0.14);
+    box-shadow: 0 8px 18px rgba(20, 40, 60, 0.06);
+  }
+
+  .listening-trackline-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    color: #17212B;
+    font-size: 12px;
+    font-weight: 900;
+  }
+
+  .listening-trackline-bar {
+    height: 6px;
+    margin-top: 7px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #E8EEF3;
+  }
+
+  #listening-trackline-fill {
+    width: 0%;
+    height: 100%;
+    border-radius: inherit;
+    background: #00BAFF;
+    transition: width 0.15s linear;
+  }
+
   #screen-mocks .listening-parts-root,
   #screen-mocks .listening-question-blocks {
     display: flex;

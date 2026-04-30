@@ -34,7 +34,7 @@ UserListening.collectAnswers = function () {
     grouped.get(qid).push(field);
   });
 
-  const answers = {};
+  const answers = { ...(UserListening.__sessionAnswers || {}) };
 
   grouped.forEach((controls, qid) => {
     if (!controls || !controls.length) return;

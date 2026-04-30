@@ -1,7 +1,162 @@
 // frontend/js/user_reading/dynamic.js
 window.UserListening = window.UserListening || {};
 
-UserListening.renderTest = function (container, data) {
+UserListening.playCheckSound = function () {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return;
+  const ctx = new AudioContextClass();
+  const gain = ctx.createGain();
+  const oscillator = ctx.createOscillator();
+
+  oscillator.type = "sine";
+  oscillator.frequency.value = 660;
+  gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + 0.03);
+  gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.55);
+
+  oscillator.connect(gain);
+  gain.connect(ctx.destination);
+  oscillator.start();
+  oscillator.stop(ctx.currentTime + 0.6);
+  setTimeout(() => ctx.close?.(), 800);
+};
+
+UserListening.formatAudioTime = function (seconds) {
+  const safe = Number.isFinite(seconds) && seconds > 0 ? seconds : 0;
+  const mins = String(Math.floor(safe / 60)).padStart(2, "0");
+  const secs = String(Math.floor(safe % 60)).padStart(2, "0");
+  return `${mins}:${secs}`;
+};
+
+UserListening.storeCurrentAnswers = function () {
+  UserListening.__sessionAnswers = {
+    ...(UserListening.__sessionAnswers || {}),
+    ...UserListening.collectSaveableAnswers()
+  };
+};
+
+UserListening.renderReadiness = function (container, data) {
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="listening-ready-screen">
+      <div class="listening-ready-card">
+        <div class="listening-ready-kicker">Listening test</div>
+        <h2>${UserListening.escapeHtml(data?.title || "Listening Test")}</h2>
+        <p>
+          Before you begin, make sure your headphones or speakers are working and your volume is comfortable.
+          The audio will play once only. You will not be able to pause, rewind, or replay tracks during the test.
+        </p>
+        <ul>
+          <li>Find a quiet place before you start.</li>
+          <li>Keep the app open until the Listening section finishes.</li>
+          <li>Use the test sound if you need to check your volume.</li>
+        </ul>
+        <div class="listening-ready-actions">
+          <button type="button" id="listening-sound-test-btn">Test</button>
+          <button type="button" id="listening-ready-btn">Ready</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const testBtn = document.getElementById("listening-sound-test-btn");
+  const readyBtn = document.getElementById("listening-ready-btn");
+  if (testBtn) testBtn.onclick = () => UserListening.playCheckSound();
+  if (readyBtn) {
+    readyBtn.onclick = () => {
+      readyBtn.disabled = true;
+      UserListening.__activeSectionIndex = 0;
+      UserListening.__sessionAnswers = {};
+      UserListening.startListeningMode(container, data);
+    };
+  }
+};
+
+UserListening.startListeningMode = function (container, data) {
+  const introAudioUrl = data?.global_instruction_intro_audio_url;
+  if (!introAudioUrl) {
+    UserListening.renderTest(container, data, { activeSectionIndex: 0, playPart: true });
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="listening-intro-screen">
+      <div class="listening-intro-card">
+        <div class="listening-ready-kicker">Powered by EBAI Academy</div>
+        <h2>${UserListening.escapeHtml(data?.title || "Listening Test")}</h2>
+        <p>${UserListening.escapeHtml(data?.global_instruction_intro || "Listen carefully to the instructions before the test begins.")}</p>
+        <div class="listening-audio-status">Playing instructions...</div>
+      </div>
+    </div>
+  `;
+
+  const audio = new Audio(UserListening.toMediaUrl(introAudioUrl));
+  audio.preload = "auto";
+  UserListening.__currentAudio = audio;
+  audio.onended = () => UserListening.renderTest(container, data, { activeSectionIndex: 0, playPart: true });
+  audio.onerror = () => UserListening.renderTest(container, data, { activeSectionIndex: 0, playPart: true });
+  audio.play().catch(() => {
+    const status = container.querySelector(".listening-audio-status");
+    if (status) status.textContent = "Tap Ready again if your browser blocked audio autoplay.";
+    UserListening.renderTest(container, data, { activeSectionIndex: 0, playPart: true });
+  });
+};
+
+UserListening.showTrackline = function (label) {
+  const trackline = document.getElementById("listening-trackline");
+  const labelEl = document.getElementById("listening-trackline-label");
+  const timeEl = document.getElementById("listening-trackline-time");
+  const fill = document.getElementById("listening-trackline-fill");
+  if (!trackline || !labelEl || !timeEl || !fill) return;
+  trackline.hidden = false;
+  labelEl.textContent = label || "Track";
+  timeEl.textContent = "00:00 / 00:00";
+  fill.style.width = "0%";
+};
+
+UserListening.updateTrackline = function (audio) {
+  const timeEl = document.getElementById("listening-trackline-time");
+  const fill = document.getElementById("listening-trackline-fill");
+  if (!timeEl || !fill || !audio) return;
+  const duration = Number.isFinite(audio.duration) ? audio.duration : 0;
+  const current = Number.isFinite(audio.currentTime) ? audio.currentTime : 0;
+  const ratio = duration > 0 ? Math.min(1, current / duration) : 0;
+  timeEl.textContent = `${UserListening.formatAudioTime(current)} / ${UserListening.formatAudioTime(duration)}`;
+  fill.style.width = `${ratio * 100}%`;
+};
+
+UserListening.playPartAudioOnce = function (container, data, section, sectionIndex) {
+  if (!section?.audio_url) return;
+  if (UserListening.__currentAudio) {
+    UserListening.__currentAudio.pause();
+    UserListening.__currentAudio = null;
+  }
+
+  const audio = new Audio(UserListening.toMediaUrl(section.audio_url));
+  audio.preload = "auto";
+  UserListening.__currentAudio = audio;
+  UserListening.showTrackline(section.audio_name || `Part ${sectionIndex + 1} audio`);
+  audio.ontimeupdate = () => UserListening.updateTrackline(audio);
+  audio.onloadedmetadata = () => UserListening.updateTrackline(audio);
+  audio.onended = () => {
+    UserListening.updateTrackline(audio);
+    UserListening.advanceListeningPart(container, data, sectionIndex);
+  };
+  audio.play().catch(() => {
+    const notice = document.getElementById("listening-audio-notice");
+    if (notice) {
+      notice.textContent = "Audio is ready. Tap here once to start the track.";
+      notice.onclick = () => {
+        notice.onclick = null;
+        notice.textContent = "Playing audio...";
+        audio.play().catch(() => {});
+      };
+    }
+  });
+};
+
+UserListening.renderTest = function (container, data, options = {}) {
   UserListening.renderShell(container);
 
   const title = document.getElementById("reading-user-title");
@@ -12,27 +167,69 @@ UserListening.renderTest = function (container, data) {
 
   UserListening.__mockId = data?.mock_id || null;
   UserListening.__isSubmitted = false;
+  UserListening.__activeSectionIndex = Number(options.activeSectionIndex || 0);
 
-  let nextQuestionNumber = 1;
+  const allSections = (data.sections || data.passages) || [];
+  const activeSection = allSections[UserListening.__activeSectionIndex] || allSections[0];
+  const nextQuestionNumber = allSections
+    .slice(0, UserListening.__activeSectionIndex)
+    .reduce((total, section) => total + (section?.questions?.length || 0), 1);
 
   content.innerHTML =
-    ((data.sections || data.passages) || [])
-      .map((section, sectionIndex) => {
-        const sectionHtml = UserListening.renderPassage(
-          section,
-          sectionIndex,
-          nextQuestionNumber
-        );
-
-        nextQuestionNumber += section?.questions?.length || 0;
-        return sectionHtml;
-      })
-      .join("") +
-    UserListening.renderSubmitSection();
+    `<div id="listening-audio-notice" class="listening-audio-notice">Audio will play once only. Pausing and rewinding are not available.</div>` +
+    (activeSection ? UserListening.renderPassage(activeSection, UserListening.__activeSectionIndex, nextQuestionNumber) : "") +
+    (UserListening.__activeSectionIndex >= allSections.length - 1 ? UserListening.renderSubmitSection() : "");
 
   UserListening.initHeader(data);
+  const sectionLabel = document.getElementById("section-text");
+  if (sectionLabel) sectionLabel.textContent = `Section ${UserListening.__activeSectionIndex + 1}`;
   UserListening.restoreProgress(data);
+  if (UserListening.__sessionAnswers) {
+    UserListening.applyRestoredAnswers(UserListening.__sessionAnswers);
+  }
   UserListening.initAutoSave(data);
+  if (options.playPart) {
+    UserListening.playPartAudioOnce(container, data, activeSection, UserListening.__activeSectionIndex);
+  }
+};
+
+UserListening.advanceListeningPart = function (container, data, completedIndex) {
+  UserListening.storeCurrentAnswers();
+  const sections = (data.sections || data.passages) || [];
+  const nextIndex = completedIndex + 1;
+  const current = sections[completedIndex] || {};
+  if (nextIndex >= sections.length) return;
+
+  const renderNext = () => {
+    UserListening.renderTest(container, data, { activeSectionIndex: nextIndex, playPart: true });
+  };
+
+  if (!current.global_instruction_after && !current.global_instruction_after_audio_url) {
+    renderNext();
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="listening-intro-screen">
+      <div class="listening-intro-card">
+        <div class="listening-ready-kicker">Next part</div>
+        <h2>Part ${nextIndex + 1}</h2>
+        <p>${UserListening.escapeHtml(current.global_instruction_after || "You now have some time to look at the next questions.")}</p>
+        <div class="listening-audio-status">Preparing next part...</div>
+      </div>
+    </div>
+  `;
+
+  if (!current.global_instruction_after_audio_url) {
+    setTimeout(renderNext, 3500);
+    return;
+  }
+
+  const audio = new Audio(UserListening.toMediaUrl(current.global_instruction_after_audio_url));
+  UserListening.__currentAudio = audio;
+  audio.onended = renderNext;
+  audio.onerror = renderNext;
+  audio.play().catch(() => setTimeout(renderNext, 3500));
 };
 
 UserListening.renderPassage = function (section, sectionIndex, startingQuestionNumber = 1) {

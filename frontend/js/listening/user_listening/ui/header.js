@@ -388,6 +388,11 @@ UserListening.initSectionCounter = function () {
 
   if (!button || !label || !dropdown || !content || !passages.length) return;
 
+  const displayNumbers = passages.map((passage, index) => {
+    const raw = Number(passage.getAttribute("data-section-index"));
+    return Number.isFinite(raw) ? raw + 1 : index + 1;
+  });
+
   dropdown.innerHTML = passages.map((_, index) => `
     <button type="button" data-section-target="${index}" style="
       width: 100%;
@@ -397,7 +402,7 @@ UserListening.initSectionCounter = function () {
       text-align: center;
       font-weight: 700;
       cursor: pointer;
-    ">Section ${index + 1}</button>
+    ">Section ${displayNumbers[index]}</button>
   `).join("");
 
   button.style.cursor = "pointer";
@@ -438,7 +443,7 @@ UserListening.initSectionCounter = function () {
       }
     });
 
-    label.textContent = `Section ${activeIndex + 1}`;
+    label.textContent = `Section ${displayNumbers[activeIndex] || activeIndex + 1}`;
   }
 
   content.removeEventListener("scroll", UserListening.__updateActivePassage || function () {});

@@ -11,6 +11,13 @@ UserListening.escapeHtml = function (value) {
     .replace(/'/g, "&#039;");
 };
 
+UserListening.toMediaUrl = function (url) {
+  if (!url) return "";
+  if (/^https?:\/\//i.test(url)) return url;
+  const base = window.API || "";
+  return `${base}${String(url).startsWith("/") ? url : `/${url}`}`;
+};
+
 UserListening.renderShell = function (container) {
   if (!container) return;
 
@@ -23,6 +30,16 @@ UserListening.renderShell = function (container) {
 
       <!-- HEADER -->
       ${UserListening.renderHeader()}
+
+      <div id="listening-trackline" class="listening-trackline" hidden>
+        <div class="listening-trackline-top">
+          <span id="listening-trackline-label">Track</span>
+          <span id="listening-trackline-time">00:00 / 00:00</span>
+        </div>
+        <div class="listening-trackline-bar">
+          <div id="listening-trackline-fill"></div>
+        </div>
+      </div>
 
       <!-- DYNAMIC CONTENT -->
      <div id="reading-user-content" style="
