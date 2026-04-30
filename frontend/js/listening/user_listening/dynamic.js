@@ -1,10 +1,70 @@
 // frontend/js/user_reading/dynamic.js
 window.UserListening = window.UserListening || {};
 
-UserListening.playCheckSound = function () {
+UserListening.getCheckSoundUrl = function () {
+  if (UserListening.__checkSoundUrl) return UserListening.__checkSoundUrl;
+  const sampleRate = 44100;
+  const duration = 0.7;
+  const sampleCount = Math.floor(sampleRate * duration);
+  const bytes = new Uint8Array(44 + sampleCount * 2);
+  const view = new DataView(bytes.buffer);
+
+  function writeString(offset, value) {
+    for (let i = 0; i < value.length; i += 1) {
+      view.setUint8(offset + i, value.charCodeAt(i));
+    }
+  }
+
+  writeString(0, "RIFF");
+  view.setUint32(4, 36 + sampleCount * 2, true);
+  writeString(8, "WAVE");
+  writeString(12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeString(36, "data");
+  view.setUint32(40, sampleCount * 2, true);
+
+  for (let i = 0; i < sampleCount; i += 1) {
+    const t = i / sampleRate;
+    const fadeIn = Math.min(1, t / 0.04);
+    const fadeOut = Math.min(1, (duration - t) / 0.12);
+    const envelope = Math.max(0, Math.min(fadeIn, fadeOut));
+    const sample = Math.sin(2 * Math.PI * 660 * t) * 0.32 * envelope;
+    view.setInt16(44 + i * 2, Math.max(-1, Math.min(1, sample)) * 32767, true);
+  }
+
+  let binary = "";
+  bytes.forEach((byte) => {
+    binary += String.fromCharCode(byte);
+  });
+  UserListening.__checkSoundUrl = `data:audio/wav;base64,${btoa(binary)}`;
+  return UserListening.__checkSoundUrl;
+};
+
+UserListening.playCheckSound = async function () {
+  try {
+    const audio = new Audio(UserListening.getCheckSoundUrl());
+    audio.preload = "auto";
+    audio.playsInline = true;
+    audio.volume = 1;
+    UserListening.__checkSoundAudio = audio;
+    await audio.play();
+    return;
+  } catch (error) {
+    console.warn("HTMLAudio test sound failed, trying WebAudio fallback", error);
+  }
+
   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
   if (!AudioContextClass) return;
   const ctx = new AudioContextClass();
+  if (ctx.state === "suspended") {
+    await ctx.resume().catch(() => {});
+  }
   const gain = ctx.createGain();
   const oscillator = ctx.createOscillator();
 
