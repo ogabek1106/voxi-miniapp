@@ -48,12 +48,33 @@ AdminListeningApi._normalizeJsonValue = function (value) {
 AdminListeningApi._prepareStateForSave = async function (state) {
   const next = JSON.parse(JSON.stringify(state || {}));
   const sections = Array.isArray(next.sections) ? next.sections : [];
+  const sourceSections = Array.isArray(state?.sections) ? state.sections : [];
 
-  for (const section of sections) {
+  if (state?.global_instruction_1_audio?.file instanceof File) {
+    const uploadedAudio = await AdminListeningApi.uploadAudio(state.global_instruction_1_audio.file);
+    next.global_instruction_1_audio = {
+      ...next.global_instruction_1_audio,
+      url: uploadedAudio.raw_url,
+      preview_url: uploadedAudio.url
+    };
+  }
+
+  for (const [sectionIndex, section] of sections.entries()) {
+    const sourceSection = sourceSections[sectionIndex] || {};
+    if (sourceSection.global_instruction_after_audio?.file instanceof File) {
+      const uploadedAudio = await AdminListeningApi.uploadAudio(sourceSection.global_instruction_after_audio.file);
+      section.global_instruction_after_audio = {
+        ...section.global_instruction_after_audio,
+        url: uploadedAudio.raw_url,
+        preview_url: uploadedAudio.url
+      };
+    }
     const blocks = Array.isArray(section.blocks) ? section.blocks : [];
-    for (const block of blocks) {
-      if (block?.image?.file instanceof File) {
-        const uploadedImage = await AdminListeningApi.uploadImage(block.image.file);
+    const sourceBlocks = Array.isArray(sourceSection.blocks) ? sourceSection.blocks : [];
+    for (const [blockIndex, block] of blocks.entries()) {
+      const sourceBlock = sourceBlocks[blockIndex] || {};
+      if (sourceBlock?.image?.file instanceof File) {
+        const uploadedImage = await AdminListeningApi.uploadImage(sourceBlock.image.file);
         block.image = {
           ...block.image,
           url: uploadedImage.raw_url,
@@ -70,6 +91,8 @@ AdminListeningApi._serialize = function (state) {
     title: state.title || "",
     audio_url: null,
     global_instruction_intro: state.global_instruction_1 || "",
+    global_instruction_intro_audio_url:
+      state.global_instruction_1_audio?.url || state.global_instruction_1_audio?.preview_url || null,
     time_limit_minutes: Number(state.time_limit_minutes || 60),
     status: "draft",
     sections: []
@@ -81,6 +104,8 @@ AdminListeningApi._serialize = function (state) {
       section_number: sectionIndex + 1,
       instructions: section.instructions || "",
       global_instruction_after: section.global_instruction_after || "",
+      global_instruction_after_audio_url:
+        section.global_instruction_after_audio?.url || section.global_instruction_after_audio?.preview_url || null,
       blocks: []
     };
 

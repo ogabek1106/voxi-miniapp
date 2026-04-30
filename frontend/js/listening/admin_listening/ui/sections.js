@@ -114,8 +114,35 @@ AdminListeningSections.render = function (root, handlers) {
     };
     const globalInstructionHelp = document.createElement("div");
     globalInstructionHelp.className = "listening-help-text";
-    globalInstructionHelp.textContent = `This instruction stays after Part ${sectionIndex + 1}. It cannot be removed separately.`;
+    globalInstructionHelp.textContent = `This instruction stays after Part ${sectionIndex + 1}. Write text, upload audio, or use both.`;
+
+    const globalAudioField = document.createElement("div");
+    globalAudioField.className = "listening-upload-field";
+    const globalAudioLabel = document.createElement("label");
+    globalAudioLabel.className = "listening-field-label";
+    globalAudioLabel.textContent = `Global Instruction ${sectionIndex + 2} audio`;
+    globalAudioField.appendChild(globalAudioLabel);
+
+    const globalAudioInput = document.createElement("input");
+    globalAudioInput.type = "file";
+    globalAudioInput.accept = "audio/*";
+    globalAudioInput.onchange = () => {
+      const file = globalAudioInput.files?.[0] || null;
+      AdminListeningState.updateSectionGlobalInstructionAfterAudio(sectionIndex, file);
+      onChange();
+      onRebuild();
+    };
+    globalAudioField.appendChild(globalAudioInput);
+
+    const globalAudioMeta = document.createElement("div");
+    globalAudioMeta.className = "listening-help-text";
+    globalAudioMeta.textContent = section.global_instruction_after_audio?.name
+      ? `Selected audio: ${section.global_instruction_after_audio.name}`
+      : "No instruction audio selected yet.";
+    globalAudioField.appendChild(globalAudioMeta);
+
     card.appendChild(globalInstructionAfter);
+    card.appendChild(globalAudioField);
     card.appendChild(globalInstructionHelp);
 
     root.appendChild(card);

@@ -20,7 +20,12 @@ AdminListeningStatic.renderShell = function (container) {
 
         <label class="listening-field-label">Global Instruction 1 <span>(optional)</span></label>
         <textarea id="listening-global-instruction-1" rows="3" placeholder="Example: You now have some time to look at questions 1 to 10."></textarea>
-        <div class="listening-help-text">This instruction appears before Part 1 and cannot be removed.</div>
+        <div class="listening-upload-field">
+          <label class="listening-field-label">Instruction audio <span>(optional)</span></label>
+          <input id="listening-global-instruction-1-audio" type="file" accept="audio/*" />
+          <div id="listening-global-instruction-1-audio-meta" class="listening-help-text"></div>
+        </div>
+        <div class="listening-help-text">This instruction appears before Part 1 and cannot be removed. Write text, upload audio, or use both.</div>
 
         <label class="listening-field-label">Time limit minutes <span>(optional, default 60)</span></label>
         <input id="listening-time-limit" type="number" min="1" step="1" />

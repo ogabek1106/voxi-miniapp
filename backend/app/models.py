@@ -148,6 +148,7 @@ class ListeningTest(Base):
     title = Column(String, nullable=True)
     audio_url = Column(Text, nullable=True)
     global_instruction_intro = Column(Text, nullable=True)
+    global_instruction_intro_audio_url = Column(Text, nullable=True)
     time_limit_minutes = Column(Integer, default=60, nullable=False)
     status = Column(String, default="draft", nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=True)
@@ -169,6 +170,7 @@ class ListeningSection(Base):
     section_number = Column(Integer, nullable=False)
     instructions = Column(Text, nullable=True)
     global_instruction_after = Column(Text, nullable=True)
+    global_instruction_after_audio_url = Column(Text, nullable=True)
     order_index = Column(Integer, nullable=False, default=0)
 
     test = relationship("ListeningTest", back_populates="sections")

@@ -35,6 +35,7 @@ window.AdminListeningState = window.AdminListeningState || {};
       order_index: 1,
       instructions: "",
       global_instruction_after: "",
+      global_instruction_after_audio: null,
       blocks: [defaultBlock()]
     };
   }
@@ -44,6 +45,7 @@ window.AdminListeningState = window.AdminListeningState || {};
       id: AdminListeningUtils.makeId("listening_test"),
       title: "",
       global_instruction_1: "",
+      global_instruction_1_audio: null,
       time_limit_minutes: window.AdminListeningConstants?.DEFAULT_TIME_LIMIT_MINUTES || 60,
       question_count: 0,
       sections: [defaultSection()]
@@ -78,6 +80,22 @@ window.AdminListeningState = window.AdminListeningState || {};
     AdminListeningState.get().global_instruction_1 = AdminListeningUtils.safeString(value);
   };
 
+  AdminListeningState.setGlobalInstruction1Audio = function (file) {
+    const s = AdminListeningState.get();
+    if (!file) {
+      s.global_instruction_1_audio = null;
+      return;
+    }
+    s.global_instruction_1_audio = {
+      name: file.name || "instruction-audio",
+      size: file.size || 0,
+      type: file.type || "",
+      preview_url: URL.createObjectURL(file),
+      file,
+      url: null
+    };
+  };
+
   AdminListeningState.addSection = function () {
     const s = AdminListeningState.get();
     s.sections.push(defaultSection());
@@ -108,6 +126,23 @@ window.AdminListeningState = window.AdminListeningState || {};
     const section = AdminListeningState.get().sections[sectionIndex];
     if (!section) return;
     section.global_instruction_after = AdminListeningUtils.safeString(value);
+  };
+
+  AdminListeningState.updateSectionGlobalInstructionAfterAudio = function (sectionIndex, file) {
+    const section = AdminListeningState.get().sections[sectionIndex];
+    if (!section) return;
+    if (!file) {
+      section.global_instruction_after_audio = null;
+      return;
+    }
+    section.global_instruction_after_audio = {
+      name: file.name || "instruction-audio",
+      size: file.size || 0,
+      type: file.type || "",
+      preview_url: URL.createObjectURL(file),
+      file,
+      url: null
+    };
   };
 
   AdminListeningState.addBlock = function (sectionIndex) {
@@ -218,6 +253,15 @@ window.AdminListeningState = window.AdminListeningState || {};
       id: AdminListeningUtils.makeId("listening_test"),
       title: AdminListeningUtils.safeString(payload?.title),
       global_instruction_1: AdminListeningUtils.safeString(payload?.global_instruction_intro),
+      global_instruction_1_audio: payload?.global_instruction_intro_audio_url
+        ? {
+            name: String(payload.global_instruction_intro_audio_url).split("/").pop() || "instruction-audio",
+            size: 0,
+            type: "",
+            preview_url: payload.global_instruction_intro_audio_url,
+            url: payload.global_instruction_intro_audio_url
+          }
+        : null,
       time_limit_minutes: Number(payload?.time_limit_minutes || 60),
       question_count: 0,
       sections: []
@@ -233,6 +277,15 @@ window.AdminListeningState = window.AdminListeningState || {};
         global_instruction_after: AdminListeningUtils.safeString(
           section?.global_instruction_after ?? section?.global_instruction_2
         ),
+        global_instruction_after_audio: section?.global_instruction_after_audio_url
+          ? {
+              name: String(section.global_instruction_after_audio_url).split("/").pop() || "instruction-audio",
+              size: 0,
+              type: "",
+              preview_url: section.global_instruction_after_audio_url,
+              url: section.global_instruction_after_audio_url
+            }
+          : null,
         blocks: blocks.map((block, bIndex) => {
           const questions = Array.isArray(block?.questions) ? block.questions : [];
           return {
