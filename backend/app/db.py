@@ -371,8 +371,16 @@ def ensure_listening_instruction_schema():
             "ADD COLUMN IF NOT EXISTS global_instruction_intro_audio_url TEXT;"
         ))
         conn.execute(text(
+            "ALTER TABLE listening_tests "
+            "ADD COLUMN IF NOT EXISTS global_instruction_intro_audio_name TEXT;"
+        ))
+        conn.execute(text(
             "ALTER TABLE listening_sections "
             "ADD COLUMN IF NOT EXISTS audio_url TEXT;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE listening_sections "
+            "ADD COLUMN IF NOT EXISTS audio_name TEXT;"
         ))
         conn.execute(text(
             "ALTER TABLE listening_sections "
@@ -381,6 +389,10 @@ def ensure_listening_instruction_schema():
         conn.execute(text(
             "ALTER TABLE listening_sections "
             "ADD COLUMN IF NOT EXISTS global_instruction_after_audio_url TEXT;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE listening_sections "
+            "ADD COLUMN IF NOT EXISTS global_instruction_after_audio_name TEXT;"
         ))
 
 

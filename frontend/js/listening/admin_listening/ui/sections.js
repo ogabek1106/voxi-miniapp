@@ -77,11 +77,24 @@ AdminListeningSections.render = function (root, handlers) {
       onRebuild();
     };
     audioField.appendChild(audioInput);
-    const audioChoose = document.createElement("label");
-    audioChoose.className = "listening-secondary-btn";
-    audioChoose.setAttribute("for", audioInput.id);
-    audioChoose.textContent = "Choose audio";
-    audioField.appendChild(audioChoose);
+    if (section.audio?.name) {
+      const audioRemove = document.createElement("button");
+      audioRemove.type = "button";
+      audioRemove.className = "listening-secondary-btn listening-danger-btn";
+      audioRemove.textContent = "Remove audio";
+      audioRemove.onclick = () => {
+        AdminListeningState.updateSectionAudio(sectionIndex, null);
+        onChange();
+        onRebuild();
+      };
+      audioField.appendChild(audioRemove);
+    } else {
+      const audioChoose = document.createElement("label");
+      audioChoose.className = "listening-secondary-btn";
+      audioChoose.setAttribute("for", audioInput.id);
+      audioChoose.textContent = "Choose audio";
+      audioField.appendChild(audioChoose);
+    }
     const audioMeta = document.createElement("div");
     audioMeta.className = "listening-help-text";
     audioMeta.textContent = section.audio?.name
@@ -158,11 +171,24 @@ AdminListeningSections.render = function (root, handlers) {
     };
     globalAudioField.appendChild(globalAudioInput);
 
-    const globalAudioChoose = document.createElement("label");
-    globalAudioChoose.className = "listening-secondary-btn";
-    globalAudioChoose.setAttribute("for", globalAudioInput.id);
-    globalAudioChoose.textContent = "Choose audio";
-    globalAudioField.appendChild(globalAudioChoose);
+    if (section.global_instruction_after_audio?.name) {
+      const globalAudioRemove = document.createElement("button");
+      globalAudioRemove.type = "button";
+      globalAudioRemove.className = "listening-secondary-btn listening-danger-btn";
+      globalAudioRemove.textContent = "Remove audio";
+      globalAudioRemove.onclick = () => {
+        AdminListeningState.updateSectionGlobalInstructionAfterAudio(sectionIndex, null);
+        onChange();
+        onRebuild();
+      };
+      globalAudioField.appendChild(globalAudioRemove);
+    } else {
+      const globalAudioChoose = document.createElement("label");
+      globalAudioChoose.className = "listening-secondary-btn";
+      globalAudioChoose.setAttribute("for", globalAudioInput.id);
+      globalAudioChoose.textContent = "Choose audio";
+      globalAudioField.appendChild(globalAudioChoose);
+    }
 
     const globalAudioMeta = document.createElement("div");
     globalAudioMeta.className = "listening-help-text";

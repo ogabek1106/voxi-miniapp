@@ -101,6 +101,7 @@ AdminListeningApi._serialize = function (state) {
     global_instruction_intro: state.global_instruction_1 || "",
     global_instruction_intro_audio_url:
       state.global_instruction_1_audio?.url || state.global_instruction_1_audio?.preview_url || null,
+    global_instruction_intro_audio_name: state.global_instruction_1_audio?.name || null,
     time_limit_minutes: Number(state.time_limit_minutes || 60),
     status: "draft",
     sections: []
@@ -112,9 +113,11 @@ AdminListeningApi._serialize = function (state) {
       section_number: sectionIndex + 1,
       instructions: section.instructions || "",
       audio_url: section.audio?.url || section.audio?.preview_url || null,
+      audio_name: section.audio?.name || null,
       global_instruction_after: section.global_instruction_after || "",
       global_instruction_after_audio_url:
         section.global_instruction_after_audio?.url || section.global_instruction_after_audio?.preview_url || null,
+      global_instruction_after_audio_name: section.global_instruction_after_audio?.name || null,
       blocks: []
     };
 

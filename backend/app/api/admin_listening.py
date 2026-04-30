@@ -37,8 +37,10 @@ class ListeningSectionIn(BaseModel):
     section_number: int
     instructions: Optional[str] = None
     audio_url: Optional[str] = None
+    audio_name: Optional[str] = None
     global_instruction_after: Optional[str] = None
     global_instruction_after_audio_url: Optional[str] = None
+    global_instruction_after_audio_name: Optional[str] = None
     blocks: List[ListeningBlockIn] = Field(default_factory=list)
 
 
@@ -47,6 +49,7 @@ class ListeningTestSaveIn(BaseModel):
     audio_url: Optional[str] = None
     global_instruction_intro: Optional[str] = None
     global_instruction_intro_audio_url: Optional[str] = None
+    global_instruction_intro_audio_name: Optional[str] = None
     time_limit_minutes: int = 60
     status: str = "draft"
     sections: List[ListeningSectionIn] = Field(default_factory=list)
@@ -64,6 +67,7 @@ def get_listening_by_mock_pack(pack_id: int, db: Session = Depends(get_db)):
             "audio_url": None,
             "global_instruction_intro": "",
             "global_instruction_intro_audio_url": None,
+            "global_instruction_intro_audio_name": None,
             "time_limit_minutes": 60,
             "status": "draft",
             "sections": []
@@ -122,8 +126,10 @@ def get_listening_by_mock_pack(pack_id: int, db: Session = Depends(get_db)):
             "section_number": section.section_number,
             "instructions": section.instructions,
             "audio_url": section.audio_url,
+            "audio_name": section.audio_name,
             "global_instruction_after": section.global_instruction_after,
             "global_instruction_after_audio_url": section.global_instruction_after_audio_url,
+            "global_instruction_after_audio_name": section.global_instruction_after_audio_name,
             "blocks": out_blocks
         })
 
@@ -133,6 +139,7 @@ def get_listening_by_mock_pack(pack_id: int, db: Session = Depends(get_db)):
         "audio_url": test.audio_url,
         "global_instruction_intro": test.global_instruction_intro or "",
         "global_instruction_intro_audio_url": test.global_instruction_intro_audio_url,
+        "global_instruction_intro_audio_name": test.global_instruction_intro_audio_name,
         "time_limit_minutes": test.time_limit_minutes or 60,
         "status": test.status or "draft",
         "sections": output_sections
@@ -151,6 +158,7 @@ def save_listening_by_mock_pack(pack_id: int, payload: ListeningTestSaveIn, db: 
     test.audio_url = payload.audio_url
     test.global_instruction_intro = payload.global_instruction_intro or ""
     test.global_instruction_intro_audio_url = payload.global_instruction_intro_audio_url
+    test.global_instruction_intro_audio_name = payload.global_instruction_intro_audio_name
     test.time_limit_minutes = int(payload.time_limit_minutes or 60)
     test.status = payload.status or "draft"
     test.updated_at = datetime.utcnow()
@@ -167,8 +175,10 @@ def save_listening_by_mock_pack(pack_id: int, payload: ListeningTestSaveIn, db: 
             section_number=int(section_in.section_number or 1),
             instructions=section_in.instructions,
             audio_url=section_in.audio_url,
+            audio_name=section_in.audio_name,
             global_instruction_after=section_in.global_instruction_after,
             global_instruction_after_audio_url=section_in.global_instruction_after_audio_url,
+            global_instruction_after_audio_name=section_in.global_instruction_after_audio_name,
             order_index=int(section_in.order_index or 0),
         )
         db.add(section)

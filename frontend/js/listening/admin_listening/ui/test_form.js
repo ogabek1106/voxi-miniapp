@@ -7,6 +7,8 @@ AdminListeningTestForm.bind = function (onChange) {
   const titleInput = document.getElementById("listening-test-title");
   const globalInstructionInput = document.getElementById("listening-global-instruction-1");
   const globalInstructionAudioInput = document.getElementById("listening-global-instruction-1-audio");
+  const globalInstructionAudioChoose = document.getElementById("listening-global-instruction-1-audio-choose");
+  const globalInstructionAudioRemove = document.getElementById("listening-global-instruction-1-audio-remove");
   const globalInstructionAudioMeta = document.getElementById("listening-global-instruction-1-audio-meta");
   const timeInput = document.getElementById("listening-time-limit");
 
@@ -31,6 +33,8 @@ AdminListeningTestForm.bind = function (onChange) {
     globalInstructionAudioMeta.textContent = audio?.name
       ? `Selected audio: ${audio.name}`
       : "No instruction audio selected yet.";
+    if (globalInstructionAudioChoose) globalInstructionAudioChoose.hidden = Boolean(audio?.name);
+    if (globalInstructionAudioRemove) globalInstructionAudioRemove.hidden = !audio?.name;
   }
 
   if (globalInstructionAudioInput) {
@@ -42,6 +46,21 @@ AdminListeningTestForm.bind = function (onChange) {
           ? `Selected audio: ${file.name}`
           : "No instruction audio selected yet.";
       }
+      if (globalInstructionAudioChoose) globalInstructionAudioChoose.hidden = Boolean(file);
+      if (globalInstructionAudioRemove) globalInstructionAudioRemove.hidden = !file;
+      onChange();
+    };
+  }
+
+  if (globalInstructionAudioRemove) {
+    globalInstructionAudioRemove.onclick = () => {
+      AdminListeningState.setGlobalInstruction1Audio(null);
+      if (globalInstructionAudioInput) globalInstructionAudioInput.value = "";
+      if (globalInstructionAudioMeta) {
+        globalInstructionAudioMeta.textContent = "No instruction audio selected yet.";
+      }
+      if (globalInstructionAudioChoose) globalInstructionAudioChoose.hidden = false;
+      globalInstructionAudioRemove.hidden = true;
       onChange();
     };
   }

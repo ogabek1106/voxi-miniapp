@@ -273,7 +273,9 @@ window.AdminListeningState = window.AdminListeningState || {};
       global_instruction_1: AdminListeningUtils.safeString(payload?.global_instruction_intro),
       global_instruction_1_audio: payload?.global_instruction_intro_audio_url
         ? {
-            name: String(payload.global_instruction_intro_audio_url).split("/").pop() || "instruction-audio",
+            name: payload.global_instruction_intro_audio_name
+              || String(payload.global_instruction_intro_audio_url).split("/").pop()
+              || "instruction-audio",
             size: 0,
             type: "",
             preview_url: payload.global_instruction_intro_audio_url,
@@ -294,7 +296,7 @@ window.AdminListeningState = window.AdminListeningState || {};
         instructions: AdminListeningUtils.safeString(section?.instructions),
         audio: section?.audio_url
           ? {
-              name: String(section.audio_url).split("/").pop() || "part-audio",
+              name: section.audio_name || String(section.audio_url).split("/").pop() || "part-audio",
               size: 0,
               type: "",
               preview_url: section.audio_url,
@@ -306,7 +308,9 @@ window.AdminListeningState = window.AdminListeningState || {};
         ),
         global_instruction_after_audio: section?.global_instruction_after_audio_url
           ? {
-              name: String(section.global_instruction_after_audio_url).split("/").pop() || "instruction-audio",
+              name: section.global_instruction_after_audio_name
+                || String(section.global_instruction_after_audio_url).split("/").pop()
+                || "instruction-audio",
               size: 0,
               type: "",
               preview_url: section.global_instruction_after_audio_url,
