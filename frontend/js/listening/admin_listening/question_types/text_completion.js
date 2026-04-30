@@ -22,6 +22,10 @@ window.AdminListeningTypeCompletion = window.AdminListeningTypeCompletion || {};
     });
   }
 
+  function gapSignature(text) {
+    return AdminListeningUtils.extractGapNumbers(text).join("|");
+  }
+
   function answerCard(ctx, question, qIndex) {
     const card = document.createElement("div");
     card.className = "listening-dynamic-row";
@@ -82,10 +86,17 @@ window.AdminListeningTypeCompletion = window.AdminListeningTypeCompletion || {};
     template.className = "listening-editor-input";
     template.rows = block.type === "flowchart_completion" ? 6 : 5;
     template.value = block.meta.template_text || "";
+    let lastGapSignature = gapSignature(template.value);
     template.oninput = () => {
+      const nextGapSignature = gapSignature(template.value);
       block.meta.template_text = template.value;
-      syncGaps(block);
-      ctx.onRebuild();
+      if (nextGapSignature !== lastGapSignature) {
+        lastGapSignature = nextGapSignature;
+        syncGaps(block);
+        ctx.onRebuild();
+        return;
+      }
+      ctx.onChange();
     };
     wrap.appendChild(template);
 
