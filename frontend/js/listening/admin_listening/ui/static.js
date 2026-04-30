@@ -5,36 +5,39 @@ AdminListeningStatic.renderShell = function (container) {
   if (!container) return;
 
   container.innerHTML = `
-    <div class="listening-admin-shell" style="display:flex; flex-direction:column; gap:12px; text-align:left;">
-      <h3 style="margin:0;">Listening Editor</h3>
-      <div>
-        <button type="button" onclick="openMockPack(window.__currentListeningPackId || window.__currentPackId || 0)">⬅ Back to Mock Pack</button>
+    <div class="listening-admin-shell">
+      <div class="listening-admin-header">
+        <div>
+          <h3 class="listening-admin-title">Listening Creator</h3>
+          <div class="listening-admin-subtitle">Build the test structure visually</div>
+        </div>
+        <button class="listening-admin-back" type="button" onclick="openMockPack(window.__currentListeningPackId || window.__currentPackId || 0)">Back</button>
       </div>
 
-      <div style="display:flex; gap:8px; align-items:center;">
-        <button id="listening-save-btn" type="button">💾 Save Listening</button>
-        <button id="listening-reload-btn" type="button">↻ Reload</button>
-        <div id="listening-save-status" style="font-size:12px; opacity:0.75;"></div>
-      </div>
+      <div class="listening-admin-card listening-admin-setup">
+        <label class="listening-field-label">Listening Test Name <span>(optional)</span></label>
+        <input id="listening-test-title" type="text" placeholder="Name of the whole Listening test" />
 
-      <div style="display:flex; flex-direction:column; gap:8px; background:var(--card-bg); border-radius:10px; padding:10px;">
-        <label style="font-size:13px; opacity:0.8;">Name of Listening (optional)</label>
-        <input id="listening-test-title" type="text" placeholder="Listening title" style="width:100%; padding:10px; box-sizing:border-box;" />
+        <label class="listening-field-label">Global Instruction 1 <span>(optional)</span></label>
+        <textarea id="listening-global-instruction-1" rows="3" placeholder="Write a global instruction for the whole Listening test"></textarea>
 
-        <label style="font-size:13px; opacity:0.8;">Upload audio (one file for whole test)</label>
+        <label class="listening-field-label">Global audio uploader</label>
         <input id="listening-test-audio" type="file" accept="audio/*" />
-        <div id="listening-audio-meta" style="font-size:12px; opacity:0.7;"></div>
+        <div id="listening-audio-meta" class="listening-help-text"></div>
 
-        <label style="font-size:13px; opacity:0.8;">Time limit minutes (optional, default 60)</label>
-        <input id="listening-time-limit" type="number" min="1" step="1" style="width:140px; padding:8px; box-sizing:border-box;" />
+        <label class="listening-field-label">Time limit minutes <span>(optional, default 60)</span></label>
+        <input id="listening-time-limit" type="number" min="1" step="1" />
       </div>
 
-      <div style="display:flex; gap:8px;">
-        <button id="listening-add-section-btn" type="button">Add section</button>
-        <button id="listening-remove-section-btn" type="button">Remove last section</button>
+      <div class="listening-admin-actions">
+        <button id="listening-save-btn" type="button">Save Listening</button>
+        <button id="listening-reload-btn" type="button">Reload</button>
+        <div id="listening-save-status" class="listening-save-status"></div>
       </div>
 
-      <div id="listening-sections-root" style="display:flex; flex-direction:column; gap:12px;"></div>
+      <div id="listening-sections-root" class="listening-parts-root"></div>
+
+      <button id="listening-add-section-btn" class="listening-add-block-btn" type="button">Add Block</button>
     </div>
   `;
 };

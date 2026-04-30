@@ -58,16 +58,9 @@ window.AdminListeningDynamic = window.AdminListeningDynamic || {};
     }
 
     const addSectionBtn = document.getElementById("listening-add-section-btn");
-    const removeSectionBtn = document.getElementById("listening-remove-section-btn");
     if (addSectionBtn) {
       addSectionBtn.onclick = () => {
         AdminListeningState.addSection();
-        rerender();
-      };
-    }
-    if (removeSectionBtn) {
-      removeSectionBtn.onclick = () => {
-        AdminListeningState.removeLastSection();
         rerender();
       };
     }

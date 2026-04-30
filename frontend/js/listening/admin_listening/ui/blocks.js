@@ -9,22 +9,25 @@ AdminListeningBlocks.renderBlock = function (ctx) {
   const onRebuild = ctx.onRebuild || onChange;
 
   const card = document.createElement("div");
-  card.style.border = "1px solid var(--border-color)";
-  card.style.borderRadius = "10px";
-  card.style.padding = "10px";
-  card.style.display = "flex";
-  card.style.flexDirection = "column";
-  card.style.gap = "8px";
-  card.style.background = "var(--card-bg)";
+  card.className = "listening-question-block";
 
   const head = document.createElement("div");
-  head.style.display = "flex";
-  head.style.justifyContent = "space-between";
-  head.style.alignItems = "center";
-  head.innerHTML = `<strong>Block ${block.order_index || blockIndex + 1}</strong>`;
+  head.className = "listening-question-block-head";
+  head.innerHTML = `<strong>Question block ${block.order_index || blockIndex + 1}</strong>`;
+  const removeBlockTop = document.createElement("button");
+  removeBlockTop.type = "button";
+  removeBlockTop.className = "listening-delete-btn";
+  removeBlockTop.setAttribute("aria-label", `Delete question block ${blockIndex + 1}`);
+  removeBlockTop.textContent = "×";
+  removeBlockTop.onclick = () => {
+    AdminListeningState.removeBlock(sectionIndex, blockIndex);
+    onRebuild();
+  };
+  head.appendChild(removeBlockTop);
   card.appendChild(head);
 
   const typeSelect = document.createElement("select");
+  typeSelect.className = "listening-editor-input";
   (window.AdminListeningConstants?.BLOCK_TYPES || []).forEach((type) => {
     const opt = document.createElement("option");
     opt.value = type.value;
@@ -40,7 +43,8 @@ AdminListeningBlocks.renderBlock = function (ctx) {
 
   const blockInstructions = document.createElement("textarea");
   blockInstructions.rows = 2;
-  blockInstructions.placeholder = "Block instructions (optional)";
+  blockInstructions.className = "listening-editor-input";
+  blockInstructions.placeholder = "Question block instruction (optional)";
   blockInstructions.value = block.instructions || "";
   blockInstructions.oninput = () => {
     AdminListeningState.updateBlock(sectionIndex, blockIndex, { instructions: blockInstructions.value });
@@ -49,12 +53,11 @@ AdminListeningBlocks.renderBlock = function (ctx) {
   card.appendChild(blockInstructions);
 
   const timeRow = document.createElement("div");
-  timeRow.style.display = "grid";
-  timeRow.style.gridTemplateColumns = "1fr 1fr";
-  timeRow.style.gap = "8px";
+  timeRow.className = "listening-time-row";
 
   const startInput = document.createElement("input");
   startInput.type = "text";
+  startInput.className = "listening-editor-input";
   startInput.placeholder = "Start time (optional, e.g. 00:35)";
   startInput.value = block.start_time || "";
   startInput.oninput = () => {
@@ -65,6 +68,7 @@ AdminListeningBlocks.renderBlock = function (ctx) {
 
   const endInput = document.createElement("input");
   endInput.type = "text";
+  endInput.className = "listening-editor-input";
   endInput.placeholder = "End time (optional, e.g. 02:10)";
   endInput.value = block.end_time || "";
   endInput.oninput = () => {
@@ -75,13 +79,10 @@ AdminListeningBlocks.renderBlock = function (ctx) {
   card.appendChild(timeRow);
 
   const imageRow = document.createElement("div");
-  imageRow.style.display = "flex";
-  imageRow.style.flexDirection = "column";
-  imageRow.style.gap = "6px";
+  imageRow.className = "listening-upload-field";
   const imageLabel = document.createElement("label");
-  imageLabel.textContent = "Block image (optional)";
-  imageLabel.style.fontSize = "12px";
-  imageLabel.style.opacity = "0.8";
+  imageLabel.textContent = "Question block image (optional)";
+  imageLabel.className = "listening-field-label";
   imageRow.appendChild(imageLabel);
   const imageInput = document.createElement("input");
   imageInput.type = "file";
@@ -95,16 +96,13 @@ AdminListeningBlocks.renderBlock = function (ctx) {
   if (block.image?.name) {
     const imageMeta = document.createElement("div");
     imageMeta.textContent = `Selected image: ${block.image.name}`;
-    imageMeta.style.fontSize = "12px";
-    imageMeta.style.opacity = "0.7";
+    imageMeta.className = "listening-help-text";
     imageRow.appendChild(imageMeta);
   }
   card.appendChild(imageRow);
 
   const typeEditorHost = document.createElement("div");
-  typeEditorHost.style.display = "flex";
-  typeEditorHost.style.flexDirection = "column";
-  typeEditorHost.style.gap = "8px";
+  typeEditorHost.className = "listening-type-editor-host";
   const typeEditor = window.AdminListeningTypeRegistry?.renderTypeEditor({
     block,
     sectionIndex,
@@ -116,12 +114,11 @@ AdminListeningBlocks.renderBlock = function (ctx) {
   card.appendChild(typeEditorHost);
 
   const controls = document.createElement("div");
-  controls.style.display = "flex";
-  controls.style.flexWrap = "wrap";
-  controls.style.gap = "6px";
+  controls.className = "listening-question-controls";
 
   const addQ = document.createElement("button");
   addQ.type = "button";
+  addQ.className = "listening-secondary-btn";
   addQ.textContent = "Add question";
   addQ.onclick = () => {
     AdminListeningState.addQuestion(sectionIndex, blockIndex);
@@ -131,21 +128,13 @@ AdminListeningBlocks.renderBlock = function (ctx) {
 
   const removeQ = document.createElement("button");
   removeQ.type = "button";
+  removeQ.className = "listening-secondary-btn";
   removeQ.textContent = "Remove last question";
   removeQ.onclick = () => {
     AdminListeningState.removeLastQuestion(sectionIndex, blockIndex);
     onRebuild();
   };
   controls.appendChild(removeQ);
-
-  const removeBlock = document.createElement("button");
-  removeBlock.type = "button";
-  removeBlock.textContent = "Remove block";
-  removeBlock.onclick = () => {
-    AdminListeningState.removeBlock(sectionIndex, blockIndex);
-    onRebuild();
-  };
-  controls.appendChild(removeBlock);
 
   card.appendChild(controls);
   return card;

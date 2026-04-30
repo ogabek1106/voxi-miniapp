@@ -34,6 +34,7 @@ window.AdminListeningState = window.AdminListeningState || {};
       id: AdminListeningUtils.makeId("listening_section"),
       order_index: 1,
       instructions: "",
+      global_instruction_2: "",
       blocks: [defaultBlock()]
     };
   }
@@ -42,6 +43,7 @@ window.AdminListeningState = window.AdminListeningState || {};
     return {
       id: AdminListeningUtils.makeId("listening_test"),
       title: "",
+      global_instruction_1: "",
       audio: null,
       time_limit_minutes: window.AdminListeningConstants?.DEFAULT_TIME_LIMIT_MINUTES || 60,
       question_count: 0,
@@ -73,6 +75,10 @@ window.AdminListeningState = window.AdminListeningState || {};
     AdminListeningState.get().time_limit_minutes = Number.isFinite(n) && n > 0 ? Math.floor(n) : 60;
   };
 
+  AdminListeningState.setGlobalInstruction1 = function (value) {
+    AdminListeningState.get().global_instruction_1 = AdminListeningUtils.safeString(value);
+  };
+
   AdminListeningState.setAudioFile = function (file) {
     const s = AdminListeningState.get();
     if (!file) {
@@ -102,10 +108,23 @@ window.AdminListeningState = window.AdminListeningState || {};
     normalize();
   };
 
+  AdminListeningState.removeSection = function (sectionIndex) {
+    const s = AdminListeningState.get();
+    if (!Array.isArray(s.sections)) return;
+    s.sections.splice(sectionIndex, 1);
+    normalize();
+  };
+
   AdminListeningState.updateSectionInstructions = function (sectionIndex, value) {
     const section = AdminListeningState.get().sections[sectionIndex];
     if (!section) return;
     section.instructions = AdminListeningUtils.safeString(value);
+  };
+
+  AdminListeningState.updateSectionGlobalInstruction2 = function (sectionIndex, value) {
+    const section = AdminListeningState.get().sections[sectionIndex];
+    if (!section) return;
+    section.global_instruction_2 = AdminListeningUtils.safeString(value);
   };
 
   AdminListeningState.addBlock = function (sectionIndex) {
@@ -124,7 +143,7 @@ window.AdminListeningState = window.AdminListeningState || {};
 
   AdminListeningState.removeBlock = function (sectionIndex, blockIndex) {
     const section = AdminListeningState.get().sections[sectionIndex];
-    if (!section || section.blocks.length <= 1) return;
+    if (!section || !Array.isArray(section.blocks)) return;
     section.blocks.splice(blockIndex, 1);
     normalize();
   };
@@ -198,6 +217,7 @@ window.AdminListeningState = window.AdminListeningState || {};
     const base = {
       id: AdminListeningUtils.makeId("listening_test"),
       title: AdminListeningUtils.safeString(payload?.title),
+      global_instruction_1: "",
       audio: payload?.audio_url
         ? {
             name: String(payload.audio_url).split("/").pop() || "audio",
@@ -219,6 +239,7 @@ window.AdminListeningState = window.AdminListeningState || {};
         id: AdminListeningUtils.makeId("listening_section"),
         order_index: Number(section?.order_index || sIndex + 1),
         instructions: AdminListeningUtils.safeString(section?.instructions),
+        global_instruction_2: "",
         blocks: blocks.map((block, bIndex) => {
           const questions = Array.isArray(block?.questions) ? block.questions : [];
           return {
