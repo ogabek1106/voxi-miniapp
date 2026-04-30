@@ -34,6 +34,7 @@ window.AdminListeningState = window.AdminListeningState || {};
       id: AdminListeningUtils.makeId("listening_section"),
       order_index: 1,
       instructions: "",
+      audio: null,
       global_instruction_after: "",
       global_instruction_after_audio: null,
       blocks: [defaultBlock()]
@@ -120,6 +121,23 @@ window.AdminListeningState = window.AdminListeningState || {};
     const section = AdminListeningState.get().sections[sectionIndex];
     if (!section) return;
     section.instructions = AdminListeningUtils.safeString(value);
+  };
+
+  AdminListeningState.updateSectionAudio = function (sectionIndex, file) {
+    const section = AdminListeningState.get().sections[sectionIndex];
+    if (!section) return;
+    if (!file) {
+      section.audio = null;
+      return;
+    }
+    section.audio = {
+      name: file.name || "part-audio",
+      size: file.size || 0,
+      type: file.type || "",
+      preview_url: URL.createObjectURL(file),
+      file,
+      url: null
+    };
   };
 
   AdminListeningState.updateSectionGlobalInstructionAfter = function (sectionIndex, value) {
@@ -274,6 +292,15 @@ window.AdminListeningState = window.AdminListeningState || {};
         id: AdminListeningUtils.makeId("listening_section"),
         order_index: Number(section?.order_index || sIndex + 1),
         instructions: AdminListeningUtils.safeString(section?.instructions),
+        audio: section?.audio_url
+          ? {
+              name: String(section.audio_url).split("/").pop() || "part-audio",
+              size: 0,
+              type: "",
+              preview_url: section.audio_url,
+              url: section.audio_url
+            }
+          : null,
         global_instruction_after: AdminListeningUtils.safeString(
           section?.global_instruction_after ?? section?.global_instruction_2
         ),

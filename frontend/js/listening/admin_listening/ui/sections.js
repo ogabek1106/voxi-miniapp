@@ -61,11 +61,33 @@ AdminListeningSections.render = function (root, handlers) {
 
     const audioField = document.createElement("div");
     audioField.className = "listening-upload-field";
-    audioField.innerHTML = `
-      <label class="listening-field-label">Audio uploader for Part ${sectionIndex + 1} <span>(mandatory)</span></label>
-      <input type="file" accept="audio/*" />
-      <div class="listening-help-text">Visual placeholder. Per-part audio logic will be connected later.</div>
-    `;
+    const audioLabel = document.createElement("label");
+    audioLabel.className = "listening-field-label";
+    audioLabel.innerHTML = `Upload audio for Part ${sectionIndex + 1} <span>(mandatory)</span>`;
+    audioField.appendChild(audioLabel);
+    const audioInput = document.createElement("input");
+    audioInput.type = "file";
+    audioInput.accept = "audio/*";
+    audioInput.hidden = true;
+    audioInput.id = `listening-part-audio-${section.id || sectionIndex}`;
+    audioInput.onchange = () => {
+      const file = audioInput.files?.[0] || null;
+      AdminListeningState.updateSectionAudio(sectionIndex, file);
+      onChange();
+      onRebuild();
+    };
+    audioField.appendChild(audioInput);
+    const audioChoose = document.createElement("label");
+    audioChoose.className = "listening-secondary-btn";
+    audioChoose.setAttribute("for", audioInput.id);
+    audioChoose.textContent = "Choose audio";
+    audioField.appendChild(audioChoose);
+    const audioMeta = document.createElement("div");
+    audioMeta.className = "listening-help-text";
+    audioMeta.textContent = section.audio?.name
+      ? `Selected audio: ${section.audio.name}`
+      : "No part audio selected yet.";
+    audioField.appendChild(audioMeta);
     card.appendChild(audioField);
 
     const imageField = document.createElement("div");
@@ -126,6 +148,8 @@ AdminListeningSections.render = function (root, handlers) {
     const globalAudioInput = document.createElement("input");
     globalAudioInput.type = "file";
     globalAudioInput.accept = "audio/*";
+    globalAudioInput.hidden = true;
+    globalAudioInput.id = `listening-global-after-audio-${section.id || sectionIndex}`;
     globalAudioInput.onchange = () => {
       const file = globalAudioInput.files?.[0] || null;
       AdminListeningState.updateSectionGlobalInstructionAfterAudio(sectionIndex, file);
@@ -133,6 +157,12 @@ AdminListeningSections.render = function (root, handlers) {
       onRebuild();
     };
     globalAudioField.appendChild(globalAudioInput);
+
+    const globalAudioChoose = document.createElement("label");
+    globalAudioChoose.className = "listening-secondary-btn";
+    globalAudioChoose.setAttribute("for", globalAudioInput.id);
+    globalAudioChoose.textContent = "Choose audio";
+    globalAudioField.appendChild(globalAudioChoose);
 
     const globalAudioMeta = document.createElement("div");
     globalAudioMeta.className = "listening-help-text";

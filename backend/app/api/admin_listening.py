@@ -36,6 +36,7 @@ class ListeningSectionIn(BaseModel):
     order_index: int
     section_number: int
     instructions: Optional[str] = None
+    audio_url: Optional[str] = None
     global_instruction_after: Optional[str] = None
     global_instruction_after_audio_url: Optional[str] = None
     blocks: List[ListeningBlockIn] = Field(default_factory=list)
@@ -120,6 +121,7 @@ def get_listening_by_mock_pack(pack_id: int, db: Session = Depends(get_db)):
             "order_index": section.order_index,
             "section_number": section.section_number,
             "instructions": section.instructions,
+            "audio_url": section.audio_url,
             "global_instruction_after": section.global_instruction_after,
             "global_instruction_after_audio_url": section.global_instruction_after_audio_url,
             "blocks": out_blocks
@@ -164,6 +166,7 @@ def save_listening_by_mock_pack(pack_id: int, payload: ListeningTestSaveIn, db: 
             test_id=test.id,
             section_number=int(section_in.section_number or 1),
             instructions=section_in.instructions,
+            audio_url=section_in.audio_url,
             global_instruction_after=section_in.global_instruction_after,
             global_instruction_after_audio_url=section_in.global_instruction_after_audio_url,
             order_index=int(section_in.order_index or 0),

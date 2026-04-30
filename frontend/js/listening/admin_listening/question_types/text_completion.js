@@ -86,18 +86,6 @@ window.AdminListeningTypeCompletion = window.AdminListeningTypeCompletion || {};
     template.className = "listening-editor-input";
     template.rows = block.type === "flowchart_completion" ? 6 : 5;
     template.value = block.meta.template_text || "";
-    let lastGapSignature = gapSignature(template.value);
-    template.oninput = () => {
-      const nextGapSignature = gapSignature(template.value);
-      block.meta.template_text = template.value;
-      if (nextGapSignature !== lastGapSignature) {
-        lastGapSignature = nextGapSignature;
-        syncGaps(block);
-        ctx.onRebuild();
-        return;
-      }
-      ctx.onChange();
-    };
     wrap.appendChild(template);
 
     const wordLimit = document.createElement("select");
@@ -118,7 +106,22 @@ window.AdminListeningTypeCompletion = window.AdminListeningTypeCompletion || {};
 
     const answers = document.createElement("div");
     answers.className = "listening-dynamic-list";
-    (block.questions || []).forEach((q, qIndex) => answers.appendChild(answerCard(ctx, q, qIndex)));
+    const renderAnswers = () => {
+      answers.innerHTML = "";
+      (block.questions || []).forEach((q, qIndex) => answers.appendChild(answerCard(ctx, q, qIndex)));
+    };
+    let lastGapSignature = gapSignature(template.value);
+    template.oninput = () => {
+      const nextGapSignature = gapSignature(template.value);
+      block.meta.template_text = template.value;
+      if (nextGapSignature !== lastGapSignature) {
+        lastGapSignature = nextGapSignature;
+        syncGaps(block);
+        renderAnswers();
+      }
+      ctx.onChange();
+    };
+    renderAnswers();
     wrap.appendChild(answers);
     return wrap;
   };

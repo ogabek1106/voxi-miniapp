@@ -169,6 +169,7 @@ class ListeningSection(Base):
     test_id = Column(Integer, ForeignKey("listening_tests.id", ondelete="CASCADE"), nullable=False)
     section_number = Column(Integer, nullable=False)
     instructions = Column(Text, nullable=True)
+    audio_url = Column(Text, nullable=True)
     global_instruction_after = Column(Text, nullable=True)
     global_instruction_after_audio_url = Column(Text, nullable=True)
     order_index = Column(Integer, nullable=False, default=0)

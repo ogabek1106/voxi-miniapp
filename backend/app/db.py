@@ -372,6 +372,10 @@ def ensure_listening_instruction_schema():
         ))
         conn.execute(text(
             "ALTER TABLE listening_sections "
+            "ADD COLUMN IF NOT EXISTS audio_url TEXT;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE listening_sections "
             "ADD COLUMN IF NOT EXISTS global_instruction_after TEXT;"
         ))
         conn.execute(text(
