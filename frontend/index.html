@@ -1383,11 +1383,50 @@
   * {
     outline: none;
   }
+
+  body:not(.app-ready) .app {
+    visibility: hidden;
+  }
+
+  body.app-ready #initial-loader {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  #initial-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 20000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #F5F9FC;
+    transition: opacity 160ms ease;
+  }
+
+  .initial-loader-ring {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 4px solid rgba(0, 186, 255, 0.16);
+    border-top-color: #00BAFF;
+    animation: initialLoaderSpin 760ms linear infinite;
+  }
+
+  @keyframes initialLoaderSpin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
   </style>
   <link rel="stylesheet" href="./css/website.css?v=2">
 
 </head>
 <body>
+
+  <div id="initial-loader" aria-hidden="true">
+    <div class="initial-loader-ring"></div>
+  </div>
 
   <div class="app">
 
@@ -1667,7 +1706,7 @@
   <script src="/js/admin_speaking/ui/editor.js"></script>
   <script src="/js/admin_speaking/loader/editor_loader.js"></script>
   <script src="./js/admin_mock.js?v=1"></script>
-  <script src="./js/app.js?v=2"></script>
+  <script src="./js/app.js?v=3"></script>
   <script src="./js/vcoins_ui.js?v=1"></script>
   <script src="./js/website/components/profile_sheet.js?v=1"></script>
   <script src="./js/website/components/header.js?v=1"></script>

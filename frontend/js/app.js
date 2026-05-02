@@ -207,10 +207,18 @@ window.refreshVcoinBalance = async function ({ animate = true } = {}) {
   }
 };
 
+function markAppReady() {
+  document.body.classList.add("app-ready");
+  window.setTimeout(() => {
+    document.getElementById("initial-loader")?.remove();
+  }, 180);
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   if (window.AppViewMode?.isWebsite?.()) {
     window.WebsiteLayout?.init?.();
     loadMe();
+    markAppReady();
 
     document.addEventListener("visibilitychange", () => {
       if (!document.hidden) {
@@ -228,6 +236,7 @@ document.addEventListener("DOMContentLoaded", () => {
   goHome();
   renderHomeIdentity();
   loadMe();
+  markAppReady();
 
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) {
