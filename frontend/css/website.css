@@ -51,25 +51,15 @@ body.view-website #screen-home {
 .website-brand {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
-  color: #17212B;
-  font-size: 21px;
-  font-weight: 900;
-  white-space: nowrap;
+  flex: 0 0 auto;
 }
 
 .website-brand-logo {
-  width: 42px;
+  display: block;
+  width: auto;
   height: 42px;
-  border-radius: 16px;
-  background: #00BAFF;
-  color: #FFFFFF;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 12px 28px rgba(20, 40, 60, 0.08);
-  font-size: 20px;
-  font-weight: 900;
+  max-width: min(260px, 42vw);
+  object-fit: contain;
 }
 
 .website-header-actions {
@@ -408,8 +398,9 @@ body.view-website #screen-home {
     padding: 0 14px;
   }
 
-  .website-brand span:last-child {
-    display: none;
+  .website-brand-logo {
+    height: 36px;
+    max-width: 128px;
   }
 
   .website-profile-button {
