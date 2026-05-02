@@ -14,125 +14,20 @@ body.view-website .app {
 }
 
 body.view-website #content {
-  width: min(1120px, calc(100vw - 48px));
-  margin: 0 auto;
-  padding: 104px 0 48px;
+  padding-top: 104px;
+  padding-bottom: 48px;
   box-sizing: border-box;
 }
 
 body.view-website .bottom-nav,
 body.view-website #screen-home .home-header,
 body.view-website #screen-home .home-admin-actions,
-body.view-website #screen-home,
 body.view-website #screen-admin {
   display: none !important;
 }
 
-body.view-website #website-home {
-  display: block;
-}
-
-body.view-website .website-home {
-  width: min(920px, 100%);
-  margin: 0 auto;
-}
-
-body.view-website .website-home-kicker {
-  margin: 0 0 8px;
-  color: #00A6E6;
-  font-size: 13px;
-  font-weight: 900;
-}
-
-body.view-website .website-home-title {
-  margin: 0;
-  color: #17212B;
-  font-size: clamp(32px, 4vw, 52px);
-  line-height: 1.04;
-  font-weight: 900;
-  letter-spacing: 0;
-}
-
-body.view-website .website-home-subtitle {
-  max-width: 620px;
-  margin: 14px 0 0;
-  color: #607080;
-  font-size: 17px;
-  line-height: 1.55;
-  font-weight: 700;
-}
-
-body.view-website .website-home-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-  margin-top: 28px;
-}
-
-body.view-website .website-course-card {
-  width: 100%;
-  min-height: 142px;
-  margin: 0;
-  border: 0;
-  border-radius: 26px;
-  background: #FFFFFF;
-  color: #17212B;
-  box-shadow: 0 16px 38px rgba(20, 40, 60, 0.08);
-  padding: 20px;
-  text-align: left;
-  display: grid;
-  grid-template-columns: 56px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 16px;
-  cursor: pointer;
-}
-
-body.view-website .website-course-card strong {
-  display: block;
-  font-size: 22px;
-  font-weight: 900;
-}
-
-body.view-website .website-course-card span {
-  display: block;
-  margin-top: 6px;
-  color: #607080;
-  font-size: 14px;
-  font-weight: 800;
-}
-
-body.view-website .website-course-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 20px;
-  background: #EAF7FF;
-  color: #00A6E6;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-}
-
-body.view-website .website-course-arrow {
-  color: #8A98A6;
-  font-size: 30px;
-  line-height: 1;
-}
-
 body.view-website #screen-home {
-  max-width: none;
-  padding: 0;
-}
-
-body.view-website #screen-home .home-shell {
-  width: 100%;
-  max-width: none;
-  padding: 0;
-}
-
-body.view-website #screen-home .home-cards {
-  max-width: 760px;
-  margin: 0 auto;
+  display: block;
 }
 
 .website-header {
@@ -506,10 +401,6 @@ body.view-website #screen-home .home-cards {
   body.view-website #content {
     width: min(100%, calc(100vw - 28px));
     padding-top: 94px;
-  }
-
-  body.view-website .website-home-grid {
-    grid-template-columns: 1fr;
   }
 
   .website-header {
