@@ -17,7 +17,8 @@ window.WebsiteHeader = window.WebsiteHeader || {};
     header.className = "website-header";
     header.innerHTML = `
       <div class="website-brand" aria-label="EBAI Academy">
-        <img class="website-brand-logo" src="./assets/ebai-header-logo.png" alt="EBAI Academy">
+        <img class="website-brand-logo" src="./assets/ebai-header-logo.png" alt="">
+        <span class="website-brand-text">EBAI Academy</span>
       </div>
 
       <div class="website-header-actions">

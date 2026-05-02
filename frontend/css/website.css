@@ -51,6 +51,7 @@ body.view-website #screen-home {
 .website-brand {
   display: inline-flex;
   align-items: center;
+  gap: 12px;
   flex: 0 0 auto;
 }
 
@@ -60,6 +61,13 @@ body.view-website #screen-home {
   height: 42px;
   max-width: min(260px, 42vw);
   object-fit: contain;
+}
+
+.website-brand-text {
+  color: #17212B;
+  font-size: 21px;
+  font-weight: 900;
+  white-space: nowrap;
 }
 
 .website-header-actions {
@@ -401,6 +409,10 @@ body.view-website #screen-home {
   .website-brand-logo {
     height: 36px;
     max-width: 128px;
+  }
+
+  .website-brand-text {
+    display: none;
   }
 
   .website-profile-button {
