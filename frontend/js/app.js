@@ -1,5 +1,5 @@
 // frontend/js/app.js
-const tg = window.Telegram?.WebApp;
+const tg = window.AppViewMode?.isMiniApp?.() ? window.Telegram?.WebApp : null;
 const FORCE_LIGHT_THEME = true;
 
 function applyBaseLightTheme() {
@@ -208,6 +208,23 @@ window.refreshVcoinBalance = async function ({ animate = true } = {}) {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
+  if (window.AppViewMode?.isWebsite?.()) {
+    window.WebsiteLayout?.init?.();
+    loadMe();
+
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) {
+        window.refreshVcoinBalance({ animate: true });
+      }
+    });
+
+    window.addEventListener("focus", () => {
+      window.refreshVcoinBalance({ animate: true });
+    });
+
+    return;
+  }
+
   goHome();
   renderHomeIdentity();
   loadMe();
@@ -268,16 +285,17 @@ document.addEventListener("DOMContentLoaded", () => {
 async function loadMe() {
   const telegramId = window.getTelegramId();
   const adminBtn = document.getElementById("adminBtn");
+  const isWebsite = window.AppViewMode?.isWebsite?.();
 
   // hard fallback for your admin account
   if (telegramId === 1150875355) {
-    window.__isAdmin = true;
+    window.__isAdmin = !isWebsite;
     renderHomeIdentity();
 
     if (adminBtn) {
-      adminBtn.style.display = "block";
+      adminBtn.style.display = isWebsite ? "none" : "block";
     }
-    ensureListeningHomeButton(true);
+    ensureListeningHomeButton(!isWebsite);
 
     return;
   }
@@ -288,9 +306,9 @@ async function loadMe() {
     renderHomeIdentity(me);
 
     if (adminBtn) {
-      adminBtn.style.display = window.__isAdmin ? "block" : "none";
+      adminBtn.style.display = (!isWebsite && window.__isAdmin) ? "block" : "none";
     }
-    ensureListeningHomeButton(true);
+    ensureListeningHomeButton(!isWebsite);
   } catch (e) {
     window.__isAdmin = false;
     renderHomeIdentity();
@@ -298,7 +316,7 @@ async function loadMe() {
     if (adminBtn) {
       adminBtn.style.display = "none";
     }
-    ensureListeningHomeButton(true);
+    ensureListeningHomeButton(!isWebsite);
 
     console.error("Failed to load /me", e);
   }

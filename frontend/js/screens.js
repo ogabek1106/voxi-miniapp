@@ -37,6 +37,7 @@ function hideAllScreens() {
   if (screenWriting) screenWriting.style.display = "none";
   if (screenSpeaking) screenSpeaking.style.display = "none";
 }
+window.hideAllScreens = hideAllScreens;
 function setBottomNavVisible(visible) {
   const nav = document.querySelector(".bottom-nav");
   if (!nav) return;
