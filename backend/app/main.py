@@ -73,6 +73,8 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "https://www.ebaiacademy.com",
+        "https://ebaiacademy.com",
         "https://cooperative-endurance-production.up.railway.app",
         "https://voxi-miniapp-production.up.railway.app",
         "https://web.telegram.org",
