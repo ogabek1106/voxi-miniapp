@@ -78,6 +78,10 @@ function renderHomeIdentity(me) {
     const parsed = Number(rawBalance);
     homeBalance.textContent = Number.isFinite(parsed) ? String(Math.max(0, Math.floor(parsed))) : "0";
   }
+
+  if (window.WebsiteHeader?.update) {
+    window.WebsiteHeader.update(me || {});
+  }
 }
 
 function ensureListeningHomeButton(visible) {
@@ -123,19 +127,29 @@ function getVcoinBalanceStorageKey(telegramId) {
 }
 
 function getDisplayedHomeVcoinBalance() {
-  const valueEl = document.getElementById("home-balance-value") || document.getElementById("home-vcoin-balance-value");
+  const valueEl = document.getElementById("home-balance-value")
+    || document.getElementById("home-vcoin-balance-value")
+    || document.getElementById("website-balance-value");
   if (!valueEl) return 0;
   return Number(valueEl.textContent || 0) || 0;
 }
 
 function setHomeVcoinBalance(value) {
-  const valueEl = document.getElementById("home-balance-value") || document.getElementById("home-vcoin-balance-value");
-  if (!valueEl) return;
-  valueEl.textContent = String(Math.max(0, Number(value) || 0));
+  const normalized = String(Math.max(0, Number(value) || 0));
+  const valueEls = [
+    document.getElementById("home-balance-value"),
+    document.getElementById("home-vcoin-balance-value"),
+    document.getElementById("website-balance-value")
+  ].filter(Boolean);
+  valueEls.forEach((valueEl) => {
+    valueEl.textContent = normalized;
+  });
 }
 
 function animateHomeVcoinBalance(fromValue, toValue) {
-  const card = document.querySelector("#screen-home .home-balance") || document.getElementById("home-vcoin-balance");
+  const card = document.querySelector("#screen-home .home-balance")
+    || document.getElementById("home-vcoin-balance")
+    || document.querySelector(".website-balance-button");
   const from = Math.max(0, Number(fromValue) || 0);
   const to = Math.max(0, Number(toValue) || 0);
 
