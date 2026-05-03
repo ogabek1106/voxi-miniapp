@@ -37,9 +37,35 @@ UserSpeakingLoader.bindBack = function () {
   UserSpeakingUI.bindBack(function () {
     const state = UserSpeakingState.get();
     const recorder = state.recorder;
+    if (state.intervals?.recordTick) {
+      clearInterval(state.intervals.recordTick);
+    }
+    if (state.intervals?.prepCountdown) {
+      clearInterval(state.intervals.prepCountdown);
+    }
+    if (state.intervals?.prepRaf) {
+      cancelAnimationFrame(state.intervals.prepRaf);
+    }
     if (recorder && typeof recorder.cleanup === "function") {
       recorder.cleanup();
     }
+    if (state.stream) {
+      state.stream.getTracks().forEach((track) => track.stop());
+    }
+    if (state.audioContext && typeof state.audioContext.close === "function") {
+      state.audioContext.close().catch(() => {});
+    }
+    UserSpeakingState.set({
+      recorder: null,
+      audioContext: null,
+      stream: null,
+      intervals: {
+        ...state.intervals,
+        prepCountdown: null,
+        prepRaf: null,
+        recordTick: null
+      }
+    });
     if (typeof window.goHome === "function") {
       window.goHome();
     }

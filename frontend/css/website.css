@@ -65,6 +65,13 @@ body.view-website:not(.mobile-browser-view) .reading-user-shell {
   overflow: visible;
 }
 
+body.view-website:not(.mobile-browser-view) .writing-user-shell,
+body.view-website:not(.mobile-browser-view) .speaking-user-shell {
+  height: auto !important;
+  min-height: calc(100vh - 60px);
+  overflow: visible;
+}
+
 body.view-website:not(.mobile-browser-view) #reading-header {
   top: 60px !important;
   z-index: 850 !important;
@@ -72,7 +79,21 @@ body.view-website:not(.mobile-browser-view) #reading-header {
   box-shadow: 0 10px 24px rgba(20, 40, 60, 0.08);
 }
 
+body.view-website:not(.mobile-browser-view) #writing-header,
+body.view-website:not(.mobile-browser-view) #speaking-header {
+  top: 60px !important;
+  z-index: 850 !important;
+  background: #F5F9FC !important;
+  box-shadow: 0 10px 24px rgba(20, 40, 60, 0.08);
+}
+
 body.view-website:not(.mobile-browser-view) #reading-user-content {
+  overflow: visible !important;
+  min-height: 0;
+}
+
+body.view-website:not(.mobile-browser-view) #writing-user-content,
+body.view-website:not(.mobile-browser-view) #speaking-user-content {
   overflow: visible !important;
   min-height: 0;
 }

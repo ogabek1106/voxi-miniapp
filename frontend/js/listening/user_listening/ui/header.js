@@ -204,6 +204,20 @@ UserListening.goBack = function () {
     UserListening.saveProgress(UserListening.__mockId, { keepalive: true }).catch(() => {});
   }
 
+  if (UserListening.__nextPartTimeout) {
+    clearTimeout(UserListening.__nextPartTimeout);
+    UserListening.__nextPartTimeout = null;
+  }
+
+  if (UserListening.__currentAudio) {
+    try {
+      UserListening.__currentAudio.pause();
+      UserListening.__currentAudio.src = "";
+      UserListening.__currentAudio.load?.();
+    } catch (_) {}
+    UserListening.__currentAudio = null;
+  }
+
   if (typeof window.goHome === "function") {
     window.goHome();
     return;

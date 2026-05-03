@@ -146,7 +146,7 @@ UserListening.startListeningMode = function (container, data) {
         <div class="listening-ready-kicker">Powered by EBAI Academy</div>
         <h2>${UserListening.escapeHtml(data?.title || "Listening Test")}</h2>
         <p>${UserListening.escapeHtml(data?.global_instruction_intro || "Listen carefully to the instructions before the test begins.")}</p>
-        <div class="listening-audio-status">Playing instructions...</div>
+        <div class="listening-audio-status" hidden></div>
       </div>
     </div>
   `;
@@ -158,7 +158,10 @@ UserListening.startListeningMode = function (container, data) {
   audio.onerror = () => UserListening.renderTest(container, data, { activeSectionIndex: 0, playPart: true });
   audio.play().catch(() => {
     const status = container.querySelector(".listening-audio-status");
-    if (status) status.textContent = "Tap Ready again if your browser blocked audio autoplay.";
+    if (status) {
+      status.hidden = false;
+      status.textContent = "Tap Ready again if your browser blocked audio autoplay.";
+    }
     UserListening.renderTest(container, data, { activeSectionIndex: 0, playPart: true });
   });
 };
@@ -281,7 +284,7 @@ UserListening.advanceListeningPart = function (container, data, completedIndex) 
   `;
 
   if (!current.global_instruction_after_audio_url) {
-    setTimeout(renderNext, 3500);
+    UserListening.__nextPartTimeout = setTimeout(renderNext, 3500);
     return;
   }
 
@@ -289,7 +292,9 @@ UserListening.advanceListeningPart = function (container, data, completedIndex) 
   UserListening.__currentAudio = audio;
   audio.onended = renderNext;
   audio.onerror = renderNext;
-  audio.play().catch(() => setTimeout(renderNext, 3500));
+  audio.play().catch(() => {
+    UserListening.__nextPartTimeout = setTimeout(renderNext, 3500);
+  });
 };
 
 UserListening.renderPassage = function (section, sectionIndex, startingQuestionNumber = 1) {
