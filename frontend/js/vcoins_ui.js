@@ -363,10 +363,15 @@ window.VCoinUI = window.VCoinUI || {};
   }
 
   window.VCoinUI.openBuyVcoinBot = async function () {
+    const websiteTab = window.AppViewMode?.isWebsite?.()
+      ? window.open("about:blank", "_blank", "noopener")
+      : null;
+
     try {
       const data = await apiGet("/vcoins/buy-link");
       const url = String(data?.url || "").trim();
       if (!url) {
+        if (websiteTab && !websiteTab.closed) websiteTab.close();
         alert("Buy V-Coin bot link is not configured yet.");
         return;
       }
@@ -378,12 +383,17 @@ window.VCoinUI = window.VCoinUI || {};
       }
 
       if (window.AppViewMode?.isWebsite?.()) {
-        window.open(url, "_blank", "noopener");
+        if (websiteTab) {
+          websiteTab.location.href = url;
+        } else {
+          window.open(url, "_blank", "noopener");
+        }
         return;
       }
 
       window.location.href = url;
     } catch (error) {
+      if (websiteTab && !websiteTab.closed) websiteTab.close();
       console.error("Failed to open V-Coin bot link", error);
       alert("Could not open Buy V-Coin bot. Please try again.");
     }
