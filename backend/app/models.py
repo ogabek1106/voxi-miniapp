@@ -12,6 +12,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     telegram_id = Column(BigInteger, unique=True, index=True, nullable=True)
     email = Column(String, unique=True, index=True, nullable=True)
+    google_id = Column(String, unique=True, index=True, nullable=True)
     password_hash = Column(Text, nullable=True)
     name = Column(String, nullable=True)
     surname = Column(String, nullable=True)

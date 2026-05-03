@@ -1,0 +1,75 @@
+window.WebsiteGoogleAuth = window.WebsiteGoogleAuth || {};
+
+(function () {
+  let scriptPromise = null;
+
+  function loadGoogleScript() {
+    if (window.google?.accounts?.id) return Promise.resolve();
+    if (scriptPromise) return scriptPromise;
+
+    scriptPromise = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = "https://accounts.google.com/gsi/client";
+      script.async = true;
+      script.defer = true;
+      script.onload = resolve;
+      script.onerror = () => reject(new Error("google_script_failed"));
+      document.head.appendChild(script);
+    });
+
+    return scriptPromise;
+  }
+
+  function messageFromError(error) {
+    const detail = error?.data?.detail;
+    if (detail === "google_login_not_configured") {
+      return "Google login is not configured on the server. Please contact admin.";
+    }
+    if (detail === "google_email_not_verified") {
+      return "Google email is not verified.";
+    }
+    if (detail === "invalid_google_token") {
+      return "Google login could not be verified. Please try again.";
+    }
+    return "Google login failed. Please try again.";
+  }
+
+  window.WebsiteGoogleAuth.render = async function (container, onSuccess) {
+    if (!container) return;
+    container.innerHTML = "";
+
+    try {
+      const config = await window.WebsiteAuthApi.googleConfig();
+      await loadGoogleScript();
+
+      window.google.accounts.id.initialize({
+        client_id: config.client_id,
+        callback: async (response) => {
+          try {
+            const result = await window.WebsiteAuthApi.googleLogin(response.credential);
+            window.WebsiteAuthState.setUser(result.user);
+            onSuccess?.(result.user);
+          } catch (error) {
+            console.error("Google website login failed", error);
+            alert(messageFromError(error));
+          }
+        },
+      });
+
+      window.google.accounts.id.renderButton(container, {
+        theme: "outline",
+        size: "large",
+        shape: "pill",
+        text: "continue_with",
+        width: Math.min(360, container.clientWidth || 360),
+      });
+    } catch (error) {
+      console.error("Google auth setup failed", error);
+      container.innerHTML = `
+        <button class="website-auth-provider" type="button" disabled>
+          Continue with Google
+        </button>
+      `;
+    }
+  };
+})();

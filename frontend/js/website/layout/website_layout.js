@@ -62,6 +62,7 @@ window.WebsiteLayout = window.WebsiteLayout || {};
     document.body.classList.add("view-website");
     document.body.classList.remove("view-miniapp");
     window.WebsiteHeader?.mount();
+    window.WebsiteFooter?.mount();
     wrapNavigation();
     window.goHome?.();
     hideMiniAppOnlyElements();

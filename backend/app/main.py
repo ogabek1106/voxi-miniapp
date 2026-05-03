@@ -22,6 +22,7 @@ from app.api.full_mock import router as full_mock_router
 from app.api.vcoins import router as vcoins_router
 from app.api.announcement import router as announcement_router
 from app.api.auth import router as auth_router
+from app.api.auth_google import router as auth_google_router
 from .db import (
     ensure_reading_progress_columns,
     ensure_mock_pack_column,
@@ -71,6 +72,7 @@ app.include_router(result_images_router)
 app.include_router(vcoins_router)
 app.include_router(announcement_router)
 app.include_router(auth_router)
+app.include_router(auth_google_router)
 app.mount("/media", StaticFiles(directory="/data/media"), name="media")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 # ✅ CORS FIX (required for Telegram Mini App)

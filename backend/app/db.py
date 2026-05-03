@@ -790,6 +790,10 @@ def ensure_user_auth_schema():
         ))
         conn.execute(text(
             "ALTER TABLE users "
+            "ADD COLUMN IF NOT EXISTS google_id VARCHAR;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE users "
             "ADD COLUMN IF NOT EXISTS password_hash TEXT;"
         ))
         conn.execute(text(
@@ -807,6 +811,10 @@ def ensure_user_auth_schema():
         conn.execute(text(
             "CREATE UNIQUE INDEX IF NOT EXISTS ix_users_email_unique "
             "ON users (email) WHERE email IS NOT NULL;"
+        ))
+        conn.execute(text(
+            "CREATE UNIQUE INDEX IF NOT EXISTS ix_users_google_id_unique "
+            "ON users (google_id) WHERE google_id IS NOT NULL;"
         ))
         conn.execute(text(
             "CREATE UNIQUE INDEX IF NOT EXISTS ix_users_telegram_id_unique "

@@ -17,6 +17,14 @@ window.WebsiteAuthApi = window.WebsiteAuthApi || {};
     return window.ApiClient.post("/auth/telegram/login", payload);
   };
 
+  window.WebsiteAuthApi.googleConfig = function () {
+    return window.ApiClient.get("/auth/google/config");
+  };
+
+  window.WebsiteAuthApi.googleLogin = function (idToken) {
+    return window.ApiClient.post("/auth/google/login", { id_token: idToken });
+  };
+
   window.WebsiteAuthApi.logout = function () {
     return window.ApiClient.post("/auth/logout", {});
   };
