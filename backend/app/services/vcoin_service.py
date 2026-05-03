@@ -190,49 +190,18 @@ def spend_once_for_content(db: Session, telegram_id: int, content_type: str, ref
     cost = cost_for_content(content_type)
     reference = str(reference_id)
     reason = f"{content_type}_spend"
-    user = _get_or_create_user_for_update(db, telegram_id)
-
-    existing = (
-        db.query(CoinLedger)
-        .filter(
-            CoinLedger.telegram_id == int(telegram_id),
-            CoinLedger.reason == reason,
-            CoinLedger.reference_type == content_type,
-            CoinLedger.reference_id == reference,
-            CoinLedger.delta < 0,
-        )
-        .first()
-    )
-    if existing:
-        return VCoinSpendResult(
-            ok=True,
-            telegram_id=int(telegram_id),
-            balance=int(user.v_coins or 0),
-            required=cost,
-            reason="already_spent",
-        )
-
-    current = int(user.v_coins or 0)
-    if current < cost:
-        raise HTTPException(
-            status_code=402,
-            detail={
-                "error": "insufficient_vcoins",
-                "required": cost,
-                "balance": current,
-            },
-        )
-
-    user.v_coins = current - cost
-    db.add(user)
-    db.flush()
-    write_ledger(
+    balance_after = spend_coins(
         db=db,
         telegram_id=telegram_id,
-        delta=-cost,
+        amount=cost,
         reason=reason,
         reference_type=content_type,
         reference_id=reference,
-        balance_after=user.v_coins,
     )
-    return VCoinSpendResult(ok=True, telegram_id=int(telegram_id), balance=int(user.v_coins), required=cost)
+    return VCoinSpendResult(
+        ok=True,
+        telegram_id=int(telegram_id),
+        balance=int(balance_after),
+        required=cost,
+        reason="spent",
+    )
