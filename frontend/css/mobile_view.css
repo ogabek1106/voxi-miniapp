@@ -8,6 +8,7 @@ body.mobile-browser-view {
 }
 
 body.mobile-browser-view {
+  --website-content-top-gap: 42px;
   overflow-y: auto;
   position: relative;
 }
@@ -40,6 +41,10 @@ body.mobile-browser-view.view-website #content {
   padding-left: 14px;
   padding-right: 14px;
   overflow-x: hidden;
+}
+
+body.mobile-browser-view.view-website #content {
+  padding-top: calc(var(--website-header-height) + var(--website-content-top-gap));
 }
 
 body.mobile-browser-view.view-website .content {
@@ -80,6 +85,44 @@ body.mobile-browser-view .website-brand-logo {
   visibility: visible !important;
   opacity: 1 !important;
   flex: 0 0 auto;
+}
+
+body.mobile-browser-view .website-brand-text {
+  display: inline-flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  font-size: 14px;
+  line-height: 1;
+  max-width: 92px;
+  white-space: normal;
+}
+
+body.mobile-browser-view .website-header-actions {
+  gap: 8px;
+}
+
+body.mobile-browser-view .website-balance-button {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+body.mobile-browser-view .website-profile-button {
+  max-width: 112px;
+  padding-right: 10px;
+}
+
+body.mobile-browser-view .website-footer {
+  text-align: center;
+  justify-items: center;
+}
+
+body.mobile-browser-view .website-footer-brand,
+body.mobile-browser-view .website-footer-contact {
+  justify-items: center;
+}
+
+body.mobile-browser-view .website-footer-links {
+  justify-content: center;
 }
 
 body.mobile-browser-view img,
