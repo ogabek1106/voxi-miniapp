@@ -401,7 +401,7 @@ window.VCoinUI = window.VCoinUI || {};
         </div>
 
         <div class="vcoin-sheet-actions">
-          <a class="vcoin-buy-btn" id="vcoin-buy-btn" href="${BUY_VCOIN_BOT_URL}" target="_blank" rel="noopener">Buy V-Coin</a>
+          <a class="vcoin-buy-btn" href="${BUY_VCOIN_BOT_URL}" target="_blank" rel="noopener">Buy V-Coin</a>
           <button class="vcoin-cancel-btn" id="vcoin-close-btn">Close</button>
         </div>
       </div>
@@ -451,7 +451,7 @@ window.VCoinUI = window.VCoinUI || {};
           ${serviceName} costs ${required} V-Coins. Your balance is ${balance} V-Coins.
         </p>
         <div class="vcoin-sheet-actions">
-          <a class="vcoin-buy-btn" id="vcoin-buy-btn" href="${BUY_VCOIN_BOT_URL}" target="_blank" rel="noopener">Buy V-Coin</a>
+          <a class="vcoin-buy-btn" href="${BUY_VCOIN_BOT_URL}" target="_blank" rel="noopener">Buy V-Coin</a>
           <button class="vcoin-cancel-btn" id="vcoin-close-btn">Cancel</button>
         </div>
       </div>
