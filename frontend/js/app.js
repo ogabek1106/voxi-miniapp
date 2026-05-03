@@ -157,32 +157,45 @@ function animateHomeVcoinBalance(fromValue, toValue) {
     || document.querySelector(".website-balance-button");
   const from = Math.max(0, Number(fromValue) || 0);
   const to = Math.max(0, Number(toValue) || 0);
+  const distance = Math.abs(to - from);
 
   if (from === to || typeof window.requestAnimationFrame !== "function") {
     setHomeVcoinBalance(to);
     return;
   }
 
+  if (window.__vcoinBalanceAnimationFrame) {
+    window.cancelAnimationFrame(window.__vcoinBalanceAnimationFrame);
+    window.__vcoinBalanceAnimationFrame = null;
+  }
+
   const startedAt = performance.now();
-  const duration = 1100;
-  if (card) card.classList.add("is-growing");
+  const duration = Math.max(760, Math.min(1350, 620 + distance * 42));
+  const isIncrease = to > from;
+  if (card) {
+    card.classList.remove("is-growing", "is-spending", "is-changing");
+    card.classList.add("is-changing", isIncrease ? "is-growing" : "is-spending");
+  }
 
   function tick(now) {
     const progress = Math.min(1, (now - startedAt) / duration);
-    const eased = 1 - Math.pow(1 - progress, 3);
+    const eased = progress < 0.5
+      ? 4 * progress * progress * progress
+      : 1 - Math.pow(-2 * progress + 2, 3) / 2;
     const current = Math.round(from + (to - from) * eased);
     setHomeVcoinBalance(current);
 
     if (progress < 1) {
-      window.requestAnimationFrame(tick);
+      window.__vcoinBalanceAnimationFrame = window.requestAnimationFrame(tick);
       return;
     }
 
     setHomeVcoinBalance(to);
-    if (card) card.classList.remove("is-growing");
+    window.__vcoinBalanceAnimationFrame = null;
+    if (card) card.classList.remove("is-growing", "is-spending", "is-changing");
   }
 
-  window.requestAnimationFrame(tick);
+  window.__vcoinBalanceAnimationFrame = window.requestAnimationFrame(tick);
 }
 
 window.refreshVcoinBalance = async function ({ animate = true } = {}) {
@@ -196,11 +209,15 @@ window.refreshVcoinBalance = async function ({ animate = true } = {}) {
     const storedRaw = window.localStorage?.getItem(storageKey);
     const storedBalance = storedRaw === null ? null : Number(storedRaw);
     const displayedBalance = getDisplayedHomeVcoinBalance();
-    const startBalance = storedBalance !== null && Number.isFinite(storedBalance)
-      ? storedBalance
-      : displayedBalance;
+    const startBalance = animate
+      ? displayedBalance
+      : (
+          storedBalance !== null && Number.isFinite(storedBalance)
+            ? storedBalance
+            : displayedBalance
+        );
 
-    if (animate && balance > startBalance) {
+    if (animate && balance !== startBalance) {
       animateHomeVcoinBalance(startBalance, balance);
     } else {
       setHomeVcoinBalance(balance);

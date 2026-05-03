@@ -264,9 +264,15 @@
     transition: transform 180ms ease, box-shadow 180ms ease;
   }
 
+  #screen-home .home-balance.is-changing,
   #screen-home .home-balance.is-growing {
     transform: translateY(-1px) scale(1.03);
     box-shadow: 0 12px 30px rgba(0,186,255,0.18);
+  }
+
+  #screen-home .home-balance.is-spending {
+    transform: translateY(1px) scale(0.98);
+    box-shadow: 0 12px 30px rgba(239,68,68,0.14);
   }
 
   .vcoin-icon {
@@ -1717,8 +1723,8 @@
   <script src="/js/admin_speaking/ui/editor.js"></script>
   <script src="/js/admin_speaking/loader/editor_loader.js"></script>
   <script src="./js/admin_mock.js?v=1"></script>
-  <script src="./js/app.js?v=5"></script>
-  <script src="./js/vcoins_ui.js?v=4"></script>
+  <script src="./js/app.js?v=6"></script>
+  <script src="./js/vcoins_ui.js?v=5"></script>
   <script src="./js/website/components/profile_sheet.js?v=3"></script>
   <script src="./js/website/components/profile_editor.js?v=1"></script>
   <script src="./js/website/components/header.js?v=6"></script>

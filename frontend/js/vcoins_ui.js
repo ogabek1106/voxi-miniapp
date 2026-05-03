@@ -510,7 +510,7 @@ window.VCoinUI = window.VCoinUI || {};
         reference_id: String(referenceId)
       });
       if (typeof window.refreshVcoinBalance === "function") {
-        window.refreshVcoinBalance({ animate: false });
+        window.refreshVcoinBalance({ animate: true });
       }
       return !!result?.ok;
     } catch (error) {
