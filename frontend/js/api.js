@@ -46,7 +46,11 @@ window.apiRequest = async function (path, options = {}) {
       status: res.status,
       data
     });
-    throw new Error(typeof data === "string" ? data : JSON.stringify(data));
+    const error = new Error(typeof data === "string" ? data : JSON.stringify(data));
+    error.status = res.status;
+    error.data = data;
+    error.url = url;
+    throw error;
   }
 
   return data;

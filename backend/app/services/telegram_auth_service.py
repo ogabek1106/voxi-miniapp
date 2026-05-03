@@ -6,8 +6,13 @@ import time
 from fastapi import HTTPException
 
 
+def get_telegram_bot_token() -> str | None:
+    token = os.getenv("TELEGRAM_BOT_TOKEN") or os.getenv("BOT_TOKEN")
+    return token.strip() if token else None
+
+
 def verify_telegram_login(payload: dict) -> dict:
-    bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
+    bot_token = get_telegram_bot_token()
     if not bot_token:
         raise HTTPException(status_code=500, detail="telegram_login_not_configured")
 

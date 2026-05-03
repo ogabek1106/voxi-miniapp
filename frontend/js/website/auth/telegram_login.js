@@ -3,6 +3,20 @@ window.WebsiteTelegramLogin = window.WebsiteTelegramLogin || {};
 (function () {
   const BOT_USERNAME = "voxi_aibot";
 
+  function getTelegramLoginErrorMessage(error) {
+    const detail = error?.data?.detail;
+    if (detail === "telegram_login_not_configured") {
+      return "Telegram login is not configured on the server. Please contact admin.";
+    }
+    if (detail === "telegram_login_expired") {
+      return "Telegram login expired. Please try again.";
+    }
+    if (detail === "invalid_telegram_login") {
+      return "Telegram login could not be verified. Please try again.";
+    }
+    return "Telegram login failed. Please try again.";
+  }
+
   window.WebsiteTelegramLogin.render = function (container, onSuccess) {
     if (!container) return;
     container.innerHTML = "";
@@ -15,7 +29,7 @@ window.WebsiteTelegramLogin = window.WebsiteTelegramLogin || {};
         onSuccess?.(result.user);
       } catch (error) {
         console.error("Telegram website login failed", error);
-        alert("Telegram login failed. Please try again.");
+        alert(getTelegramLoginErrorMessage(error));
       } finally {
         delete window[callbackName];
       }
