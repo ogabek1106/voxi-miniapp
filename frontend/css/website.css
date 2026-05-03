@@ -98,6 +98,22 @@ body.view-website:not(.mobile-browser-view) #speaking-user-content {
   min-height: 0;
 }
 
+.listening-audio-notice {
+  position: sticky;
+  top: 92px;
+  z-index: 90;
+}
+
+body.view-website:not(.mobile-browser-view) .listening-trackline {
+  top: 98px;
+  z-index: 845;
+}
+
+body.view-website:not(.mobile-browser-view) .listening-audio-notice {
+  top: 152px;
+  z-index: 840;
+}
+
 .website-header {
   position: sticky;
   top: 0;

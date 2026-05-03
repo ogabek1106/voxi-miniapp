@@ -34,7 +34,7 @@ UserSpeakingLoader.setPartIndex = function (index) {
 };
 
 UserSpeakingLoader.bindBack = function () {
-  UserSpeakingUI.bindBack(function () {
+  const exitToHome = function () {
     const state = UserSpeakingState.get();
     const recorder = state.recorder;
     if (state.intervals?.recordTick) {
@@ -69,6 +69,15 @@ UserSpeakingLoader.bindBack = function () {
     if (typeof window.goHome === "function") {
       window.goHome();
     }
+  };
+
+  UserSpeakingUI.bindBack(function () {
+    if (window.ExamExitGuard?.confirmExit && !UserSpeakingState.get().isSubmitted) {
+      window.ExamExitGuard.confirmExit(exitToHome);
+      return;
+    }
+
+    exitToHome();
   });
 };
 

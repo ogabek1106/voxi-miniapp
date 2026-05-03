@@ -32,17 +32,26 @@ UserWritingLoader.bindEvents = function (data) {
 
   if (backBtn) {
     backBtn.onclick = async function () {
-      try {
-        const state = UserWritingState.get();
-        if (!state.isSubmitted) {
-          const answers = UserWritingUI.readAnswers();
-          await UserWritingApi.save(state.mockId, answers, { keepalive: true });
-        }
-      } catch (_) {}
+      const exitToHome = async function () {
+        try {
+          const state = UserWritingState.get();
+          if (!state.isSubmitted) {
+            const answers = UserWritingUI.readAnswers();
+            await UserWritingApi.save(state.mockId, answers, { keepalive: true });
+          }
+        } catch (_) {}
 
-      if (typeof window.goHome === "function") {
-        window.goHome();
+        if (typeof window.goHome === "function") {
+          window.goHome();
+        }
+      };
+
+      if (window.ExamExitGuard?.confirmExit && !UserWritingState.get().isSubmitted) {
+        window.ExamExitGuard.confirmExit(exitToHome);
+        return;
       }
+
+      exitToHome();
     };
   }
 

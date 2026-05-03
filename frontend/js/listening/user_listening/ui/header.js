@@ -199,7 +199,7 @@ UserListening.renderSubmitSection = function () {
   `;
 };
 
-UserListening.goBack = function () {
+UserListening.exitToHome = function () {
   if (UserListening.__mockId && !UserListening.__isSubmitted && typeof UserListening.saveProgress === "function") {
     UserListening.saveProgress(UserListening.__mockId, { keepalive: true }).catch(() => {});
   }
@@ -231,6 +231,15 @@ UserListening.goBack = function () {
   if (typeof window.goHome === "function") {
     window.goHome();
   }
+};
+
+UserListening.goBack = function () {
+  if (window.ExamExitGuard?.confirmExit && !UserListening.__isSubmitted) {
+    window.ExamExitGuard.confirmExit(UserListening.exitToHome);
+    return;
+  }
+
+  UserListening.exitToHome();
 };
 
 UserListening.showAutosaveBadge = function (text = "Saved!") {
