@@ -21,6 +21,7 @@ from app.api.speaking import router as speaking_router
 from app.api.full_mock import router as full_mock_router
 from app.api.vcoins import router as vcoins_router
 from app.api.announcement import router as announcement_router
+from app.api.auth import router as auth_router
 from .db import (
     ensure_reading_progress_columns,
     ensure_mock_pack_column,
@@ -31,7 +32,8 @@ from .db import (
     ensure_listening_instruction_schema,
     ensure_full_mock_results_schema,
     ensure_vcoin_schema,
-    ensure_announcement_schema
+    ensure_announcement_schema,
+    ensure_user_auth_schema
 )
 from app.api.admin_upload import router as admin_upload_router
 from app.api.result_images import router as result_images_router
@@ -48,6 +50,7 @@ ensure_writing_schema()
 ensure_speaking_schema()
 ensure_full_mock_results_schema()
 ensure_vcoin_schema()
+ensure_user_auth_schema()
 ensure_announcement_schema()
 app = FastAPI(title="Voxi Mini App API")
 app.include_router(mock_list.router)
@@ -67,6 +70,7 @@ app.include_router(admin_mock_packs.router)
 app.include_router(result_images_router)
 app.include_router(vcoins_router)
 app.include_router(announcement_router)
+app.include_router(auth_router)
 app.mount("/media", StaticFiles(directory="/data/media"), name="media")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 # ✅ CORS FIX (required for Telegram Mini App)
@@ -81,7 +85,7 @@ app.add_middleware(
         "https://web.telegram.org/a"
     ],
     allow_origin_regex=r"https://.*\.railway\.app",
-    allow_credentials=False,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )

@@ -778,6 +778,42 @@ def ensure_vcoin_schema():
         ))
 
 
+def ensure_user_auth_schema():
+    with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+        conn.execute(text(
+            "ALTER TABLE users "
+            "ALTER COLUMN telegram_id DROP NOT NULL;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE users "
+            "ADD COLUMN IF NOT EXISTS email VARCHAR;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE users "
+            "ADD COLUMN IF NOT EXISTS password_hash TEXT;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE users "
+            "ADD COLUMN IF NOT EXISTS photo_url TEXT;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE users "
+            "ADD COLUMN IF NOT EXISTS created_at TIMESTAMP;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE users "
+            "ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP;"
+        ))
+        conn.execute(text(
+            "CREATE UNIQUE INDEX IF NOT EXISTS ix_users_email_unique "
+            "ON users (email) WHERE email IS NOT NULL;"
+        ))
+        conn.execute(text(
+            "CREATE UNIQUE INDEX IF NOT EXISTS ix_users_telegram_id_unique "
+            "ON users (telegram_id) WHERE telegram_id IS NOT NULL;"
+        ))
+
+
 def ensure_announcement_schema():
     with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
         conn.execute(text(

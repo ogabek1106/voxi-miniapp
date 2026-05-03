@@ -8,6 +8,9 @@ window.SharedUser = window.SharedUser || {};
   window.SharedUser.getTelegramId = telegramId;
 
   window.SharedUser.loadMe = async function () {
+    if (window.AppViewMode?.isWebsite?.()) {
+      return window.WebsiteAuthState?.getUser?.() || window.WebsiteAuthState?.load?.() || null;
+    }
     const id = telegramId();
     if (!id) return null;
     return apiGet(`/me?telegram_id=${id}`);

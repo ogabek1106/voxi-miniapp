@@ -19,16 +19,20 @@ window.parseApiResponse = function (text) {
 
 window.apiRequest = async function (path, options = {}) {
   const url = window.apiUrl(path);
+  const requestOptions = {
+    credentials: "include",
+    ...options
+  };
   let res;
   let text = "";
 
   try {
-    res = await fetch(url, options);
+    res = await fetch(url, requestOptions);
     text = await res.text();
   } catch (error) {
     console.log("[API] request failed", {
       url,
-      method: options.method || "GET",
+      method: requestOptions.method || "GET",
       message: error?.message || String(error)
     });
     throw error;
@@ -38,7 +42,7 @@ window.apiRequest = async function (path, options = {}) {
   if (!res.ok) {
     console.log("[API] bad response", {
       url,
-      method: options.method || "GET",
+      method: requestOptions.method || "GET",
       status: res.status,
       data
     });

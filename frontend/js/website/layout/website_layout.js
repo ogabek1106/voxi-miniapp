@@ -66,16 +66,12 @@ window.WebsiteLayout = window.WebsiteLayout || {};
     window.goHome?.();
     hideMiniAppOnlyElements();
 
-    window.SharedUser?.loadMe?.()
-      .then((me) => window.WebsiteHeader?.update?.(me || {}))
+    window.WebsiteAuthState?.load?.()
+      .then(() => window.WebsiteHeader?.render?.())
       .catch((error) => console.error("Website user load failed", error));
 
     if (typeof window.refreshVcoinBalance === "function") {
       window.refreshVcoinBalance({ animate: false });
     }
   };
-
-  document.addEventListener("DOMContentLoaded", () => {
-    window.WebsiteLayout.init();
-  });
 })();

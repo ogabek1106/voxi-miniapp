@@ -134,6 +134,13 @@ body.view-website #screen-home {
   height: 20px;
 }
 
+.website-profile-button-avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
+}
+
 .website-profile-button span:last-child {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -302,6 +309,19 @@ body.view-website #screen-home {
   margin-top: 14px;
 }
 
+.website-profile-logout {
+  width: auto;
+  margin: 14px 0 0 10px;
+  border: 0;
+  border-radius: 999px;
+  background: #EEF2F7;
+  color: #17212B;
+  font-size: 14px;
+  font-weight: 900;
+  padding: 11px 16px;
+  cursor: pointer;
+}
+
 .website-profile-activity {
   margin-top: 20px;
 }
@@ -393,6 +413,104 @@ body.view-website #screen-home {
   color: #607080;
   font-size: 15px;
   font-weight: 800;
+}
+
+.website-auth-link {
+  width: auto;
+  height: 44px;
+  margin: 0;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 16px;
+  background: #FFFFFF;
+  color: #17212B;
+  box-shadow: 0 12px 30px rgba(20, 40, 60, 0.08);
+  font-size: 14px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.website-auth-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  background: rgba(17, 24, 39, 0.34);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  box-sizing: border-box;
+}
+
+.website-auth-card {
+  position: relative;
+  width: min(420px, 100%);
+  border-radius: 26px;
+  background: #FFFFFF;
+  padding: 24px;
+  box-sizing: border-box;
+  box-shadow: 0 22px 60px rgba(20, 40, 60, 0.22);
+}
+
+.website-auth-card h2 {
+  margin: 0 0 16px;
+  color: #17212B;
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.website-auth-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  margin: 0;
+  border-radius: 50%;
+  border: 0;
+  background: #EEF2F7;
+  color: #17212B;
+  box-shadow: none;
+  font-size: 22px;
+  line-height: 1;
+  padding: 0;
+}
+
+.website-auth-form {
+  display: grid;
+  gap: 10px;
+}
+
+.website-auth-form input {
+  width: 100%;
+  height: 46px;
+  margin: 0;
+  border-radius: 16px;
+  border: 1px solid rgba(20, 40, 60, 0.10);
+  background: #F5F9FC;
+  color: #17212B;
+  padding: 0 14px;
+}
+
+.website-auth-primary {
+  height: 48px;
+  margin: 4px 0 0;
+  border-radius: 16px;
+  background: #00BAFF;
+  color: #FFFFFF;
+}
+
+.website-auth-divider {
+  height: 1px;
+  margin: 18px 0;
+  background: rgba(20, 40, 60, 0.08);
+}
+
+.website-telegram-login-slot {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 @media (max-width: 720px) {

@@ -14,6 +14,10 @@ function applyBaseLightTheme() {
 }
 
 window.getTelegramId = function () {
+  if (window.AppViewMode?.isWebsite?.()) {
+    return null;
+  }
+
   const telegramId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
 
   if (telegramId) return telegramId;
@@ -217,7 +221,6 @@ function markAppReady() {
 document.addEventListener("DOMContentLoaded", () => {
   if (window.AppViewMode?.isWebsite?.()) {
     window.WebsiteLayout?.init?.();
-    loadMe();
     markAppReady();
 
     document.addEventListener("visibilitychange", () => {

@@ -339,6 +339,10 @@ window.VCoinUI = window.VCoinUI || {};
 
   async function fetchBalance() {
     const id = telegramId();
+    if (!id && window.AppViewMode?.isWebsite?.()) {
+      const user = window.WebsiteAuthState?.getUser?.();
+      return Number(user?.v_coins || 0);
+    }
     if (!id) return 0;
     const data = await apiGet(`/vcoins/balance?telegram_id=${id}`);
     return Number(data?.v_coins || 0);
@@ -346,6 +350,7 @@ window.VCoinUI = window.VCoinUI || {};
 
   async function fetchLedger() {
     const id = telegramId();
+    if (!id && window.AppViewMode?.isWebsite?.()) return [];
     if (!id) return [];
     const data = await apiGet(`/vcoins/ledger?telegram_id=${id}`);
     return Array.isArray(data?.items) ? data.items : [];

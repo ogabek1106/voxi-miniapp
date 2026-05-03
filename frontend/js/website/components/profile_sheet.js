@@ -66,6 +66,7 @@ window.WebsiteProfileSheet = window.WebsiteProfileSheet || {};
         </button>
 
         <button class="website-profile-edit" onclick="goProfile()">Edit profile</button>
+        <button class="website-profile-logout" id="website-profile-logout">Log out</button>
 
         <div class="website-profile-activity">
           ${lastActivityHtml}
@@ -77,6 +78,10 @@ window.WebsiteProfileSheet = window.WebsiteProfileSheet || {};
   window.WebsiteProfileSheet.close = close;
 
   window.WebsiteProfileSheet.open = async function () {
+    if (!window.WebsiteAuthState?.isAuthenticated?.()) {
+      window.WebsiteAuthModal?.open("login");
+      return;
+    }
     close();
 
     const backdrop = document.createElement("div");
@@ -93,8 +98,12 @@ window.WebsiteProfileSheet = window.WebsiteProfileSheet || {};
     });
 
     try {
-      const me = await window.SharedUser.loadMe();
+      const me = window.WebsiteAuthState.getUser() || await window.SharedUser.loadMe();
       backdrop.innerHTML = renderProfile(me || {});
+      document.getElementById("website-profile-logout")?.addEventListener("click", async () => {
+        await window.WebsiteAuthState.logout();
+        close();
+      });
     } catch (error) {
       console.error("Website profile load failed", error);
       backdrop.innerHTML = `
