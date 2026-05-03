@@ -1,0 +1,90 @@
+html.mobile-browser-view,
+body.mobile-browser-view {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+body.mobile-browser-view {
+  overflow-y: auto;
+  position: relative;
+}
+
+body.mobile-browser-view * {
+  box-sizing: border-box;
+}
+
+body.mobile-browser-view #app,
+body.mobile-browser-view .app,
+body.mobile-browser-view .app-shell,
+body.mobile-browser-view .page,
+body.mobile-browser-view .screen {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body.mobile-browser-view.view-website .app {
+  min-height: 100dvh;
+  height: auto;
+  overflow: visible;
+}
+
+body.mobile-browser-view.view-website .content,
+body.mobile-browser-view.view-website #content {
+  width: 100%;
+  max-width: 430px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 14px;
+  padding-right: 14px;
+  overflow-x: hidden;
+}
+
+body.mobile-browser-view.view-website .content {
+  overflow-y: visible;
+}
+
+body.mobile-browser-view .container,
+body.mobile-browser-view .main-container,
+body.mobile-browser-view .page-container {
+  width: 100%;
+  max-width: 430px;
+  height: auto;
+  min-height: 0;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 14px;
+  padding-right: 14px;
+}
+
+body.mobile-browser-view .website-brand,
+body.mobile-browser-view .brand,
+body.mobile-browser-view .branding,
+body.mobile-browser-view .logo,
+body.mobile-browser-view .top-brand {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+body.mobile-browser-view .website-header {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body.mobile-browser-view .website-brand-logo {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  flex: 0 0 auto;
+}
+
+body.mobile-browser-view img,
+body.mobile-browser-view svg,
+body.mobile-browser-view canvas,
+body.mobile-browser-view video {
+  max-width: 100%;
+}
