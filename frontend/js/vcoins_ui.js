@@ -7,8 +7,36 @@ window.VCoinUI = window.VCoinUI || {};
   };
   const BUY_VCOIN_BOT_URL = "https://t.me/voxi_aibot?start=buy_vcoin";
 
+  function normalizeTelegramId(value) {
+    const id = Number(value || 0);
+    return Number.isFinite(id) && id > 0 ? id : null;
+  }
+
   function telegramId() {
-    return typeof window.getTelegramId === "function" ? window.getTelegramId() : null;
+    const id = typeof window.getTelegramId === "function" ? window.getTelegramId() : null;
+    if (id) return normalizeTelegramId(id);
+
+    if (window.AppViewMode?.isWebsite?.()) {
+      return normalizeTelegramId(window.WebsiteAuthState?.getUser?.()?.telegram_id);
+    }
+
+    return null;
+  }
+
+  async function resolveTelegramId() {
+    let id = telegramId();
+    if (id || !window.AppViewMode?.isWebsite?.() || !window.WebsiteAuthState?.load) {
+      return id;
+    }
+
+    try {
+      const user = await window.WebsiteAuthState.load();
+      id = normalizeTelegramId(user?.telegram_id);
+    } catch (_) {
+      id = null;
+    }
+
+    return id;
   }
 
   function ensureStyles() {
@@ -465,9 +493,13 @@ window.VCoinUI = window.VCoinUI || {};
   };
 
   window.VCoinUI.ensureAccess = async function ({ contentType, referenceId, serviceName }) {
-    const id = telegramId();
+    const id = await resolveTelegramId();
     if (!id) {
-      alert("Open this mini app inside Telegram.");
+      if (window.AppViewMode?.isWebsite?.()) {
+        alert("Please log in with Telegram to use V-Coin paid content.");
+      } else {
+        alert("Open this mini app inside Telegram.");
+      }
       return false;
     }
 

@@ -2,6 +2,17 @@ body.view-website {
   --website-header-height: 86px;
   --website-content-top-gap: 26px;
   background: #F5F9FC;
+  min-height: 100vh;
+  height: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+html[data-view-mode="website"] {
+  min-height: 100%;
+  height: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 body.view-website .app {
@@ -13,6 +24,15 @@ body.view-website .app {
   background: #F5F9FC;
   box-shadow: none;
   overflow: visible;
+}
+
+body.view-website .content {
+  overflow: visible;
+}
+
+body.view-website .container {
+  min-height: 0;
+  height: auto;
 }
 
 body.view-website #content {

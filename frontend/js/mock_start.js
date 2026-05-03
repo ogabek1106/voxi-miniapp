@@ -39,6 +39,27 @@ MockFlow.isActive = function (mockId) {
   return !!MockFlow.active && !!MockFlow.mockId && MockFlow.mockId === safeMockId;
 };
 
+function applyTestContentSpacing() {
+  const content = document.getElementById("content");
+  if (!content) return;
+
+  if (window.AppViewMode?.isWebsite?.()) {
+    content.style.removeProperty("padding");
+    return;
+  }
+
+  content.style.padding = "2px 2px";
+}
+
+async function requirePaidAccess(payload) {
+  if (!window.VCoinUI?.ensureAccess) {
+    alert("V-Coin balance checker is not loaded. Please try again.");
+    return false;
+  }
+
+  return window.VCoinUI.ensureAccess(payload);
+}
+
 MockFlow.goToNextPart = function (currentPart, mockId, container) {
   MockDebug.log("MockFlow.goToNextPart.enter", { currentPart, mockId, active: MockFlow.active, flowMockId: MockFlow.mockId });
   if (!MockFlow.isActive(mockId) || !window.MockTransitionPage?.show) {
@@ -170,14 +191,13 @@ window.openMockWarning = function (packId, title) {
 
 window.startFullMock = async function (mockId) {
   MockDebug.log("startFullMock.enter", { mockId });
-  if (window.VCoinUI?.ensureAccess) {
-    const allowed = await window.VCoinUI.ensureAccess({
-      contentType: "full_mock",
-      referenceId: mockId,
-      serviceName: "Full Mock Test"
-    });
-    if (!allowed) return;
-  }
+  const allowed = await requirePaidAccess({
+    contentType: "full_mock",
+    referenceId: mockId,
+    serviceName: "Full Mock Test"
+  });
+  if (!allowed) return;
+
   MockFlow.activate(mockId);
   await window.startListeningMock(mockId, { fromFlow: true });
 };
@@ -185,14 +205,13 @@ window.startFullMock = async function (mockId) {
 window.startMock = async function (mockId, options = {}) {
   MockDebug.log("startMock.enter", { mockId, options });
   if (!options.fromFlow) {
-    if (window.VCoinUI?.ensureAccess) {
-      const allowed = await window.VCoinUI.ensureAccess({
-        contentType: "separate_block",
-        referenceId: `reading:${mockId}`,
-        serviceName: "Reading section"
-      });
-      if (!allowed) return;
-    }
+    const allowed = await requirePaidAccess({
+      contentType: "separate_block",
+      referenceId: `reading:${mockId}`,
+      serviceName: "Reading section"
+    });
+    if (!allowed) return;
+
     MockFlow.deactivate();
   }
 
@@ -202,8 +221,7 @@ window.startMock = async function (mockId, options = {}) {
     setBottomNavVisible(false);
   }
 
-  const content = document.getElementById("content");
-  if (content) content.style.padding = "2px 2px";
+  applyTestContentSpacing();
 
   if (!screenReading) return;
 
@@ -246,14 +264,13 @@ window.startMock = async function (mockId, options = {}) {
 window.startWritingMock = async function (mockId, options = {}) {
   MockDebug.log("startWritingMock.enter", { mockId, options });
   if (!options.fromFlow) {
-    if (window.VCoinUI?.ensureAccess) {
-      const allowed = await window.VCoinUI.ensureAccess({
-        contentType: "separate_block",
-        referenceId: `writing:${mockId}`,
-        serviceName: "Writing section"
-      });
-      if (!allowed) return;
-    }
+    const allowed = await requirePaidAccess({
+      contentType: "separate_block",
+      referenceId: `writing:${mockId}`,
+      serviceName: "Writing section"
+    });
+    if (!allowed) return;
+
     MockFlow.deactivate();
   }
 
@@ -263,8 +280,7 @@ window.startWritingMock = async function (mockId, options = {}) {
     setBottomNavVisible(false);
   }
 
-  const content = document.getElementById("content");
-  if (content) content.style.padding = "2px 2px";
+  applyTestContentSpacing();
 
   if (!screenWriting) return;
   screenWriting.style.display = "block";
@@ -282,14 +298,13 @@ window.startWritingMock = async function (mockId, options = {}) {
 window.startListeningMock = async function (mockId, options = {}) {
   MockDebug.log("startListeningMock.enter", { mockId, options });
   if (!options.fromFlow) {
-    if (window.VCoinUI?.ensureAccess) {
-      const allowed = await window.VCoinUI.ensureAccess({
-        contentType: "separate_block",
-        referenceId: `listening:${mockId}`,
-        serviceName: "Listening section"
-      });
-      if (!allowed) return;
-    }
+    const allowed = await requirePaidAccess({
+      contentType: "separate_block",
+      referenceId: `listening:${mockId}`,
+      serviceName: "Listening section"
+    });
+    if (!allowed) return;
+
     MockFlow.deactivate();
   }
 
@@ -299,8 +314,7 @@ window.startListeningMock = async function (mockId, options = {}) {
     setBottomNavVisible(false);
   }
 
-  const content = document.getElementById("content");
-  if (content) content.style.padding = "2px 2px";
+  applyTestContentSpacing();
 
   if (!screenReading) return;
 
@@ -432,14 +446,13 @@ window.startListeningMock = async function (mockId, options = {}) {
 window.startSpeakingMock = async function (mockId, options = {}) {
   MockDebug.log("startSpeakingMock.enter", { mockId, options });
   if (!options.fromFlow) {
-    if (window.VCoinUI?.ensureAccess) {
-      const allowed = await window.VCoinUI.ensureAccess({
-        contentType: "separate_block",
-        referenceId: `speaking:${mockId}`,
-        serviceName: "Speaking section"
-      });
-      if (!allowed) return;
-    }
+    const allowed = await requirePaidAccess({
+      contentType: "separate_block",
+      referenceId: `speaking:${mockId}`,
+      serviceName: "Speaking section"
+    });
+    if (!allowed) return;
+
     MockFlow.deactivate();
   }
 
@@ -449,8 +462,7 @@ window.startSpeakingMock = async function (mockId, options = {}) {
     setBottomNavVisible(false);
   }
 
-  const content = document.getElementById("content");
-  if (content) content.style.padding = "2px 2px";
+  applyTestContentSpacing();
 
   if (!screenSpeaking) return;
   screenSpeaking.style.display = "block";
