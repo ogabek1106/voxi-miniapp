@@ -23,6 +23,12 @@ window.WebsiteLayout = window.WebsiteLayout || {};
     document.getElementById("website-home")?.remove();
   }
 
+  function restoreWebsiteContentSpacing() {
+    const content = document.getElementById("content");
+    if (!content) return;
+    content.style.removeProperty("padding");
+  }
+
   function wrapNavigation() {
     if (window.WebsiteLayout._navigationWrapped) return;
     window.WebsiteLayout._navigationWrapped = true;
@@ -36,6 +42,7 @@ window.WebsiteLayout = window.WebsiteLayout || {};
 
       removeWebsiteHome();
       if (typeof miniGoHome === "function") miniGoHome();
+      restoreWebsiteContentSpacing();
       hideMiniAppOnlyElements();
     };
 
@@ -51,7 +58,11 @@ window.WebsiteLayout = window.WebsiteLayout || {};
       if (typeof original !== "function") return;
       window[name] = function (...args) {
         removeWebsiteHome();
-        return original.apply(this, args);
+        const result = original.apply(this, args);
+        if (name === "showMocksScreen" || name === "goProfile") {
+          restoreWebsiteContentSpacing();
+        }
+        return result;
       };
     });
   }

@@ -24,7 +24,7 @@ window.VCoinUI = window.VCoinUI || {};
       .vcoin-sheet-backdrop {
         position: fixed;
         inset: 0;
-        z-index: 9998;
+        z-index: 10004;
         background: rgba(17,24,39,0.28);
         display: flex;
         align-items: flex-end;
@@ -350,7 +350,13 @@ window.VCoinUI = window.VCoinUI || {};
 
   async function fetchLedger() {
     const id = telegramId();
-    if (!id && window.AppViewMode?.isWebsite?.()) return [];
+    if (!id && window.AppViewMode?.isWebsite?.()) {
+      const user = window.WebsiteAuthState?.getUser?.();
+      const websiteTelegramId = Number(user?.telegram_id || 0);
+      if (!websiteTelegramId) return [];
+      const data = await apiGet(`/vcoins/ledger?telegram_id=${websiteTelegramId}`);
+      return Array.isArray(data?.items) ? data.items : [];
+    }
     if (!id) return [];
     const data = await apiGet(`/vcoins/ledger?telegram_id=${id}`);
     return Array.isArray(data?.items) ? data.items : [];
@@ -368,6 +374,11 @@ window.VCoinUI = window.VCoinUI || {};
       const tg = window.Telegram?.WebApp;
       if (tg && typeof tg.openTelegramLink === "function") {
         tg.openTelegramLink(url);
+        return;
+      }
+
+      if (window.AppViewMode?.isWebsite?.()) {
+        window.open(url, "_blank", "noopener");
         return;
       }
 
