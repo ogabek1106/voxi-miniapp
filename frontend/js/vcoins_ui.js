@@ -5,6 +5,7 @@ window.VCoinUI = window.VCoinUI || {};
     full_mock: 10,
     separate_block: 3
   };
+  const BUY_VCOIN_BOT_URL = "https://t.me/voxi_aibot?start=buy_vcoin";
 
   function telegramId() {
     return typeof window.getTelegramId === "function" ? window.getTelegramId() : null;
@@ -217,7 +218,8 @@ window.VCoinUI = window.VCoinUI || {};
         margin-top: 14px;
       }
 
-      .vcoin-sheet button {
+      .vcoin-sheet button,
+      .vcoin-sheet .vcoin-buy-btn {
         height: 48px;
         border-radius: 14px;
         border: none;
@@ -229,6 +231,10 @@ window.VCoinUI = window.VCoinUI || {};
       .vcoin-buy-btn {
         background: #00BAFF !important;
         color: #ffffff !important;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
       }
 
       .vcoin-cancel-btn {
@@ -362,28 +368,6 @@ window.VCoinUI = window.VCoinUI || {};
     return Array.isArray(data?.items) ? data.items : [];
   }
 
-  window.VCoinUI.openBuyVcoinBot = async function () {
-    try {
-      const data = await apiGet("/vcoins/buy-link");
-      const url = String(data?.url || "").trim();
-      if (!url) {
-        alert("Buy V-Coin bot link is not configured yet.");
-        return;
-      }
-
-      const tg = window.Telegram?.WebApp;
-      if (tg && typeof tg.openTelegramLink === "function") {
-        tg.openTelegramLink(url);
-        return;
-      }
-
-      window.location.assign(url);
-    } catch (error) {
-      console.error("Failed to open V-Coin bot link", error);
-      alert("Could not open Buy V-Coin bot. Please try again.");
-    }
-  };
-
   window.VCoinUI.openBalanceSheet = async function () {
     ensureStyles();
     closeSheet();
@@ -417,7 +401,7 @@ window.VCoinUI = window.VCoinUI || {};
         </div>
 
         <div class="vcoin-sheet-actions">
-          <button class="vcoin-buy-btn" id="vcoin-buy-btn">Buy V-Coin</button>
+          <a class="vcoin-buy-btn" id="vcoin-buy-btn" href="${BUY_VCOIN_BOT_URL}" target="_blank" rel="noopener">Buy V-Coin</a>
           <button class="vcoin-cancel-btn" id="vcoin-close-btn">Close</button>
         </div>
       </div>
@@ -430,7 +414,6 @@ window.VCoinUI = window.VCoinUI || {};
     bindSheetDragToClose(backdrop.querySelector(".vcoin-sheet"));
 
     document.getElementById("vcoin-close-btn").onclick = closeSheet;
-    document.getElementById("vcoin-buy-btn").onclick = window.VCoinUI.openBuyVcoinBot;
 
     try {
       const [balance, ledger] = await Promise.all([fetchBalance(), fetchLedger()]);
@@ -468,7 +451,7 @@ window.VCoinUI = window.VCoinUI || {};
           ${serviceName} costs ${required} V-Coins. Your balance is ${balance} V-Coins.
         </p>
         <div class="vcoin-sheet-actions">
-          <button class="vcoin-buy-btn" id="vcoin-buy-btn">Buy V-Coin</button>
+          <a class="vcoin-buy-btn" id="vcoin-buy-btn" href="${BUY_VCOIN_BOT_URL}" target="_blank" rel="noopener">Buy V-Coin</a>
           <button class="vcoin-cancel-btn" id="vcoin-close-btn">Cancel</button>
         </div>
       </div>
@@ -479,7 +462,6 @@ window.VCoinUI = window.VCoinUI || {};
       if (event.target === backdrop) closeSheet();
     });
     document.getElementById("vcoin-close-btn").onclick = closeSheet;
-    document.getElementById("vcoin-buy-btn").onclick = window.VCoinUI.openBuyVcoinBot;
   };
 
   window.VCoinUI.ensureAccess = async function ({ contentType, referenceId, serviceName }) {
