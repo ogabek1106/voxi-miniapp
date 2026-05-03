@@ -2,16 +2,16 @@ body.view-website {
   --website-header-height: 86px;
   --website-content-top-gap: 26px;
   background: #F5F9FC;
-  min-height: 100vh;
-  height: auto;
-  overflow-y: auto;
+  min-height: 100%;
+  height: 100%;
+  overflow-y: hidden;
   overflow-x: hidden;
 }
 
 html[data-view-mode="website"] {
   min-height: 100%;
-  height: auto;
-  overflow-y: auto;
+  height: 100%;
+  overflow-y: hidden;
   overflow-x: hidden;
 }
 
@@ -19,11 +19,15 @@ body.view-website .app {
   width: 100%;
   max-width: none;
   min-height: 100vh;
-  height: auto;
+  height: 100vh;
   border-radius: 0;
   background: #F5F9FC;
   box-shadow: none;
-  overflow: visible;
+  overflow-y: auto;
+  overflow-x: hidden;
+  touch-action: pan-y;
+  overscroll-behavior-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 body.view-website .content {

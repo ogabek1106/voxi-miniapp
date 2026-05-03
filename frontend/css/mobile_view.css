@@ -28,8 +28,12 @@ body.mobile-browser-view .screen {
 
 body.mobile-browser-view.view-website .app {
   min-height: 100dvh;
-  height: auto;
-  overflow: visible;
+  height: 100dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  touch-action: pan-y;
+  overscroll-behavior-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 body.mobile-browser-view.view-website .content,
