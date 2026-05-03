@@ -20,17 +20,23 @@ window.WebsiteFooter = window.WebsiteFooter || {};
         <span>Practice IELTS in real conditions</span>
       </div>
       <nav class="website-footer-links" aria-label="Website footer">
-        <a href="#">About Us</a>
-        <a href="#">Contact Us</a>
-        <a href="#">Privacy Policy</a>
-        <a href="#">Terms of Service</a>
+        <button type="button" data-website-info="about">About Us</button>
+        <button type="button" data-website-info="contact">Contact Us</button>
+        <button type="button" data-website-info="privacy">Privacy Policy</button>
+        <button type="button" data-website-info="terms">Terms of Service</button>
       </nav>
       <div class="website-footer-contact">
-        <span>Telegram: @voxi_aibot</span>
-        <span>Email: support@ebaiacademy.com</span>
+        <a href="https://t.me/IELTSforeverybody" target="_blank" rel="noopener">Telegram channel</a>
+        <a href="https://t.me/voxi_aibot" target="_blank" rel="noopener">Telegram Bot</a>
       </div>
     `;
 
     app.appendChild(footer);
+
+    footer.querySelectorAll("[data-website-info]").forEach((button) => {
+      button.addEventListener("click", () => {
+        window.WebsiteInfoModal?.open(button.dataset.websiteInfo);
+      });
+    });
   };
 })();
