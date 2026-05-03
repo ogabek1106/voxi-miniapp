@@ -60,8 +60,9 @@ UserReading.renderHeader = function () {
           font-size: 12px;
           cursor: pointer;
           user-select: none;
+          color: #17212B;
         ">
-          <span id="passage-text">Passage 1</span>
+          <span id="passage-text" style="color:#17212B; position:relative; z-index:2;">Passage 1</span>
           <div id="passage-dropdown" style="
             display: none;
             position: absolute;
@@ -74,6 +75,7 @@ UserReading.renderHeader = function () {
             border-radius: 6px;
             overflow: hidden;
             box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+            color: #17212B;
           "></div>
         </div>
 
@@ -396,6 +398,7 @@ UserReading.initPassageCounter = function () {
       padding: 9px 8px;
       text-align: center;
       font-weight: 700;
+      color: #17212B;
       cursor: pointer;
     ">Passage ${index + 1}</button>
   `).join("");
@@ -441,9 +444,17 @@ UserReading.initPassageCounter = function () {
     label.textContent = `Passage ${activeIndex + 1}`;
   }
 
+  const scrollHost = window.AppViewMode?.isWebsite?.() && !document.body.classList.contains("mobile-browser-view")
+    ? document.querySelector(".app")
+    : content;
+
   content.removeEventListener("scroll", UserReading.__updateActivePassage || function () {});
+  if (UserReading.__activePassageScrollHost && UserReading.__activePassageScrollHost !== content) {
+    UserReading.__activePassageScrollHost.removeEventListener("scroll", UserReading.__updateActivePassage || function () {});
+  }
   UserReading.__updateActivePassage = updateActivePassage;
-  content.addEventListener("scroll", updateActivePassage, { passive: true });
+  UserReading.__activePassageScrollHost = scrollHost;
+  scrollHost?.addEventListener("scroll", updateActivePassage, { passive: true });
   updateActivePassage();
 };
 
