@@ -585,22 +585,18 @@ body.view-website #screen-home {
   flex-wrap: wrap;
 }
 
-.website-footer-links button,
-.website-footer-contact a {
+.website-footer-links a {
   color: #17212B;
-  background: transparent;
-  border: 0;
-  margin: 0;
-  padding: 0;
   text-decoration: none;
   font-size: 13px;
   font-weight: 900;
-  box-shadow: none;
-  cursor: pointer;
 }
 
 .website-footer-contact a {
   color: #607080;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 800;
 }
 
 .website-info-backdrop {

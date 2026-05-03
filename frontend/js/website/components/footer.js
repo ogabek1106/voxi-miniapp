@@ -20,10 +20,10 @@ window.WebsiteFooter = window.WebsiteFooter || {};
         <span>Practice IELTS in real conditions</span>
       </div>
       <nav class="website-footer-links" aria-label="Website footer">
-        <button type="button" data-website-info="about">About Us</button>
-        <button type="button" data-website-info="contact">Contact Us</button>
-        <button type="button" data-website-info="privacy">Privacy Policy</button>
-        <button type="button" data-website-info="terms">Terms of Service</button>
+        <a href="#" data-website-info="about">About Us</a>
+        <a href="#" data-website-info="contact">Contact Us</a>
+        <a href="#" data-website-info="privacy">Privacy Policy</a>
+        <a href="#" data-website-info="terms">Terms of Service</a>
       </nav>
       <div class="website-footer-contact">
         <a href="https://t.me/IELTSforeverybody" target="_blank" rel="noopener">Telegram channel</a>
@@ -33,9 +33,10 @@ window.WebsiteFooter = window.WebsiteFooter || {};
 
     app.appendChild(footer);
 
-    footer.querySelectorAll("[data-website-info]").forEach((button) => {
-      button.addEventListener("click", () => {
-        window.WebsiteInfoModal?.open(button.dataset.websiteInfo);
+    footer.querySelectorAll("[data-website-info]").forEach((link) => {
+      link.addEventListener("click", (event) => {
+        event.preventDefault();
+        window.WebsiteInfoModal?.open(link.dataset.websiteInfo);
       });
     });
   };
