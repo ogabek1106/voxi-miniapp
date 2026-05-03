@@ -40,4 +40,8 @@ window.WebsiteFooter = window.WebsiteFooter || {};
       });
     });
   };
+
+  window.WebsiteFooter.unmount = function () {
+    document.getElementById("website-footer")?.remove();
+  };
 })();

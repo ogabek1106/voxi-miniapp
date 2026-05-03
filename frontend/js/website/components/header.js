@@ -44,6 +44,11 @@ window.WebsiteHeader = window.WebsiteHeader || {};
     `;
 
     app.prepend(header);
+    if (!window.WebsiteHeader._scrollBound) {
+      window.WebsiteHeader._scrollBound = true;
+      app.addEventListener("scroll", () => window.WebsiteHeader.updateScrollState(), { passive: true });
+    }
+    window.WebsiteHeader.updateScrollState();
     document.getElementById("website-profile-button")?.addEventListener("click", () => {
       if (window.WebsiteAuthState?.isAuthenticated?.()) {
         window.WebsiteProfileSheet?.open();
@@ -93,5 +98,12 @@ window.WebsiteHeader = window.WebsiteHeader || {};
       window.WebsiteHeader.render();
       return;
     }
+  };
+
+  window.WebsiteHeader.updateScrollState = function () {
+    const header = document.getElementById("website-header");
+    const app = document.querySelector(".app");
+    if (!header || !app) return;
+    header.classList.toggle("is-compact", app.scrollTop > 18);
   };
 })();

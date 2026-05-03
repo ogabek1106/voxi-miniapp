@@ -22,6 +22,14 @@ window.WebsiteLayout = window.WebsiteLayout || {};
     document.getElementById("website-home")?.remove();
   }
 
+  function showHomeFooter() {
+    window.WebsiteFooter?.mount?.();
+  }
+
+  function hideHomeFooter() {
+    window.WebsiteFooter?.unmount?.();
+  }
+
   function restoreWebsiteContentSpacing() {
     const content = document.getElementById("content");
     if (!content) return;
@@ -55,6 +63,9 @@ window.WebsiteLayout = window.WebsiteLayout || {};
       if (typeof miniGoHome === "function") miniGoHome();
       restoreWebsiteContentSpacing();
       hideMiniAppOnlyElements();
+      showHomeFooter();
+      document.querySelector(".app")?.scrollTo({ top: 0, behavior: "auto" });
+      window.WebsiteHeader?.updateScrollState?.();
     };
 
     [
@@ -69,10 +80,12 @@ window.WebsiteLayout = window.WebsiteLayout || {};
       if (typeof original !== "function") return;
       window[name] = function (...args) {
         removeWebsiteHome();
+        hideHomeFooter();
         const result = original.apply(this, args);
         if (name === "showMocksScreen" || name === "goProfile") {
           restoreWebsiteContentSpacing();
         }
+        window.WebsiteHeader?.updateScrollState?.();
         return result;
       };
     });
@@ -84,10 +97,10 @@ window.WebsiteLayout = window.WebsiteLayout || {};
     document.body.classList.add("view-website");
     document.body.classList.remove("view-miniapp");
     window.WebsiteHeader?.mount();
-    window.WebsiteFooter?.mount();
     wrapNavigation();
     window.goHome?.();
     hideMiniAppOnlyElements();
+    showHomeFooter();
 
     window.WebsiteAuthState?.load?.()
       .then((user) => {
