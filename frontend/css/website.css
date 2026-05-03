@@ -75,7 +75,7 @@ body.view-website #screen-home {
   background: rgba(245, 249, 252, 0.88);
   backdrop-filter: blur(18px);
   border-bottom: 1px solid rgba(20, 40, 60, 0.08);
-  transition: height 180ms ease, padding 180ms ease, box-shadow 180ms ease, background 180ms ease;
+  transition: box-shadow 140ms ease, background 140ms ease;
 }
 
 body.view-website .website-header.is-compact {
@@ -99,7 +99,7 @@ body.view-website .website-header.is-compact {
   height: 42px;
   max-width: min(260px, 42vw);
   object-fit: contain;
-  transition: height 180ms ease;
+  transition: height 120ms ease;
 }
 
 body.view-website .website-header.is-compact .website-brand-logo {
@@ -111,7 +111,7 @@ body.view-website .website-header.is-compact .website-brand-logo {
   font-size: 21px;
   font-weight: 900;
   white-space: nowrap;
-  transition: font-size 180ms ease;
+  transition: font-size 120ms ease;
 }
 
 body.view-website .website-header.is-compact .website-brand-text {
@@ -147,7 +147,7 @@ body.view-website .website-header.is-compact .website-brand-text {
   border-radius: 18px;
   font-size: 17px;
   font-weight: 900;
-  transition: height 180ms ease, padding 180ms ease, font-size 180ms ease;
+  transition: box-shadow 140ms ease;
 }
 
 body.view-website .website-header.is-compact .website-balance-button {
@@ -176,7 +176,7 @@ body.view-website .website-header.is-compact .website-balance-button .vcoin-icon
   font-size: 15px;
   font-weight: 900;
   justify-content: flex-start;
-  transition: height 180ms ease, padding 180ms ease, font-size 180ms ease;
+  transition: box-shadow 140ms ease;
 }
 
 body.view-website .website-header.is-compact .website-profile-button {
@@ -197,7 +197,6 @@ body.view-website .website-header.is-compact .website-profile-button {
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  transition: width 180ms ease, height 180ms ease;
 }
 
 body.view-website .website-header.is-compact .website-profile-button-avatar {

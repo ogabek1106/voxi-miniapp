@@ -104,6 +104,16 @@ window.WebsiteHeader = window.WebsiteHeader || {};
     const header = document.getElementById("website-header");
     const app = document.querySelector(".app");
     if (!header || !app) return;
-    header.classList.toggle("is-compact", app.scrollTop > 18);
+    const isCompact = header.classList.contains("is-compact");
+    const scrollTop = app.scrollTop;
+
+    if (!isCompact && scrollTop > 72) {
+      header.classList.add("is-compact");
+      return;
+    }
+
+    if (isCompact && scrollTop <= 2) {
+      header.classList.remove("is-compact");
+    }
   };
 })();
