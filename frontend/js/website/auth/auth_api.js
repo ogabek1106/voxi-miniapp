@@ -5,6 +5,10 @@ window.WebsiteAuthApi = window.WebsiteAuthApi || {};
     return window.ApiClient.get("/auth/me");
   };
 
+  window.WebsiteAuthApi.updateMe = function (payload) {
+    return window.ApiClient.post("/auth/me", payload);
+  };
+
   window.WebsiteAuthApi.signup = function (payload) {
     return window.ApiClient.post("/auth/email/signup", payload);
   };

@@ -23,6 +23,11 @@ class TelegramLoginIn(BaseModel):
     hash: str
 
 
+class ProfileUpdateIn(BaseModel):
+    name: str | None = None
+    surname: str | None = None
+
+
 class SafeUserOut(BaseModel):
     id: int
     telegram_id: int | None = None

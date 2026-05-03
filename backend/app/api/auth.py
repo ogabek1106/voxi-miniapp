@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Request, Response
 from sqlalchemy.orm import Session
 
 from app.deps import get_db
-from app.schemas.auth import EmailLoginIn, EmailSignupIn, TelegramLoginIn
+from app.schemas.auth import EmailLoginIn, EmailSignupIn, ProfileUpdateIn, TelegramLoginIn
 from app.services.auth_service import (
     clear_session_cookie,
     get_session_user,
@@ -51,6 +51,16 @@ def logout(response: Response):
 def auth_me(request: Request, db: Session = Depends(get_db)):
     user = require_session_user(db, request)
     return safe_user(db, user)
+
+
+@router.post("/me")
+def update_auth_me(payload: ProfileUpdateIn, request: Request, db: Session = Depends(get_db)):
+    user = require_session_user(db, request)
+    user.name = (payload.name or "").strip() or None
+    user.surname = (payload.surname or "").strip() or None
+    db.commit()
+    db.refresh(user)
+    return {"ok": True, "user": safe_user(db, user)}
 
 
 @router.get("/session")

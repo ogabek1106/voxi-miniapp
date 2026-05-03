@@ -65,7 +65,7 @@ window.WebsiteProfileSheet = window.WebsiteProfileSheet || {};
           <span aria-hidden="true">›</span>
         </button>
 
-        <button class="website-profile-edit" onclick="goProfile()">Edit profile</button>
+        <button class="website-profile-edit" id="website-profile-edit">Edit profile</button>
         <button class="website-profile-logout" id="website-profile-logout">Log out</button>
 
         <div class="website-profile-activity">
@@ -103,6 +103,9 @@ window.WebsiteProfileSheet = window.WebsiteProfileSheet || {};
       document.getElementById("website-profile-logout")?.addEventListener("click", async () => {
         await window.WebsiteAuthState.logout();
         close();
+      });
+      document.getElementById("website-profile-edit")?.addEventListener("click", () => {
+        window.WebsiteProfileEditor?.open(me || {});
       });
     } catch (error) {
       console.error("Website profile load failed", error);
