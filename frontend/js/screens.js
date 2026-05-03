@@ -279,7 +279,7 @@ window.showAdminPanel = function () {
 };
 
 window.showAnnouncementAdmin = async function () {
-  const telegramId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+  const telegramId = window.getTelegramId?.();
   if (!telegramId) return alert("Open inside Telegram");
 
   hideAllScreens();
@@ -336,7 +336,7 @@ async function uploadAnnouncementImage(file) {
 }
 
 window.saveAnnouncementAdmin = async function () {
-  const telegramId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+  const telegramId = window.getTelegramId?.();
   if (!telegramId) return alert("Open inside Telegram");
 
   const textEl = document.getElementById("announcement-admin-text");
@@ -365,7 +365,7 @@ window.saveAnnouncementAdmin = async function () {
 };
 
 window.clearAnnouncementAdmin = async function () {
-  const telegramId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+  const telegramId = window.getTelegramId?.();
   if (!telegramId) return alert("Open inside Telegram");
 
   try {
@@ -382,7 +382,7 @@ window.clearAnnouncementAdmin = async function () {
 };
 
 window.showDbStats = async function () {
-  const telegramId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+  const telegramId = window.getTelegramId?.();
   if (!telegramId) return alert("Open inside Telegram");
 
   hideAllScreens();

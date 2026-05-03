@@ -15,7 +15,8 @@ function applyBaseLightTheme() {
 
 window.getTelegramId = function () {
   if (window.AppViewMode?.isWebsite?.()) {
-    return null;
+    const websiteUser = window.WebsiteAuthState?.getUser?.();
+    return websiteUser?.telegram_id || null;
   }
 
   const telegramId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;

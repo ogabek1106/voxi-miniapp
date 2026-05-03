@@ -23,9 +23,12 @@ body.view-website #content {
 
 body.view-website .bottom-nav,
 body.view-website #screen-home .home-header,
-body.view-website #screen-home .home-admin-actions,
 body.view-website #screen-admin {
   display: none !important;
+}
+
+body.view-website #screen-home .home-admin-actions {
+  display: none;
 }
 
 body.view-website #screen-home {

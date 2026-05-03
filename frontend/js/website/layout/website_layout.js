@@ -12,8 +12,7 @@ window.WebsiteLayout = window.WebsiteLayout || {};
     const homeHeader = document.querySelector("#screen-home .home-header");
     if (homeHeader) homeHeader.style.display = "none";
 
-    const adminActions = document.querySelector("#screen-home .home-admin-actions");
-    if (adminActions) adminActions.style.display = "none";
+    updateWebsiteAdminState(window.WebsiteAuthState?.getUser?.() || null);
 
     const adminScreen = document.getElementById("screen-admin");
     if (adminScreen) adminScreen.style.display = "none";
@@ -27,6 +26,18 @@ window.WebsiteLayout = window.WebsiteLayout || {};
     const content = document.getElementById("content");
     if (!content) return;
     content.style.removeProperty("padding");
+  }
+
+  function updateWebsiteAdminState(user) {
+    if (!isWebsite()) return;
+    const isAdmin = Boolean(user?.is_admin);
+    window.__isAdmin = isAdmin;
+
+    const adminBtn = document.getElementById("adminBtn");
+    if (adminBtn) adminBtn.style.display = isAdmin ? "block" : "none";
+
+    const adminActions = document.querySelector("#screen-home .home-admin-actions");
+    if (adminActions) adminActions.style.display = isAdmin ? "flex" : "none";
   }
 
   function wrapNavigation() {
@@ -79,8 +90,15 @@ window.WebsiteLayout = window.WebsiteLayout || {};
     hideMiniAppOnlyElements();
 
     window.WebsiteAuthState?.load?.()
-      .then(() => window.WebsiteHeader?.render?.())
+      .then((user) => {
+        updateWebsiteAdminState(user);
+        window.WebsiteHeader?.render?.();
+      })
       .catch((error) => console.error("Website user load failed", error));
+
+    window.WebsiteAuthState?.subscribe?.((user) => {
+      updateWebsiteAdminState(user);
+    });
 
     if (typeof window.refreshVcoinBalance === "function") {
       window.refreshVcoinBalance({ animate: false });
