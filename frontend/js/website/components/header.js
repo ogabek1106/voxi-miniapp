@@ -47,6 +47,7 @@ window.WebsiteHeader = window.WebsiteHeader || {};
     if (!window.WebsiteHeader._scrollBound) {
       window.WebsiteHeader._scrollBound = true;
       app.addEventListener("scroll", () => window.WebsiteHeader.updateScrollState(), { passive: true });
+      window.addEventListener("scroll", () => window.WebsiteHeader.updateScrollState(), { passive: true });
     }
     window.WebsiteHeader.updateScrollState();
     document.getElementById("website-profile-button")?.addEventListener("click", () => {
@@ -105,7 +106,9 @@ window.WebsiteHeader = window.WebsiteHeader || {};
     const app = document.querySelector(".app");
     if (!header || !app) return;
     const isCompact = header.classList.contains("is-compact");
-    const scrollTop = app.scrollTop;
+    const scrollTop = document.body.classList.contains("mobile-browser-view")
+      ? (window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0)
+      : app.scrollTop;
 
     if (!isCompact && scrollTop > 72) {
       header.classList.add("is-compact");
