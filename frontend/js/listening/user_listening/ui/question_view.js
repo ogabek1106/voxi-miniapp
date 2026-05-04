@@ -3,8 +3,125 @@
 window.UserListening = window.UserListening || {};
 
 UserListening.isMatchingType = function (type) {
-  const normalizedType = String(type || "").toUpperCase();
+  const normalizedType = UserListening.normalizeListeningQuestionType
+    ? UserListening.normalizeListeningQuestionType(type)
+    : String(type || "").toUpperCase();
   return normalizedType === "MATCHING" || normalizedType === "PARAGRAPH_MATCHING";
+};
+
+UserListening.normalizeListeningQuestionType = function (type) {
+  const normalized = String(type || "").trim().toUpperCase();
+  const aliases = {
+    MCQ_SINGLE: "SINGLE_CHOICE",
+    MCQ_MULTIPLE: "MULTIPLE_CHOICE",
+    MULTI_CHOICE: "MULTIPLE_CHOICE",
+    MAP_LABELING: "MAP_LABELING",
+    DIAGRAM_LABELING: "DIAGRAM_LABELING"
+  };
+  return aliases[normalized] || normalized;
+};
+
+UserListening.getQuestionText = function (question) {
+  const content = question?.content;
+  if (typeof content === "string") return content;
+  if (content && typeof content === "object") {
+    return content.text || content.prompt || content.label || "";
+  }
+  return "";
+};
+
+UserListening.getQuestionOptions = function (question, group = null) {
+  const sources = [
+    question?.meta?.options,
+    question?.content?.options,
+    question?.options,
+    group?.meta?.options,
+    group?.content?.options
+  ];
+  const raw = sources.find((item) => Array.isArray(item)) || [];
+  return raw
+    .map((option, index) => {
+      if (typeof option === "string") {
+        return {
+          key: String.fromCharCode(65 + index),
+          text: option
+        };
+      }
+      return {
+        key: option?.key || option?.value || String.fromCharCode(65 + index),
+        text: option?.text || option?.label || option?.value || ""
+      };
+    })
+    .filter((option) => String(option.text || option.key || "").trim().length > 0);
+};
+
+UserListening.isListeningCompletionType = function (type) {
+  return [
+    "FORM_COMPLETION",
+    "NOTE_COMPLETION",
+    "SENTENCE_COMPLETION",
+    "SUMMARY_COMPLETION",
+    "FLOWCHART_COMPLETION",
+    "TABLE_COMPLETION",
+    "SHORT_ANSWER"
+  ].includes(UserListening.normalizeListeningQuestionType(type));
+};
+
+UserListening.isListeningLabelType = function (type) {
+  return [
+    "MAP_LABEL",
+    "PLAN_LABEL",
+    "DIAGRAM_LABEL",
+    "MAP_LABELING",
+    "DIAGRAM_LABELING"
+  ].includes(UserListening.normalizeListeningQuestionType(type));
+};
+
+UserListening.isListeningGroupedType = function (type) {
+  return UserListening.isListeningCompletionType(type) || UserListening.isListeningLabelType(type);
+};
+
+UserListening.groupListeningQuestionBlocks = function (items) {
+  const result = [];
+
+  items.forEach((item) => {
+    const type = UserListening.normalizeListeningQuestionType(item?.type);
+    if (UserListening.isMatchingType(type) || !UserListening.isListeningGroupedType(type) || !item.question_group_id) {
+      result.push(item);
+      return;
+    }
+
+    let group = result.find(
+      (entry) => entry.type === "LISTENING_TYPED_GROUP" && entry.group_id === item.question_group_id
+    );
+
+    if (!group) {
+      group = {
+        type: "LISTENING_TYPED_GROUP",
+        question_type: type,
+        group_id: item.question_group_id,
+        questions: [],
+        meta: item.meta || {},
+        content: item.content || {},
+        image_url: item.image_url || "",
+        instruction: item.instruction || ""
+      };
+      result.push(group);
+    }
+
+    group.questions.push(item);
+    group.meta = { ...(group.meta || {}), ...(item.meta || {}) };
+    if (!group.image_url && item.image_url) group.image_url = item.image_url;
+    if (!group.instruction && item.instruction) group.instruction = item.instruction;
+  });
+
+  result.forEach((item) => {
+    if (item.type === "LISTENING_TYPED_GROUP") {
+      item.questions.sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
+    }
+  });
+
+  return result;
 };
 
 UserListening.groupMatchingQuestions = function (questions) {
@@ -56,13 +173,20 @@ UserListening.renderQuestionsForSection = function (passage, passageIndex, start
   const grouped = UserListening.groupImageQuestions
     ? UserListening.groupImageQuestions(groupedSummary)
     : groupedSummary;
+  const listeningGrouped = UserListening.groupListeningQuestionBlocks(grouped);
   let currentNumber = startingQuestionNumber;
 
   return `
     <div class="questions-container">
-      ${grouped.map((item, index) => {
+      ${listeningGrouped.map((item, index) => {
         if (item.type === "MATCHING_GROUP") {
           const block = UserListening.renderMatchingGroup(item, passageIndex, currentNumber, passage);
+          currentNumber += item.questions.length;
+          return block;
+        }
+
+        if (item.type === "LISTENING_TYPED_GROUP") {
+          const block = UserListening.renderListeningTypedGroup(item, currentNumber);
           currentNumber += item.questions.length;
           return block;
         }
@@ -87,8 +211,280 @@ UserListening.renderQuestionsForSection = function (passage, passageIndex, start
   `;
 };
 
+UserListening.renderListeningGroupHeader = function (group, startNumber) {
+  const endNumber = startNumber + (group.questions?.length || 1) - 1;
+  const label = (group.questions?.length || 0) > 1
+    ? `Questions ${startNumber}-${endNumber}`
+    : `Question ${startNumber}`;
+
+  return `
+    <div class="question-header">
+      <div class="question-number">${label}</div>
+      ${group.instruction ? `
+        <div class="question-instruction">
+          ${UserListening.escapeHtml(group.instruction)}
+        </div>
+      ` : ""}
+    </div>
+  `;
+};
+
+UserListening.getCompletionTemplate = function (group) {
+  const first = group.questions?.[0] || {};
+  return group.meta?.template_text
+    || first.meta?.template_text
+    || group.content?.text
+    || UserListening.getQuestionText(first)
+    || "";
+};
+
+UserListening.renderListeningTextInput = function (question, className = "question-input") {
+  return `
+    <input
+      type="text"
+      name="q_${question.id}"
+      data-qid="${question.id}"
+      class="${className}"
+      autocomplete="off"
+      autocapitalize="off"
+      spellcheck="false"
+    />
+  `;
+};
+
+UserListening.renderTemplateWithGapInputs = function (template, questions, inputClass = "summary-blank-input") {
+  const byGap = new Map();
+  (questions || []).forEach((question, index) => {
+    const gap = String(question?.meta?.gap || index + 1);
+    byGap.set(gap, question);
+  });
+
+  let fallbackIndex = 0;
+  let html = "";
+  let lastIndex = 0;
+  let inserted = 0;
+  const regex = /\[\[(\d+)\]\]|_{3,}/g;
+  let match;
+
+  while ((match = regex.exec(String(template || "")))) {
+    html += UserListening.escapeHtml(String(template || "").slice(lastIndex, match.index));
+    const question = match[1]
+      ? byGap.get(String(match[1]))
+      : questions?.[fallbackIndex++];
+    if (question) {
+      html += UserListening.renderListeningTextInput(question, inputClass);
+      inserted += 1;
+    }
+    lastIndex = regex.lastIndex;
+  }
+
+  html += UserListening.escapeHtml(String(template || "").slice(lastIndex));
+  if (inserted === 0 && questions?.length === 1) {
+    html += ` ${UserListening.renderListeningTextInput(questions[0], inputClass)}`;
+  }
+  return html;
+};
+
+UserListening.renderCompletionAsForm = function (group, startNumber) {
+  const template = UserListening.getCompletionTemplate(group);
+  const lines = String(template || "")
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const body = lines.length ? lines : [template];
+
+  return `
+    <div class="question-block listening-form-completion">
+      ${UserListening.renderListeningGroupHeader(group, startNumber)}
+      ${group.meta?.title ? `<div class="listening-form-title">${UserListening.escapeHtml(group.meta.title)}</div>` : ""}
+      <div class="listening-form-lines">
+        ${body.map((line) => {
+          const parts = line.split(/:\s*/);
+          const hasLabel = parts.length > 1;
+          return `
+            <div class="listening-form-row">
+              ${hasLabel ? `<span class="listening-form-label">${UserListening.escapeHtml(parts.shift())}:</span>` : ""}
+              <span class="listening-form-value">
+                ${UserListening.renderTemplateWithGapInputs(parts.join(": ") || line, group.questions, "gap-input")}
+              </span>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    </div>
+  `;
+};
+
+UserListening.renderCompletionAsNotes = function (group, startNumber) {
+  const template = UserListening.getCompletionTemplate(group);
+  const lines = String(template || "")
+    .split(/\n+/)
+    .map((line) => line.trim().replace(/^[-\u2022]\s*/, ""))
+    .filter(Boolean);
+
+  return `
+    <div class="question-block listening-note-completion">
+      ${UserListening.renderListeningGroupHeader(group, startNumber)}
+      <ul class="listening-note-list">
+        ${(lines.length ? lines : [template]).map((line) => `
+          <li>${UserListening.renderTemplateWithGapInputs(line, group.questions, "gap-input")}</li>
+        `).join("")}
+      </ul>
+    </div>
+  `;
+};
+
+UserListening.renderSentenceCompletionGroup = function (group, startNumber) {
+  return `
+    <div class="question-block listening-sentence-completion">
+      ${UserListening.renderListeningGroupHeader(group, startNumber)}
+      <div class="listening-sentence-list">
+        ${(group.questions || []).map((question, index) => `
+          <div class="listening-sentence-row">
+            <span class="matching-row-number">${startNumber + index}.</span>
+            <span>${UserListening.renderTemplateWithGapInputs(UserListening.getQuestionText(question), [question], "summary-blank-input")}</span>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `;
+};
+
+UserListening.renderSummaryCompletionGroup = function (group, startNumber) {
+  return `
+    <div class="question-block summary-group listening-summary-completion">
+      ${UserListening.renderListeningGroupHeader(group, startNumber)}
+      <div class="summary-text">
+        ${UserListening.renderTemplateWithGapInputs(UserListening.getCompletionTemplate(group), group.questions, "summary-blank-input")}
+      </div>
+    </div>
+  `;
+};
+
+UserListening.renderFlowchartCompletionGroup = function (group, startNumber) {
+  const steps = String(UserListening.getCompletionTemplate(group) || "")
+    .split(/\n+|\u2192|\u2193|->|=>/g)
+    .map((step) => step.trim())
+    .filter(Boolean);
+
+  return `
+    <div class="question-block listening-flowchart-completion">
+      ${UserListening.renderListeningGroupHeader(group, startNumber)}
+      <div class="listening-flowchart-list">
+        ${(steps.length ? steps : [UserListening.getCompletionTemplate(group)]).map((step, index, list) => `
+          <div class="listening-flowchart-step">
+            ${UserListening.renderTemplateWithGapInputs(step, group.questions, "gap-input")}
+          </div>
+          ${index < list.length - 1 ? `<div class="listening-flowchart-arrow">&darr;</div>` : ""}
+        `).join("")}
+      </div>
+    </div>
+  `;
+};
+
+UserListening.renderTableCompletionGroup = function (group, startNumber) {
+  const template = String(UserListening.getCompletionTemplate(group) || "");
+  const rows = template
+    .split(/\n+/)
+    .map((line) => line.split("|").map((cell) => cell.trim()))
+    .filter((row) => row.some(Boolean));
+
+  if (!rows.length || rows.every((row) => row.length < 2)) {
+    return UserListening.renderCompletionAsForm(group, startNumber);
+  }
+
+  return `
+    <div class="question-block listening-table-completion">
+      ${UserListening.renderListeningGroupHeader(group, startNumber)}
+      <div class="listening-table-scroll">
+        <table class="listening-completion-table">
+          <tbody>
+            ${rows.map((row, rowIndex) => `
+              <tr>
+                ${row.map((cell) => `
+                  <${rowIndex === 0 ? "th" : "td"}>
+                    ${UserListening.renderTemplateWithGapInputs(cell, group.questions, "gap-input")}
+                  </${rowIndex === 0 ? "th" : "td"}>
+                `).join("")}
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+};
+
+UserListening.renderShortAnswerGroup = function (group, startNumber) {
+  return `
+    <div class="question-block listening-short-answer">
+      ${UserListening.renderListeningGroupHeader(group, startNumber)}
+      <div class="listening-short-answer-list">
+        ${(group.questions || []).map((question, index) => `
+          <div class="listening-short-answer-row">
+            <div class="question-text">
+              ${startNumber + index}. ${UserListening.escapeHtml(UserListening.getQuestionText(question))}
+            </div>
+            ${UserListening.renderListeningTextInput(question, "question-input")}
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `;
+};
+
+UserListening.renderLabelingGroup = function (group, startNumber) {
+  const imageUrl = group.image_url || group.meta?.image_url || group.content?.image_url || "";
+  const mode = group.meta?.answer_mode || "text";
+  const options = UserListening.getQuestionOptions(group.questions?.[0] || {}, group);
+
+  return `
+    <div class="question-block image-questions-group listening-labeling-group">
+      ${UserListening.renderListeningGroupHeader(group, startNumber)}
+      ${imageUrl ? `
+        <div class="image-questions-image-wrap">
+          <img
+            src="${UserListening.toMediaUrl ? UserListening.toMediaUrl(imageUrl) : imageUrl}"
+            class="image-questions-image"
+            alt="Question visual"
+          />
+        </div>
+      ` : ""}
+      <div class="image-questions-list">
+        ${(group.questions || []).map((question, index) => {
+          const number = startNumber + index;
+          return `
+            <div class="image-questions-row">
+              <div class="image-questions-label">${number}.</div>
+              <div class="image-questions-text">
+                ${UserListening.escapeHtml(UserListening.getQuestionText(question) || `Label ${index + 1}`)}
+              </div>
+              ${mode === "dropdown" && options.length
+                ? UserListening.renderMatchingSelect(question.id, options)
+                : UserListening.renderListeningTextInput(question, "image-inline-gap-input")}
+            </div>
+          `;
+        }).join("")}
+      </div>
+    </div>
+  `;
+};
+
+UserListening.renderListeningTypedGroup = function (group, startNumber) {
+  const type = UserListening.normalizeListeningQuestionType(group.question_type);
+  if (type === "FORM_COMPLETION") return UserListening.renderCompletionAsForm(group, startNumber);
+  if (type === "NOTE_COMPLETION") return UserListening.renderCompletionAsNotes(group, startNumber);
+  if (type === "SENTENCE_COMPLETION") return UserListening.renderSentenceCompletionGroup(group, startNumber);
+  if (type === "SUMMARY_COMPLETION") return UserListening.renderSummaryCompletionGroup(group, startNumber);
+  if (type === "FLOWCHART_COMPLETION") return UserListening.renderFlowchartCompletionGroup(group, startNumber);
+  if (type === "TABLE_COMPLETION") return UserListening.renderTableCompletionGroup(group, startNumber);
+  if (type === "SHORT_ANSWER") return UserListening.renderShortAnswerGroup(group, startNumber);
+  if (UserListening.isListeningLabelType(type)) return UserListening.renderLabelingGroup(group, startNumber);
+  return UserListening.renderShortAnswerGroup(group, startNumber);
+};
+
 UserListening.renderSingleQuestion = function (q, questionIndex, passageIndex, displayOrder = null, passage = null) {
-  const type = (q.type || "").toUpperCase();
+  const type = UserListening.normalizeListeningQuestionType(q.type || "");
 
   const base = {
     id: q.id,
@@ -108,8 +504,32 @@ UserListening.renderSingleQuestion = function (q, questionIndex, passageIndex, d
       break;
 
     case "MULTI_CHOICE":
+    case "MULTIPLE_CHOICE":
       inner = UserListening.renderMultiChoice(q, base);
       break;
+
+    case "FORM_COMPLETION":
+    case "NOTE_COMPLETION":
+    case "SENTENCE_COMPLETION":
+    case "SUMMARY_COMPLETION":
+    case "FLOWCHART_COMPLETION":
+    case "TABLE_COMPLETION":
+    case "SHORT_ANSWER":
+    case "MAP_LABEL":
+    case "PLAN_LABEL":
+    case "DIAGRAM_LABEL":
+    case "MAP_LABELING":
+    case "DIAGRAM_LABELING":
+      return UserListening.renderListeningTypedGroup({
+        type: "LISTENING_TYPED_GROUP",
+        question_type: type,
+        group_id: q.question_group_id || q.id,
+        questions: [q],
+        meta: q.meta || {},
+        content: q.content || {},
+        image_url: q.image_url || "",
+        instruction: q.instruction || ""
+      }, base.order);
 
     case "TFNG":
       inner = UserListening.renderTFNG(q, base);
@@ -151,7 +571,7 @@ UserListening.renderSingleQuestion = function (q, questionIndex, passageIndex, d
       break;
 
     default:
-      inner = `<div>Unsupported question type: ${type}</div>`;
+      inner = UserListening.renderTextInput(q, base);
   }
 
   if (
@@ -195,7 +615,7 @@ UserListening.renderQuestionHeader = function (base) {
 };
 
 UserListening.renderTextInput = function (q, base) {
-  const text = q.content?.text || "";
+  const text = UserListening.getQuestionText(q);
   const wordLimit = q.meta?.word_limit || q.word_limit;
 
   return `
@@ -222,20 +642,20 @@ UserListening.renderTextInput = function (q, base) {
 };
 
 UserListening.renderSingleChoice = function (q, base) {
-  const options = q.options || q.meta?.options || [];
+  const options = UserListening.getQuestionOptions(q);
 
   return `
     <div class="question-text">
-      ${UserListening.escapeHtml(q.content?.text || "")}
+      ${UserListening.escapeHtml(UserListening.getQuestionText(q))}
     </div>
 
     ${options.map((opt, i) => {
-      const key = String.fromCharCode(65 + i);
+      const key = opt.key || String.fromCharCode(65 + i);
 
       return `
         <label class="option">
-          <input type="radio" name="q_${q.id}" value="${key}" />
-          ${key}. ${UserListening.escapeHtml(opt)}
+          <input type="radio" name="q_${q.id}" data-qid="${q.id}" value="${UserListening.escapeHtml(key)}" />
+          ${UserListening.escapeHtml(key)}. ${UserListening.escapeHtml(opt.text)}
         </label>
       `;
     }).join("")}
@@ -243,16 +663,16 @@ UserListening.renderSingleChoice = function (q, base) {
 };
 
 UserListening.renderMultiChoice = function (q, base) {
-  const options = q.options || q.content?.options || [];
+  const options = UserListening.getQuestionOptions(q);
 
   return `
     <div class="question-text">
-      ${UserListening.escapeHtml(q.content?.text || "")}
+      ${UserListening.escapeHtml(UserListening.getQuestionText(q))}
     </div>
 
     ${options.map((opt) => `
       <label class="option">
-        <input type="checkbox" name="q_${q.id}" value="${opt.key}">
+        <input type="checkbox" name="q_${q.id}" data-qid="${q.id}" value="${UserListening.escapeHtml(opt.key)}">
         ${UserListening.escapeHtml(opt.key)}. ${UserListening.escapeHtml(opt.text)}
       </label>
     `).join("")}

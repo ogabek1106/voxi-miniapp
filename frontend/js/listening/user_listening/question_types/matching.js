@@ -2,7 +2,9 @@
 window.UserListening = window.UserListening || {};
 
 UserListening.isMatchingType = function (type) {
-  const normalizedType = String(type || "").toUpperCase();
+  const normalizedType = UserListening.normalizeListeningQuestionType
+    ? UserListening.normalizeListeningQuestionType(type)
+    : String(type || "").toUpperCase();
   return normalizedType === "MATCHING" || normalizedType === "PARAGRAPH_MATCHING";
 };
 
@@ -75,9 +77,12 @@ UserListening.buildParagraphMatchingLetters = function (group, passage) {
 
 UserListening.renderMatchingGroup = function (group, passageIndex, startNumber, passage = null) {
   const isParagraphMatching = group.question_type === "PARAGRAPH_MATCHING";
-  const options = isParagraphMatching
+  const rawOptions = isParagraphMatching
     ? UserListening.buildParagraphMatchingLetters(group, passage)
     : (group.meta?.options || []);
+  const options = UserListening.getQuestionOptions
+    ? UserListening.getQuestionOptions(group.questions?.[0] || {}, { meta: { options: rawOptions } })
+    : rawOptions.map((text, index) => ({ key: String.fromCharCode(65 + index), text }));
   const instruction = group.questions?.[0]?.instruction || "";
   const endNumber = startNumber + group.questions.length - 1;
   const headerLabel = group.questions.length > 1
@@ -99,10 +104,10 @@ UserListening.renderMatchingGroup = function (group, passageIndex, startNumber, 
       ${isParagraphMatching ? "" : `
         <div class="matching-options">
           ${options.map((opt, i) => {
-            const letter = String.fromCharCode(65 + i);
+            const letter = opt.key || String.fromCharCode(65 + i);
             return `
               <div class="matching-option-item">
-                <strong>${letter}.</strong> ${UserListening.escapeHtml(opt)}
+                <strong>${UserListening.escapeHtml(letter)}.</strong> ${UserListening.escapeHtml(opt.text || opt.key || "")}
               </div>
             `;
           }).join("")}
@@ -117,7 +122,7 @@ UserListening.renderMatchingGroup = function (group, passageIndex, startNumber, 
             <div class="matching-row">
               <div class="matching-text">
                 <span class="matching-row-number">${number}.</span>
-                ${UserListening.escapeHtml(q.content?.text || "")}
+                ${UserListening.escapeHtml(UserListening.getQuestionText ? UserListening.getQuestionText(q) : (q.content?.text || ""))}
               </div>
 
               ${UserListening.renderMatchingSelect(q.id, options)}
@@ -135,9 +140,9 @@ UserListening.renderMatchingSelect = function (questionId, options) {
       <option value="">Choose</option>
 
       ${options.map((option, index) => {
-        const letter = typeof option === "string" && option.length === 1
-          ? option
-          : String.fromCharCode(65 + index);
+        const letter = typeof option === "string"
+          ? (option.length === 1 ? option : String.fromCharCode(65 + index))
+          : (option?.key || option?.value || String.fromCharCode(65 + index));
 
         return `
           <option value="${letter}">

@@ -324,9 +324,21 @@ window.startListeningMock = async function (mockId, options = {}) {
   function mapBlockTypeToQuestionType(blockType) {
     const normalized = String(blockType || "").toLowerCase();
 
+    if (normalized === "form_completion") return "FORM_COMPLETION";
+    if (normalized === "note_completion") return "NOTE_COMPLETION";
+    if (normalized === "sentence_completion") return "SENTENCE_COMPLETION";
+    if (normalized === "summary_completion") return "SUMMARY_COMPLETION";
+    if (normalized === "flowchart_completion") return "FLOWCHART_COMPLETION";
+    if (normalized === "table_completion") return "TABLE_COMPLETION";
+    if (normalized === "short_answer") return "SHORT_ANSWER";
     if (normalized === "mcq_single") return "SINGLE_CHOICE";
     if (normalized === "mcq_multiple") return "MULTI_CHOICE";
     if (normalized === "matching") return "MATCHING";
+    if (normalized === "map_label") return "MAP_LABEL";
+    if (normalized === "plan_label") return "PLAN_LABEL";
+    if (normalized === "diagram_label") return "DIAGRAM_LABEL";
+    if (normalized === "map_labeling") return "MAP_LABELING";
+    if (normalized === "diagram_labeling") return "DIAGRAM_LABELING";
     if (normalized === "tfng") return "TFNG";
     if (normalized === "yes_no_ng") return "YES_NO_NG";
 
@@ -391,7 +403,7 @@ window.startListeningMock = async function (mockId, options = {}) {
             type: String(question?.type || questionType).toUpperCase(),
             instruction: question?.instruction || block?.instruction || "",
             content,
-            meta: question?.meta || block?.meta || {},
+            meta: { ...(block?.meta || {}), ...(question?.meta || {}) },
             points: 1,
             image_url: block?.image_url || null
           });
