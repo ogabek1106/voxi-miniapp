@@ -236,6 +236,8 @@ UserReading.showResultScreen = function (data = {}) {
   container.innerHTML = "";
 
   UserReading.renderResultPage(container, {
+    sectionType: "reading",
+    overallLabel: "IELTS Reading",
     band: data.band ?? "0.0",
     correct: data.correct ?? 0,
     total: data.total ?? 40,

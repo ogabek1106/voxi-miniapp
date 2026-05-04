@@ -47,36 +47,6 @@ UserListening.renderHeader = function () {
           ">60:00</span>
         </div>
 
-        <div id="header-section" style="
-          flex: 1;
-          position: relative;
-          height: 100%;
-          border-radius: 6px;
-          background: #f4f4f6;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: 700;
-          font-size: 12px;
-          cursor: pointer;
-          user-select: none;
-        ">
-          <span id="section-text">Section 1</span>
-          <div id="section-dropdown" style="
-            display: none;
-            position: absolute;
-            top: 34px;
-            left: 0;
-            right: 0;
-            z-index: 200;
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            overflow: hidden;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
-          "></div>
-        </div>
-
         <div id="header-questions" style="
           flex: 1;
           position: relative;
@@ -302,7 +272,6 @@ UserListening.applyHighlight = function (range) {
 UserListening.initHeader = function (data) {
   UserListening.__timerAutoSubmitted = false;
   UserListening.initReadingTimer(data?.timer, data);
-  UserListening.initSectionCounter();
   UserListening.initQuestionCounter();
   UserListening.initSubmitButton();
 

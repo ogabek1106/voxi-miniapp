@@ -2,62 +2,13 @@
 window.UserListening = window.UserListening || {};
 
 UserListening.renderResultPage = function (container, data = {}) {
-  if (!container) return;
-
-  const band = Number(data.band ?? 0).toFixed(1);
-  const correct = Number(data.correct ?? 0);
-  const total = Number(data.total ?? 40);
-  const isProfileBack = data.backTarget === "profile";
-
-  const today = new Date();
-  const formattedDate = today.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric"
-  });
-
-  container.innerHTML = `
-    <div class="reading-result-page">
-      <div class="reading-result-card-wrapper">
-        <div
-          class="reading-result-card"
-          id="reading-result-card"
-          data-band="${band}"
-          data-correct="${correct}"
-          data-total="${total}"
-        >
-          <div class="reading-result-card-type">IELTS Reading</div>
-
-          <div class="reading-result-band-box">
-            <div class="reading-result-band-value" id="reading-result-band-value">0.0</div>
-          </div>
-
-          <div class="reading-result-score">Score: ${correct}/${total}</div>
-          <div class="reading-result-date">${formattedDate}</div>
-          <div class="reading-result-brand">Powered by EBAI Academy</div>
-        </div>
-      </div>
-
-      <div class="reading-result-actions">
-        <div class="result-action-item" id="result-share-btn">
-          <div class="result-action-circle">SH</div>
-          <div class="result-action-label">Share</div>
-        </div>
-
-        <div class="result-action-item" id="result-story-btn">
-          <div class="result-action-circle">ST</div>
-          <div class="result-action-label">Story</div>
-        </div>
-      </div>
-
-      <button type="button" class="reading-result-home-link" id="result-home-link">
-        ${isProfileBack ? "Back to Profile" : "Home Page"}
-      </button>
-    </div>
-  `;
-
-  UserListening.animateBandValue(Number(band));
-  UserListening.initResultActions({ band, correct, total, backTarget: data.backTarget });
+  if (window.UserReading?.renderResultPage) {
+    window.UserReading.renderResultPage(container, {
+      ...data,
+      sectionType: data.sectionType || "listening",
+      overallLabel: data.overallLabel || "IELTS Listening"
+    });
+  }
 };
 
 UserListening.animateBandValue = function (targetBand) {

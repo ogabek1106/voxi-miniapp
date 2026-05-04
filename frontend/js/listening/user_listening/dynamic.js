@@ -166,14 +166,12 @@ UserListening.startListeningMode = function (container, data) {
   });
 };
 
-UserListening.showTrackline = function (label) {
+UserListening.showTrackline = function () {
   const trackline = document.getElementById("listening-trackline");
-  const labelEl = document.getElementById("listening-trackline-label");
   const timeEl = document.getElementById("listening-trackline-time");
   const fill = document.getElementById("listening-trackline-fill");
-  if (!trackline || !labelEl || !timeEl || !fill) return;
+  if (!trackline || !timeEl || !fill) return;
   trackline.hidden = false;
-  labelEl.textContent = label || "Track";
   timeEl.textContent = "00:00 / 00:00";
   fill.style.width = "0%";
 };
@@ -199,7 +197,7 @@ UserListening.playPartAudioOnce = function (container, data, section, sectionInd
   const audio = new Audio(UserListening.toMediaUrl(section.audio_url));
   audio.preload = "auto";
   UserListening.__currentAudio = audio;
-  UserListening.showTrackline(section.audio_name || `Part ${sectionIndex + 1} audio`);
+  UserListening.showTrackline();
   audio.ontimeupdate = () => UserListening.updateTrackline(audio);
   audio.onloadedmetadata = () => UserListening.updateTrackline(audio);
   audio.onended = () => {
@@ -244,8 +242,6 @@ UserListening.renderTest = function (container, data, options = {}) {
     (UserListening.__activeSectionIndex >= allSections.length - 1 ? UserListening.renderSubmitSection() : "");
 
   UserListening.initHeader(data);
-  const sectionLabel = document.getElementById("section-text");
-  if (sectionLabel) sectionLabel.textContent = `Section ${UserListening.__activeSectionIndex + 1}`;
   UserListening.restoreProgress(data);
   if (UserListening.__sessionAnswers) {
     UserListening.applyRestoredAnswers(UserListening.__sessionAnswers);
@@ -498,6 +494,8 @@ UserListening.showResultScreen = function (data = {}) {
   container.innerHTML = "";
 
   UserListening.renderResultPage(container, {
+    sectionType: "listening",
+    overallLabel: "IELTS Listening",
     band: data.band ?? "0.0",
     correct: data.correct ?? 0,
     total: data.total ?? 40,

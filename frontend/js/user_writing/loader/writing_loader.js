@@ -268,9 +268,10 @@ UserWritingLoader.runAiCheckAndShowResult = async function (mockId) {
   if (window.UserReading?.renderResultPage) {
     target.innerHTML = "";
     window.UserReading.renderResultPage(target, {
+      sectionType: "writing",
+      overallLabel: "IELTS Writing",
       band,
-      correct: 0,
-      total: 40,
+      hideScore: true,
       backTarget: "home"
     });
     return;

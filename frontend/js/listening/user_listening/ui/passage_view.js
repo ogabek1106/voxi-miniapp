@@ -3,19 +3,23 @@
 window.UserListening = window.UserListening || {};
 
 UserListening.renderSectionView = function (section, sectionIndex) {
+  const sectionLabel = `Section ${sectionIndex + 1}`;
+  const title = String(section?.title || "").trim();
+  const showTitle = title && title.toLowerCase() !== sectionLabel.toLowerCase();
+
   return `
     <section class="section-container" data-section-index="${sectionIndex}">
 
       <!-- SECTION HEADER -->
       <div class="section-header">
         <div class="section-number">
-          Section ${sectionIndex + 1}
+          ${sectionLabel}
         </div>
 
         ${
-          section.title
+          showTitle
             ? `<div class="section-title">
-                 ${UserListening.escapeHtml(section.title)}
+                 ${UserListening.escapeHtml(title)}
                </div>`
             : ""
         }

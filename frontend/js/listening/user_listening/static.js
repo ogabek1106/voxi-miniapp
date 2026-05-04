@@ -33,7 +33,6 @@ UserListening.renderShell = function (container) {
 
       <div id="listening-trackline" class="listening-trackline" hidden>
         <div class="listening-trackline-top">
-          <span id="listening-trackline-label">Track</span>
           <span id="listening-trackline-time">00:00 / 00:00</span>
         </div>
         <div class="listening-trackline-bar">

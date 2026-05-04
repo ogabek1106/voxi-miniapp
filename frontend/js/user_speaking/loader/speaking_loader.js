@@ -419,17 +419,16 @@ UserSpeakingLoader.runCheckAndShowResult = async function (options = {}) {
     }
 
     window.UserReading.renderResultPage(container, {
+      sectionType: "full_mock",
+      overallLabel: "Full IELTS Mock Result",
       band: overallBand,
-      correct: 0,
-      total: 40,
       backTarget: "home",
       breakdown: {
         listening: Number(fullResult?.listening_band ?? 0),
         reading: Number(fullResult?.reading_band ?? 0),
         writing: Number(fullResult?.writing_band ?? 0),
         speaking: Number(fullResult?.speaking_band ?? fallbackBand)
-      },
-      overallLabel: "Overall IELTS Band"
+      }
     });
     return;
   }
@@ -531,9 +530,10 @@ UserSpeakingLoader.start = async function (mockId, container) {
         if (window.UserReading?.renderResultPage) {
           target.innerHTML = "";
           window.UserReading.renderResultPage(target, {
+            sectionType: "speaking",
+            overallLabel: "IELTS Speaking",
             band: Number(data.result.overall_band || 0),
-            correct: 0,
-            total: 40,
+            hideScore: true,
             backTarget: "home"
           });
           return;

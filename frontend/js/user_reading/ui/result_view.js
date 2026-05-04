@@ -1,6 +1,28 @@
 // frontend/js/user_reading/ui/result_view.js
 window.UserReading = window.UserReading || {};
 
+UserReading.getResultTitle = function (data = {}) {
+  if (data.overallLabel) return String(data.overallLabel);
+
+  const sectionType = String(data.sectionType || data.section || "reading").toLowerCase();
+  const labels = {
+    listening: "IELTS Listening",
+    reading: "IELTS Reading",
+    writing: "IELTS Writing",
+    speaking: "IELTS Speaking",
+    full_mock: "Full IELTS Mock Result",
+    fullmock: "Full IELTS Mock Result",
+    mock: "Full IELTS Mock Result"
+  };
+
+  return labels[sectionType] || "IELTS Reading";
+};
+
+UserReading.canShowTelegramResultActions = function () {
+  if (window.AppViewMode?.isWebsite?.()) return false;
+  return !!window.Telegram?.WebApp;
+};
+
 UserReading.renderResultPage = function (container, data = {}) {
   if (!container) return;
 
@@ -8,16 +30,31 @@ UserReading.renderResultPage = function (container, data = {}) {
   const correct = Number(data.correct ?? 0);
   const total = Number(data.total ?? 40);
   const isProfileBack = data.backTarget === "profile";
-  const overallLabel = String(data.overallLabel || "IELTS Reading");
+  const overallLabel = UserReading.getResultTitle(data);
   const breakdown = data.breakdown && typeof data.breakdown === "object"
     ? data.breakdown
     : null;
-  const scoreHtml = breakdown ? "" : `<div class="reading-result-score">Score: ${correct}/${total}</div>`;
+  const hideScore = !!data.hideScore || data.scoreMode === "band_only";
+  const showScore = !breakdown && !hideScore;
+  const scoreHtml = showScore ? `<div class="reading-result-score">Score: ${correct}/${total}</div>` : "";
   const detailsHtml = breakdown ? `
           <div class="reading-result-score" style="margin-top:8px;">Listening: ${Number(breakdown.listening ?? 0).toFixed(1)}</div>
           <div class="reading-result-score">Reading: ${Number(breakdown.reading ?? 0).toFixed(1)}</div>
           <div class="reading-result-score">Writing: ${Number(breakdown.writing ?? 0).toFixed(1)}</div>
           <div class="reading-result-score">Speaking: ${Number(breakdown.speaking ?? 0).toFixed(1)}</div>
+  ` : "";
+  const actionsHtml = UserReading.canShowTelegramResultActions() ? `
+      <div class="reading-result-actions">
+        <div class="result-action-item" id="result-share-btn">
+          <div class="result-action-circle">SH</div>
+          <div class="result-action-label">Share</div>
+        </div>
+
+        <div class="result-action-item" id="result-story-btn">
+          <div class="result-action-circle">ST</div>
+          <div class="result-action-label">Story</div>
+        </div>
+      </div>
   ` : "";
 
   const today = new Date();
@@ -35,7 +72,7 @@ UserReading.renderResultPage = function (container, data = {}) {
           id="reading-result-card"
           data-band="${band}"
           data-correct="${correct}"
-          data-total="${total}"
+          data-total="${showScore ? total : 0}"
         >
           <div class="reading-result-card-type">${overallLabel}</div>
 
@@ -50,26 +87,16 @@ UserReading.renderResultPage = function (container, data = {}) {
         </div>
       </div>
 
-      <div class="reading-result-actions">
-        <div class="result-action-item" id="result-share-btn">
-          <div class="result-action-circle">SH</div>
-          <div class="result-action-label">Share</div>
-        </div>
-
-        <div class="result-action-item" id="result-story-btn">
-          <div class="result-action-circle">ST</div>
-          <div class="result-action-label">Story</div>
-        </div>
-      </div>
+      ${actionsHtml}
 
       <button type="button" class="reading-result-home-link" id="result-home-link">
-        ${isProfileBack ? "Back to Profile" : "Home Page"}
+        ${isProfileBack ? "Back to Profile" : "Back to Home"}
       </button>
     </div>
   `;
 
   UserReading.animateBandValue(Number(band));
-  UserReading.initResultActions({ band, correct, total, backTarget: data.backTarget });
+  UserReading.initResultActions({ ...data, band, correct, total: showScore ? total : 0, title: overallLabel });
 };
 
 UserReading.animateBandValue = function (targetBand) {
@@ -110,7 +137,7 @@ UserReading.initResultActions = function (data) {
   if (homeLink) homeLink.onclick = () => (goBackToProfile ? goProfile() : goHome());
 };
 
-UserReading.shareStoryResult = async function ({ band, correct, total }) {
+UserReading.shareStoryResult = async function ({ band, correct, total, title }) {
   const tg = window.Telegram?.WebApp;
   if (!tg || typeof tg.shareToStory !== "function") {
     alert("Story is not supported in this Telegram version.");
@@ -129,11 +156,12 @@ UserReading.shareStoryResult = async function ({ band, correct, total }) {
       band: Number(band || card.dataset.band || 0).toFixed(1),
       correct: Number(correct || card.dataset.correct || 0),
       total: Number(total || card.dataset.total || 40),
+      title: title || document.querySelector(".reading-result-card-type")?.textContent || "IELTS Result",
       dateText
     });
 
     const uploaded = await UserReading.uploadResultCardImage(blob);
-    const description = "I just completed an IELTS Reading practice with Voxi AI. Try yours now.";
+    const description = `I just completed ${title || "an IELTS practice"} with Voxi AI. Try yours now.`;
 
     tg.shareToStory(uploaded.url, {
       text: description,
@@ -150,16 +178,17 @@ UserReading.shareStoryResult = async function ({ band, correct, total }) {
   }
 };
 
-UserReading.shareResult = function ({ band, correct, total }) {
+UserReading.shareResult = function ({ band, correct, total, title }) {
   const botLink = "https://t.me/voxi_aibot";
+  const resultTitle = title || "IELTS Result";
   const text =
-    `I got Band ${band} in IELTS Reading (${correct}/${total})\n\n` +
+    `I got Band ${band} in ${resultTitle}${Number(total) > 0 ? ` (${correct}/${total})` : ""}\n\n` +
     `Try it yourself:\n${botLink}`;
   const url = `https://t.me/share/url?url=${encodeURIComponent(botLink)}&text=${encodeURIComponent(text)}`;
   window.open(url, "_blank");
 };
 
-UserReading.resultCardToBlob = function ({ band, correct, total, dateText }) {
+UserReading.resultCardToBlob = function ({ band, correct, total, title, dateText }) {
   const canvas = document.createElement("canvas");
   canvas.width = 1080;
   canvas.height = 1350;
@@ -187,7 +216,7 @@ UserReading.resultCardToBlob = function ({ band, correct, total, dateText }) {
   ctx.textAlign = "center";
   ctx.fillStyle = "#00baff";
   ctx.font = "700 48px system-ui, -apple-system, sans-serif";
-  ctx.fillText("IELTS Reading", canvas.width / 2, cardY + 90);
+  ctx.fillText(title || "IELTS Result", canvas.width / 2, cardY + 90);
 
   const circleX = canvas.width / 2;
   const circleY = cardY + 360;
@@ -203,7 +232,9 @@ UserReading.resultCardToBlob = function ({ band, correct, total, dateText }) {
 
   ctx.fillStyle = "#00baff";
   ctx.font = "800 58px system-ui, -apple-system, sans-serif";
-  ctx.fillText(`Score: ${correct}/${total}`, canvas.width / 2, cardY + 630);
+  if (Number(total) > 0) {
+    ctx.fillText(`Score: ${correct}/${total}`, canvas.width / 2, cardY + 630);
+  }
 
   ctx.fillStyle = "#6b7280";
   ctx.font = "600 34px system-ui, -apple-system, sans-serif";
