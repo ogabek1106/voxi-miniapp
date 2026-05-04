@@ -238,8 +238,7 @@ UserListening.renderTest = function (container, data, options = {}) {
 
   content.innerHTML =
     `<div id="listening-audio-notice" class="listening-audio-notice">Audio will play once only. Pausing and rewinding are not available.</div>` +
-    (activeSection ? UserListening.renderPassage(activeSection, UserListening.__activeSectionIndex, nextQuestionNumber) : "") +
-    (UserListening.__activeSectionIndex >= allSections.length - 1 ? UserListening.renderSubmitSection() : "");
+    (activeSection ? UserListening.renderPassage(activeSection, UserListening.__activeSectionIndex, nextQuestionNumber) : "");
 
   UserListening.initHeader(data);
   UserListening.restoreProgress(data);
@@ -252,12 +251,27 @@ UserListening.renderTest = function (container, data, options = {}) {
   }
 };
 
+UserListening.finishListeningFlow = function () {
+  UserListening.storeCurrentAnswers();
+  if (UserListening.__nextPartTimeout) {
+    clearTimeout(UserListening.__nextPartTimeout);
+    UserListening.__nextPartTimeout = null;
+  }
+
+  UserListening.__nextPartTimeout = setTimeout(() => {
+    UserListening.submitReading({ auto: true });
+  }, 2000);
+};
+
 UserListening.advanceListeningPart = function (container, data, completedIndex) {
   UserListening.storeCurrentAnswers();
   const sections = (data.sections || data.passages) || [];
   const nextIndex = completedIndex + 1;
   const current = sections[completedIndex] || {};
-  if (nextIndex >= sections.length) return;
+  if (nextIndex >= sections.length) {
+    UserListening.finishListeningFlow();
+    return;
+  }
 
   const renderNext = () => {
     UserListening.storeCurrentAnswers();
@@ -275,6 +289,12 @@ UserListening.advanceListeningPart = function (container, data, completedIndex) 
   }
 
   UserListening.__nextPartTimeout = setTimeout(() => {
+    let moved = false;
+    const moveNextOnce = () => {
+      if (moved) return;
+      moved = true;
+      renderNext();
+    };
     const audio = new Audio(UserListening.toMediaUrl(current.global_instruction_after_audio_url));
     audio.preload = "auto";
     UserListening.__currentAudio = audio;
@@ -283,9 +303,9 @@ UserListening.advanceListeningPart = function (container, data, completedIndex) 
     audio.onloadedmetadata = () => UserListening.updateTrackline(audio);
     audio.onended = () => {
       UserListening.updateTrackline(audio);
-      renderNext();
+      moveNextOnce();
     };
-    audio.onerror = renderNext;
+    audio.onerror = moveNextOnce;
     audio.play().catch(() => {
       const notice = document.getElementById("listening-audio-notice");
       if (notice) {
@@ -293,10 +313,10 @@ UserListening.advanceListeningPart = function (container, data, completedIndex) 
         notice.onclick = () => {
           notice.onclick = null;
           notice.textContent = "Audio will play once only. Pausing and rewinding are not available.";
-          audio.play().catch(renderNext);
+          audio.play().catch(moveNextOnce);
         };
       } else {
-        renderNext();
+        moveNextOnce();
       }
     });
   }, 2000);
