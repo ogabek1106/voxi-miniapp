@@ -260,37 +260,46 @@ UserListening.advanceListeningPart = function (container, data, completedIndex) 
   if (nextIndex >= sections.length) return;
 
   const renderNext = () => {
+    UserListening.storeCurrentAnswers();
     UserListening.renderTest(container, data, { activeSectionIndex: nextIndex, playPart: true });
   };
 
-  if (!current.global_instruction_after && !current.global_instruction_after_audio_url) {
-    renderNext();
-    return;
+  if (UserListening.__nextPartTimeout) {
+    clearTimeout(UserListening.__nextPartTimeout);
+    UserListening.__nextPartTimeout = null;
   }
-
-  container.innerHTML = `
-    <div class="listening-intro-screen">
-      <div class="listening-intro-card">
-        <div class="listening-ready-kicker">Next part</div>
-        <h2>Part ${nextIndex + 1}</h2>
-        <p>${UserListening.escapeHtml(current.global_instruction_after || "You now have some time to look at the next questions.")}</p>
-        <div class="listening-audio-status">Preparing next part...</div>
-      </div>
-    </div>
-  `;
 
   if (!current.global_instruction_after_audio_url) {
-    UserListening.__nextPartTimeout = setTimeout(renderNext, 3500);
+    UserListening.__nextPartTimeout = setTimeout(renderNext, 2000);
     return;
   }
 
-  const audio = new Audio(UserListening.toMediaUrl(current.global_instruction_after_audio_url));
-  UserListening.__currentAudio = audio;
-  audio.onended = renderNext;
-  audio.onerror = renderNext;
-  audio.play().catch(() => {
-    UserListening.__nextPartTimeout = setTimeout(renderNext, 3500);
-  });
+  UserListening.__nextPartTimeout = setTimeout(() => {
+    const audio = new Audio(UserListening.toMediaUrl(current.global_instruction_after_audio_url));
+    audio.preload = "auto";
+    UserListening.__currentAudio = audio;
+    UserListening.showTrackline();
+    audio.ontimeupdate = () => UserListening.updateTrackline(audio);
+    audio.onloadedmetadata = () => UserListening.updateTrackline(audio);
+    audio.onended = () => {
+      UserListening.updateTrackline(audio);
+      renderNext();
+    };
+    audio.onerror = renderNext;
+    audio.play().catch(() => {
+      const notice = document.getElementById("listening-audio-notice");
+      if (notice) {
+        notice.textContent = "Audio is ready. Tap here once to continue.";
+        notice.onclick = () => {
+          notice.onclick = null;
+          notice.textContent = "Audio will play once only. Pausing and rewinding are not available.";
+          audio.play().catch(renderNext);
+        };
+      } else {
+        renderNext();
+      }
+    });
+  }, 2000);
 };
 
 UserListening.renderPassage = function (section, sectionIndex, startingQuestionNumber = 1) {
