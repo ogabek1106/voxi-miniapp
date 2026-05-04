@@ -28,8 +28,8 @@ body.mobile-browser-view .screen {
 
 body.mobile-browser-view.view-website .app {
   min-height: 100dvh;
-  height: 100dvh;
-  overflow-y: auto;
+  height: auto;
+  overflow-y: visible;
   overflow-x: hidden;
   touch-action: pan-y;
   overscroll-behavior-y: auto;
@@ -116,8 +116,12 @@ body.mobile-browser-view .website-profile-button {
 }
 
 body.mobile-browser-view .website-footer {
+  position: static !important;
+  inset: auto !important;
+  transform: none !important;
   text-align: center;
   justify-items: center;
+  margin-top: 20px;
 }
 
 body.mobile-browser-view .website-footer-brand,
