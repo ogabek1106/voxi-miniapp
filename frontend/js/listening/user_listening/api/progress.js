@@ -26,6 +26,11 @@ UserListening.saveProgress = async function (mockId, options = {}) {
       keepalive: true
     });
 
+    if (res.status === 404) {
+      console.warn("Listening save endpoint is not ready yet. Skipping backend progress save.");
+      return { status: "save_unavailable" };
+    }
+
     if (!res.ok) {
       throw new Error(await res.text() || "Failed to save listening progress");
     }
@@ -34,14 +39,43 @@ UserListening.saveProgress = async function (mockId, options = {}) {
     return text ? JSON.parse(text) : { status: "saved" };
   }
 
-  return apiPost(`/mock-tests/${mockId}/listening/save`, payload);
+  const response = await fetch(`${window.API}/mock-tests/${mockId}/listening/save`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  const text = await response.text();
+
+  if (response.status === 404) {
+    console.warn("Listening save endpoint is not ready yet. Skipping backend progress save.");
+    return { status: "save_unavailable" };
+  }
+
+  if (!response.ok) {
+    throw new Error(text || "Failed to save listening progress");
+  }
+
+  return text ? JSON.parse(text) : { status: "saved" };
 };
 
 UserListening.loadProgress = async function (mockId) {
   const userId = UserListening.getTelegramUserId();
   if (!userId || !mockId) return null;
 
-  return apiGet(`/mock-tests/${mockId}/listening/resume?telegram_id=${userId}`);
+  const response = await fetch(`${window.API}/mock-tests/${mockId}/listening/resume?telegram_id=${userId}`);
+  const text = await response.text();
+
+  if (response.status === 404) {
+    console.warn("Listening resume endpoint is not ready yet. Starting without backend progress.");
+    return null;
+  }
+
+  if (!response.ok) {
+    throw new Error(text || "Failed to load listening progress");
+  }
+
+  return text ? JSON.parse(text) : null;
 };
 
 UserListening.submitProgress = async function (mockId) {

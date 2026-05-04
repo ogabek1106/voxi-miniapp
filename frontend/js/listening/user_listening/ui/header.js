@@ -1085,7 +1085,9 @@ UserListening.submitReading = async function (options = {}) {
     }
 
     if (UserListening.__mockId) {
-      await UserListening.saveProgress(UserListening.__mockId);
+      if (!options.skipSave) {
+        await UserListening.saveProgress(UserListening.__mockId);
+      }
       const result = await UserListening.submitProgress(UserListening.__mockId);
 
       const score = Number(result?.score || 0);

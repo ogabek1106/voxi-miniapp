@@ -259,7 +259,7 @@ UserListening.finishListeningFlow = function () {
   }
 
   UserListening.__nextPartTimeout = setTimeout(() => {
-    UserListening.submitReading({ auto: true });
+    UserListening.submitReading({ auto: true, skipSave: true });
   }, 2000);
 };
 
