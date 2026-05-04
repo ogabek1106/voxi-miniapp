@@ -30,8 +30,8 @@ body.mobile-browser-view .screen {
 body.mobile-browser-view.view-website .app {
   display: block;
   min-height: 100dvh;
-  height: auto;
-  overflow-y: visible;
+  height: 100dvh;
+  overflow-y: auto;
   overflow-x: hidden;
   touch-action: pan-y;
   overscroll-behavior-y: auto;

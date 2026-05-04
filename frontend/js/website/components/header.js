@@ -107,7 +107,7 @@ window.WebsiteHeader = window.WebsiteHeader || {};
     if (!header || !app) return;
     const isCompact = header.classList.contains("is-compact");
     const scrollTop = document.body.classList.contains("mobile-browser-view")
-      ? (window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0)
+      ? Math.max(app.scrollTop || 0, window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0)
       : app.scrollTop;
 
     if (!isCompact && scrollTop > 72) {
