@@ -23,11 +23,26 @@ window.WebsiteLayout = window.WebsiteLayout || {};
   }
 
   function showHomeFooter() {
-    window.WebsiteFooter?.mount?.();
+    if (isWebsiteHomeVisible()) {
+      window.WebsiteFooter?.mount?.();
+    }
   }
 
   function hideHomeFooter() {
     window.WebsiteFooter?.unmount?.();
+  }
+
+  function isWebsiteHomeVisible() {
+    if (!isWebsite()) return false;
+    const home = document.getElementById("screen-home");
+    if (!home) return false;
+    return getComputedStyle(home).display !== "none";
+  }
+
+  function syncFooterVisibility() {
+    if (!isWebsite()) return;
+    if (isWebsiteHomeVisible()) showHomeFooter();
+    else hideHomeFooter();
   }
 
   function restoreWebsiteContentSpacing() {
@@ -63,7 +78,7 @@ window.WebsiteLayout = window.WebsiteLayout || {};
       if (typeof miniGoHome === "function") miniGoHome();
       restoreWebsiteContentSpacing();
       hideMiniAppOnlyElements();
-      showHomeFooter();
+      syncFooterVisibility();
       document.querySelector(".app")?.scrollTo({ top: 0, behavior: "auto" });
       window.WebsiteHeader?.updateScrollState?.();
     };
@@ -85,6 +100,7 @@ window.WebsiteLayout = window.WebsiteLayout || {};
         if (name === "showMocksScreen" || name === "goProfile") {
           restoreWebsiteContentSpacing();
         }
+        syncFooterVisibility();
         window.WebsiteHeader?.updateScrollState?.();
         return result;
       };
@@ -100,7 +116,18 @@ window.WebsiteLayout = window.WebsiteLayout || {};
     wrapNavigation();
     window.goHome?.();
     hideMiniAppOnlyElements();
-    showHomeFooter();
+    syncFooterVisibility();
+
+    if (!window.WebsiteLayout._footerObserver) {
+      const app = document.querySelector(".app") || document.body;
+      window.WebsiteLayout._footerObserver = new MutationObserver(() => syncFooterVisibility());
+      window.WebsiteLayout._footerObserver.observe(app, {
+        attributes: true,
+        childList: true,
+        subtree: true,
+        attributeFilter: ["style", "class"]
+      });
+    }
 
     window.WebsiteAuthState?.load?.()
       .then((user) => {

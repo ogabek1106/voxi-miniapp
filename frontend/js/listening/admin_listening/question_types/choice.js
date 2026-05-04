@@ -7,31 +7,28 @@ window.AdminListeningTypeChoice = window.AdminListeningTypeChoice || {};
   }
 
   function hydrate(block) {
-    AdminListeningUtils.ensureQuestionCount(block, 1);
-    const q = block.questions[0];
-    if (!q.meta) q.meta = {};
-    if (!Array.isArray(q.meta.options) || q.meta.options.length < 2) {
-      q.meta.options = block.type === "mcq_multiple" ? ["", "", "", "", ""] : ["", "", "", ""];
-    }
-    if (block.type === "mcq_multiple") {
-      if (!Array.isArray(q.correct_answer)) q.correct_answer = [];
-      q.meta.required_count = Number(q.meta.required_count || 2);
-    } else if (!q.correct_answer) {
-      q.correct_answer = "";
-    }
+    AdminListeningUtils.ensureQuestionCount(block, Math.max(1, block.questions?.length || 1));
+
+    (block.questions || []).forEach((q) => {
+      if (!q.meta) q.meta = {};
+      if (!Array.isArray(q.meta.options) || q.meta.options.length < 2) {
+        q.meta.options = block.type === "mcq_multiple" ? ["", "", "", "", ""] : ["", "", "", ""];
+      }
+
+      if (block.type === "mcq_multiple") {
+        if (!Array.isArray(q.correct_answer)) q.correct_answer = [];
+        q.meta.required_count = Number(q.meta.required_count || 2);
+      } else if (!q.correct_answer) {
+        q.correct_answer = "";
+      }
+    });
   }
 
-  AdminListeningTypeChoice.hydrate = hydrate;
-
-  AdminListeningTypeChoice.render = function (ctx) {
-    const block = ctx.block;
-    hydrate(block);
-    const q = block.questions[0];
+  function renderQuestion(ctx, q, qIndex, isMulti) {
     const options = q.meta.options;
-    const isMulti = block.type === "mcq_multiple";
-
-    const wrap = document.createElement("div");
-    wrap.className = "listening-type-panel";
+    const panel = document.createElement("div");
+    panel.className = "listening-dynamic-row";
+    panel.innerHTML = `<div class="listening-row-title">Question ${qIndex + 1}</div>`;
 
     const prompt = document.createElement("textarea");
     prompt.className = "listening-editor-input";
@@ -39,10 +36,10 @@ window.AdminListeningTypeChoice = window.AdminListeningTypeChoice || {};
     prompt.placeholder = "Student question";
     prompt.value = q.content || "";
     prompt.oninput = () => {
-      AdminListeningState.updateQuestion(ctx.sectionIndex, ctx.blockIndex, 0, { content: prompt.value });
+      AdminListeningState.updateQuestion(ctx.sectionIndex, ctx.blockIndex, qIndex, { content: prompt.value });
       ctx.onChange();
     };
-    wrap.appendChild(prompt);
+    panel.appendChild(prompt);
 
     if (isMulti) {
       const required = document.createElement("input");
@@ -53,10 +50,10 @@ window.AdminListeningTypeChoice = window.AdminListeningTypeChoice || {};
       required.value = String(q.meta.required_count || 2);
       required.oninput = () => {
         const meta = { ...(q.meta || {}), required_count: Math.max(1, Number(required.value || 1)) };
-        AdminListeningState.updateQuestion(ctx.sectionIndex, ctx.blockIndex, 0, { meta });
+        AdminListeningState.updateQuestion(ctx.sectionIndex, ctx.blockIndex, qIndex, { meta });
         ctx.onChange();
       };
-      wrap.appendChild(required);
+      panel.appendChild(required);
     }
 
     const list = document.createElement("div");
@@ -68,7 +65,7 @@ window.AdminListeningTypeChoice = window.AdminListeningTypeChoice || {};
 
       const chooser = document.createElement("input");
       chooser.type = isMulti ? "checkbox" : "radio";
-      chooser.name = `listen_choice_${ctx.sectionIndex}_${ctx.blockIndex}`;
+      chooser.name = `listen_choice_${ctx.sectionIndex}_${ctx.blockIndex}_${qIndex}`;
       chooser.checked = isMulti
         ? (Array.isArray(q.correct_answer) && q.correct_answer.includes(letter))
         : q.correct_answer === letter;
@@ -77,9 +74,11 @@ window.AdminListeningTypeChoice = window.AdminListeningTypeChoice || {};
           const set = new Set(Array.isArray(q.correct_answer) ? q.correct_answer : []);
           if (chooser.checked) set.add(letter);
           else set.delete(letter);
-          AdminListeningState.updateQuestion(ctx.sectionIndex, ctx.blockIndex, 0, { correct_answer: Array.from(set).sort() });
+          AdminListeningState.updateQuestion(ctx.sectionIndex, ctx.blockIndex, qIndex, {
+            correct_answer: Array.from(set).sort()
+          });
         } else {
-          AdminListeningState.updateQuestion(ctx.sectionIndex, ctx.blockIndex, 0, { correct_answer: letter });
+          AdminListeningState.updateQuestion(ctx.sectionIndex, ctx.blockIndex, qIndex, { correct_answer: letter });
         }
         ctx.onChange();
       };
@@ -93,7 +92,7 @@ window.AdminListeningTypeChoice = window.AdminListeningTypeChoice || {};
       input.oninput = () => {
         const nextOptions = [...options];
         nextOptions[optionIndex] = input.value;
-        AdminListeningState.updateQuestion(ctx.sectionIndex, ctx.blockIndex, 0, {
+        AdminListeningState.updateQuestion(ctx.sectionIndex, ctx.blockIndex, qIndex, {
           meta: { ...(q.meta || {}), options: nextOptions }
         });
         ctx.onChange();
@@ -101,24 +100,26 @@ window.AdminListeningTypeChoice = window.AdminListeningTypeChoice || {};
       row.appendChild(input);
       list.appendChild(row);
     });
-    wrap.appendChild(list);
+    panel.appendChild(list);
 
     const controls = document.createElement("div");
     controls.className = "listening-question-controls";
-    const add = document.createElement("button");
-    add.type = "button";
-    add.className = "listening-secondary-btn";
-    add.textContent = "Add option";
-    add.onclick = () => {
+
+    const addOption = document.createElement("button");
+    addOption.type = "button";
+    addOption.className = "listening-secondary-btn";
+    addOption.textContent = "Add option";
+    addOption.onclick = () => {
       q.meta.options.push("");
       ctx.onRebuild();
     };
-    controls.appendChild(add);
-    const remove = document.createElement("button");
-    remove.type = "button";
-    remove.className = "listening-secondary-btn";
-    remove.textContent = "Remove";
-    remove.onclick = () => {
+    controls.appendChild(addOption);
+
+    const removeOption = document.createElement("button");
+    removeOption.type = "button";
+    removeOption.className = "listening-secondary-btn";
+    removeOption.textContent = "Remove option";
+    removeOption.onclick = () => {
       if (q.meta.options.length <= 2) return;
       const removedLetter = letters(q.meta.options).at(-1);
       q.meta.options.pop();
@@ -126,16 +127,44 @@ window.AdminListeningTypeChoice = window.AdminListeningTypeChoice || {};
       else if (q.correct_answer === removedLetter) q.correct_answer = "";
       ctx.onRebuild();
     };
-    controls.appendChild(remove);
-    wrap.appendChild(controls);
+    controls.appendChild(removeOption);
+
+    const removeQuestion = document.createElement("button");
+    removeQuestion.type = "button";
+    removeQuestion.className = "listening-secondary-btn";
+    removeQuestion.textContent = "Remove question";
+    removeQuestion.disabled = (ctx.block.questions || []).length <= 1;
+    removeQuestion.onclick = () => {
+      AdminListeningState.removeQuestion(ctx.sectionIndex, ctx.blockIndex, qIndex);
+      ctx.onRebuild();
+    };
+    controls.appendChild(removeQuestion);
+
+    panel.appendChild(controls);
+    return panel;
+  }
+
+  AdminListeningTypeChoice.hydrate = hydrate;
+
+  AdminListeningTypeChoice.render = function (ctx) {
+    const block = ctx.block;
+    hydrate(block);
+    const isMulti = block.type === "mcq_multiple";
+
+    const wrap = document.createElement("div");
+    wrap.className = "listening-type-panel";
+
+    (block.questions || []).forEach((q, qIndex) => {
+      wrap.appendChild(renderQuestion(ctx, q, qIndex, isMulti));
+    });
+
     return wrap;
   };
 
   AdminListeningTypeChoice.serialize = function (block) {
     hydrate(block);
-    const q = block.questions[0];
-    return [{
-      order_index: 1,
+    return (block.questions || []).map((q, index) => ({
+      order_index: index + 1,
       question_number: Number(q.number || 0),
       type: block.type,
       content: { text: q.content || "" },
@@ -143,24 +172,32 @@ window.AdminListeningTypeChoice = window.AdminListeningTypeChoice || {};
         ? { values: Array.isArray(q.correct_answer) ? q.correct_answer : [] }
         : { text: q.correct_answer || "" },
       meta: q.meta || {}
-    }];
+    }));
   };
 
   AdminListeningTypeChoice.validate = function (block) {
     hydrate(block);
-    const q = block.questions[0];
     const errors = [];
-    const options = q.meta?.options || [];
-    if (!String(q.content || "").trim()) errors.push("Add the student question.");
-    if (options.filter((opt) => String(opt || "").trim()).length < 2) errors.push("Add at least two options.");
-    if (block.type === "mcq_multiple") {
-      const required = Number(q.meta?.required_count || 0);
-      const selected = Array.isArray(q.correct_answer) ? q.correct_answer : [];
-      if (!required) errors.push("Choose how many answers are required.");
-      if (selected.length !== required) errors.push(`Choose exactly ${required || "the required number of"} correct answers.`);
-    } else if (!q.correct_answer) {
-      errors.push("Choose the correct answer.");
-    }
+
+    (block.questions || []).forEach((q, index) => {
+      const options = q.meta?.options || [];
+      if (!String(q.content || "").trim()) errors.push(`Add the student question for item ${index + 1}.`);
+      if (options.filter((opt) => String(opt || "").trim()).length < 2) {
+        errors.push(`Add at least two options for item ${index + 1}.`);
+      }
+
+      if (block.type === "mcq_multiple") {
+        const required = Number(q.meta?.required_count || 0);
+        const selected = Array.isArray(q.correct_answer) ? q.correct_answer : [];
+        if (!required) errors.push(`Choose how many answers are required for item ${index + 1}.`);
+        if (selected.length !== required) {
+          errors.push(`Choose exactly ${required || "the required number of"} correct answers for item ${index + 1}.`);
+        }
+      } else if (!q.correct_answer) {
+        errors.push(`Choose the correct answer for item ${index + 1}.`);
+      }
+    });
+
     return errors;
   };
 })();
