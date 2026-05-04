@@ -18,9 +18,10 @@
 .listening-short-answer-row,
 .listening-flowchart-step {
   color: #17212B;
-  font-size: 15px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 15.5px;
   font-weight: 500;
-  line-height: 1.6;
+  line-height: 1.7;
 }
 
 .listening-form-row {
@@ -41,9 +42,29 @@
   display: grid;
   gap: 8px;
   color: #17212B;
-  font-size: 15px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 15.5px;
   font-weight: 500;
-  line-height: 1.6;
+  line-height: 1.7;
+}
+
+.listening-form-value,
+.listening-sentence-row span:not(.matching-row-number),
+.listening-short-answer-row .question-text,
+.listening-flowchart-step {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 15.5px;
+  line-height: 1.7;
+}
+
+.listening-form-completion .gap-input,
+.listening-note-completion .gap-input,
+.listening-sentence-completion .summary-blank-input,
+.listening-summary-completion .summary-blank-input,
+.listening-flowchart-completion .gap-input,
+.listening-table-completion .gap-input {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 15px;
 }
 
 .listening-flowchart-arrow {
