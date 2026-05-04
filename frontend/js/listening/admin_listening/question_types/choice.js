@@ -110,7 +110,10 @@ window.AdminListeningTypeChoice = window.AdminListeningTypeChoice || {};
     addOption.className = "listening-secondary-btn";
     addOption.textContent = "Add option";
     addOption.onclick = () => {
-      q.meta.options.push("");
+      const nextOptions = [...(q.meta.options || []), ""];
+      AdminListeningState.updateQuestion(ctx.sectionIndex, ctx.blockIndex, qIndex, {
+        meta: { ...(q.meta || {}), options: nextOptions }
+      });
       ctx.onRebuild();
     };
     controls.appendChild(addOption);
@@ -120,25 +123,20 @@ window.AdminListeningTypeChoice = window.AdminListeningTypeChoice || {};
     removeOption.className = "listening-secondary-btn";
     removeOption.textContent = "Remove option";
     removeOption.onclick = () => {
-      if (q.meta.options.length <= 2) return;
-      const removedLetter = letters(q.meta.options).at(-1);
-      q.meta.options.pop();
-      if (isMulti) q.correct_answer = (q.correct_answer || []).filter((v) => v !== removedLetter);
-      else if (q.correct_answer === removedLetter) q.correct_answer = "";
+      const currentOptions = [...(q.meta.options || [])];
+      if (currentOptions.length <= 2) return;
+      const removedLetter = letters(currentOptions).at(-1);
+      const nextOptions = currentOptions.slice(0, -1);
+      const nextAnswer = isMulti
+        ? (q.correct_answer || []).filter((v) => v !== removedLetter)
+        : (q.correct_answer === removedLetter ? "" : q.correct_answer);
+      AdminListeningState.updateQuestion(ctx.sectionIndex, ctx.blockIndex, qIndex, {
+        correct_answer: nextAnswer,
+        meta: { ...(q.meta || {}), options: nextOptions }
+      });
       ctx.onRebuild();
     };
     controls.appendChild(removeOption);
-
-    const removeQuestion = document.createElement("button");
-    removeQuestion.type = "button";
-    removeQuestion.className = "listening-secondary-btn";
-    removeQuestion.textContent = "Remove question";
-    removeQuestion.disabled = (ctx.block.questions || []).length <= 1;
-    removeQuestion.onclick = () => {
-      AdminListeningState.removeQuestion(ctx.sectionIndex, ctx.blockIndex, qIndex);
-      ctx.onRebuild();
-    };
-    controls.appendChild(removeQuestion);
 
     panel.appendChild(controls);
     return panel;
