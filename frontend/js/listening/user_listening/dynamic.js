@@ -170,10 +170,53 @@ UserListening.showTrackline = function () {
   const trackline = document.getElementById("listening-trackline");
   const timeEl = document.getElementById("listening-trackline-time");
   const fill = document.getElementById("listening-trackline-fill");
+  const adminControls = document.getElementById("listening-admin-audio-controls");
   if (!trackline || !timeEl || !fill) return;
   trackline.hidden = false;
   timeEl.textContent = "00:00 / 00:00";
   fill.style.width = "0%";
+  if (adminControls) {
+    adminControls.hidden = !UserListening.canUseAdminAudioControls();
+  }
+};
+
+UserListening.canUseAdminAudioControls = function () {
+  return Boolean(window.__isAdmin);
+};
+
+UserListening.bindAdminAudioControls = function (audio) {
+  const controls = document.getElementById("listening-admin-audio-controls");
+  if (!controls || !UserListening.canUseAdminAudioControls()) return;
+
+  controls.hidden = false;
+  const pauseButton = controls.querySelector('[data-admin-audio-control="pause"]');
+
+  function updatePauseLabel() {
+    if (pauseButton) pauseButton.textContent = audio?.paused ? "Play" : "Pause";
+  }
+
+  controls.querySelectorAll("[data-admin-audio-control]").forEach((button) => {
+    button.onclick = () => {
+      if (!audio) return;
+
+      if (button.dataset.adminAudioControl === "pause") {
+        if (audio.paused) audio.play().catch(() => {});
+        else audio.pause();
+        updatePauseLabel();
+        return;
+      }
+
+      const delta = Number(button.dataset.seekSeconds || 0);
+      const duration = Number.isFinite(audio.duration) ? audio.duration : 0;
+      const nextTime = Math.max(0, Math.min(duration || Number.MAX_SAFE_INTEGER, (audio.currentTime || 0) + delta));
+      audio.currentTime = nextTime;
+      UserListening.updateTrackline(audio);
+    };
+  });
+
+  audio.onpause = updatePauseLabel;
+  audio.onplay = updatePauseLabel;
+  updatePauseLabel();
 };
 
 UserListening.updateTrackline = function (audio) {
@@ -198,6 +241,7 @@ UserListening.playPartAudioOnce = function (container, data, section, sectionInd
   audio.preload = "auto";
   UserListening.__currentAudio = audio;
   UserListening.showTrackline();
+  UserListening.bindAdminAudioControls(audio);
   audio.ontimeupdate = () => UserListening.updateTrackline(audio);
   audio.onloadedmetadata = () => UserListening.updateTrackline(audio);
   audio.onended = () => {
@@ -299,6 +343,7 @@ UserListening.advanceListeningPart = function (container, data, completedIndex) 
     audio.preload = "auto";
     UserListening.__currentAudio = audio;
     UserListening.showTrackline();
+    UserListening.bindAdminAudioControls(audio);
     audio.ontimeupdate = () => UserListening.updateTrackline(audio);
     audio.onloadedmetadata = () => UserListening.updateTrackline(audio);
     audio.onended = () => {

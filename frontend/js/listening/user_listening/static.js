@@ -38,6 +38,13 @@ UserListening.renderShell = function (container) {
         <div class="listening-trackline-bar">
           <div id="listening-trackline-fill"></div>
         </div>
+        <div id="listening-admin-audio-controls" class="listening-admin-audio-controls" hidden>
+          <button type="button" data-admin-audio-control="seek" data-seek-seconds="-30">30 sec back</button>
+          <button type="button" data-admin-audio-control="seek" data-seek-seconds="-10">10 sec back</button>
+          <button type="button" data-admin-audio-control="pause">Pause</button>
+          <button type="button" data-admin-audio-control="seek" data-seek-seconds="10">10 sec forward</button>
+          <button type="button" data-admin-audio-control="seek" data-seek-seconds="30">30 sec forward</button>
+        </div>
       </div>
 
       <!-- DYNAMIC CONTENT -->
