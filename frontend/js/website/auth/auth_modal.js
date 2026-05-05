@@ -22,9 +22,13 @@ window.WebsiteAuthModal = window.WebsiteAuthModal || {};
           <button class="website-auth-primary" type="submit">${isSignup ? "Create account" : "Log in"}</button>
         </form>
         <div class="website-auth-divider"><span>OR</span></div>
-        <div class="website-auth-provider-row">
-          <div id="google-login-slot" class="website-google-login-slot"></div>
-          <div id="telegram-login-slot" class="website-telegram-login-slot"></div>
+        <div class="auth-social-row">
+          <button id="googleLoginBtn" class="auth-social-btn" type="button" aria-label="Continue with Google">
+            <img src="assets/auth/googleicon.png" class="auth-social-icon" alt="">
+          </button>
+          <button id="telegramLoginBtn" class="auth-social-btn" type="button" aria-label="Continue with Telegram">
+            <img src="assets/auth/telegramicon.png" class="auth-social-icon" alt="">
+          </button>
         </div>
         ${!isSignup ? `
           <button class="website-auth-switch" type="button" data-auth-switch="signup">
@@ -87,13 +91,13 @@ window.WebsiteAuthModal = window.WebsiteAuthModal || {};
       window.WebsiteAuthModal.open("signup");
     });
 
-    window.WebsiteGoogleAuth.render(
-      document.getElementById("google-login-slot"),
+    window.WebsiteGoogleAuth.attachButton(
+      document.getElementById("googleLoginBtn"),
       () => close()
     );
 
-    window.WebsiteTelegramLogin.render(
-      document.getElementById("telegram-login-slot"),
+    window.WebsiteTelegramLogin.attachButton(
+      document.getElementById("telegramLoginBtn"),
       () => close()
     );
   };

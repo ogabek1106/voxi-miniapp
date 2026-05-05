@@ -754,43 +754,31 @@ body.view-website .website-header.is-compact .website-profile-button-avatar svg 
   font-weight: 900;
 }
 
-.website-google-login-slot,
-.website-telegram-login-slot {
-  position: relative;
+.auth-social-row {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 16px;
+}
+
+.auth-social-btn {
   width: 54px;
   height: 54px;
-  min-height: 54px;
+  border-radius: 50%;
+  border: none;
+  background: #f1f5f9;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  border-radius: 50%;
-  background: #FFFFFF;
-  box-shadow: 0 12px 30px rgba(20, 40, 60, 0.10);
+  cursor: pointer;
+  padding: 0;
 }
 
-.website-auth-provider-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-}
-
-.website-google-login-slot > div {
-  width: 44px !important;
-  height: 44px !important;
-  border-radius: 50% !important;
-  overflow: hidden;
-}
-
-.website-telegram-login-slot iframe {
-  position: absolute;
-  inset: 0;
-  width: 100% !important;
-  height: 100% !important;
-  opacity: 0.01;
-  z-index: 2;
-  border-radius: 50%;
+.auth-social-icon {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  display: block;
 }
 
 .website-auth-provider-icon {

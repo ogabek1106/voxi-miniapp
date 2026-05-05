@@ -1,7 +1,23 @@
 window.WebsiteTelegramLogin = window.WebsiteTelegramLogin || {};
 
 (function () {
-  const BOT_USERNAME = "voxi_aibot";
+  let scriptPromise = null;
+
+  function loadTelegramAuthScript() {
+    if (window.Telegram?.Login?.auth) return Promise.resolve();
+    if (scriptPromise) return scriptPromise;
+
+    scriptPromise = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = "https://telegram.org/js/telegram-widget.js?22";
+      script.async = true;
+      script.onload = resolve;
+      script.onerror = () => reject(new Error("telegram_script_failed"));
+      document.head.appendChild(script);
+    });
+
+    return scriptPromise;
+  }
 
   function getTelegramLoginErrorMessage(error) {
     const detail = error?.data?.detail;
@@ -17,37 +33,43 @@ window.WebsiteTelegramLogin = window.WebsiteTelegramLogin || {};
     return "Telegram login failed. Please try again.";
   }
 
+  window.WebsiteTelegramLogin.attachButton = function (button, onSuccess) {
+    if (!button) return;
+
+    button.addEventListener("click", async () => {
+      try {
+        const config = await window.WebsiteAuthApi.telegramConfig();
+        await loadTelegramAuthScript();
+
+        window.Telegram.Login.auth(
+          { bot_id: config.bot_id, request_access: "write" },
+          async (payload) => {
+            if (!payload) return;
+
+            try {
+              const result = await window.WebsiteAuthApi.telegramLogin(payload);
+              window.WebsiteAuthState.setUser(result.user);
+              onSuccess?.(result.user);
+            } catch (error) {
+              console.error("Telegram website login failed", error);
+              alert(getTelegramLoginErrorMessage(error));
+            }
+          }
+        );
+      } catch (error) {
+        console.error("Telegram auth setup failed", error);
+        alert(getTelegramLoginErrorMessage(error));
+      }
+    });
+  };
+
   window.WebsiteTelegramLogin.render = function (container, onSuccess) {
     if (!container) return;
     container.innerHTML = `
-      <span class="website-auth-provider-icon website-telegram-icon-visual" aria-hidden="true">
-        <img src="assets/auth/telegramicon.png" alt="">
-      </span>
+      <button class="auth-social-btn" type="button" aria-label="Continue with Telegram">
+        <img src="assets/auth/telegramicon.png" class="auth-social-icon" alt="">
+      </button>
     `;
-
-    const callbackName = `onTelegramWebsiteAuth_${Date.now()}`;
-    window[callbackName] = async function (payload) {
-      try {
-        const result = await window.WebsiteAuthApi.telegramLogin(payload);
-        window.WebsiteAuthState.setUser(result.user);
-        onSuccess?.(result.user);
-      } catch (error) {
-        console.error("Telegram website login failed", error);
-        alert(getTelegramLoginErrorMessage(error));
-      } finally {
-        delete window[callbackName];
-      }
-    };
-
-    const script = document.createElement("script");
-    script.src = "https://telegram.org/js/telegram-widget.js?22";
-    script.async = true;
-    script.setAttribute("data-telegram-login", BOT_USERNAME);
-    script.setAttribute("data-size", "small");
-    script.setAttribute("data-radius", "999");
-    script.setAttribute("data-userpic", "false");
-    script.setAttribute("data-request-access", "write");
-    script.setAttribute("data-onauth", `${callbackName}(user)`);
-    container.appendChild(script);
+    window.WebsiteTelegramLogin.attachButton(container.querySelector("button"), onSuccess);
   };
 })();

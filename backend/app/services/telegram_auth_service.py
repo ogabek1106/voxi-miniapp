@@ -11,6 +11,13 @@ def get_telegram_bot_token() -> str | None:
     return token.strip() if token else None
 
 
+def get_telegram_bot_id() -> str:
+    bot_token = get_telegram_bot_token()
+    if not bot_token or ":" not in bot_token:
+        raise HTTPException(status_code=500, detail="telegram_login_not_configured")
+    return bot_token.split(":", 1)[0]
+
+
 def verify_telegram_login(payload: dict) -> dict:
     bot_token = get_telegram_bot_token()
     if not bot_token:

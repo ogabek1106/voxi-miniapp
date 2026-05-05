@@ -13,7 +13,7 @@ from app.services.auth_service import (
     set_session_cookie,
     signup_email,
 )
-from app.services.telegram_auth_service import verify_telegram_login
+from app.services.telegram_auth_service import get_telegram_bot_id, verify_telegram_login
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -39,6 +39,11 @@ def telegram_login(payload: TelegramLoginIn, response: Response, db: Session = D
     user = login_telegram(db, verified)
     set_session_cookie(response, user)
     return {"ok": True, "user": safe_user(db, user)}
+
+
+@router.get("/telegram/config")
+def telegram_config():
+    return {"bot_id": get_telegram_bot_id()}
 
 
 @router.post("/logout")

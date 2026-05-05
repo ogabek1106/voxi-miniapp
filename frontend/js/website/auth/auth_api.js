@@ -21,6 +21,10 @@ window.WebsiteAuthApi = window.WebsiteAuthApi || {};
     return window.ApiClient.post("/auth/telegram/login", payload);
   };
 
+  window.WebsiteAuthApi.telegramConfig = function () {
+    return window.ApiClient.get("/auth/telegram/config");
+  };
+
   window.WebsiteAuthApi.googleConfig = function () {
     return window.ApiClient.get("/auth/google/config");
   };

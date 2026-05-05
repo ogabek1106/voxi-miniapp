@@ -2,6 +2,8 @@ window.WebsiteGoogleAuth = window.WebsiteGoogleAuth || {};
 
 (function () {
   let scriptPromise = null;
+  let initialized = false;
+  let activeOnSuccess = null;
 
   function loadGoogleScript() {
     if (window.google?.accounts?.id) return Promise.resolve();
@@ -39,22 +41,7 @@ window.WebsiteGoogleAuth = window.WebsiteGoogleAuth || {};
     container.innerHTML = "";
 
     try {
-      const config = await window.WebsiteAuthApi.googleConfig();
-      await loadGoogleScript();
-
-      window.google.accounts.id.initialize({
-        client_id: config.client_id,
-        callback: async (response) => {
-          try {
-            const result = await window.WebsiteAuthApi.googleLogin(response.credential);
-            window.WebsiteAuthState.setUser(result.user);
-            onSuccess?.(result.user);
-          } catch (error) {
-            console.error("Google website login failed", error);
-            alert(messageFromError(error));
-          }
-        },
-      });
+      await ensureInitialized(onSuccess);
 
       window.google.accounts.id.renderButton(container, {
         type: "icon",
@@ -70,5 +57,51 @@ window.WebsiteGoogleAuth = window.WebsiteGoogleAuth || {};
         </button>
       `;
     }
+  };
+
+  async function ensureInitialized(onSuccess) {
+    activeOnSuccess = onSuccess;
+    if (initialized) return;
+
+    const config = await window.WebsiteAuthApi.googleConfig();
+    await loadGoogleScript();
+
+    window.google.accounts.id.initialize({
+      client_id: config.client_id,
+      auto_select: false,
+      use_fedcm_for_prompt: true,
+      callback: async (response) => {
+        try {
+          const result = await window.WebsiteAuthApi.googleLogin(response.credential);
+          window.WebsiteAuthState.setUser(result.user);
+          activeOnSuccess?.(result.user);
+        } catch (error) {
+          console.error("Google website login failed", error);
+          alert(messageFromError(error));
+        }
+      },
+    });
+    initialized = true;
+  }
+
+  window.WebsiteGoogleAuth.attachButton = function (button, onSuccess) {
+    if (!button) return;
+
+    button.addEventListener("click", async () => {
+      try {
+        await ensureInitialized(onSuccess);
+        window.google.accounts.id.prompt((notification) => {
+          if (
+            notification.isNotDisplayed?.() ||
+            notification.isSkippedMoment?.()
+          ) {
+            console.warn("Google login prompt was not displayed", notification.getNotDisplayedReason?.() || notification.getSkippedReason?.());
+          }
+        });
+      } catch (error) {
+        console.error("Google auth setup failed", error);
+        alert(messageFromError(error));
+      }
+    });
   };
 })();
