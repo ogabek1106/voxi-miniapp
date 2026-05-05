@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, Request, Response
+from fastapi import APIRouter, Body, Depends, Request, Response
 from sqlalchemy.orm import Session
 
 from app.deps import get_db
-from app.schemas.auth import EmailLoginIn, EmailSignupIn, ProfileUpdateIn, TelegramLoginIn
+from app.schemas.auth import EmailLoginIn, EmailSignupIn, ProfileUpdateIn
 from app.services.auth_service import (
     clear_session_cookie,
     get_session_user,
@@ -33,9 +33,8 @@ def email_login(payload: EmailLoginIn, response: Response, db: Session = Depends
 
 
 @router.post("/telegram/login")
-def telegram_login(payload: TelegramLoginIn, response: Response, db: Session = Depends(get_db)):
-    payload_data = payload.model_dump() if hasattr(payload, "model_dump") else payload.dict()
-    verified = verify_telegram_login(payload_data)
+def telegram_login(response: Response, payload: dict = Body(...), db: Session = Depends(get_db)):
+    verified = verify_telegram_login(payload)
     user = login_telegram(db, verified)
     set_session_cookie(response, user)
     return {"ok": True, "user": safe_user(db, user)}
