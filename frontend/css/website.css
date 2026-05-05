@@ -731,19 +731,24 @@ body.view-website .website-header.is-compact .website-profile-button-avatar svg 
 }
 
 .website-auth-divider {
-  height: 1px;
   margin: 18px 0 14px;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.website-auth-divider::before,
+.website-auth-divider::after {
+  content: "";
+  height: 1px;
+  flex: 1;
   background: rgba(20, 40, 60, 0.08);
-  position: relative;
 }
 
 .website-auth-divider span {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  padding: 0 10px;
-  background: #FFFFFF;
+  padding: 0;
+  background: transparent;
   color: #607080;
   font-size: 12px;
   font-weight: 900;
@@ -751,40 +756,44 @@ body.view-website .website-header.is-compact .website-profile-button-avatar svg 
 
 .website-google-login-slot,
 .website-telegram-login-slot {
-  position: relative;
-  width: 54px;
-  height: 54px;
+  position: static;
+  width: 100%;
+  min-height: 44px;
+  height: auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  border-radius: 50%;
-  background: #FFFFFF;
-  box-shadow: 0 12px 30px rgba(20, 40, 60, 0.10);
+  overflow: visible;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .website-auth-provider-row {
-  display: flex;
+  display: grid;
   align-items: center;
   justify-content: center;
-  gap: 14px;
+  width: 100%;
+  gap: 10px;
+}
+
+.website-google-login-slot,
+.website-telegram-login-slot {
+  max-width: 320px;
 }
 
 .website-google-login-slot > div {
-  width: 44px !important;
-  height: 44px !important;
-  border-radius: 50% !important;
-  overflow: hidden;
+  width: 100% !important;
+  max-width: 320px;
+  border-radius: 14px !important;
+  overflow: visible;
 }
 
 .website-telegram-login-slot iframe {
-  position: absolute;
-  inset: 0;
-  width: 100% !important;
-  height: 100% !important;
-  opacity: 0.01;
-  z-index: 2;
-  border-radius: 50%;
+  position: static;
+  opacity: 1;
+  z-index: auto;
+  border-radius: 14px;
 }
 
 .website-auth-provider-icon {
