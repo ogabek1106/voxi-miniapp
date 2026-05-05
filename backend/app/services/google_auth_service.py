@@ -44,6 +44,15 @@ def get_google_redirect_uri() -> str:
     return redirect_uri
 
 
+def get_google_success_redirect_url() -> str:
+    return (
+        os.getenv("GOOGLE_SUCCESS_REDIRECT_URL")
+        or os.getenv("WEBSITE_URL")
+        or os.getenv("FRONTEND_URL")
+        or "https://www.ebaiacademy.com"
+    ).strip()
+
+
 def build_google_auth_url() -> str:
     query = urlencode({
         "client_id": get_google_client_id(),

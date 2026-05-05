@@ -24,8 +24,13 @@ window.WebsiteGoogleAuth = window.WebsiteGoogleAuth || {};
 
   function messageFromError(error) {
     const detail = error?.data?.detail;
-    if (detail === "google_login_not_configured") {
-      return "Google login is not configured on the server. Please contact admin.";
+    if (
+      detail === "google_login_not_configured" ||
+      detail === "missing_google_client_id" ||
+      detail === "missing_google_client_secret" ||
+      detail === "missing_google_redirect_uri"
+    ) {
+      return `Google login is not configured on the server (${detail}). Please contact admin.`;
     }
     if (detail === "google_email_not_verified") {
       return "Google email is not verified.";
@@ -88,20 +93,7 @@ window.WebsiteGoogleAuth = window.WebsiteGoogleAuth || {};
     if (!button) return;
 
     button.addEventListener("click", async () => {
-      try {
-        await ensureInitialized(onSuccess);
-        window.google.accounts.id.prompt((notification) => {
-          if (
-            notification.isNotDisplayed?.() ||
-            notification.isSkippedMoment?.()
-          ) {
-            console.warn("Google login prompt was not displayed", notification.getNotDisplayedReason?.() || notification.getSkippedReason?.());
-          }
-        });
-      } catch (error) {
-        console.error("Google auth setup failed", error);
-        alert(messageFromError(error));
-      }
+      window.location.assign(window.apiUrl("/auth/google/login"));
     });
   };
 })();
