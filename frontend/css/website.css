@@ -338,6 +338,14 @@ body.view-website .website-header.is-compact .website-profile-button-avatar svg 
   height: 34px;
 }
 
+.website-profile-avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
+  display: block;
+}
+
 .website-profile-title-group h2 {
   margin: 0;
   color: #17212B;

@@ -27,6 +27,7 @@ window.WebsiteProfileSheet = window.WebsiteProfileSheet || {};
 
   function renderProfile(me) {
     const fullName = escapeHtml(window.SharedUser?.getFullName(me) || "Profile");
+    const photoUrl = String(me?.photo_url || "").trim();
     const vCoins = window.SharedUser?.getBalance(me) || 0;
     const lastScore = escapeHtml(window.SharedUser?.getLastScore(me) || "-");
     const lastActivityHtml = window.ProfileUI?.renderLastActivity(me?.last_activity) || "";
@@ -36,10 +37,12 @@ window.WebsiteProfileSheet = window.WebsiteProfileSheet || {};
         <div class="website-profile-handle" data-profile-close="1"></div>
         <div class="website-profile-head">
           <div class="website-profile-avatar" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"></circle>
-              <path d="M5 19.2c1.5-3 4-4.7 7-4.7s5.5 1.7 7 4.7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
-            </svg>
+            ${photoUrl ? `<img src="${escapeHtml(photoUrl)}" alt="">` : `
+              <svg viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"></circle>
+                <path d="M5 19.2c1.5-3 4-4.7 7-4.7s5.5 1.7 7 4.7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+              </svg>
+            `}
           </div>
           <div class="website-profile-title-group">
             <h2>${fullName}</h2>
