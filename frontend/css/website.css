@@ -756,44 +756,41 @@ body.view-website .website-header.is-compact .website-profile-button-avatar svg 
 
 .website-google-login-slot,
 .website-telegram-login-slot {
-  position: static;
-  width: 100%;
-  min-height: 44px;
-  height: auto;
+  position: relative;
+  width: 54px;
+  height: 54px;
+  min-height: 54px;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: visible;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #FFFFFF;
+  box-shadow: 0 12px 30px rgba(20, 40, 60, 0.10);
 }
 
 .website-auth-provider-row {
-  display: grid;
+  display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  gap: 10px;
-}
-
-.website-google-login-slot,
-.website-telegram-login-slot {
-  max-width: 320px;
+  gap: 14px;
 }
 
 .website-google-login-slot > div {
-  width: 100% !important;
-  max-width: 320px;
-  border-radius: 14px !important;
-  overflow: visible;
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 50% !important;
+  overflow: hidden;
 }
 
 .website-telegram-login-slot iframe {
-  position: static;
-  opacity: 1;
-  z-index: auto;
-  border-radius: 14px;
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  opacity: 0.01;
+  z-index: 2;
+  border-radius: 50%;
 }
 
 .website-auth-provider-icon {
@@ -813,7 +810,7 @@ body.view-website .website-header.is-compact .website-profile-button-avatar svg 
   object-fit: contain;
 }
 
-.website-telegram-icon-fallback {
+.website-telegram-icon-visual {
   pointer-events: none;
   position: absolute;
   inset: 0;

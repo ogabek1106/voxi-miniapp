@@ -57,11 +57,10 @@ window.WebsiteGoogleAuth = window.WebsiteGoogleAuth || {};
       });
 
       window.google.accounts.id.renderButton(container, {
+        type: "icon",
         theme: "outline",
         size: "large",
-        shape: "pill",
-        text: "continue_with",
-        width: Math.min(320, container.clientWidth || 320),
+        shape: "circle",
       });
     } catch (error) {
       console.error("Google auth setup failed", error);
