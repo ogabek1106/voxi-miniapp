@@ -19,7 +19,9 @@ window.WebsiteTelegramLogin = window.WebsiteTelegramLogin || {};
 
   window.WebsiteTelegramLogin.render = function (container, onSuccess) {
     if (!container) return;
-    container.innerHTML = "";
+    container.innerHTML = `
+      <img class="website-auth-provider-logo" src="assets/auth/telegramicon.png" alt="">
+    `;
 
     const callbackName = `onTelegramWebsiteAuth_${Date.now()}`;
     window[callbackName] = async function (payload) {
