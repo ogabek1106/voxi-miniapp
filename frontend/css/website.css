@@ -782,8 +782,9 @@ body.view-website .website-header.is-compact .website-profile-button-avatar svg 
   inset: 0;
   width: 100% !important;
   height: 100% !important;
-  opacity: 0;
+  opacity: 0.01;
   z-index: 2;
+  border-radius: 50%;
 }
 
 .website-auth-provider-icon {
@@ -803,12 +804,10 @@ body.view-website .website-header.is-compact .website-profile-button-avatar svg 
   object-fit: contain;
 }
 
-.website-auth-provider-logo {
-  width: 34px;
-  height: 34px;
-  object-fit: contain;
+.website-telegram-icon-fallback {
   pointer-events: none;
-  position: relative;
+  position: absolute;
+  inset: 0;
   z-index: 1;
 }
 

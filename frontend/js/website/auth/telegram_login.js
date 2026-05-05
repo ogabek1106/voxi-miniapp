@@ -20,7 +20,9 @@ window.WebsiteTelegramLogin = window.WebsiteTelegramLogin || {};
   window.WebsiteTelegramLogin.render = function (container, onSuccess) {
     if (!container) return;
     container.innerHTML = `
-      <img class="website-auth-provider-logo" src="assets/auth/telegramicon.png" alt="">
+      <button class="website-auth-provider-icon website-telegram-icon-fallback" type="button" aria-label="Continue with Telegram" disabled>
+        <img src="assets/auth/telegramicon.png" alt="">
+      </button>
     `;
 
     const callbackName = `onTelegramWebsiteAuth_${Date.now()}`;
