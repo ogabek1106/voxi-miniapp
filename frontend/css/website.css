@@ -812,6 +812,26 @@ body.view-website .website-header.is-compact .website-profile-button-avatar svg 
   z-index: 1;
 }
 
+.website-auth-switch {
+  display: block;
+  width: fit-content;
+  height: auto;
+  margin: 14px auto 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #00A6E6;
+  box-shadow: none;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.website-auth-switch:hover {
+  text-decoration: underline;
+}
+
 .website-footer {
   width: min(1120px, calc(100vw - 48px));
   margin: 8px auto 32px;

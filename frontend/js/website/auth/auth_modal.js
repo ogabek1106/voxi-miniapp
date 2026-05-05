@@ -26,6 +26,11 @@ window.WebsiteAuthModal = window.WebsiteAuthModal || {};
           <div id="google-login-slot" class="website-google-login-slot"></div>
           <div id="telegram-login-slot" class="website-telegram-login-slot"></div>
         </div>
+        ${!isSignup ? `
+          <button class="website-auth-switch" type="button" data-auth-switch="signup">
+            New here? Create an account
+          </button>
+        ` : ""}
       </div>
     `;
   }
@@ -76,6 +81,10 @@ window.WebsiteAuthModal = window.WebsiteAuthModal || {};
     document.getElementById("website-auth-form")?.addEventListener("submit", (event) => {
       event.preventDefault();
       submit(mode);
+    });
+
+    backdrop.querySelector("[data-auth-switch='signup']")?.addEventListener("click", () => {
+      window.WebsiteAuthModal.open("signup");
     });
 
     window.WebsiteGoogleAuth.render(
