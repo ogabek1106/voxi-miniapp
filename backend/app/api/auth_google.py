@@ -10,6 +10,7 @@ from app.services.google_auth_service import (
     exchange_google_code_for_id_token,
     get_google_client_id,
     get_google_success_redirect_url,
+    google_auth_dependency_debug,
     login_google_user,
 )
 
@@ -21,6 +22,11 @@ def google_config():
     return {
         "client_id": get_google_client_id(),
     }
+
+
+@router.get("/debug/dependencies")
+def google_dependency_debug():
+    return google_auth_dependency_debug()
 
 
 @router.get("/login")

@@ -1,5 +1,7 @@
 import os
+import sys
 from datetime import datetime
+from importlib import metadata, util
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
@@ -95,6 +97,29 @@ def exchange_google_code_for_id_token(code: str) -> str:
     return id_token
 
 
+def google_auth_dependency_debug(exc: Exception | None = None) -> dict:
+    def version(package_name: str) -> str | None:
+        try:
+            return metadata.version(package_name)
+        except metadata.PackageNotFoundError:
+            return None
+
+    def spec_origin(module_name: str) -> str | None:
+        spec = util.find_spec(module_name)
+        return getattr(spec, "origin", None) if spec else None
+
+    return {
+        "error": "google_auth_dependency_missing",
+        "import_exception": repr(exc) if exc else None,
+        "google_auth_version": version("google-auth"),
+        "requests_version": version("requests"),
+        "google_spec": spec_origin("google"),
+        "google_auth_spec": spec_origin("google.auth"),
+        "requests_spec": spec_origin("requests"),
+        "sys_path": sys.path,
+    }
+
+
 def verify_google_id_token(id_token: str) -> dict:
     if not id_token:
         raise HTTPException(status_code=400, detail="missing_google_token")
@@ -103,7 +128,7 @@ def verify_google_id_token(id_token: str) -> dict:
         from google.auth.transport import requests as google_requests
         from google.oauth2 import id_token as google_id_token
     except ImportError as exc:
-        raise HTTPException(status_code=500, detail="google_auth_dependency_missing") from exc
+        raise HTTPException(status_code=500, detail=google_auth_dependency_debug(exc)) from exc
 
     try:
         payload = google_id_token.verify_oauth2_token(
