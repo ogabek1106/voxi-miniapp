@@ -11,9 +11,6 @@ window.WebsiteAuthModal = window.WebsiteAuthModal || {};
       <div class="website-auth-card" role="dialog" aria-modal="true">
         <button class="website-auth-close" data-auth-close="1" aria-label="Close">x</button>
         <h2>${isSignup ? "Create account" : "Log in"}</h2>
-        <div id="google-login-slot" class="website-google-login-slot"></div>
-        <div id="telegram-login-slot" class="website-telegram-login-slot"></div>
-        <div class="website-auth-divider"><span>or</span></div>
         <form id="website-auth-form" class="website-auth-form">
           ${isSignup ? `
             <input id="auth-name" name="name" autocomplete="given-name" placeholder="Name" required>
@@ -24,6 +21,11 @@ window.WebsiteAuthModal = window.WebsiteAuthModal || {};
           ${isSignup ? `<input id="auth-confirm" name="confirm" type="password" autocomplete="new-password" placeholder="Confirm password" required>` : ""}
           <button class="website-auth-primary" type="submit">${isSignup ? "Create account" : "Log in"}</button>
         </form>
+        <div class="website-auth-divider"><span>OR</span></div>
+        <div class="website-auth-provider-row">
+          <div id="google-login-slot" class="website-google-login-slot"></div>
+          <div id="telegram-login-slot" class="website-telegram-login-slot"></div>
+        </div>
       </div>
     `;
   }

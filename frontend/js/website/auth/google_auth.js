@@ -57,17 +57,16 @@ window.WebsiteGoogleAuth = window.WebsiteGoogleAuth || {};
       });
 
       window.google.accounts.id.renderButton(container, {
+        type: "icon",
         theme: "outline",
         size: "large",
-        shape: "pill",
-        text: "continue_with",
-        width: Math.min(360, container.clientWidth || 360),
+        shape: "circle",
       });
     } catch (error) {
       console.error("Google auth setup failed", error);
       container.innerHTML = `
-        <button class="website-auth-provider" type="button" disabled>
-          Continue with Google
+        <button class="website-auth-provider-icon" type="button" disabled aria-label="Continue with Google">
+          <img src="assets/auth/googleicon.png" alt="">
         </button>
       `;
     }

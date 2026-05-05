@@ -730,21 +730,9 @@ body.view-website .website-header.is-compact .website-profile-button-avatar svg 
   color: #FFFFFF;
 }
 
-.website-auth-provider {
-  width: 100%;
-  min-height: 44px;
-  margin: 0;
-  border: 1px solid rgba(20, 40, 60, 0.10);
-  border-radius: 999px;
-  background: #FFFFFF;
-  color: #17212B;
-  font-size: 14px;
-  font-weight: 900;
-}
-
 .website-auth-divider {
   height: 1px;
-  margin: 18px 0;
+  margin: 18px 0 14px;
   background: rgba(20, 40, 60, 0.08);
   position: relative;
 }
@@ -763,14 +751,51 @@ body.view-website .website-header.is-compact .website-profile-button-avatar svg 
 
 .website-google-login-slot,
 .website-telegram-login-slot {
-  min-height: 44px;
+  width: 54px;
+  height: 54px;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #FFFFFF;
+  box-shadow: 0 12px 30px rgba(20, 40, 60, 0.10);
 }
 
-.website-google-login-slot {
-  margin-bottom: 10px;
+.website-auth-provider-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.website-google-login-slot > div {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 50% !important;
+  overflow: hidden;
+}
+
+.website-telegram-login-slot iframe {
+  transform: scale(0.9);
+  transform-origin: center;
+}
+
+.website-auth-provider-icon {
+  width: 54px;
+  height: 54px;
+  margin: 0;
+  padding: 10px;
+  border: 0;
+  border-radius: 50%;
+  background: #FFFFFF;
+  box-shadow: 0 12px 30px rgba(20, 40, 60, 0.10);
+}
+
+.website-auth-provider-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .website-footer {
