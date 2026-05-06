@@ -23,11 +23,13 @@ UserListening.groupMatchingQuestions = function (questions) {
           question_type: String(q.type || "").toUpperCase(),
           group_id: q.question_group_id,
           questions: [],
-          meta: q.meta || {}
+          meta: q.meta || {},
+          image_url: q.image_url || ""
         };
         result.push(group);
       }
 
+      if (!group.image_url && q.image_url) group.image_url = q.image_url;
       group.questions.push(q);
     } else {
       result.push(q);
@@ -101,6 +103,7 @@ UserListening.renderMatchingGroup = function (group, passageIndex, startNumber, 
           </div>
         ` : ""}
       </div>
+      ${UserListening.renderListeningVisual ? UserListening.renderListeningVisual(group) : ""}
       ${isParagraphMatching ? "" : `
         <div class="matching-options">
           ${options.map((opt, i) => {

@@ -42,7 +42,9 @@ UserListening.groupImageQuestions = function (items) {
 UserListening.renderImageQuestionsGroup = function (group, startNumber) {
   const first = group.questions?.[0] || {};
   const instruction = first.instruction || "";
-  const imageUrl = first.image_url || "";
+  const imageUrl = UserListening.getListeningVisualUrl
+    ? UserListening.getListeningVisualUrl(group)
+    : (group.image_url || first.image_url || "");
   const endNumber = startNumber + group.questions.length - 1;
   const headerLabel = group.questions.length > 1
     ? `Questions ${startNumber}-${endNumber}`
@@ -62,10 +64,10 @@ UserListening.renderImageQuestionsGroup = function (group, startNumber) {
       ${imageUrl ? `
         <div class="image-questions-image-wrap">
           <img
-            src="${window.API}${imageUrl}"
+            src="${UserListening.toMediaUrl ? UserListening.toMediaUrl(imageUrl) : `${window.API}${imageUrl}`}"
             class="image-questions-image"
             alt="Question image"
-            data-full-image-src="${window.API}${imageUrl}"
+            data-full-image-src="${UserListening.toMediaUrl ? UserListening.toMediaUrl(imageUrl) : `${window.API}${imageUrl}`}"
             onclick="UserListening.openImageQuestionsViewer(this.getAttribute('data-full-image-src'))"
           />
         </div>

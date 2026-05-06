@@ -55,6 +55,33 @@ UserListening.getQuestionOptions = function (question, group = null) {
     .filter((option) => String(option.text || option.key || "").trim().length > 0);
 };
 
+UserListening.getListeningVisualUrl = function (item) {
+  const firstQuestion = Array.isArray(item?.questions) ? (item.questions[0] || {}) : {};
+  return item?.image_url
+    || item?.meta?.image_url
+    || item?.content?.image_url
+    || firstQuestion?.image_url
+    || firstQuestion?.meta?.image_url
+    || firstQuestion?.content?.image_url
+    || "";
+};
+
+UserListening.renderListeningVisual = function (item, alt = "Question visual") {
+  const imageUrl = UserListening.getListeningVisualUrl(item);
+  if (!imageUrl) return "";
+  const src = UserListening.toMediaUrl ? UserListening.toMediaUrl(imageUrl) : imageUrl;
+
+  return `
+    <div class="image-questions-image-wrap listening-block-visual">
+      <img
+        src="${UserListening.escapeHtml(src)}"
+        class="image-questions-image"
+        alt="${UserListening.escapeHtml(alt)}"
+      />
+    </div>
+  `;
+};
+
 UserListening.isListeningCompletionType = function (type) {
   return [
     "FORM_COMPLETION",
@@ -139,11 +166,13 @@ UserListening.groupMatchingQuestions = function (questions) {
           question_type: String(q.type || "").toUpperCase(),
           group_id: q.question_group_id,
           questions: [],
-          meta: q.meta || {}
+          meta: q.meta || {},
+          image_url: q.image_url || ""
         };
         result.push(group);
       }
 
+      if (!group.image_url && q.image_url) group.image_url = q.image_url;
       group.questions.push(q);
     } else {
       result.push(q);
@@ -226,6 +255,7 @@ UserListening.renderListeningGroupHeader = function (group, startNumber) {
         </div>
       ` : ""}
     </div>
+    ${UserListening.renderListeningVisual(group)}
   `;
 };
 
@@ -434,22 +464,12 @@ UserListening.renderShortAnswerGroup = function (group, startNumber) {
 };
 
 UserListening.renderLabelingGroup = function (group, startNumber) {
-  const imageUrl = group.image_url || group.meta?.image_url || group.content?.image_url || "";
   const mode = group.meta?.answer_mode || "text";
   const options = UserListening.getQuestionOptions(group.questions?.[0] || {}, group);
 
   return `
     <div class="question-block image-questions-group listening-labeling-group">
       ${UserListening.renderListeningGroupHeader(group, startNumber)}
-      ${imageUrl ? `
-        <div class="image-questions-image-wrap">
-          <img
-            src="${UserListening.toMediaUrl ? UserListening.toMediaUrl(imageUrl) : imageUrl}"
-            class="image-questions-image"
-            alt="Question visual"
-          />
-        </div>
-      ` : ""}
       <div class="image-questions-list">
         ${(group.questions || []).map((question, index) => {
           const number = startNumber + index;
@@ -494,6 +514,7 @@ UserListening.renderSingleQuestion = function (q, questionIndex, passageIndex, d
     instruction: q.instruction,
     meta: q.meta || {},
     content: q.content || {},
+    image_url: q.image_url || "",
   };
 
   let inner = "";
@@ -546,13 +567,15 @@ UserListening.renderSingleQuestion = function (q, questionIndex, passageIndex, d
           group_id: q.question_group_id || q.id,
           questions: [q],
           meta: q.meta || {},
-          content: q.content || {}
+          content: q.content || {},
+          image_url: q.image_url || ""
         }, base.order);
       } else if (UserListening.isImageQuestionsQuestion && UserListening.isImageQuestionsQuestion(q)) {
         inner = UserListening.renderImageQuestionsGroup({
           type: "IMAGE_QUESTIONS_GROUP",
           group_id: q.question_group_id || q.id,
-          questions: [q]
+          questions: [q],
+          image_url: q.image_url || ""
         }, base.order);
       } else {
         inner = UserListening.renderGap(q, base);
@@ -566,7 +589,8 @@ UserListening.renderSingleQuestion = function (q, questionIndex, passageIndex, d
         question_type: type,
         group_id: q.question_group_id || q.id,
         questions: [q],
-        meta: q.meta || {}
+        meta: q.meta || {},
+        image_url: q.image_url || ""
       }, passageIndex, base.order, passage);
       break;
 
@@ -590,6 +614,8 @@ UserListening.renderSingleQuestion = function (q, questionIndex, passageIndex, d
          data-question-type="${UserListening.escapeHtml(type)}">
 
       ${UserListening.renderQuestionHeader(base)}
+
+      ${UserListening.renderListeningVisual(base)}
 
       ${inner}
     </div>
