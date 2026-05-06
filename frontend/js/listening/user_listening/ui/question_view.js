@@ -77,6 +77,8 @@ UserListening.renderListeningVisual = function (item, alt = "Question visual") {
         src="${UserListening.escapeHtml(src)}"
         class="image-questions-image"
         alt="${UserListening.escapeHtml(alt)}"
+        data-full-image-src="${UserListening.escapeHtml(src)}"
+        onclick="UserListening.openImageQuestionsViewer(this.getAttribute('data-full-image-src'))"
       />
     </div>
   `;
