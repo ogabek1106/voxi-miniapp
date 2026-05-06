@@ -39,11 +39,21 @@ UserListening.renderShell = function (container) {
           <div id="listening-trackline-fill"></div>
         </div>
         <div id="listening-admin-audio-controls" class="listening-admin-audio-controls" hidden>
-          <button type="button" data-admin-audio-control="seek" data-seek-seconds="-30">30 sec back</button>
-          <button type="button" data-admin-audio-control="seek" data-seek-seconds="-10">10 sec back</button>
-          <button type="button" data-admin-audio-control="pause">Pause</button>
-          <button type="button" data-admin-audio-control="seek" data-seek-seconds="10">10 sec forward</button>
-          <button type="button" data-admin-audio-control="seek" data-seek-seconds="30">30 sec forward</button>
+          <button type="button" data-admin-audio-control="seek" data-seek-seconds="-30" aria-label="Back 30 seconds" title="Back 30 seconds">
+            <span aria-hidden="true">↺</span><small>30</small>
+          </button>
+          <button type="button" data-admin-audio-control="seek" data-seek-seconds="-10" aria-label="Back 10 seconds" title="Back 10 seconds">
+            <span aria-hidden="true">↺</span><small>10</small>
+          </button>
+          <button type="button" data-admin-audio-control="pause" aria-label="Pause audio" title="Pause audio">
+            <span class="admin-audio-pause-icon" aria-hidden="true">Ⅱ</span>
+          </button>
+          <button type="button" data-admin-audio-control="seek" data-seek-seconds="10" aria-label="Forward 10 seconds" title="Forward 10 seconds">
+            <span aria-hidden="true">↻</span><small>10</small>
+          </button>
+          <button type="button" data-admin-audio-control="seek" data-seek-seconds="30" aria-label="Forward 30 seconds" title="Forward 30 seconds">
+            <span aria-hidden="true">↻</span><small>30</small>
+          </button>
         </div>
       </div>
 

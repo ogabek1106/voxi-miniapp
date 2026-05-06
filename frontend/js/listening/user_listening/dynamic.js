@@ -192,7 +192,13 @@ UserListening.bindAdminAudioControls = function (audio) {
   const pauseButton = controls.querySelector('[data-admin-audio-control="pause"]');
 
   function updatePauseLabel() {
-    if (pauseButton) pauseButton.textContent = audio?.paused ? "Play" : "Pause";
+    if (!pauseButton) return;
+    const isPaused = Boolean(audio?.paused);
+    pauseButton.setAttribute("aria-label", isPaused ? "Play audio" : "Pause audio");
+    pauseButton.setAttribute("title", isPaused ? "Play audio" : "Pause audio");
+    pauseButton.innerHTML = isPaused
+      ? `<span class="admin-audio-play-icon" aria-hidden="true">▶</span>`
+      : `<span class="admin-audio-pause-icon" aria-hidden="true">Ⅱ</span>`;
   }
 
   controls.querySelectorAll("[data-admin-audio-control]").forEach((button) => {

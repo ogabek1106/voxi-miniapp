@@ -1,3 +1,58 @@
+.listening-admin-audio-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.listening-admin-audio-controls[hidden] {
+  display: none !important;
+}
+
+.listening-admin-audio-controls button {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #EAF7FF;
+  color: #17212B;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  box-shadow: 0 8px 18px rgba(20, 40, 60, 0.10);
+  cursor: pointer;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.listening-admin-audio-controls button span {
+  font-size: 17px;
+  line-height: 1;
+}
+
+.listening-admin-audio-controls button small {
+  margin-left: -3px;
+  font-size: 9px;
+  line-height: 1;
+  font-weight: 900;
+}
+
+.listening-admin-audio-controls button:hover {
+  background: #DDF3FF;
+}
+
+.admin-audio-play-icon {
+  margin-left: 2px;
+  font-size: 15px !important;
+}
+
+.admin-audio-pause-icon {
+  font-size: 16px !important;
+}
+
 .listening-form-title {
   margin-bottom: 8px;
   font-size: 15px;
