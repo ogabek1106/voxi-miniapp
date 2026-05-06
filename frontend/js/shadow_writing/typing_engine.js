@@ -15,9 +15,14 @@ window.ShadowWritingTyping = window.ShadowWritingTyping || {};
     const typedChars = Array.isArray(typed) ? typed : Array.from(String(typed || ""));
     return chars.map((char, index) => {
       const typedChar = typedChars[index];
-      let cls = "shadow-char";
-      if (index === typedChars.length) cls += " is-current";
-      if (typedChar !== undefined) cls += typedChar === char ? " is-correct" : " is-wrong";
+      const classes = ["shadow-char"];
+      if (typedChar !== undefined) {
+        classes.push(typedChar === char ? "sw-char--correct" : "sw-char--wrong");
+      } else {
+        classes.push("sw-char--pending");
+        if (index === typedChars.length) classes.push("sw-char--current");
+      }
+      const cls = classes.join(" ");
       return `<span class="${cls}">${char === "\n" ? "<br>" : escapeHtml(char)}</span>`;
     }).join("");
   }
@@ -77,37 +82,57 @@ window.ShadowWritingTyping = window.ShadowWritingTyping || {};
       completeIfReady();
     }
 
-    function backspace() {
-      if (completed || typedChars.length <= 0) return;
-      typedChars.pop();
-      rerender();
-    }
-
     function handleKeydown(event) {
       if (completed) return;
-      if (event.ctrlKey || event.metaKey || event.altKey) return;
 
-      if (event.key === "Backspace") {
+      const key = event.key || "";
+      const lowerKey = key.toLowerCase();
+      const blockedCombo = (event.ctrlKey || event.metaKey) && ["a", "v", "x", "z"].includes(lowerKey);
+      const ignoredKeys = new Set([
+        "Shift",
+        "Alt",
+        "Control",
+        "Meta",
+        "CapsLock",
+        "Tab",
+        "Escape",
+        "ArrowLeft",
+        "ArrowRight",
+        "ArrowUp",
+        "ArrowDown",
+        "Home",
+        "End",
+        "PageUp",
+        "PageDown",
+      ]);
+
+      if (key === "Backspace" || key === "Delete" || blockedCombo) {
         event.preventDefault();
-        backspace();
+        event.stopPropagation();
         return;
       }
 
-      if (event.key === "Enter") {
+      if (ignoredKeys.has(key)) {
+        if (key === "Tab") event.preventDefault();
+        return;
+      }
+      if (event.ctrlKey || event.metaKey || event.altKey) return;
+
+      if (key === "Enter") {
         event.preventDefault();
         addChar("\n");
         return;
       }
 
-      if (event.key === " ") {
+      if (key === " ") {
         event.preventDefault();
         addChar(" ");
         return;
       }
 
-      if (event.key && event.key.length === 1) {
+      if (key.length === 1) {
         event.preventDefault();
-        addChar(event.key);
+        addChar(key);
       }
     }
 
@@ -126,6 +151,13 @@ window.ShadowWritingTyping = window.ShadowWritingTyping || {};
     if (mobileInput) {
       mobileInput.value = "";
       mobileInput.disabled = false;
+      mobileInput.addEventListener("beforeinput", (event) => {
+        if (event.inputType && event.inputType !== "insertText" && event.inputType !== "insertLineBreak") {
+          event.preventDefault();
+        }
+      });
+      mobileInput.addEventListener("paste", (event) => event.preventDefault());
+      mobileInput.addEventListener("cut", (event) => event.preventDefault());
       mobileInput.addEventListener("input", () => {
         const value = mobileInput.value || "";
         if (!value) return;
@@ -133,10 +165,11 @@ window.ShadowWritingTyping = window.ShadowWritingTyping || {};
         mobileInput.value = "";
       });
       mobileInput.addEventListener("keydown", (event) => {
-        if (event.key === "Backspace") {
+        const lowerKey = String(event.key || "").toLowerCase();
+        const blockedCombo = (event.ctrlKey || event.metaKey) && ["a", "v", "x", "z"].includes(lowerKey);
+        if (event.key === "Backspace" || event.key === "Delete" || blockedCombo) {
           event.preventDefault();
           event.stopPropagation();
-          backspace();
         }
       });
       window.setTimeout(focusMobileInput, 80);

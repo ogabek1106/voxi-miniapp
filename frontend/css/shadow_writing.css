@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700&display=swap");
+
 .shadow-writing-screen {
   width: 100%;
   min-height: 100%;
@@ -5,7 +7,7 @@
   padding: 12px 0 28px;
   text-align: left;
   color: #17212B;
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: "Nunito", "Inter", system-ui, sans-serif;
 }
 
 #screen-mocks.container.shadow-writing-host {
@@ -50,28 +52,33 @@
 
 .shadow-target {
   min-height: 52vh;
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-size: 20px;
-  line-height: 1.9;
-  font-weight: 500;
+  font-family: "Nunito", "Inter", system-ui, sans-serif;
+  font-size: 22px;
+  line-height: 2;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   white-space: pre-wrap;
-  color: #94a3b8;
+  color: #9aa7b8;
   outline: none;
 }
 
-.shadow-char.is-correct {
-  color: #17212B;
+.sw-char--pending {
+  color: #9aa7b8;
 }
 
-.shadow-char.is-wrong {
-  color: #dc2626;
-  background: rgba(220, 38, 38, 0.08);
+.sw-char--correct {
+  color: #111827;
+}
+
+.sw-char--wrong {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
   border-radius: 4px;
 }
 
-.shadow-char.is-current {
+.sw-char--current {
   border-bottom: 2px solid #00baff;
-  color: #17212B;
+  color: #9aa7b8;
 }
 
 .shadow-hidden-input {
@@ -218,7 +225,7 @@
   .shadow-target {
     min-height: 55vh;
     font-size: 17px;
-    line-height: 1.9;
+    line-height: 2;
   }
 
   .shadow-writing-actions {
