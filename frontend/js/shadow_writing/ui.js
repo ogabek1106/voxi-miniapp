@@ -1,12 +1,6 @@
 window.ShadowWritingUI = window.ShadowWritingUI || {};
 
 (function () {
-  function isAdmin() {
-    if (window.__isAdmin) return true;
-    const websiteUser = window.WebsiteAuthState?.getUser?.();
-    return Boolean(websiteUser?.is_admin);
-  }
-
   ShadowWritingUI.escape = function (value) {
     return String(value ?? "")
       .replace(/&/g, "&amp;")
@@ -31,7 +25,6 @@ window.ShadowWritingUI = window.ShadowWritingUI || {};
           <p>${meta}</p>
           <div class="shadow-writing-actions">
             <button class="shadow-secondary-btn" onclick="ShadowWritingTyping.cleanup(); ShadowWritingHistory.show()">History</button>
-            ${isAdmin() ? `<button class="shadow-finish-btn" onclick="ShadowWritingTyping.finishNow()">Finish Now</button>` : ""}
             <button class="shadow-secondary-btn" onclick="ShadowWritingTyping.cleanup(); goHome()">Back</button>
           </div>
         </div>
@@ -40,6 +33,10 @@ window.ShadowWritingUI = window.ShadowWritingUI || {};
 
         <div class="shadow-essay-card" onclick="document.getElementById('shadow-writing-input')?.focus({ preventScroll: true })">
           <div id="shadow-writing-target" class="shadow-target" aria-label="Essay text"></div>
+        </div>
+
+        <div id="shadow-writing-finish-actions" class="shadow-writing-finish-actions">
+          <button class="shadow-finish-btn" onclick="ShadowWritingTyping.finishNow()">Finish Now</button>
         </div>
 
         <div id="shadow-writing-result-actions" class="shadow-writing-result-actions" hidden></div>
@@ -66,6 +63,7 @@ window.ShadowWritingUI = window.ShadowWritingUI || {};
     ShadowWritingState.set({ completed: true, result: stats });
     const statsEl = document.getElementById("shadow-writing-stats");
     const topActions = document.querySelector(".shadow-writing-head .shadow-writing-actions");
+    const finishActions = document.getElementById("shadow-writing-finish-actions");
     const resultActions = document.getElementById("shadow-writing-result-actions");
 
     if (statsEl) {
@@ -73,6 +71,7 @@ window.ShadowWritingUI = window.ShadowWritingUI || {};
       statsEl.hidden = false;
     }
     if (topActions) topActions.remove();
+    if (finishActions) finishActions.remove();
     if (resultActions) {
       resultActions.innerHTML = ShadowWritingResult.renderActions();
       resultActions.hidden = false;

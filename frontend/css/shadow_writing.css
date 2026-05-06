@@ -156,6 +156,12 @@
   margin-top: 14px;
 }
 
+.shadow-writing-finish-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
 .shadow-history-list {
   display: flex;
   flex-direction: column;
@@ -256,6 +262,11 @@
   }
 
   .shadow-writing-result-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .shadow-writing-finish-actions {
     display: grid;
     grid-template-columns: 1fr;
   }
