@@ -197,6 +197,7 @@ window.renderSingleQuestion = function (question, index, passageIndex = 0, displ
 UserListening.renderQuestionsForSection = function (passage, passageIndex, startingQuestionNumber = 1) {
   if (!passage.questions || !passage.questions.length) return "";
 
+  UserListening.__questionDisplayNumbers = new Map();
   const groupedMatching = UserListening.groupMatchingQuestions(passage.questions);
   const groupedSummary = UserListening.groupSummaryQuestions
     ? UserListening.groupSummaryQuestions(groupedMatching)
@@ -206,34 +207,47 @@ UserListening.renderQuestionsForSection = function (passage, passageIndex, start
     : groupedSummary;
   const listeningGrouped = UserListening.groupListeningQuestionBlocks(grouped);
   let currentNumber = startingQuestionNumber;
+  const registerDisplayNumbers = (questions, startNumber) => {
+    (questions || []).forEach((question, index) => {
+      const qid = Number(question?.id);
+      if (Number.isFinite(qid) && qid > 0) {
+        UserListening.__questionDisplayNumbers.set(qid, startNumber + index);
+      }
+    });
+  };
 
   return `
     <div class="questions-container">
       ${listeningGrouped.map((item, index) => {
         if (item.type === "MATCHING_GROUP") {
+          registerDisplayNumbers(item.questions, currentNumber);
           const block = UserListening.renderMatchingGroup(item, passageIndex, currentNumber, passage);
           currentNumber += item.questions.length;
           return block;
         }
 
         if (item.type === "LISTENING_TYPED_GROUP") {
+          registerDisplayNumbers(item.questions, currentNumber);
           const block = UserListening.renderListeningTypedGroup(item, currentNumber);
           currentNumber += item.questions.length;
           return block;
         }
 
         if (item.type === "SUMMARY_GROUP") {
+          registerDisplayNumbers(item.questions, currentNumber);
           const block = UserListening.renderSummaryGroup(item, currentNumber);
           currentNumber += item.questions.length;
           return block;
         }
 
         if (item.type === "IMAGE_QUESTIONS_GROUP") {
+          registerDisplayNumbers(item.questions, currentNumber);
           const block = UserListening.renderImageQuestionsGroup(item, currentNumber);
           currentNumber += item.questions.length;
           return block;
         }
 
+        registerDisplayNumbers([item], currentNumber);
         const block = UserListening.renderSingleQuestion(item, index, passageIndex, currentNumber, passage);
         currentNumber += 1;
         return block;

@@ -500,24 +500,29 @@ UserListening.initQuestionCounter = function () {
   function collectQuestions() {
     const fields = Array.from(content.querySelectorAll('[name^="q_"], [data-qid]'));
     const byId = new Map();
+    const displayNumbers = UserListening.__questionDisplayNumbers instanceof Map
+      ? UserListening.__questionDisplayNumbers
+      : new Map();
 
     fields.forEach((field) => {
       const qid = getQuestionId(field);
       if (!qid) return;
 
       if (!byId.has(qid)) {
+        const displayOrder = displayNumbers.get(qid) || byId.size + 1;
         byId.set(qid, {
           qid,
           controls: [],
           anchor: getQuestionAnchor(field),
-          order: byId.size + 1
+          order: displayOrder,
+          sortOrder: byId.size + 1
         });
       }
 
       byId.get(qid).controls.push(field);
     });
 
-    return Array.from(byId.values()).sort((a, b) => a.order - b.order);
+    return Array.from(byId.values()).sort((a, b) => a.sortOrder - b.sortOrder);
   }
 
   function isAnswered(questionEntry) {
@@ -543,7 +548,7 @@ UserListening.initQuestionCounter = function () {
         : (lessThanTenMinLeft ? "#fee2e2" : "#f8fafc");
       const color = answered ? "#166534" : (lessThanTenMinLeft ? "#991b1b" : "#111827");
       return `
-        <button type="button" data-question-order="${question.order}" style="
+        <button type="button" data-question-id="${question.qid}" style="
           width: 100%;
           border: 0;
           border-bottom: 1px solid #f1f5f9;
@@ -583,11 +588,11 @@ UserListening.initQuestionCounter = function () {
 
   dropdown.onclick = function (event) {
     event.stopPropagation();
-    const target = event.target.closest("[data-question-order]");
+    const target = event.target.closest("[data-question-id]");
     if (!target) return;
 
-    const order = Number(target.dataset.questionOrder);
-    const question = (UserListening.__questionList || []).find((item) => item.order === order);
+    const qid = Number(target.dataset.questionId);
+    const question = (UserListening.__questionList || []).find((item) => item.qid === qid);
     if (question?.anchor) {
       question.anchor.scrollIntoView({ behavior: "smooth", block: "center" });
     }
