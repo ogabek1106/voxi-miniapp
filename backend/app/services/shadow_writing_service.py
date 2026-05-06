@@ -3,7 +3,7 @@ from datetime import datetime
 
 from sqlalchemy.orm import Session, joinedload
 
-from app.models import ShadowWritingAttempt, ShadowWritingEssay
+from app.models import ShadowWritingAttempt, ShadowWritingEssay, User
 
 
 def serialize_essay(essay: ShadowWritingEssay) -> dict:
@@ -146,3 +146,86 @@ def list_history(db: Session, telegram_id: int) -> list[ShadowWritingAttempt]:
         .order_by(ShadowWritingAttempt.completed_at.desc())
         .all()
     )
+
+
+def _speed_wpm(attempt: ShadowWritingAttempt) -> float:
+    seconds = int(attempt.time_seconds or 0)
+    typed_chars = int(attempt.typed_chars or 0)
+    if seconds <= 0:
+        return 0.0
+    return round((typed_chars / 5) / (seconds / 60), 1)
+
+
+def _login_method(user: User | None) -> str | None:
+    if not user:
+        return None
+    if user.google_id:
+        return "Google"
+    if user.telegram_id:
+        return "Telegram"
+    if user.email:
+        return "Email"
+    return None
+
+
+def list_admin_stats(db: Session) -> dict:
+    rows = (
+        db.query(ShadowWritingAttempt, ShadowWritingEssay, User)
+        .join(ShadowWritingEssay, ShadowWritingAttempt.essay_id == ShadowWritingEssay.id)
+        .outerjoin(User, ShadowWritingAttempt.telegram_id == User.telegram_id)
+        .filter(ShadowWritingAttempt.completed_at != None)
+        .order_by(ShadowWritingAttempt.completed_at.desc())
+        .all()
+    )
+
+    items = []
+    total_accuracy = 0.0
+    total_speed = 0.0
+    total_time = 0
+    unique_users = set()
+
+    for attempt, essay, user in rows:
+        speed = _speed_wpm(attempt)
+        accuracy = round(float(attempt.accuracy or 0), 1)
+        time_seconds = int(attempt.time_seconds or 0)
+        telegram_id = attempt.telegram_id
+        if telegram_id is not None:
+            unique_users.add(int(telegram_id))
+
+        total_accuracy += accuracy
+        total_speed += speed
+        total_time += time_seconds
+        user_name = " ".join(
+            part for part in [
+                (user.name or "").strip() if user else "",
+                (user.surname or "").strip() if user else "",
+            ] if part
+        ) or None
+
+        items.append({
+            "attempt_id": attempt.id,
+            "telegram_id": telegram_id,
+            "user_name": user_name,
+            "login_method": _login_method(user),
+            "essay_title": essay.title,
+            "essay_level": essay.level,
+            "essay_theme": essay.theme,
+            "time_seconds": time_seconds,
+            "speed_wpm": speed,
+            "accuracy": accuracy,
+            "mistakes_count": int(attempt.mistakes_count or 0),
+            "typed_chars": int(attempt.typed_chars or 0),
+            "completed_at": attempt.completed_at.isoformat() if attempt.completed_at else None,
+        })
+
+    total_attempts = len(items)
+    return {
+        "summary": {
+            "total_attempts": total_attempts,
+            "unique_users": len(unique_users),
+            "average_accuracy": round(total_accuracy / total_attempts, 1) if total_attempts else 0,
+            "average_speed_wpm": round(total_speed / total_attempts, 1) if total_attempts else 0,
+            "total_time_seconds": total_time,
+        },
+        "items": items,
+    }
