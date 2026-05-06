@@ -54,5 +54,12 @@ window.ShadowWritingLoader = window.ShadowWritingLoader || {};
 })();
 
 window.showShadowWritingEntry = function () {
+  if (!window.VoxiAuthGate?.requireAuth?.({
+    feature: "shadow-writing",
+    onSuccess: () => window.showShadowWritingEntry(),
+  })) {
+    return;
+  }
+
   ShadowWritingLoader.start();
 };

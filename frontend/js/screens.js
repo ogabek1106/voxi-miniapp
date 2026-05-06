@@ -84,10 +84,24 @@ window.showMocksScreen = function () {
 };
 
 window.showMocksEntry = function () {
+  if (!window.VoxiAuthGate?.requireAuth?.({
+    feature: "full-mock",
+    onSuccess: () => window.showMocksEntry(),
+  })) {
+    return;
+  }
+
   window.showMocksScreen();
 };
 
 window.showReadingEntry = async function () {
+  if (!window.VoxiAuthGate?.requireAuth?.({
+    feature: "reading",
+    onSuccess: () => window.showReadingEntry(),
+  })) {
+    return;
+  }
+
   try {
     const mocks = await apiGet("/mock/list");
     if (!Array.isArray(mocks) || !mocks.length) {
@@ -117,6 +131,13 @@ window.showReadingEntry = async function () {
 };
 
 window.showWritingEntry = async function () {
+  if (!window.VoxiAuthGate?.requireAuth?.({
+    feature: "writing",
+    onSuccess: () => window.showWritingEntry(),
+  })) {
+    return;
+  }
+
   try {
     const mocks = await apiGet("/mock/writing-list");
     if (!Array.isArray(mocks) || !mocks.length) {
@@ -151,6 +172,13 @@ window.showWritingEntry = async function () {
 };
 
 window.showSpeakingEntry = async function () {
+  if (!window.VoxiAuthGate?.requireAuth?.({
+    feature: "speaking",
+    onSuccess: () => window.showSpeakingEntry(),
+  })) {
+    return;
+  }
+
   try {
     const mocks = await apiGet("/mock/speaking-list");
     if (!Array.isArray(mocks) || !mocks.length) {
@@ -185,6 +213,13 @@ window.showSpeakingEntry = async function () {
 };
 
 window.showListeningEntry = async function () {
+  if (!window.VoxiAuthGate?.requireAuth?.({
+    feature: "listening",
+    onSuccess: () => window.showListeningEntry(),
+  })) {
+    return;
+  }
+
   try {
     const mocks = await apiGet("/mock/list");
     if (!Array.isArray(mocks) || !mocks.length) {
