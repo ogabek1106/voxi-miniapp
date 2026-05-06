@@ -44,6 +44,20 @@
   background: #DDF3FF;
 }
 
+.listening-block-visual {
+  width: min(100%, 680px);
+  margin: 12px auto 18px;
+  text-align: center;
+}
+
+.listening-block-visual .image-questions-image {
+  width: auto;
+  max-width: 100%;
+  max-height: min(46vh, 420px);
+  object-fit: contain;
+  margin: 0 auto;
+}
+
 .admin-audio-play-icon {
   margin-left: 2px;
   font-size: 15px !important;
