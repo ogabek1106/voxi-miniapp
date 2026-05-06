@@ -36,9 +36,13 @@ window.ShadowWritingUI = window.ShadowWritingUI || {};
           </div>
         </div>
 
+        <div id="shadow-writing-stats" class="shadow-stats-wrap" hidden></div>
+
         <div class="shadow-essay-card" onclick="document.getElementById('shadow-writing-input')?.focus({ preventScroll: true })">
           <div id="shadow-writing-target" class="shadow-target" aria-label="Essay text"></div>
         </div>
+
+        <div id="shadow-writing-result-actions" class="shadow-writing-result-actions" hidden></div>
 
         <textarea id="shadow-writing-input" class="shadow-hidden-input" aria-hidden="true" autocomplete="off" autocapitalize="off" spellcheck="false"></textarea>
       </div>
@@ -60,6 +64,18 @@ window.ShadowWritingUI = window.ShadowWritingUI || {};
       console.error("Shadow Writing complete error:", error);
     }
     ShadowWritingState.set({ completed: true, result: stats });
-    if (screen) screen.innerHTML = ShadowWritingResult.render(stats, essay);
+    const statsEl = document.getElementById("shadow-writing-stats");
+    const topActions = document.querySelector(".shadow-writing-head .shadow-writing-actions");
+    const resultActions = document.getElementById("shadow-writing-result-actions");
+
+    if (statsEl) {
+      statsEl.innerHTML = ShadowWritingResult.renderStats(stats, essay);
+      statsEl.hidden = false;
+    }
+    if (topActions) topActions.remove();
+    if (resultActions) {
+      resultActions.innerHTML = ShadowWritingResult.renderActions();
+      resultActions.hidden = false;
+    }
   };
 })();

@@ -121,28 +121,39 @@
   color: #b91c1c;
 }
 
+.shadow-stats-wrap {
+  margin: 14px 0;
+}
+
 .shadow-result-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .shadow-result-card {
-  padding: 16px;
+  padding: 10px 12px;
 }
 
 .shadow-result-card span {
   display: block;
   color: #667584;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 900;
 }
 
 .shadow-result-card strong {
   display: block;
-  margin-top: 5px;
-  font-size: 26px;
+  margin-top: 3px;
+  font-size: 16px;
   font-weight: 950;
+  white-space: nowrap;
+}
+
+.shadow-writing-result-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
 }
 
 .shadow-history-list {
@@ -204,7 +215,9 @@
     margin: 0 auto;
   }
 
-  .shadow-secondary-btn {
+  .shadow-primary-btn,
+  .shadow-secondary-btn,
+  .shadow-finish-btn {
     width: auto;
     min-width: 132px;
     padding-left: 22px;
@@ -235,5 +248,14 @@
   .shadow-writing-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
+  }
+
+  .shadow-result-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .shadow-writing-result-actions {
+    display: grid;
+    grid-template-columns: 1fr;
   }
 }
