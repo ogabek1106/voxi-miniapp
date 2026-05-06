@@ -12,23 +12,28 @@ window.ShadowWritingUI = window.ShadowWritingUI || {};
 
   ShadowWritingUI.renderPractice = function (attempt) {
     const essay = attempt?.essay || {};
+    const meta = [
+      essay.title || "Untitled Essay",
+      essay.level || "",
+      essay.theme || ""
+    ].filter(Boolean).map(ShadowWritingUI.escape).join(" &middot; ");
+
     return `
       <div class="shadow-writing-screen">
         <div class="shadow-writing-head">
           <h2>Shadow Writing</h2>
-          <p>${ShadowWritingUI.escape(essay.title || "Untitled Essay")} · ${ShadowWritingUI.escape(essay.level || "")} · ${ShadowWritingUI.escape(essay.theme || "")}</p>
+          <p>${meta}</p>
+          <div class="shadow-writing-actions">
+            <button class="shadow-secondary-btn" onclick="ShadowWritingTyping.cleanup(); ShadowWritingHistory.show()">History</button>
+            <button class="shadow-secondary-btn" onclick="ShadowWritingTyping.cleanup(); goHome()">Back</button>
+          </div>
         </div>
 
-        <div class="shadow-essay-card">
+        <div class="shadow-essay-card" onclick="document.getElementById('shadow-writing-input')?.focus({ preventScroll: true })">
           <div id="shadow-writing-target" class="shadow-target" aria-label="Essay text"></div>
         </div>
 
-        <textarea id="shadow-writing-input" class="shadow-input" placeholder="Start typing the essay here..." autocomplete="off" autocapitalize="off" spellcheck="false"></textarea>
-
-        <div class="shadow-writing-actions">
-          <button class="shadow-secondary-btn" onclick="ShadowWritingHistory.show()">History</button>
-          <button class="shadow-secondary-btn" onclick="goHome()">Back</button>
-        </div>
+        <textarea id="shadow-writing-input" class="shadow-hidden-input" aria-hidden="true" autocomplete="off" autocapitalize="off" spellcheck="false"></textarea>
       </div>
     `;
   };

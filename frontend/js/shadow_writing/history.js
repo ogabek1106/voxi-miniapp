@@ -34,6 +34,7 @@ window.ShadowWritingHistory = window.ShadowWritingHistory || {};
   ShadowWritingHistory.show = async function () {
     const screen = document.getElementById("screen-mocks");
     if (!screen) return;
+    screen.classList.add("shadow-writing-host");
     screen.innerHTML = `<div class="shadow-writing-screen"><p class="shadow-muted">Loading history...</p></div>`;
 
     try {

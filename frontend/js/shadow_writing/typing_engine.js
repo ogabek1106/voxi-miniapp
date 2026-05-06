@@ -12,7 +12,7 @@ window.ShadowWritingTyping = window.ShadowWritingTyping || {};
 
   function renderTarget(text, typed) {
     const chars = Array.from(String(text || ""));
-    const typedChars = Array.from(String(typed || ""));
+    const typedChars = Array.isArray(typed) ? typed : Array.from(String(typed || ""));
     return chars.map((char, index) => {
       const typedChar = typedChars[index];
       let cls = "shadow-char";
@@ -24,7 +24,7 @@ window.ShadowWritingTyping = window.ShadowWritingTyping || {};
 
   function calculate(text, typed, startedAt) {
     const targetChars = Array.from(String(text || ""));
-    const typedChars = Array.from(String(typed || "")).slice(0, targetChars.length);
+    const typedChars = (Array.isArray(typed) ? typed : Array.from(String(typed || ""))).slice(0, targetChars.length);
     let mistakes = 0;
     typedChars.forEach((char, index) => {
       if (char !== targetChars[index]) mistakes += 1;
@@ -43,24 +43,103 @@ window.ShadowWritingTyping = window.ShadowWritingTyping || {};
 
   ShadowWritingTyping.renderTarget = renderTarget;
   ShadowWritingTyping.calculate = calculate;
+  ShadowWritingTyping.cleanup = ShadowWritingTyping.cleanup || function () {};
 
-  ShadowWritingTyping.bind = function ({ essay, output, input, onComplete }) {
-    if (!essay || !output || !input) return;
+  ShadowWritingTyping.bind = function ({ essay, output, mobileInput, onComplete }) {
+    if (!essay || !output) return;
+    ShadowWritingTyping.cleanup();
     const targetText = String(essay.text || "");
-    output.innerHTML = renderTarget(targetText, "");
-    input.value = "";
-    input.focus();
+    const targetChars = Array.from(targetText);
+    const typedChars = [];
+    let completed = false;
 
-    input.addEventListener("input", () => {
-      if (input.value.length > targetText.length) {
-        input.value = input.value.slice(0, targetText.length);
-      }
-      output.innerHTML = renderTarget(targetText, input.value);
+    function focusMobileInput() {
+      if (!mobileInput || completed) return;
+      mobileInput.focus({ preventScroll: true });
+    }
 
-      if (input.value.length >= targetText.length) {
-        input.disabled = true;
-        onComplete?.(calculate(targetText, input.value, ShadowWritingState.get().startedAt));
+    function rerender() {
+      output.innerHTML = renderTarget(targetText, typedChars);
+    }
+
+    function completeIfReady() {
+      if (completed || typedChars.length < targetChars.length) return;
+      completed = true;
+      if (mobileInput) mobileInput.disabled = true;
+      ShadowWritingTyping.cleanup();
+      onComplete?.(calculate(targetText, typedChars, ShadowWritingState.get().startedAt));
+    }
+
+    function addChar(char) {
+      if (completed || typedChars.length >= targetChars.length) return;
+      typedChars.push(char);
+      rerender();
+      completeIfReady();
+    }
+
+    function backspace() {
+      if (completed || typedChars.length <= 0) return;
+      typedChars.pop();
+      rerender();
+    }
+
+    function handleKeydown(event) {
+      if (completed) return;
+      if (event.ctrlKey || event.metaKey || event.altKey) return;
+
+      if (event.key === "Backspace") {
+        event.preventDefault();
+        backspace();
+        return;
       }
-    });
+
+      if (event.key === "Enter") {
+        event.preventDefault();
+        addChar("\n");
+        return;
+      }
+
+      if (event.key === " ") {
+        event.preventDefault();
+        addChar(" ");
+        return;
+      }
+
+      if (event.key && event.key.length === 1) {
+        event.preventDefault();
+        addChar(event.key);
+      }
+    }
+
+    rerender();
+    output.tabIndex = 0;
+    output.addEventListener("click", focusMobileInput);
+    output.addEventListener("touchstart", focusMobileInput, { passive: true });
+    document.addEventListener("keydown", handleKeydown);
+    ShadowWritingTyping.cleanup = function () {
+      document.removeEventListener("keydown", handleKeydown);
+      output.removeEventListener("click", focusMobileInput);
+      output.removeEventListener("touchstart", focusMobileInput);
+      ShadowWritingTyping.cleanup = function () {};
+    };
+
+    if (mobileInput) {
+      mobileInput.value = "";
+      mobileInput.disabled = false;
+      mobileInput.addEventListener("input", () => {
+        const value = mobileInput.value || "";
+        if (!value) return;
+        Array.from(value).forEach((char) => addChar(char));
+        mobileInput.value = "";
+      });
+      mobileInput.addEventListener("keydown", (event) => {
+        if (event.key === "Backspace") {
+          event.preventDefault();
+          event.stopPropagation();
+          backspace();
+        }
+      });
+      window.setTimeout(focusMobileInput, 80);
+    }
   };
 })();

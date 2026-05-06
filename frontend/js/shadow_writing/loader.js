@@ -7,6 +7,7 @@ window.ShadowWritingLoader = window.ShadowWritingLoader || {};
     if (typeof setBottomNavVisible === "function") setBottomNavVisible(false);
     const screen = document.getElementById("screen-mocks");
     if (screen) {
+      screen.classList.add("shadow-writing-host");
       screen.style.display = "block";
       screen.innerHTML = `<div class="shadow-writing-screen"><p class="shadow-muted">Preparing essay...</p></div>`;
     }
@@ -34,7 +35,7 @@ window.ShadowWritingLoader = window.ShadowWritingLoader || {};
       ShadowWritingTyping.bind({
         essay: attempt.essay,
         output: document.getElementById("shadow-writing-target"),
-        input: document.getElementById("shadow-writing-input"),
+        mobileInput: document.getElementById("shadow-writing-input"),
         onComplete: ShadowWritingUI.showResult,
       });
     } catch (error) {

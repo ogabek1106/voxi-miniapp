@@ -36,6 +36,7 @@ function hideAllScreens() {
   if (screenReading) screenReading.style.display = "none";
   if (screenWriting) screenWriting.style.display = "none";
   if (screenSpeaking) screenSpeaking.style.display = "none";
+  if (screenMocks) screenMocks.classList.remove("shadow-writing-host");
 }
 window.hideAllScreens = hideAllScreens;
 function setBottomNavVisible(visible) {
