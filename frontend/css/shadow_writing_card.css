@@ -7,6 +7,17 @@
   z-index: 1;
 }
 
+body #screen-home .home-card::before {
+  background:
+    radial-gradient(circle 96px at var(--x) var(--y), rgba(0, 186, 255, 0.58) 0%, rgba(0, 186, 255, 0.40) 34%, rgba(0, 186, 255, 0.22) 58%, transparent 76%),
+    radial-gradient(circle 210px at var(--x) var(--y), rgba(0, 186, 255, 0.26) 0%, rgba(0, 186, 255, 0.15) 44%, transparent 78%);
+}
+
+body #screen-home .home-card.is-interacting::before,
+body #screen-home .home-card:hover::before {
+  opacity: 1;
+}
+
 #screen-home .home-card--shadow-writing-feature {
   position: relative;
   z-index: 2;
