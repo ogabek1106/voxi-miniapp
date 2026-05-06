@@ -55,7 +55,7 @@
   font-family: "Nunito", "Inter", system-ui, sans-serif;
   font-size: 22px;
   line-height: 2;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.01em;
   white-space: pre-wrap;
   color: #9aa7b8;
@@ -98,7 +98,8 @@
 }
 
 .shadow-primary-btn,
-.shadow-secondary-btn {
+.shadow-secondary-btn,
+.shadow-finish-btn {
   height: 52px;
   margin-top: 0;
   border-radius: 20px;
@@ -115,6 +116,11 @@
 .shadow-secondary-btn {
   background: #ffffff;
   color: #17212B;
+}
+
+.shadow-finish-btn {
+  background: #fee2e2;
+  color: #b91c1c;
 }
 
 .shadow-result-grid {

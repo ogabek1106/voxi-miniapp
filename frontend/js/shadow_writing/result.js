@@ -18,6 +18,7 @@ window.ShadowWritingResult = window.ShadowWritingResult || {};
 
         <div class="shadow-result-grid">
           <div class="shadow-result-card"><span>Time</span><strong>${formatTime(result?.time_seconds)}</strong></div>
+          <div class="shadow-result-card"><span>Speed</span><strong>${Number(result?.wpm || 0)} WPM</strong></div>
           <div class="shadow-result-card"><span>Accuracy</span><strong>${Number(result?.accuracy || 0)}%</strong></div>
           <div class="shadow-result-card"><span>Mistakes</span><strong>${Number(result?.mistakes_count || 0)}</strong></div>
           <div class="shadow-result-card"><span>Typed</span><strong>${Number(result?.typed_chars || 0)}</strong></div>

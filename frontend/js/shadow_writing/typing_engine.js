@@ -10,7 +10,7 @@ window.ShadowWritingTyping = window.ShadowWritingTyping || {};
       .replace(/'/g, "&#039;");
   }
 
-  function renderTarget(text, typed) {
+  function renderTarget(text, typed, options = {}) {
     const chars = Array.from(String(text || ""));
     const typedChars = Array.isArray(typed) ? typed : Array.from(String(typed || ""));
     return chars.map((char, index) => {
@@ -18,6 +18,8 @@ window.ShadowWritingTyping = window.ShadowWritingTyping || {};
       const classes = ["shadow-char"];
       if (typedChar !== undefined) {
         classes.push(typedChar === char ? "sw-char--correct" : "sw-char--wrong");
+      } else if (options.markRemainingWrong) {
+        classes.push("sw-char--wrong");
       } else {
         classes.push("sw-char--pending");
         if (index === typedChars.length) classes.push("sw-char--current");
@@ -27,28 +29,38 @@ window.ShadowWritingTyping = window.ShadowWritingTyping || {};
     }).join("");
   }
 
-  function calculate(text, typed, startedAt) {
+  function calculate(text, typed, startedAt, options = {}) {
     const targetChars = Array.from(String(text || ""));
     const typedChars = (Array.isArray(typed) ? typed : Array.from(String(typed || ""))).slice(0, targetChars.length);
     let mistakes = 0;
     typedChars.forEach((char, index) => {
       if (char !== targetChars[index]) mistakes += 1;
     });
+    const totalChars = targetChars.length;
     const typedCount = typedChars.length;
-    const correct = Math.max(0, typedCount - mistakes);
-    const accuracy = typedCount > 0 ? Math.round((correct / typedCount) * 1000) / 10 : 0;
+    const wrongTypedCount = mistakes;
+    const untypedCount = Math.max(0, totalChars - typedCount);
+    const correct = Math.max(0, typedCount - wrongTypedCount);
+    if (options.forceFinish) mistakes = wrongTypedCount + untypedCount;
+    const denominator = options.forceFinish ? totalChars : typedCount;
+    const accuracy = denominator > 0 ? Math.round((correct / denominator) * 1000) / 10 : 0;
     const elapsed = Math.max(0, Math.round((Date.now() - Number(startedAt || Date.now())) / 1000));
+    const minutes = elapsed > 0 ? elapsed / 60 : 0;
+    const wpm = minutes > 0 ? Math.round(((typedCount / 5) / minutes) * 10) / 10 : 0;
     return {
       time_seconds: elapsed,
       accuracy,
       mistakes_count: mistakes,
       typed_chars: typedCount,
+      total_chars: totalChars,
+      wpm,
     };
   }
 
   ShadowWritingTyping.renderTarget = renderTarget;
   ShadowWritingTyping.calculate = calculate;
   ShadowWritingTyping.cleanup = ShadowWritingTyping.cleanup || function () {};
+  ShadowWritingTyping.finishNow = ShadowWritingTyping.finishNow || function () {};
 
   ShadowWritingTyping.bind = function ({ essay, output, mobileInput, onComplete }) {
     if (!essay || !output) return;
@@ -73,6 +85,16 @@ window.ShadowWritingTyping = window.ShadowWritingTyping || {};
       if (mobileInput) mobileInput.disabled = true;
       ShadowWritingTyping.cleanup();
       onComplete?.(calculate(targetText, typedChars, ShadowWritingState.get().startedAt));
+    }
+
+    function forceFinish() {
+      if (completed) return;
+      completed = true;
+      if (mobileInput) mobileInput.disabled = true;
+      output.innerHTML = renderTarget(targetText, typedChars, { markRemainingWrong: true });
+      const stats = calculate(targetText, typedChars, ShadowWritingState.get().startedAt, { forceFinish: true });
+      ShadowWritingTyping.cleanup();
+      window.setTimeout(() => onComplete?.(stats), 120);
     }
 
     function addChar(char) {
@@ -146,7 +168,9 @@ window.ShadowWritingTyping = window.ShadowWritingTyping || {};
       output.removeEventListener("click", focusMobileInput);
       output.removeEventListener("touchstart", focusMobileInput);
       ShadowWritingTyping.cleanup = function () {};
+      ShadowWritingTyping.finishNow = function () {};
     };
+    ShadowWritingTyping.finishNow = forceFinish;
 
     if (mobileInput) {
       mobileInput.value = "";

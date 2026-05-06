@@ -1,6 +1,12 @@
 window.ShadowWritingUI = window.ShadowWritingUI || {};
 
 (function () {
+  function isAdmin() {
+    if (window.__isAdmin) return true;
+    const websiteUser = window.WebsiteAuthState?.getUser?.();
+    return Boolean(websiteUser?.is_admin);
+  }
+
   ShadowWritingUI.escape = function (value) {
     return String(value ?? "")
       .replace(/&/g, "&amp;")
@@ -25,6 +31,7 @@ window.ShadowWritingUI = window.ShadowWritingUI || {};
           <p>${meta}</p>
           <div class="shadow-writing-actions">
             <button class="shadow-secondary-btn" onclick="ShadowWritingTyping.cleanup(); ShadowWritingHistory.show()">History</button>
+            ${isAdmin() ? `<button class="shadow-finish-btn" onclick="ShadowWritingTyping.finishNow()">Finish Now</button>` : ""}
             <button class="shadow-secondary-btn" onclick="ShadowWritingTyping.cleanup(); goHome()">Back</button>
           </div>
         </div>
