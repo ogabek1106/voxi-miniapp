@@ -1,5 +1,14 @@
+.shadow-writing-feature-wrap {
+  position: relative;
+  grid-column: 1 / -1;
+  overflow: visible;
+  z-index: 1;
+}
+
 #screen-home .home-card--shadow-writing-feature {
   position: relative;
+  z-index: 2;
+  width: 100%;
   min-height: 128px;
   overflow: hidden;
   background: #ffffff;
@@ -8,19 +17,48 @@
   transition: box-shadow 180ms ease;
 }
 
-#screen-home .home-card--shadow-writing-feature::after {
-  content: "";
+.shadow-writing-bubbles {
   position: absolute;
   inset: 0;
-  z-index: 0;
+  z-index: 1;
   pointer-events: none;
-  background:
-    radial-gradient(circle at 18% 58%, rgba(239, 68, 68, 0.16) 0 0, transparent 34px),
-    radial-gradient(circle at 52% 35%, rgba(239, 68, 68, 0.12) 0 0, transparent 46px),
-    radial-gradient(circle at 78% 62%, rgba(239, 68, 68, 0.10) 0 0, transparent 40px);
+  overflow: visible;
+}
+
+.sw-bubble {
+  position: absolute;
+  width: var(--size, 16px);
+  height: var(--size, 16px);
+  left: var(--left, 50%);
+  top: var(--top, 50%);
+  border-radius: 50%;
+  background: var(--color, rgba(239, 68, 68, 0.45));
+  box-shadow: 0 0 18px rgba(239, 68, 68, 0.20);
   opacity: 0;
-  transform: scale(0.84);
-  animation: shadowWritingBubbles 4.8s ease-in-out infinite;
+  filter: blur(var(--blur, 0px));
+  transform: translate(0, 0) scale(0.4);
+  animation: shadowWritingBubbleOut 4.8s ease-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+.sw-bubble.b1 { --left: 8%; --top: 26%; --x: -58px; --y: -30px; --size: 13px; --delay: 0s; --color: rgba(239, 68, 68, 0.48); }
+.sw-bubble.b2 { --left: 23%; --top: 10%; --x: -26px; --y: -54px; --size: 18px; --delay: 0.06s; --color: rgba(248, 113, 113, 0.44); --blur: 0.3px; }
+.sw-bubble.b3 { --left: 48%; --top: 7%; --x: 10px; --y: -62px; --size: 12px; --delay: 0.14s; --color: rgba(220, 38, 38, 0.42); }
+.sw-bubble.b4 { --left: 78%; --top: 14%; --x: 44px; --y: -48px; --size: 15px; --delay: 0.04s; --color: rgba(239, 68, 68, 0.46); }
+.sw-bubble.b5 { --left: 94%; --top: 34%; --x: 62px; --y: -22px; --size: 20px; --delay: 0.11s; --color: rgba(248, 113, 113, 0.40); --blur: 0.5px; }
+.sw-bubble.b6 { --left: 7%; --top: 54%; --x: -64px; --y: 8px; --size: 17px; --delay: 0.18s; --color: rgba(220, 38, 38, 0.39); }
+.sw-bubble.b7 { --left: 18%; --top: 82%; --x: -42px; --y: 48px; --size: 14px; --delay: 0.09s; --color: rgba(239, 68, 68, 0.45); }
+.sw-bubble.b8 { --left: 42%; --top: 94%; --x: -10px; --y: 60px; --size: 18px; --delay: 0.22s; --color: rgba(248, 113, 113, 0.43); }
+.sw-bubble.b9 { --left: 66%; --top: 88%; --x: 30px; --y: 54px; --size: 13px; --delay: 0.02s; --color: rgba(220, 38, 38, 0.43); }
+.sw-bubble.b10 { --left: 91%; --top: 74%; --x: 64px; --y: 34px; --size: 16px; --delay: 0.16s; --color: rgba(239, 68, 68, 0.47); }
+.sw-bubble.b11 { --left: 36%; --top: 38%; --x: -34px; --y: -18px; --size: 10px; --delay: 0.26s; --color: rgba(248, 113, 113, 0.50); }
+.sw-bubble.b12 { --left: 58%; --top: 46%; --x: 38px; --y: -8px; --size: 11px; --delay: 0.2s; --color: rgba(239, 68, 68, 0.46); }
+.sw-bubble.b13 { --left: 30%; --top: 62%; --x: -20px; --y: 38px; --size: 12px; --delay: 0.12s; --color: rgba(220, 38, 38, 0.40); }
+.sw-bubble.b14 { --left: 73%; --top: 54%; --x: 52px; --y: 18px; --size: 14px; --delay: 0.28s; --color: rgba(248, 113, 113, 0.42); }
+
+#screen-home .home-card--shadow-writing-feature > * {
+  position: relative;
+  z-index: 3;
 }
 
 #screen-home .home-card--shadow-writing-feature:hover,
@@ -65,7 +103,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  #screen-home .home-card--shadow-writing-feature::after,
+  .sw-bubble,
   #screen-home .home-card--shadow-writing-feature {
     animation: none;
   }
@@ -86,17 +124,17 @@
   }
 }
 
-@keyframes shadowWritingBubbles {
-  0%, 80%, 100% {
+@keyframes shadowWritingBubbleOut {
+  0%, 78% {
     opacity: 0;
-    transform: scale(0.84);
+    transform: translate(0, 0) scale(0.4);
   }
-  86% {
-    opacity: 0.52;
-    transform: scale(0.96);
+  82% {
+    opacity: 0.86;
+    transform: translate(0, 0) scale(0.72);
   }
-  96% {
+  94%, 100% {
     opacity: 0;
-    transform: scale(1.2);
+    transform: translate(var(--x), var(--y)) scale(1.45);
   }
 }
