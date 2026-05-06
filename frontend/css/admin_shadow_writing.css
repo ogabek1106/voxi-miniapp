@@ -1,0 +1,129 @@
+.admin-shadow-screen {
+  width: 100%;
+  min-height: 100%;
+  box-sizing: border-box;
+  padding: 10px 0 24px;
+  text-align: left;
+  color: #17212B;
+}
+
+.admin-shadow-head h2 {
+  margin: 0;
+  font-size: 26px;
+  line-height: 1.08;
+  font-weight: 950;
+}
+
+.admin-shadow-head p,
+.admin-shadow-muted,
+.admin-shadow-meta,
+.admin-shadow-preview {
+  color: #667584;
+  font-weight: 800;
+}
+
+.admin-shadow-head p {
+  margin: 7px 0 14px;
+  font-size: 14px;
+}
+
+.admin-shadow-primary,
+.admin-shadow-secondary,
+.admin-shadow-delete {
+  height: 52px;
+  border-radius: 20px;
+  font-weight: 950;
+}
+
+.admin-shadow-primary {
+  background: #00baff;
+  color: #ffffff;
+}
+
+.admin-shadow-secondary {
+  background: #ffffff;
+  color: #17212B;
+}
+
+.admin-shadow-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-shadow-form label {
+  margin-top: 8px;
+  color: #667584;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.admin-shadow-form input,
+.admin-shadow-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(20, 40, 60, 0.08);
+  border-radius: 18px;
+  padding: 14px;
+  background: #ffffff;
+  color: #17212B;
+  font: 800 15px/1.45 Nunito, Manrope, system-ui, sans-serif;
+  outline: none;
+}
+
+.admin-shadow-form textarea {
+  min-height: 240px;
+  resize: vertical;
+}
+
+.admin-shadow-library {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-shadow-essay-card,
+.admin-shadow-empty {
+  background: #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 14px 34px rgba(20, 40, 60, 0.08);
+  border: 1px solid rgba(20, 40, 60, 0.05);
+}
+
+.admin-shadow-essay-card {
+  padding: 16px;
+}
+
+.admin-shadow-essay-card h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.admin-shadow-meta {
+  margin: 5px 0 0;
+  font-size: 13px;
+}
+
+.admin-shadow-preview {
+  margin: 10px 0 0;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.admin-shadow-delete {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.admin-shadow-empty {
+  padding: 18px;
+  text-align: center;
+}
+
+@media (min-width: 720px) {
+  .admin-shadow-screen {
+    max-width: 780px;
+    margin: 0 auto;
+  }
+}

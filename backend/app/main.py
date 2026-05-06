@@ -21,6 +21,8 @@ from app.api.speaking import router as speaking_router
 from app.api.full_mock import router as full_mock_router
 from app.api.vcoins import router as vcoins_router
 from app.api.announcement import router as announcement_router
+from app.api.admin_shadow_writing import router as admin_shadow_writing_router
+from app.api.shadow_writing import router as shadow_writing_router
 from app.api.auth import router as auth_router
 from app.api.auth_google import router as auth_google_router
 from .db import (
@@ -34,7 +36,8 @@ from .db import (
     ensure_full_mock_results_schema,
     ensure_vcoin_schema,
     ensure_announcement_schema,
-    ensure_user_auth_schema
+    ensure_user_auth_schema,
+    ensure_shadow_writing_schema
 )
 from app.api.admin_upload import router as admin_upload_router
 from app.api.result_images import router as result_images_router
@@ -53,6 +56,7 @@ ensure_full_mock_results_schema()
 ensure_vcoin_schema()
 ensure_user_auth_schema()
 ensure_announcement_schema()
+ensure_shadow_writing_schema()
 app = FastAPI(title="Voxi Mini App API")
 app.include_router(mock_list.router)
 app.include_router(admin_upload_router)
@@ -71,6 +75,8 @@ app.include_router(admin_mock_packs.router)
 app.include_router(result_images_router)
 app.include_router(vcoins_router)
 app.include_router(announcement_router)
+app.include_router(admin_shadow_writing_router)
+app.include_router(shadow_writing_router)
 app.include_router(auth_router)
 app.include_router(auth_google_router)
 app.mount("/media", StaticFiles(directory="/data/media"), name="media")

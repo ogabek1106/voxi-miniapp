@@ -31,6 +31,41 @@ class AppAnnouncement(Base):
     updated_at = Column(DateTime(timezone=True), nullable=True)
 
 
+class ShadowWritingEssay(Base):
+    __tablename__ = "shadow_writing_essays"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=True)
+    level = Column(String, nullable=False)
+    theme = Column(String, nullable=False)
+    text = Column(Text, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    attempts = relationship(
+        "ShadowWritingAttempt",
+        back_populates="essay",
+        cascade="all, delete-orphan",
+        passive_deletes=True
+    )
+
+
+class ShadowWritingAttempt(Base):
+    __tablename__ = "shadow_writing_attempts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    telegram_id = Column(BigInteger, index=True, nullable=False)
+    essay_id = Column(Integer, ForeignKey("shadow_writing_essays.id", ondelete="CASCADE"), nullable=False)
+    started_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+    time_seconds = Column(Integer, nullable=True)
+    accuracy = Column(Float, nullable=True)
+    mistakes_count = Column(Integer, nullable=True)
+    typed_chars = Column(Integer, nullable=True)
+
+    essay = relationship("ShadowWritingEssay", back_populates="attempts")
+
+
 class ReadingTestStatus(enum.Enum):
     draft = "draft"
     published = "published"

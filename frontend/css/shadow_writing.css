@@ -1,0 +1,196 @@
+.shadow-writing-screen {
+  width: 100%;
+  min-height: 100%;
+  box-sizing: border-box;
+  padding: 10px 0 24px;
+  text-align: left;
+  color: #17212B;
+}
+
+.shadow-writing-head {
+  margin: 4px 0 14px;
+  text-align: left;
+}
+
+.shadow-writing-head h2 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.05;
+  font-weight: 950;
+  letter-spacing: 0;
+}
+
+.shadow-writing-head p,
+.shadow-muted {
+  margin: 7px 0 0;
+  color: #667584;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.shadow-essay-card,
+.shadow-result-card,
+.shadow-history-item,
+.shadow-empty {
+  background: #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 14px 34px rgba(20, 40, 60, 0.08);
+  border: 1px solid rgba(20, 40, 60, 0.05);
+}
+
+.shadow-essay-card {
+  padding: 18px;
+}
+
+.shadow-target {
+  font-size: 18px;
+  line-height: 1.75;
+  font-weight: 800;
+  white-space: pre-wrap;
+  color: #94a3b8;
+}
+
+.shadow-char.is-correct {
+  color: #17212B;
+}
+
+.shadow-char.is-wrong {
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.08);
+  border-radius: 5px;
+}
+
+.shadow-char.is-current {
+  border-bottom: 3px solid #00baff;
+  color: #17212B;
+}
+
+.shadow-input {
+  width: 100%;
+  min-height: 140px;
+  resize: vertical;
+  margin-top: 14px;
+  padding: 16px;
+  border: 1px solid rgba(20, 40, 60, 0.08);
+  border-radius: 22px;
+  background: #ffffff;
+  color: #17212B;
+  font: 800 16px/1.55 Nunito, Manrope, system-ui, sans-serif;
+  box-shadow: 0 12px 28px rgba(20, 40, 60, 0.06);
+  box-sizing: border-box;
+  outline: none;
+}
+
+.shadow-input:focus {
+  border-color: rgba(0, 186, 255, 0.55);
+}
+
+.shadow-writing-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.shadow-primary-btn,
+.shadow-secondary-btn {
+  height: 52px;
+  margin-top: 14px;
+  border-radius: 20px;
+  font-size: 15px;
+  font-weight: 950;
+  box-shadow: 0 10px 26px rgba(20, 40, 60, 0.08);
+}
+
+.shadow-primary-btn {
+  background: #00baff;
+  color: #fff;
+}
+
+.shadow-secondary-btn {
+  background: #ffffff;
+  color: #17212B;
+}
+
+.shadow-result-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.shadow-result-card {
+  padding: 16px;
+}
+
+.shadow-result-card span {
+  display: block;
+  color: #667584;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.shadow-result-card strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 26px;
+  font-weight: 950;
+}
+
+.shadow-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.shadow-history-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 15px;
+}
+
+.shadow-history-item strong,
+.shadow-history-item span,
+.shadow-history-item small,
+.shadow-history-score b {
+  display: block;
+}
+
+.shadow-history-item strong {
+  font-size: 15px;
+  font-weight: 950;
+}
+
+.shadow-history-item span,
+.shadow-history-item small,
+.shadow-history-score span {
+  margin-top: 3px;
+  color: #667584;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.shadow-history-score {
+  text-align: right;
+  flex: 0 0 auto;
+}
+
+.shadow-history-score b {
+  color: #00a2df;
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.shadow-empty {
+  padding: 18px;
+  text-align: center;
+  color: #667584;
+  font-weight: 900;
+}
+
+@media (min-width: 720px) {
+  .shadow-writing-screen {
+    max-width: 880px;
+    margin: 0 auto;
+  }
+}

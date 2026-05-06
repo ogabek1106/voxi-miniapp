@@ -845,3 +845,92 @@ def ensure_announcement_schema():
             "ALTER TABLE app_announcements "
             "ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ;"
         ))
+
+
+def ensure_shadow_writing_schema():
+    with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS shadow_writing_essays ("
+            "id SERIAL PRIMARY KEY, "
+            "title VARCHAR NULL, "
+            "level VARCHAR NOT NULL, "
+            "theme VARCHAR NOT NULL, "
+            "text TEXT NOT NULL, "
+            "created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), "
+            "updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()"
+            ");"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_shadow_writing_essays_created_at "
+            "ON shadow_writing_essays (created_at);"
+        ))
+
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS shadow_writing_attempts ("
+            "id SERIAL PRIMARY KEY, "
+            "telegram_id BIGINT NOT NULL, "
+            "essay_id INTEGER NOT NULL, "
+            "started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), "
+            "completed_at TIMESTAMPTZ NULL, "
+            "time_seconds INTEGER NULL, "
+            "accuracy DOUBLE PRECISION NULL, "
+            "mistakes_count INTEGER NULL, "
+            "typed_chars INTEGER NULL"
+            ");"
+        ))
+        conn.execute(text(
+            "ALTER TABLE shadow_writing_attempts "
+            "ADD COLUMN IF NOT EXISTS telegram_id BIGINT;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE shadow_writing_attempts "
+            "ADD COLUMN IF NOT EXISTS essay_id INTEGER;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE shadow_writing_attempts "
+            "ADD COLUMN IF NOT EXISTS started_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"
+        ))
+        conn.execute(text(
+            "ALTER TABLE shadow_writing_attempts "
+            "ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE shadow_writing_attempts "
+            "ADD COLUMN IF NOT EXISTS time_seconds INTEGER;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE shadow_writing_attempts "
+            "ADD COLUMN IF NOT EXISTS accuracy DOUBLE PRECISION;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE shadow_writing_attempts "
+            "ADD COLUMN IF NOT EXISTS mistakes_count INTEGER;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE shadow_writing_attempts "
+            "ADD COLUMN IF NOT EXISTS typed_chars INTEGER;"
+        ))
+        conn.execute(text(
+            "DO $$ "
+            "BEGIN "
+            "IF NOT EXISTS ("
+            "SELECT 1 FROM information_schema.table_constraints "
+            "WHERE constraint_name = 'shadow_writing_attempts_essay_id_fkey'"
+            ") THEN "
+            "ALTER TABLE shadow_writing_attempts "
+            "ADD CONSTRAINT shadow_writing_attempts_essay_id_fkey "
+            "FOREIGN KEY (essay_id) "
+            "REFERENCES shadow_writing_essays(id) "
+            "ON DELETE CASCADE; "
+            "END IF; "
+            "END "
+            "$$;"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_shadow_writing_attempts_telegram_id "
+            "ON shadow_writing_attempts (telegram_id);"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_shadow_writing_attempts_essay_id "
+            "ON shadow_writing_attempts (essay_id);"
+        ))

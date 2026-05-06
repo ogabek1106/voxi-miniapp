@@ -17,6 +17,8 @@
   <link rel="stylesheet" href="css/user_speaking.css">
   <link rel="stylesheet" href="css/admin_writing.css">
   <link rel="stylesheet" href="css/admin_speaking.css">
+  <link rel="stylesheet" href="css/shadow_writing.css?v=1">
+  <link rel="stylesheet" href="css/admin_shadow_writing.css?v=1">
   <link rel="icon" type="image/png" href="./assets/favicon.png">
   <link rel="apple-touch-icon" href="./assets/favicon.png">
   <title>EBAI Academy | IELTS Practice Platform</title>
@@ -1575,6 +1577,19 @@
                 <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
               </svg>
             </div>
+
+            <div class="home-card home-card--small" onclick="showShadowWritingEntry()" role="button" tabindex="0">
+              <span class="home-card-icon-wrap" aria-hidden="true">
+                <svg class="home-card-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M5 19h14M7 16l7.8-7.8a2 2 0 012.8 2.8L9.8 18.8 6 20l1-4z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>
+                  <path d="M13.5 9.5l2 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path>
+                </svg>
+              </span>
+              <h3 class="home-card-title">Shadow Writing</h3>
+              <svg class="home-card-arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </div>
           </div>
 
           <div class="home-admin-actions" id="home-admin-actions">
@@ -1748,12 +1763,24 @@
   <script src="/js/admin_writing/ui/tasks.js"></script>
   <script src="/js/admin_writing/ui/editor.js"></script>
   <script src="/js/admin_writing/loader/editor_loader.js"></script>
+  <script src="/js/admin_shadow_writing/api.js?v=1"></script>
+  <script src="/js/admin_shadow_writing/ui.js?v=1"></script>
+  <script src="/js/admin_shadow_writing/add_essay.js?v=1"></script>
+  <script src="/js/admin_shadow_writing/essay_library.js?v=1"></script>
+  <script src="/js/admin_shadow_writing/loader.js?v=1"></script>
   <script src="/js/admin_speaking/core/state.js"></script>
   <script src="/js/admin_speaking/api/speaking_api.js"></script>
   <script src="/js/admin_speaking/ui/parts.js"></script>
   <script src="/js/admin_speaking/ui/editor.js"></script>
   <script src="/js/admin_speaking/loader/editor_loader.js"></script>
   <script src="./js/admin_mock.js?v=1"></script>
+  <script src="./js/shadow_writing/state.js?v=1"></script>
+  <script src="./js/shadow_writing/api.js?v=1"></script>
+  <script src="./js/shadow_writing/typing_engine.js?v=1"></script>
+  <script src="./js/shadow_writing/result.js?v=1"></script>
+  <script src="./js/shadow_writing/history.js?v=1"></script>
+  <script src="./js/shadow_writing/ui.js?v=1"></script>
+  <script src="./js/shadow_writing/loader.js?v=1"></script>
   <script src="./js/app.js?v=6"></script>
   <script src="./js/vcoins_ui.js?v=5"></script>
   <script src="./js/website/components/profile_sheet.js?v=3"></script>
