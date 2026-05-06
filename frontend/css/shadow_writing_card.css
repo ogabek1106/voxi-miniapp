@@ -36,12 +36,36 @@
   top: var(--top, 50%);
   border-radius: 50%;
   background: var(--color, rgba(239, 68, 68, 0.74));
-  box-shadow: 0 0 18px rgba(239, 68, 68, 0.34);
+  box-shadow: 0 0 22px rgba(239, 68, 68, 0.44);
   opacity: 0;
   filter: blur(var(--blur, 0px));
   transform: translate(0, 0) scale(0.4);
   animation: shadowWritingBubbleOut 4.8s ease-out infinite;
   animation-delay: var(--delay, 0s);
+}
+
+.sw-bubble::before,
+.sw-bubble::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(220, 38, 38, 0.74);
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.34);
+}
+
+.sw-bubble::before {
+  width: 54%;
+  height: 54%;
+  left: -70%;
+  top: 18%;
+}
+
+.sw-bubble::after {
+  width: 42%;
+  height: 42%;
+  right: -62%;
+  bottom: -22%;
+  background: rgba(248, 113, 113, 0.72);
 }
 
 .sw-bubble.b1 { --left: 8%; --top: 26%; --x: -96px; --y: -52px; --size: 13px; --delay: 0s; --color: rgba(239, 68, 68, 0.80); }
@@ -133,10 +157,15 @@
 }
 
 #screen-home .home-card-feature-badge {
-  position: absolute;
-  top: 22px;
-  right: 28px;
-  z-index: 2;
+  position: absolute !important;
+  top: 22px !important;
+  right: 28px !important;
+  bottom: auto !important;
+  left: auto !important;
+  z-index: 10 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 6px 12px;
   border-radius: 999px;
   background: rgba(239, 68, 68, 0.08);
