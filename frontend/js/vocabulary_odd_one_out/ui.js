@@ -39,11 +39,13 @@ window.VocabularyOddOneOutUI = window.VocabularyOddOneOutUI || {};
     }
     screen.innerHTML = `
       <div class="vocab-ooo-screen">
-        <button class="vocab-ooo-back vocab-ooo-back--floating" onclick="goHome()" type="button">← Back</button>
-        <section class="vocab-ooo-hero" aria-labelledby="vocab-ooo-title">
-          <h2 id="vocab-ooo-title">Odd One Out</h2>
-          <p>Find the word that does not belong</p>
-        </section>
+        <div class="vocab-ooo-topbar">
+          <section class="vocab-ooo-hero" aria-labelledby="vocab-ooo-title">
+            <h2 id="vocab-ooo-title">Odd One Out</h2>
+            <p>Find the word that does not belong</p>
+          </section>
+          <button class="vocab-ooo-back vocab-ooo-back--floating" onclick="goHome()" type="button">&larr; Back</button>
+        </div>
         <section class="vocab-ooo-board" aria-label="Odd One Out puzzle board">
           <div class="vocab-ooo-grid">
             ${(set.words || []).map((word) => `
