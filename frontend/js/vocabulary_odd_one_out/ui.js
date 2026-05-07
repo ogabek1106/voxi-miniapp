@@ -17,6 +17,7 @@ window.VocabularyOddOneOutUI = window.VocabularyOddOneOutUI || {};
     const screen = document.getElementById("screen-mocks");
     if (screen) {
       screen.classList.remove("shadow-writing-host");
+      screen.classList.add("vocab-ooo-host");
       screen.style.display = "block";
     }
     return screen;

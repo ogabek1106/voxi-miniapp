@@ -1,6 +1,12 @@
+#screen-mocks.container.vocab-ooo-host {
+  width: 100% !important;
+  max-width: none !important;
+  text-align: left;
+}
+
 .vocab-ooo-screen {
-  width: calc(100% - 64px);
-  max-width: 1500px;
+  width: calc(100% - 192px);
+  max-width: none;
   margin: 0 auto;
   padding: 24px 0 40px;
   box-sizing: border-box;
@@ -238,6 +244,12 @@
   0% { transform: scale(1); }
   42% { transform: scale(1.035); }
   100% { transform: scale(1); }
+}
+
+@media (max-width: 1100px) {
+  .vocab-ooo-screen {
+    width: calc(100% - 48px);
+  }
 }
 
 @media (max-width: 720px) {

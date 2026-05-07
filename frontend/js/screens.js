@@ -37,6 +37,7 @@ function hideAllScreens() {
   if (screenWriting) screenWriting.style.display = "none";
   if (screenSpeaking) screenSpeaking.style.display = "none";
   if (screenMocks) screenMocks.classList.remove("shadow-writing-host");
+  if (screenMocks) screenMocks.classList.remove("vocab-ooo-host");
 }
 window.hideAllScreens = hideAllScreens;
 function setBottomNavVisible(visible) {
