@@ -39,21 +39,20 @@ window.VocabularyOddOneOutUI = window.VocabularyOddOneOutUI || {};
     }
     screen.innerHTML = `
       <div class="vocab-ooo-screen">
-        <div class="vocab-ooo-head">
-          <div>
-            <h2>Odd One Out</h2>
-            <p>${state.index + 1} / ${state.sets.length} · ${VocabularyOddOneOutUI.escape(set.level || "Vocabulary")} · ${VocabularyOddOneOutUI.escape(set.category || "Puzzle")}</p>
+        <button class="vocab-ooo-back vocab-ooo-back--floating" onclick="goHome()" type="button">← Back</button>
+        <section class="vocab-ooo-hero" aria-labelledby="vocab-ooo-title">
+          <h2 id="vocab-ooo-title">Odd One Out</h2>
+          <p>Find the word that does not belong</p>
+        </section>
+        <section class="vocab-ooo-board" aria-label="Odd One Out puzzle board">
+          <div class="vocab-ooo-grid">
+            ${(set.words || []).map((word) => `
+              <button class="vocab-ooo-card" data-word-id="${Number(word.id)}" onclick="VocabularyOddOneOutGame.answer(${Number(word.id)})" type="button">
+                <span>${VocabularyOddOneOutUI.escape(word.word_text)}</span>
+              </button>
+            `).join("")}
           </div>
-          <button class="vocab-ooo-back" onclick="goHome()">Back</button>
-        </div>
-        <div class="vocab-ooo-title">${VocabularyOddOneOutUI.escape(set.title || "Choose the odd word")}</div>
-        <div class="vocab-ooo-grid">
-          ${(set.words || []).map((word) => `
-            <button class="vocab-ooo-card" data-word-id="${Number(word.id)}" onclick="VocabularyOddOneOutGame.answer(${Number(word.id)})">
-              ${VocabularyOddOneOutUI.escape(word.word_text)}
-            </button>
-          `).join("")}
-        </div>
+        </section>
         <div id="vocab-ooo-feedback" class="vocab-ooo-feedback" hidden></div>
       </div>
     `;
