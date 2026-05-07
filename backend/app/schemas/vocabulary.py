@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 class VocabularyPuzzleWordIn(BaseModel):
     word_text: str = Field(..., min_length=1)
+    image_url: Optional[str] = None
     is_correct: bool = False
 
     @field_validator("word_text")
@@ -14,6 +15,12 @@ class VocabularyPuzzleWordIn(BaseModel):
         if not value:
             raise ValueError("word_text_required")
         return value
+
+    @field_validator("image_url")
+    @classmethod
+    def clean_image_url(cls, value: Optional[str]) -> Optional[str]:
+        value = str(value or "").strip()
+        return value or None
 
 
 class VocabularyPuzzleSetIn(BaseModel):

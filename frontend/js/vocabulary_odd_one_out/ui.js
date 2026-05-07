@@ -10,6 +10,13 @@ window.VocabularyOddOneOutUI = window.VocabularyOddOneOutUI || {};
       .replace(/'/g, "&#039;");
   };
 
+  function fullImageUrl(url) {
+    const value = String(url || "").trim();
+    if (!value) return "";
+    if (/^https?:\/\//i.test(value)) return value;
+    return `${window.API}${value.startsWith("/") ? value : `/${value}`}`;
+  }
+
   VocabularyOddOneOutUI.screen = function () {
     if (typeof hideAllScreens === "function") hideAllScreens();
     if (typeof hideAnnouncement === "function") hideAnnouncement();
@@ -71,11 +78,24 @@ window.VocabularyOddOneOutUI = window.VocabularyOddOneOutUI || {};
   };
 
   VocabularyOddOneOutUI.renderFeedback = function ({ selectedWordId, correct, correctWordId, explanation }) {
+    const result = VocabularyOddOneOutState.get().lastResult || {};
+    const imageByWordId = new Map(
+      (result.word_images || []).map((item) => [Number(item.id), item.image_url || ""])
+    );
     document.querySelectorAll(".vocab-word-card").forEach((card) => {
       const wordId = Number(card.dataset.wordId);
+      const imageUrl = fullImageUrl(imageByWordId.get(wordId));
       card.disabled = true;
+      card.classList.add("is-revealed");
       if (wordId === Number(correctWordId)) card.classList.add("is-correct");
       if (wordId === Number(selectedWordId) && !correct) card.classList.add("is-wrong");
+      if (!card.querySelector(".vocab-word-card-image-slot")) {
+        card.insertAdjacentHTML("beforeend", `
+          <span class="vocab-word-card-image-slot ${imageUrl ? "" : "is-empty"}">
+            ${imageUrl ? `<img src="${VocabularyOddOneOutUI.escape(imageUrl)}" alt="">` : `<span>No image added</span>`}
+          </span>
+        `);
+      }
     });
     const feedback = document.getElementById("vocab-ooo-feedback");
     if (!feedback) return;

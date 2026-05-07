@@ -10,7 +10,14 @@ window.AdminVocabularyOddOneOutForm = window.AdminVocabularyOddOneOutForm || {};
   }
 
   function emptyWords() {
-    return [0, 1, 2, 3].map((index) => ({ word_text: "", is_correct: index === 0 }));
+    return [0, 1, 2, 3].map((index) => ({ word_text: "", image_url: "", is_correct: index === 0 }));
+  }
+
+  function fullImageUrl(url) {
+    const value = String(url || "").trim();
+    if (!value) return "";
+    if (/^https?:\/\//i.test(value)) return value;
+    return `${window.API}${value.startsWith("/") ? value : `/${value}`}`;
   }
 
   AdminVocabularyOddOneOutForm.render = function () {
@@ -41,12 +48,24 @@ window.AdminVocabularyOddOneOutForm = window.AdminVocabularyOddOneOutForm || {};
 
         <div class="admin-vocab-word-list">
           ${words.map((word, index) => `
-            <div class="admin-vocab-word-row">
-              <input class="vocab-word-input" value="${AdminVocabularyOddOneOutUI.escape(word.word_text || "")}" placeholder="Word ${index + 1}" required>
-              <label class="admin-vocab-radio">
-                <input type="radio" name="vocab-correct" value="${index}" ${word.is_correct ? "checked" : ""}>
-                Odd
-              </label>
+            <div class="admin-vocab-word-row" data-image-url="${AdminVocabularyOddOneOutUI.escape(word.image_url || "")}">
+              <div class="admin-vocab-word-main">
+                <input class="vocab-word-input" value="${AdminVocabularyOddOneOutUI.escape(word.word_text || "")}" placeholder="Word ${index + 1}" required>
+                <label class="admin-vocab-radio">
+                  <input type="radio" name="vocab-correct" value="${index}" ${word.is_correct ? "checked" : ""}>
+                  Odd
+                </label>
+              </div>
+              <div class="admin-vocab-word-image">
+                <div class="admin-vocab-image-preview">
+                  ${word.image_url ? `<img src="${AdminVocabularyOddOneOutUI.escape(fullImageUrl(word.image_url))}" alt="Word ${index + 1} image">` : `<span>No image</span>`}
+                </div>
+                <div class="admin-vocab-image-actions">
+                  <button type="button" class="admin-vocab-secondary admin-vocab-image-upload">Upload image</button>
+                  <button type="button" class="admin-vocab-image-remove" ${word.image_url ? "" : "hidden"}>Remove</button>
+                  <input type="file" class="admin-vocab-image-input" accept="image/*" hidden>
+                </div>
+              </div>
             </div>
           `).join("")}
         </div>
@@ -59,16 +78,56 @@ window.AdminVocabularyOddOneOutForm = window.AdminVocabularyOddOneOutForm || {};
     `;
 
     document.getElementById("admin-vocab-form")?.addEventListener("submit", AdminVocabularyOddOneOutForm.submit);
+    AdminVocabularyOddOneOutForm.bindImageUploads(host);
     host.querySelector("[data-vocab-new='1']")?.addEventListener("click", () => {
       AdminVocabularyOddOneOutState.setEditing(null);
       AdminVocabularyOddOneOutForm.render();
     });
   };
 
+  AdminVocabularyOddOneOutForm.bindImageUploads = function (host) {
+    host.querySelectorAll(".admin-vocab-word-row").forEach((row) => {
+      const uploadBtn = row.querySelector(".admin-vocab-image-upload");
+      const removeBtn = row.querySelector(".admin-vocab-image-remove");
+      const input = row.querySelector(".admin-vocab-image-input");
+      const preview = row.querySelector(".admin-vocab-image-preview");
+      if (!uploadBtn || !removeBtn || !input || !preview) return;
+
+      uploadBtn.addEventListener("click", () => input.click());
+      removeBtn.addEventListener("click", () => {
+        row.dataset.imageUrl = "";
+        preview.innerHTML = "<span>No image</span>";
+        removeBtn.hidden = true;
+        input.value = "";
+      });
+      input.addEventListener("change", async () => {
+        const file = input.files?.[0];
+        if (!file) return;
+        const original = uploadBtn.textContent;
+        uploadBtn.disabled = true;
+        uploadBtn.textContent = "Uploading...";
+        try {
+          const uploaded = await AdminVocabularyOddOneOutApi.uploadImageFile(file);
+          row.dataset.imageUrl = uploaded.relativeUrl;
+          preview.innerHTML = `<img src="${AdminVocabularyOddOneOutUI.escape(uploaded.fullUrl)}" alt="Word image">`;
+          removeBtn.hidden = false;
+        } catch (error) {
+          console.error("Vocabulary word image upload error:", error);
+          AdminVocabularyOddOneOutUI.renderMessage("Could not upload image.", "error");
+        } finally {
+          uploadBtn.disabled = false;
+          uploadBtn.textContent = original;
+          input.value = "";
+        }
+      });
+    });
+  };
+
   AdminVocabularyOddOneOutForm.collect = function () {
     const correctIndex = Number(document.querySelector("input[name='vocab-correct']:checked")?.value ?? -1);
-    const words = Array.from(document.querySelectorAll(".vocab-word-input")).map((input, index) => ({
-      word_text: input.value.trim(),
+    const words = Array.from(document.querySelectorAll(".admin-vocab-word-row")).map((row, index) => ({
+      word_text: row.querySelector(".vocab-word-input")?.value.trim() || "",
+      image_url: row.dataset.imageUrl || null,
       is_correct: index === correctIndex,
     }));
     return {

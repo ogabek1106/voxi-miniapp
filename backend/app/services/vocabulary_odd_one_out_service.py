@@ -28,18 +28,28 @@ def _validate_payload(payload):
         raise HTTPException(status_code=422, detail="invalid_category")
 
 
-def serialize_word(word: VocabularyPuzzleWord, include_correct: bool = True) -> dict:
+def serialize_word(
+    word: VocabularyPuzzleWord,
+    include_correct: bool = True,
+    include_image: bool = True,
+) -> dict:
     data = {
         "id": word.id,
         "word_text": word.word_text,
         "order_index": word.order_index,
     }
+    if include_image:
+        data["image_url"] = word.image_url
     if include_correct:
         data["is_correct"] = bool(word.is_correct)
     return data
 
 
-def serialize_set(puzzle_set: VocabularyPuzzleSet, include_correct: bool = True) -> dict:
+def serialize_set(
+    puzzle_set: VocabularyPuzzleSet,
+    include_correct: bool = True,
+    include_image: bool = True,
+) -> dict:
     return {
         "id": puzzle_set.id,
         "title": puzzle_set.title,
@@ -49,7 +59,10 @@ def serialize_set(puzzle_set: VocabularyPuzzleSet, include_correct: bool = True)
         "status": puzzle_set.status,
         "created_at": puzzle_set.created_at.isoformat() if puzzle_set.created_at else None,
         "updated_at": puzzle_set.updated_at.isoformat() if puzzle_set.updated_at else None,
-        "words": [serialize_word(word, include_correct=include_correct) for word in puzzle_set.words],
+        "words": [
+            serialize_word(word, include_correct=include_correct, include_image=include_image)
+            for word in puzzle_set.words
+        ],
     }
 
 
@@ -114,6 +127,7 @@ def _replace_words(db: Session, puzzle_set: VocabularyPuzzleSet, words):
         db.add(VocabularyPuzzleWord(
             set_id=puzzle_set.id,
             word_text=word.word_text,
+            image_url=_clean_optional(word.image_url),
             order_index=index,
             is_correct=bool(word.is_correct),
         ))
@@ -157,7 +171,10 @@ def build_session(db: Session) -> list[dict]:
             "title": puzzle_set.title,
             "level": puzzle_set.level,
             "category": puzzle_set.category,
-            "words": [serialize_word(word, include_correct=False) for word in words],
+            "words": [
+                serialize_word(word, include_correct=False, include_image=False)
+                for word in words
+            ],
         })
     return result
 
@@ -176,4 +193,11 @@ def check_answer(db: Session, set_id: int, selected_word_id: int) -> dict:
         "correct": int(correct_word.id) == int(selected_word_id),
         "correct_word_id": correct_word.id,
         "explanation": puzzle_set.explanation,
+        "word_images": [
+            {
+                "id": word.id,
+                "image_url": word.image_url,
+            }
+            for word in puzzle_set.words
+        ],
     }

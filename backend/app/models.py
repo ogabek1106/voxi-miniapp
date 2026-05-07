@@ -93,6 +93,7 @@ class VocabularyPuzzleWord(Base):
     id = Column(Integer, primary_key=True, index=True)
     set_id = Column(Integer, ForeignKey("vocabulary_puzzle_sets.id", ondelete="CASCADE"), nullable=False)
     word_text = Column(String, nullable=False)
+    image_url = Column(Text, nullable=True)
     order_index = Column(Integer, nullable=False, default=0)
     is_correct = Column(Boolean, nullable=False, default=False)
 

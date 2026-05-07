@@ -984,6 +984,7 @@ def ensure_vocabulary_puzzle_schema():
             "id SERIAL PRIMARY KEY, "
             "set_id INTEGER NOT NULL, "
             "word_text VARCHAR NOT NULL, "
+            "image_url TEXT NULL, "
             "order_index INTEGER NOT NULL DEFAULT 0, "
             "is_correct BOOLEAN NOT NULL DEFAULT FALSE"
             ");"
@@ -995,6 +996,10 @@ def ensure_vocabulary_puzzle_schema():
         conn.execute(text(
             "ALTER TABLE vocabulary_puzzle_words "
             "ADD COLUMN IF NOT EXISTS word_text VARCHAR;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE vocabulary_puzzle_words "
+            "ADD COLUMN IF NOT EXISTS image_url TEXT;"
         ))
         conn.execute(text(
             "ALTER TABLE vocabulary_puzzle_words "

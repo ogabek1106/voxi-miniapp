@@ -2,7 +2,10 @@ window.AdminVocabularyOddOneOutList = window.AdminVocabularyOddOneOutList || {};
 
 (function () {
   function previewWords(set) {
-    return (set.words || []).map((word) => word.is_correct ? `${word.word_text} *` : word.word_text).join(" · ");
+    return (set.words || []).map((word) => {
+      const imageMark = word.image_url ? " [image]" : "";
+      return word.is_correct ? `${word.word_text}${imageMark} *` : `${word.word_text}${imageMark}`;
+    }).join(" - ");
   }
 
   AdminVocabularyOddOneOutList.render = function () {
@@ -24,7 +27,7 @@ window.AdminVocabularyOddOneOutList = window.AdminVocabularyOddOneOutList || {};
       <article class="admin-vocab-set-card">
         <div>
           <h4>${AdminVocabularyOddOneOutUI.escape(set.title || "Untitled puzzle")}</h4>
-          <p>${AdminVocabularyOddOneOutUI.escape(set.level || "No level")} · ${AdminVocabularyOddOneOutUI.escape(set.category || "No category")} · ${AdminVocabularyOddOneOutUI.escape(set.status)}</p>
+          <p>${AdminVocabularyOddOneOutUI.escape(set.level || "No level")} - ${AdminVocabularyOddOneOutUI.escape(set.category || "No category")} - ${AdminVocabularyOddOneOutUI.escape(set.status)}</p>
           <span>${AdminVocabularyOddOneOutUI.escape(previewWords(set))}</span>
         </div>
         <div class="admin-vocab-set-actions">
