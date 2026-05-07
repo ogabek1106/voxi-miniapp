@@ -56,7 +56,7 @@ window.VocabularyOddOneOutUI = window.VocabularyOddOneOutUI || {};
             `).join("")}
           </div>
         </section>
-        <div id="vocab-ooo-feedback" class="vocab-ooo-feedback" hidden></div>
+        <div id="vocab-ooo-feedback" class="vocab-feedback-slot" aria-live="polite"></div>
       </div>
     `;
   };
@@ -70,11 +70,14 @@ window.VocabularyOddOneOutUI = window.VocabularyOddOneOutUI || {};
     });
     const feedback = document.getElementById("vocab-ooo-feedback");
     if (!feedback) return;
-    feedback.hidden = false;
     feedback.innerHTML = `
-      <strong>${correct ? "Correct" : "Not quite"}</strong>
-      ${explanation ? `<p>${VocabularyOddOneOutUI.escape(explanation)}</p>` : ""}
-      <button class="vocab-ooo-next" onclick="VocabularyOddOneOutGame.next()">Next</button>
+      <div class="vocab-feedback-card">
+        <div>
+          <strong>${correct ? "Correct" : "Not quite"}</strong>
+          ${explanation ? `<p>${VocabularyOddOneOutUI.escape(explanation)}</p>` : ""}
+        </div>
+        <button class="vocab-ooo-next" onclick="VocabularyOddOneOutGame.next()">Next</button>
+      </div>
     `;
   };
 
