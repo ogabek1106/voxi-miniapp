@@ -223,7 +223,7 @@ body.view-website.vocab-ooo-active:not(.mobile-browser-view) .content {
 
 .vocab-side-panel {
   align-self: start;
-  height: 462px;
+  height: 472px;
   margin-top: 10px;
   min-height: 0;
   box-sizing: border-box;
@@ -239,7 +239,7 @@ body.view-website.vocab-ooo-active:not(.mobile-browser-view) .content {
 }
 
 .vocab-game-layout.is-revealed .vocab-side-panel {
-  height: 514px;
+  height: 524px;
 }
 
 .vocab-panel-content {
