@@ -40,23 +40,29 @@ window.VocabularyOddOneOutUI = window.VocabularyOddOneOutUI || {};
     }
     screen.innerHTML = `
       <div class="vocab-game-page">
-        <div class="vocab-game-top">
-          <section class="vocab-game-heading" aria-labelledby="vocab-ooo-title">
-            <h1 id="vocab-ooo-title">Odd One Out</h1>
-            <p>Find the word that does not belong</p>
-          </section>
-          <button class="vocab-back-btn" onclick="goHome()" type="button">&larr; Back</button>
-        </div>
-        <section class="vocab-game-board" aria-label="Odd One Out puzzle board">
-          <div class="vocab-card-grid">
-            ${(set.words || []).map((word) => `
-              <button class="vocab-word-card" data-word-id="${Number(word.id)}" onclick="VocabularyOddOneOutGame.answer(${Number(word.id)})" type="button">
-                <span>${VocabularyOddOneOutUI.escape(word.word_text)}</span>
-              </button>
-            `).join("")}
+        <div class="vocab-game-layout">
+          <div class="vocab-left-column">
+            <section class="vocab-game-heading" aria-labelledby="vocab-ooo-title">
+              <h1 id="vocab-ooo-title">Odd One Out</h1>
+              <p>Find the word that does not belong</p>
+            </section>
+            <section class="vocab-game-board" aria-label="Odd One Out puzzle board">
+              <div class="vocab-card-grid">
+                ${(set.words || []).map((word) => `
+                  <button class="vocab-word-card" data-word-id="${Number(word.id)}" onclick="VocabularyOddOneOutGame.answer(${Number(word.id)})" type="button">
+                    <span class="vocab-word-card-text">${VocabularyOddOneOutUI.escape(word.word_text)}</span>
+                  </button>
+                `).join("")}
+              </div>
+            </section>
           </div>
-        </section>
-        <div id="vocab-ooo-feedback" class="vocab-feedback-slot" aria-live="polite"></div>
+          <aside id="vocab-ooo-feedback" class="vocab-side-panel" aria-live="polite">
+            <button class="vocab-back-btn" onclick="goHome()" type="button">&larr; Back</button>
+            <div class="vocab-panel-content vocab-panel-content--initial">
+              <p>Find the word that does not belong</p>
+            </div>
+          </aside>
+        </div>
       </div>
     `;
   };
@@ -71,13 +77,12 @@ window.VocabularyOddOneOutUI = window.VocabularyOddOneOutUI || {};
     const feedback = document.getElementById("vocab-ooo-feedback");
     if (!feedback) return;
     feedback.innerHTML = `
-      <div class="vocab-feedback-card">
-        <div>
-          <strong>${correct ? "Correct" : "Not quite"}</strong>
-          ${explanation ? `<p>${VocabularyOddOneOutUI.escape(explanation)}</p>` : ""}
-        </div>
-        <button class="vocab-ooo-next" onclick="VocabularyOddOneOutGame.next()">Next</button>
+      <button class="vocab-back-btn" onclick="goHome()" type="button">&larr; Back</button>
+      <div class="vocab-panel-content">
+        <strong>${correct ? "Correct" : "Not quite"}</strong>
+        <p>${explanation ? VocabularyOddOneOutUI.escape(explanation) : "Review the odd word, then continue."}</p>
       </div>
+      <button class="vocab-next-btn" onclick="VocabularyOddOneOutGame.next()">Next</button>
     `;
   };
 
