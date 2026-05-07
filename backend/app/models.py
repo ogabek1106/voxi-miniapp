@@ -66,6 +66,39 @@ class ShadowWritingAttempt(Base):
     essay = relationship("ShadowWritingEssay", back_populates="attempts")
 
 
+class VocabularyPuzzleSet(Base):
+    __tablename__ = "vocabulary_puzzle_sets"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=True)
+    level = Column(String, nullable=True)
+    category = Column(String, nullable=True)
+    explanation = Column(Text, nullable=True)
+    status = Column(String, nullable=False, default="draft")
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    words = relationship(
+        "VocabularyPuzzleWord",
+        back_populates="set",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        order_by="VocabularyPuzzleWord.order_index",
+    )
+
+
+class VocabularyPuzzleWord(Base):
+    __tablename__ = "vocabulary_puzzle_words"
+
+    id = Column(Integer, primary_key=True, index=True)
+    set_id = Column(Integer, ForeignKey("vocabulary_puzzle_sets.id", ondelete="CASCADE"), nullable=False)
+    word_text = Column(String, nullable=False)
+    order_index = Column(Integer, nullable=False, default=0)
+    is_correct = Column(Boolean, nullable=False, default=False)
+
+    set = relationship("VocabularyPuzzleSet", back_populates="words")
+
+
 class ReadingTestStatus(enum.Enum):
     draft = "draft"
     published = "published"

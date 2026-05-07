@@ -23,6 +23,8 @@ from app.api.vcoins import router as vcoins_router
 from app.api.announcement import router as announcement_router
 from app.api.admin_shadow_writing import router as admin_shadow_writing_router
 from app.api.shadow_writing import router as shadow_writing_router
+from app.api.admin_vocabulary_odd_one_out import router as admin_vocabulary_odd_one_out_router
+from app.api.vocabulary_odd_one_out import router as vocabulary_odd_one_out_router
 from app.api.auth import router as auth_router
 from app.api.auth_google import router as auth_google_router
 from .db import (
@@ -37,7 +39,8 @@ from .db import (
     ensure_vcoin_schema,
     ensure_announcement_schema,
     ensure_user_auth_schema,
-    ensure_shadow_writing_schema
+    ensure_shadow_writing_schema,
+    ensure_vocabulary_puzzle_schema
 )
 from app.api.admin_upload import router as admin_upload_router
 from app.api.result_images import router as result_images_router
@@ -57,6 +60,7 @@ ensure_vcoin_schema()
 ensure_user_auth_schema()
 ensure_announcement_schema()
 ensure_shadow_writing_schema()
+ensure_vocabulary_puzzle_schema()
 app = FastAPI(title="Voxi Mini App API")
 app.include_router(mock_list.router)
 app.include_router(admin_upload_router)
@@ -77,6 +81,8 @@ app.include_router(vcoins_router)
 app.include_router(announcement_router)
 app.include_router(admin_shadow_writing_router)
 app.include_router(shadow_writing_router)
+app.include_router(admin_vocabulary_odd_one_out_router)
+app.include_router(vocabulary_odd_one_out_router)
 app.include_router(auth_router)
 app.include_router(auth_google_router)
 app.mount("/media", StaticFiles(directory="/data/media"), name="media")

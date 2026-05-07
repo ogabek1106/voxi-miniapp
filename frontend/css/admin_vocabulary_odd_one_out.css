@@ -1,0 +1,199 @@
+.admin-vocab-screen {
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 10px 12px 30px;
+  box-sizing: border-box;
+  color: #17212b;
+  font-family: Nunito, Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.admin-vocab-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.admin-vocab-head h2 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 950;
+}
+
+.admin-vocab-head p {
+  margin: 6px 0 0;
+  color: #667584;
+  font-weight: 800;
+}
+
+.admin-vocab-layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.9fr) minmax(360px, 1.1fr);
+  gap: 14px;
+}
+
+.admin-vocab-card,
+.admin-vocab-empty {
+  background: #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 14px 34px rgba(20, 40, 60, 0.08);
+  border: 1px solid rgba(20, 40, 60, 0.05);
+  padding: 18px;
+}
+
+.admin-vocab-card h3 {
+  margin: 0 0 14px;
+  font-size: 20px;
+  font-weight: 950;
+}
+
+.admin-vocab-card label {
+  display: block;
+  margin: 12px 0 6px;
+  color: #667584;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.admin-vocab-card input,
+.admin-vocab-card select,
+.admin-vocab-card textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: 16px;
+  background: #f5f9fc;
+  padding: 13px 14px;
+  color: #17212b;
+  font-size: 15px;
+  font-weight: 800;
+  outline: none;
+}
+
+.admin-vocab-card textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+.admin-vocab-two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.admin-vocab-word-row {
+  display: grid;
+  grid-template-columns: 1fr 78px;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.admin-vocab-radio {
+  height: 46px;
+  margin: 0 !important;
+  border-radius: 16px;
+  background: rgba(0, 186, 255, 0.10);
+  color: #00a2df !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.admin-vocab-radio input {
+  width: auto;
+  padding: 0;
+}
+
+.admin-vocab-actions,
+.admin-vocab-set-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.admin-vocab-primary,
+.admin-vocab-secondary,
+.admin-vocab-set-actions button {
+  min-height: 46px;
+  border: 0;
+  border-radius: 16px;
+  padding: 0 16px;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.admin-vocab-primary {
+  background: #00baff;
+  color: #ffffff;
+}
+
+.admin-vocab-secondary,
+.admin-vocab-set-actions button {
+  background: #ffffff;
+  color: #17212b;
+  box-shadow: 0 10px 26px rgba(20, 40, 60, 0.08);
+}
+
+.admin-vocab-message {
+  padding: 10px 12px;
+  border-radius: 14px;
+  font-weight: 900;
+  margin-bottom: 12px;
+}
+
+.admin-vocab-message.is-error {
+  background: rgba(239, 68, 68, 0.10);
+  color: #b91c1c;
+}
+
+.admin-vocab-message.is-success {
+  background: rgba(34, 197, 94, 0.12);
+  color: #15803d;
+}
+
+.admin-vocab-set-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-vocab-set-card {
+  border-radius: 18px;
+  background: #f8fbff;
+  padding: 14px;
+}
+
+.admin-vocab-set-card h4,
+.admin-vocab-set-card p {
+  margin: 0;
+}
+
+.admin-vocab-set-card h4 {
+  font-size: 16px;
+  font-weight: 950;
+}
+
+.admin-vocab-set-card p,
+.admin-vocab-set-card span {
+  display: block;
+  margin-top: 5px;
+  color: #667584;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.admin-vocab-set-actions .is-danger {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+@media (max-width: 820px) {
+  .admin-vocab-layout,
+  .admin-vocab-two {
+    grid-template-columns: 1fr;
+  }
+}

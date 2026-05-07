@@ -934,3 +934,97 @@ def ensure_shadow_writing_schema():
             "CREATE INDEX IF NOT EXISTS ix_shadow_writing_attempts_essay_id "
             "ON shadow_writing_attempts (essay_id);"
         ))
+
+
+def ensure_vocabulary_puzzle_schema():
+    with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS vocabulary_puzzle_sets ("
+            "id SERIAL PRIMARY KEY, "
+            "title VARCHAR NULL, "
+            "level VARCHAR NULL, "
+            "category VARCHAR NULL, "
+            "explanation TEXT NULL, "
+            "status VARCHAR NOT NULL DEFAULT 'draft', "
+            "created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), "
+            "updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()"
+            ");"
+        ))
+        conn.execute(text(
+            "ALTER TABLE vocabulary_puzzle_sets "
+            "ADD COLUMN IF NOT EXISTS title VARCHAR;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE vocabulary_puzzle_sets "
+            "ADD COLUMN IF NOT EXISTS level VARCHAR;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE vocabulary_puzzle_sets "
+            "ADD COLUMN IF NOT EXISTS category VARCHAR;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE vocabulary_puzzle_sets "
+            "ADD COLUMN IF NOT EXISTS explanation TEXT;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE vocabulary_puzzle_sets "
+            "ADD COLUMN IF NOT EXISTS status VARCHAR NOT NULL DEFAULT 'draft';"
+        ))
+        conn.execute(text(
+            "ALTER TABLE vocabulary_puzzle_sets "
+            "ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"
+        ))
+        conn.execute(text(
+            "ALTER TABLE vocabulary_puzzle_sets "
+            "ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"
+        ))
+
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS vocabulary_puzzle_words ("
+            "id SERIAL PRIMARY KEY, "
+            "set_id INTEGER NOT NULL, "
+            "word_text VARCHAR NOT NULL, "
+            "order_index INTEGER NOT NULL DEFAULT 0, "
+            "is_correct BOOLEAN NOT NULL DEFAULT FALSE"
+            ");"
+        ))
+        conn.execute(text(
+            "ALTER TABLE vocabulary_puzzle_words "
+            "ADD COLUMN IF NOT EXISTS set_id INTEGER;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE vocabulary_puzzle_words "
+            "ADD COLUMN IF NOT EXISTS word_text VARCHAR;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE vocabulary_puzzle_words "
+            "ADD COLUMN IF NOT EXISTS order_index INTEGER NOT NULL DEFAULT 0;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE vocabulary_puzzle_words "
+            "ADD COLUMN IF NOT EXISTS is_correct BOOLEAN NOT NULL DEFAULT FALSE;"
+        ))
+        conn.execute(text(
+            "DO $$ "
+            "BEGIN "
+            "IF NOT EXISTS ("
+            "SELECT 1 FROM information_schema.table_constraints "
+            "WHERE constraint_name = 'vocabulary_puzzle_words_set_id_fkey'"
+            ") THEN "
+            "ALTER TABLE vocabulary_puzzle_words "
+            "ADD CONSTRAINT vocabulary_puzzle_words_set_id_fkey "
+            "FOREIGN KEY (set_id) "
+            "REFERENCES vocabulary_puzzle_sets(id) "
+            "ON DELETE CASCADE; "
+            "END IF; "
+            "END "
+            "$$;"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_vocabulary_puzzle_sets_status "
+            "ON vocabulary_puzzle_sets (status);"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_vocabulary_puzzle_words_set_id "
+            "ON vocabulary_puzzle_words (set_id);"
+        ))

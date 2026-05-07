@@ -20,6 +20,8 @@
   <link rel="stylesheet" href="css/shadow_writing.css?v=7">
   <link rel="stylesheet" href="css/admin_shadow_writing.css?v=1">
   <link rel="stylesheet" href="css/admin_shadow_writing_stats.css?v=1">
+  <link rel="stylesheet" href="css/admin_vocabulary_odd_one_out.css?v=1">
+  <link rel="stylesheet" href="css/vocabulary_odd_one_out.css?v=1">
   <link rel="stylesheet" href="css/auth_gate.css?v=1">
   <link rel="stylesheet" href="css/shadow_writing_card.css?v=1">
   <link rel="icon" type="image/png" href="./assets/favicon.png">
@@ -1659,6 +1661,20 @@
                 <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
               </svg>
             </div>
+
+            <div class="home-card home-card--wide home-card--mock" onclick="showVocabularyOddOneOutEntry()" role="button" tabindex="0">
+              <span class="home-card-icon-wrap" aria-hidden="true">
+                <svg class="home-card-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M7 7h10M7 12h10M7 17h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path>
+                  <path d="M17.5 16.5l1.5 1.5 3-3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+              </span>
+              <h3 class="home-card-title">Odd One Out</h3>
+              <p class="home-card-subtitle">Vocabulary puzzle cards</p>
+              <svg class="home-card-arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </div>
           </div>
 
           <div class="home-admin-actions" id="home-admin-actions">
@@ -1845,6 +1861,12 @@
   <script src="/js/admin_shadow_writing_stats/ui.js?v=1"></script>
   <script src="/js/admin_shadow_writing_stats/table.js?v=1"></script>
   <script src="/js/admin_shadow_writing_stats/loader.js?v=1"></script>
+  <script src="/js/admin_vocabulary_odd_one_out/api.js?v=1"></script>
+  <script src="/js/admin_vocabulary_odd_one_out/state.js?v=1"></script>
+  <script src="/js/admin_vocabulary_odd_one_out/ui.js?v=1"></script>
+  <script src="/js/admin_vocabulary_odd_one_out/form.js?v=1"></script>
+  <script src="/js/admin_vocabulary_odd_one_out/list.js?v=1"></script>
+  <script src="/js/admin_vocabulary_odd_one_out/loader.js?v=1"></script>
   <script src="/js/admin_speaking/core/state.js"></script>
   <script src="/js/admin_speaking/api/speaking_api.js"></script>
   <script src="/js/admin_speaking/ui/parts.js"></script>
@@ -1858,6 +1880,11 @@
   <script src="./js/shadow_writing/history.js?v=2"></script>
   <script src="./js/shadow_writing/ui.js?v=4"></script>
   <script src="./js/shadow_writing/loader.js?v=3"></script>
+  <script src="./js/vocabulary_odd_one_out/api.js?v=1"></script>
+  <script src="./js/vocabulary_odd_one_out/state.js?v=1"></script>
+  <script src="./js/vocabulary_odd_one_out/ui.js?v=1"></script>
+  <script src="./js/vocabulary_odd_one_out/game.js?v=1"></script>
+  <script src="./js/vocabulary_odd_one_out/loader.js?v=1"></script>
   <script src="./js/app.js?v=6"></script>
   <script src="./js/vcoins_ui.js?v=5"></script>
   <script src="./js/website/components/profile_sheet.js?v=3"></script>

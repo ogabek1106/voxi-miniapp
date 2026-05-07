@@ -310,6 +310,7 @@ window.showAdminPanel = function () {
     <button onclick="showAdminMockPacks()">📦 MOCK Packs</button>
     <button onclick="showAdminShadowWriting()">Shadow Writing Essays</button>
     <button onclick="showAdminShadowWritingStats()">Shadow Writing Stats</button>
+    <button onclick="showAdminVocabularyOddOneOut()">Vocabulary Odd One Out</button>
     <button onclick="showAnnouncementAdmin()">📢 Announcement</button>
     <button onclick="showDbStats()">📊 Database Stats</button>
     <button onclick="goHome()">⬅ Back</button>
