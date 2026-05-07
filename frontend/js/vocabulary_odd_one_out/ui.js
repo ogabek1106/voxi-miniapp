@@ -18,6 +18,7 @@ window.VocabularyOddOneOutUI = window.VocabularyOddOneOutUI || {};
     if (screen) {
       screen.classList.remove("shadow-writing-host");
       screen.classList.add("vocab-ooo-host");
+      document.body.classList.add("vocab-ooo-active");
       screen.style.display = "block";
     }
     return screen;
@@ -56,12 +57,14 @@ window.VocabularyOddOneOutUI = window.VocabularyOddOneOutUI || {};
               </div>
             </section>
           </div>
-          <aside id="vocab-ooo-feedback" class="vocab-side-panel" aria-live="polite">
+          <div class="vocab-right-column">
             <button class="vocab-back-btn" onclick="goHome()" type="button">&larr; Back</button>
-            <div class="vocab-panel-content vocab-panel-content--initial">
-              <p>Find the word that does not belong</p>
-            </div>
-          </aside>
+            <aside id="vocab-ooo-feedback" class="vocab-side-panel" aria-live="polite">
+              <div class="vocab-panel-content vocab-panel-content--initial">
+                <p>Find the word that does not belong</p>
+              </div>
+            </aside>
+          </div>
         </div>
       </div>
     `;
@@ -77,7 +80,6 @@ window.VocabularyOddOneOutUI = window.VocabularyOddOneOutUI || {};
     const feedback = document.getElementById("vocab-ooo-feedback");
     if (!feedback) return;
     feedback.innerHTML = `
-      <button class="vocab-back-btn" onclick="goHome()" type="button">&larr; Back</button>
       <div class="vocab-panel-content">
         <strong>${correct ? "Correct" : "Not quite"}</strong>
         <p>${explanation ? VocabularyOddOneOutUI.escape(explanation) : "Review the odd word, then continue."}</p>
