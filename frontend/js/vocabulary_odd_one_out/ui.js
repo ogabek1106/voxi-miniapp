@@ -82,6 +82,7 @@ window.VocabularyOddOneOutUI = window.VocabularyOddOneOutUI || {};
     const imageByWordId = new Map(
       (result.word_images || []).map((item) => [Number(item.id), item.image_url || ""])
     );
+    document.querySelector(".vocab-game-layout")?.classList.add("is-revealed");
     document.querySelectorAll(".vocab-word-card").forEach((card) => {
       const wordId = Number(card.dataset.wordId);
       const imageUrl = fullImageUrl(imageByWordId.get(wordId));

@@ -29,7 +29,7 @@ body.view-website.vocab-ooo-active:not(.mobile-browser-view) .content {
   display: grid;
   grid-template-columns: max-content minmax(430px, 1fr);
   gap: 28px;
-  align-items: stretch;
+  align-items: start;
   justify-content: start;
 }
 
@@ -157,7 +157,7 @@ body.view-website.vocab-ooo-active:not(.mobile-browser-view) .content {
 }
 
 .vocab-word-card.is-revealed {
-  min-height: 260px;
+  min-height: 246px;
   flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
@@ -174,8 +174,8 @@ body.view-website.vocab-ooo-active:not(.mobile-browser-view) .content {
 }
 
 .vocab-word-card.is-revealed .vocab-word-card-image-slot {
-  min-height: 150px;
-  max-height: 170px;
+  min-height: 132px;
+  max-height: 148px;
   margin-top: 12px;
   opacity: 1;
   transform: translateY(0);
@@ -222,7 +222,8 @@ body.view-website.vocab-ooo-active:not(.mobile-browser-view) .content {
 }
 
 .vocab-side-panel {
-  align-self: stretch;
+  align-self: start;
+  height: 462px;
   min-height: 0;
   box-sizing: border-box;
   display: flex;
@@ -234,6 +235,10 @@ body.view-website.vocab-ooo-active:not(.mobile-browser-view) .content {
   background: rgba(255, 255, 255, 0.92);
   box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
   backdrop-filter: blur(10px);
+}
+
+.vocab-game-layout.is-revealed .vocab-side-panel {
+  height: 514px;
 }
 
 .vocab-panel-content {
