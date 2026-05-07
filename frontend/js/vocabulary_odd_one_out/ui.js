@@ -26,7 +26,7 @@ window.VocabularyOddOneOutUI = window.VocabularyOddOneOutUI || {};
   VocabularyOddOneOutUI.renderLoading = function () {
     const screen = VocabularyOddOneOutUI.screen();
     if (!screen) return;
-    screen.innerHTML = `<div class="vocab-ooo-screen"><div class="vocab-ooo-empty">Preparing puzzle...</div></div>`;
+    screen.innerHTML = `<div class="vocab-game-page"><div class="vocab-ooo-empty">Preparing puzzle...</div></div>`;
   };
 
   VocabularyOddOneOutUI.renderPuzzle = function () {
@@ -39,18 +39,18 @@ window.VocabularyOddOneOutUI = window.VocabularyOddOneOutUI || {};
       return;
     }
     screen.innerHTML = `
-      <div class="vocab-ooo-screen">
-        <div class="vocab-ooo-topbar">
-          <section class="vocab-ooo-hero" aria-labelledby="vocab-ooo-title">
-            <h2 id="vocab-ooo-title">Odd One Out</h2>
+      <div class="vocab-game-page">
+        <div class="vocab-game-top">
+          <section class="vocab-game-heading" aria-labelledby="vocab-ooo-title">
+            <h1 id="vocab-ooo-title">Odd One Out</h1>
             <p>Find the word that does not belong</p>
           </section>
-          <button class="vocab-ooo-back vocab-ooo-back--floating" onclick="goHome()" type="button">&larr; Back</button>
+          <button class="vocab-back-btn" onclick="goHome()" type="button">&larr; Back</button>
         </div>
-        <section class="vocab-ooo-board" aria-label="Odd One Out puzzle board">
-          <div class="vocab-ooo-grid">
+        <section class="vocab-game-board" aria-label="Odd One Out puzzle board">
+          <div class="vocab-card-grid">
             ${(set.words || []).map((word) => `
-              <button class="vocab-ooo-card" data-word-id="${Number(word.id)}" onclick="VocabularyOddOneOutGame.answer(${Number(word.id)})" type="button">
+              <button class="vocab-word-card" data-word-id="${Number(word.id)}" onclick="VocabularyOddOneOutGame.answer(${Number(word.id)})" type="button">
                 <span>${VocabularyOddOneOutUI.escape(word.word_text)}</span>
               </button>
             `).join("")}
@@ -62,7 +62,7 @@ window.VocabularyOddOneOutUI = window.VocabularyOddOneOutUI || {};
   };
 
   VocabularyOddOneOutUI.renderFeedback = function ({ selectedWordId, correct, correctWordId, explanation }) {
-    document.querySelectorAll(".vocab-ooo-card").forEach((card) => {
+    document.querySelectorAll(".vocab-word-card").forEach((card) => {
       const wordId = Number(card.dataset.wordId);
       card.disabled = true;
       if (wordId === Number(correctWordId)) card.classList.add("is-correct");
@@ -83,7 +83,7 @@ window.VocabularyOddOneOutUI = window.VocabularyOddOneOutUI || {};
     if (!screen) return;
     const state = VocabularyOddOneOutState.get();
     screen.innerHTML = `
-      <div class="vocab-ooo-screen">
+      <div class="vocab-game-page">
         <div class="vocab-ooo-result">
           <h2>Odd One Out</h2>
           <strong>${state.correct} / ${state.sets.length}</strong>
