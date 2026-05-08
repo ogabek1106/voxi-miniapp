@@ -61,6 +61,9 @@ window.VocabularyOddOneOutGame = window.VocabularyOddOneOutGame || {};
       if (remaining <= 0) {
         clearTimer(explanationTimerId);
         explanationTimerId = null;
+        if (!timedOut) {
+          VocabularyOddOneOutGame.next();
+        }
       }
     }
     tick();
