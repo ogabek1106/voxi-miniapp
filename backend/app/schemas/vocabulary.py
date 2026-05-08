@@ -45,4 +45,5 @@ class VocabularyPuzzleSetIn(BaseModel):
 
 class VocabularyPuzzleCheckIn(BaseModel):
     set_id: int
-    selected_word_id: int
+    selected_word_id: Optional[int] = None
+    timed_out: bool = False

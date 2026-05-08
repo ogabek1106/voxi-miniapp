@@ -15,4 +15,12 @@ def get_session(db: Session = Depends(get_db)):
 
 @router.post("/check")
 def check_answer(payload: VocabularyPuzzleCheckIn, db: Session = Depends(get_db)):
-    return {"ok": True, **service.check_answer(db, payload.set_id, payload.selected_word_id)}
+    return {
+        "ok": True,
+        **service.check_answer(
+            db,
+            payload.set_id,
+            payload.selected_word_id,
+            timed_out=payload.timed_out,
+        ),
+    }

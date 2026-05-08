@@ -179,7 +179,7 @@ def build_session(db: Session) -> list[dict]:
     return result
 
 
-def check_answer(db: Session, set_id: int, selected_word_id: int) -> dict:
+def check_answer(db: Session, set_id: int, selected_word_id: int | None, timed_out: bool = False) -> dict:
     puzzle_set = get_set(db, set_id)
     if not puzzle_set or puzzle_set.status != "published":
         raise HTTPException(status_code=404, detail="vocabulary_puzzle_set_not_found")
@@ -187,12 +187,13 @@ def check_answer(db: Session, set_id: int, selected_word_id: int) -> dict:
     if not correct_word:
         raise HTTPException(status_code=422, detail="puzzle_has_no_correct_word")
     selected_exists = any(word.id == selected_word_id for word in puzzle_set.words)
-    if not selected_exists:
+    if not timed_out and not selected_exists:
         raise HTTPException(status_code=404, detail="vocabulary_puzzle_word_not_found")
     return {
-        "correct": int(correct_word.id) == int(selected_word_id),
+        "correct": False if timed_out else int(correct_word.id) == int(selected_word_id),
         "correct_word_id": correct_word.id,
         "explanation": puzzle_set.explanation,
+        "timed_out": bool(timed_out),
         "word_images": [
             {
                 "id": word.id,

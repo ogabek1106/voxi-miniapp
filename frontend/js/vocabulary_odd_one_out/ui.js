@@ -17,6 +17,28 @@ window.VocabularyOddOneOutUI = window.VocabularyOddOneOutUI || {};
     return `${window.API}${value.startsWith("/") ? value : `/${value}`}`;
   }
 
+  function comboMarkup() {
+    const state = VocabularyOddOneOutState.get();
+    if (state.comboBreak) {
+      return `<div id="vocab-combo" class="vocab-combo is-breaking">x${Number(state.comboBreak)}</div>`;
+    }
+    if (state.streak >= 3) {
+      return `<div id="vocab-combo" class="vocab-combo">x${Number(state.streak)}</div>`;
+    }
+    return `<div id="vocab-combo" class="vocab-combo is-empty" aria-hidden="true"></div>`;
+  }
+
+  function panelStatusMarkup() {
+    return `
+      <div class="vocab-panel-status">
+        ${comboMarkup()}
+        <div id="vocab-timer" class="vocab-timer is-calm" aria-live="polite">
+          <span class="vocab-timer-number">10</span>
+        </div>
+      </div>
+    `;
+  }
+
   VocabularyOddOneOutUI.screen = function () {
     if (typeof hideAllScreens === "function") hideAllScreens();
     if (typeof hideAnnouncement === "function") hideAnnouncement();
@@ -53,7 +75,7 @@ window.VocabularyOddOneOutUI = window.VocabularyOddOneOutUI || {};
             <h1 id="vocab-ooo-title">Odd One Out</h1>
             <p>Find the word that does not belong</p>
           </section>
-          <button class="vocab-back-btn" onclick="goHome()" type="button">&larr; Back</button>
+          <button class="vocab-back-btn" onclick="VocabularyOddOneOutGame.exit()" type="button">&larr; Back</button>
         </div>
         <div class="vocab-game-layout">
           <div class="vocab-left-column">
@@ -71,29 +93,33 @@ window.VocabularyOddOneOutUI = window.VocabularyOddOneOutUI || {};
             <div class="vocab-panel-content vocab-panel-content--initial">
               <p>Find the word that does not belong</p>
             </div>
+            ${panelStatusMarkup()}
+            <div class="vocab-next-placeholder" aria-hidden="true"></div>
           </aside>
         </div>
       </div>
     `;
+    VocabularyOddOneOutGame.startQuestionTimer();
   };
 
-  VocabularyOddOneOutUI.renderFeedback = function ({ selectedWordId, correct, correctWordId, explanation }) {
+  VocabularyOddOneOutUI.renderFeedback = function ({ selectedWordId, correct, correctWordId, explanation, timedOut = false }) {
     const result = VocabularyOddOneOutState.get().lastResult || {};
     const imageByWordId = new Map(
       (result.word_images || []).map((item) => [Number(item.id), item.image_url || ""])
     );
-    document.querySelector(".vocab-game-layout")?.classList.add("is-revealed");
+    const hasAnyImage = Array.from(imageByWordId.values()).some((url) => Boolean(url));
+    if (hasAnyImage) document.querySelector(".vocab-game-layout")?.classList.add("is-revealed");
     document.querySelectorAll(".vocab-word-card").forEach((card) => {
       const wordId = Number(card.dataset.wordId);
       const imageUrl = fullImageUrl(imageByWordId.get(wordId));
       card.disabled = true;
-      card.classList.add("is-revealed");
+      if (imageUrl) card.classList.add("is-revealed");
       if (wordId === Number(correctWordId)) card.classList.add("is-correct");
       if (wordId === Number(selectedWordId) && !correct) card.classList.add("is-wrong");
-      if (!card.querySelector(".vocab-word-card-image-slot")) {
+      if (imageUrl && !card.querySelector(".vocab-word-card-image-slot")) {
         card.insertAdjacentHTML("beforeend", `
-          <span class="vocab-word-card-image-slot ${imageUrl ? "" : "is-empty"}">
-            ${imageUrl ? `<img src="${VocabularyOddOneOutUI.escape(imageUrl)}" alt="">` : `<span>No image added</span>`}
+          <span class="vocab-word-card-image-slot">
+            <img src="${VocabularyOddOneOutUI.escape(imageUrl)}" alt="">
           </span>
         `);
       }
@@ -102,11 +128,29 @@ window.VocabularyOddOneOutUI = window.VocabularyOddOneOutUI || {};
     if (!feedback) return;
     feedback.innerHTML = `
       <div class="vocab-panel-content">
-        <strong>${correct ? "Correct" : "Not quite"}</strong>
+        <strong>${timedOut ? "Time's up" : (correct ? "Correct" : "Not quite")}</strong>
         <p>${explanation ? VocabularyOddOneOutUI.escape(explanation) : "Review the odd word, then continue."}</p>
       </div>
+      ${panelStatusMarkup()}
       <button class="vocab-next-btn" onclick="VocabularyOddOneOutGame.next()">Next</button>
     `;
+  };
+
+  VocabularyOddOneOutUI.renderTimer = function ({ seconds, mode }) {
+    const timer = document.getElementById("vocab-timer");
+    if (!timer) return;
+    const safeSeconds = Math.max(0, Number(seconds) || 0);
+    timer.className = "vocab-timer";
+    if (mode === "explanation") {
+      timer.classList.add("is-explain");
+    } else if (safeSeconds <= 3) {
+      timer.classList.add("is-danger");
+    } else if (safeSeconds <= 6) {
+      timer.classList.add("is-warn");
+    } else {
+      timer.classList.add("is-calm");
+    }
+    timer.innerHTML = `<span class="vocab-timer-number">${safeSeconds}</span>`;
   };
 
   VocabularyOddOneOutUI.renderResult = function () {

@@ -5,6 +5,8 @@ window.VocabularyOddOneOutState = window.VocabularyOddOneOutState || {};
     sets: [],
     index: 0,
     correct: 0,
+    streak: 0,
+    comboBreak: null,
     answered: false,
     lastResult: null,
   };
@@ -22,6 +24,8 @@ window.VocabularyOddOneOutState = window.VocabularyOddOneOutState || {};
       sets: Array.isArray(sets) ? sets : [],
       index: 0,
       correct: 0,
+      streak: 0,
+      comboBreak: null,
       answered: false,
       lastResult: null,
     };

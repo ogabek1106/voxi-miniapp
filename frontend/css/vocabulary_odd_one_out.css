@@ -228,9 +228,8 @@ body.view-website.vocab-ooo-active:not(.mobile-browser-view) .content {
   margin-top: 10px;
   min-height: 0;
   box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto 54px;
   gap: 20px;
   padding: 24px;
   border-radius: 32px;
@@ -277,6 +276,79 @@ body.view-website.vocab-ooo-active:not(.mobile-browser-view) .content {
   font-size: 22px;
   font-weight: 900;
   line-height: 1.25;
+}
+
+.vocab-panel-status {
+  min-height: 96px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.vocab-combo {
+  min-height: 34px;
+  padding: 4px 16px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(255, 214, 102, 0.94), rgba(255, 139, 92, 0.94));
+  color: #ffffff;
+  box-shadow: 0 12px 28px rgba(255, 139, 92, 0.34);
+  font-size: 24px;
+  font-weight: 950;
+  line-height: 1;
+  transform: rotate(-3deg);
+  animation: vocabComboFloat 2100ms ease-in-out infinite, vocabComboPop 420ms ease-out;
+}
+
+.vocab-combo.is-empty {
+  visibility: hidden;
+}
+
+.vocab-combo.is-breaking {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.96), rgba(185, 28, 28, 0.96));
+  box-shadow: 0 14px 30px rgba(239, 68, 68, 0.34);
+  animation: vocabComboBreak 720ms ease-in forwards;
+}
+
+.vocab-timer {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  box-shadow: 0 16px 34px rgba(0, 186, 255, 0.25);
+  font-size: 30px;
+  font-weight: 950;
+  line-height: 1;
+  transition: background 220ms ease, box-shadow 220ms ease, transform 220ms ease;
+}
+
+.vocab-timer.is-calm {
+  background: linear-gradient(135deg, #00baff, #42d8ff);
+}
+
+.vocab-timer.is-warn {
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  box-shadow: 0 16px 34px rgba(249, 115, 22, 0.28);
+  transform: scale(1.04);
+}
+
+.vocab-timer.is-danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  box-shadow: 0 18px 38px rgba(239, 68, 68, 0.36);
+  animation: vocabTimerDanger 520ms ease-in-out infinite;
+}
+
+.vocab-timer.is-explain {
+  background: linear-gradient(135deg, #64748b, #94a3b8);
+  box-shadow: 0 14px 28px rgba(100, 116, 139, 0.22);
+}
+
+.vocab-next-placeholder {
+  min-height: 54px;
 }
 
 .vocab-back-btn {
@@ -385,6 +457,29 @@ body.view-website.vocab-ooo-active:not(.mobile-browser-view) .content {
   100% { transform: scale(1); }
 }
 
+@keyframes vocabTimerDanger {
+  0%, 100% { transform: translateX(0) scale(1.08); }
+  28% { transform: translateX(-2px) scale(1.12); }
+  56% { transform: translateX(2px) scale(1.10); }
+}
+
+@keyframes vocabComboFloat {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-5px) rotate(2deg); }
+}
+
+@keyframes vocabComboPop {
+  0% { opacity: 0; transform: scale(0.45) rotate(-12deg); }
+  70% { opacity: 1; transform: scale(1.15) rotate(4deg); }
+  100% { transform: scale(1) rotate(-3deg); }
+}
+
+@keyframes vocabComboBreak {
+  0% { opacity: 1; transform: translateY(0) rotate(-3deg) scale(1); }
+  42% { opacity: 1; transform: translateY(10px) rotate(10deg) scale(1.08); }
+  100% { opacity: 0; transform: translateY(54px) rotate(22deg) scale(0.72); }
+}
+
 @media (max-width: 980px) {
   .vocab-game-page {
     width: min(100% - 32px, 720px);
@@ -426,9 +521,31 @@ body.view-website.vocab-ooo-active:not(.mobile-browser-view) .content {
     height: 104px;
     min-height: 104px;
     margin-top: 0;
+    grid-template-rows: minmax(0, 1fr) auto 38px;
     gap: 10px;
     padding: 12px;
     border-radius: 22px;
+  }
+
+  .vocab-panel-status {
+    min-height: 42px;
+    gap: 4px;
+  }
+
+  .vocab-combo {
+    min-height: 18px;
+    padding: 2px 10px;
+    font-size: 16px;
+  }
+
+  .vocab-combo.is-empty {
+    display: none;
+  }
+
+  .vocab-timer {
+    width: 42px;
+    height: 42px;
+    font-size: 18px;
   }
 
   .vocab-game-layout.is-revealed .vocab-side-panel {
@@ -479,6 +596,10 @@ body.view-website.vocab-ooo-active:not(.mobile-browser-view) .content {
     min-height: 38px;
     border-radius: 14px;
     font-size: 14px;
+  }
+
+  .vocab-next-placeholder {
+    min-height: 38px;
   }
 }
 

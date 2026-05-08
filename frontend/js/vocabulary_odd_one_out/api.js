@@ -5,10 +5,11 @@ window.VocabularyOddOneOutApi = window.VocabularyOddOneOutApi || {};
     return apiGet("/vocabulary/odd-one-out/session");
   };
 
-  VocabularyOddOneOutApi.check = function ({ setId, selectedWordId }) {
+  VocabularyOddOneOutApi.check = function ({ setId, selectedWordId, timedOut = false }) {
     return apiPost("/vocabulary/odd-one-out/check", {
       set_id: Number(setId),
-      selected_word_id: Number(selectedWordId),
+      selected_word_id: selectedWordId == null ? null : Number(selectedWordId),
+      timed_out: Boolean(timedOut),
     });
   };
 })();
