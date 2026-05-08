@@ -253,9 +253,19 @@ body #screen-home .home-card:hover::before {
 }
 
 @media (max-width: 700px) {
+  body.view-miniapp #screen-home,
+  body.mobile-browser-view #screen-home {
+    padding-top: 0;
+  }
+
   body.view-miniapp #screen-home .home-shell,
   body.mobile-browser-view #screen-home .home-shell {
     gap: 8px;
+  }
+
+  body.view-miniapp #screen-home .home-header,
+  body.mobile-browser-view #screen-home .home-header {
+    height: 52px;
   }
 
   .home-feature-row {

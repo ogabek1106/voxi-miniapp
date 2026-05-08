@@ -9,7 +9,7 @@ body.mobile-browser-view {
 }
 
 body.mobile-browser-view {
-  --website-content-top-gap: 42px;
+  --website-content-top-gap: 0px;
   overflow-y: auto;
   position: relative;
 }
