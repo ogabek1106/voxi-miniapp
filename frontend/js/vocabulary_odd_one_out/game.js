@@ -5,6 +5,7 @@ window.VocabularyOddOneOutGame = window.VocabularyOddOneOutGame || {};
   const EXPLANATION_SECONDS = 12;
   let questionTimerId = null;
   let explanationTimerId = null;
+  let explanationAdvanceTimerId = null;
   let cleanupTimerId = null;
 
   function clearTimer(id) {
@@ -18,11 +19,19 @@ window.VocabularyOddOneOutGame = window.VocabularyOddOneOutGame || {};
     }
   }
 
+  function stopExplanationAdvanceTimer() {
+    if (explanationAdvanceTimerId) {
+      clearTimeout(explanationAdvanceTimerId);
+      explanationAdvanceTimerId = null;
+    }
+  }
+
   VocabularyOddOneOutGame.stopTimers = function () {
     clearTimer(questionTimerId);
     clearTimer(explanationTimerId);
     questionTimerId = null;
     explanationTimerId = null;
+    stopExplanationAdvanceTimer();
     stopCleanupTimer();
   };
 
@@ -50,6 +59,7 @@ window.VocabularyOddOneOutGame = window.VocabularyOddOneOutGame || {};
     clearTimer(questionTimerId);
     questionTimerId = null;
     clearTimer(explanationTimerId);
+    stopExplanationAdvanceTimer();
     const endsAt = Date.now() + EXPLANATION_SECONDS * 1000;
     let lastRendered = null;
     function tick() {
@@ -62,6 +72,7 @@ window.VocabularyOddOneOutGame = window.VocabularyOddOneOutGame || {};
         clearTimer(explanationTimerId);
         explanationTimerId = null;
         if (!timedOut) {
+          stopExplanationAdvanceTimer();
           VocabularyOddOneOutGame.next();
         }
       }
@@ -70,6 +81,16 @@ window.VocabularyOddOneOutGame = window.VocabularyOddOneOutGame || {};
     explanationTimerId = setInterval(() => {
       tick();
     }, 250);
+    if (!timedOut) {
+      explanationAdvanceTimerId = setTimeout(() => {
+        explanationAdvanceTimerId = null;
+        if (explanationTimerId) {
+          clearTimer(explanationTimerId);
+          explanationTimerId = null;
+        }
+        VocabularyOddOneOutGame.next();
+      }, EXPLANATION_SECONDS * 1000 + 150);
+    }
     if (timedOut) {
       stopCleanupTimer();
       cleanupTimerId = setTimeout(() => {
