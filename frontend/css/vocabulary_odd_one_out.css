@@ -491,7 +491,7 @@ body.view-website.vocab-ooo-active:not(.mobile-browser-view) .content {
   }
 
   body.mobile-browser-view.view-website.vocab-ooo-active #content {
-    padding-top: var(--website-header-height);
+    padding-top: 0;
     padding-bottom: 0;
   }
 
@@ -560,7 +560,7 @@ body.view-website.vocab-ooo-active:not(.mobile-browser-view) .content {
   }
 
   .vocab-panel-status {
-    order: 3;
+    order: 2;
     position: static;
     z-index: auto;
     min-height: 86px;
@@ -647,7 +647,7 @@ body.view-website.vocab-ooo-active:not(.mobile-browser-view) .content {
   }
 
   .vocab-next-btn {
-    order: 2;
+    order: 3;
     height: 42px;
     min-height: 42px;
     max-width: 220px;

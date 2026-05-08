@@ -47,17 +47,26 @@ window.VocabularyOddOneOutGame = window.VocabularyOddOneOutGame || {};
   };
 
   VocabularyOddOneOutGame.startExplanationTimer = function ({ timedOut = false } = {}) {
+    clearTimer(questionTimerId);
+    questionTimerId = null;
     clearTimer(explanationTimerId);
-    let remaining = EXPLANATION_SECONDS;
-    VocabularyOddOneOutUI.renderTimer({ seconds: remaining, mode: "explanation" });
-    explanationTimerId = setInterval(() => {
-      remaining -= 1;
-      VocabularyOddOneOutUI.renderTimer({ seconds: remaining, mode: "explanation" });
+    const endsAt = Date.now() + EXPLANATION_SECONDS * 1000;
+    let lastRendered = null;
+    function tick() {
+      const remaining = Math.max(0, Math.ceil((endsAt - Date.now()) / 1000));
+      if (remaining !== lastRendered) {
+        VocabularyOddOneOutUI.renderTimer({ seconds: remaining, mode: "explanation" });
+        lastRendered = remaining;
+      }
       if (remaining <= 0) {
         clearTimer(explanationTimerId);
         explanationTimerId = null;
       }
-    }, 1000);
+    }
+    tick();
+    explanationTimerId = setInterval(() => {
+      tick();
+    }, 250);
     if (timedOut) {
       stopCleanupTimer();
       cleanupTimerId = setTimeout(() => {
