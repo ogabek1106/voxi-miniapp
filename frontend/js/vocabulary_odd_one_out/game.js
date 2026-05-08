@@ -42,6 +42,7 @@ window.VocabularyOddOneOutGame = window.VocabularyOddOneOutGame || {};
 
   VocabularyOddOneOutGame.startQuestionTimer = function () {
     VocabularyOddOneOutGame.stopTimers();
+    VocabularyOddOneOutState.set({ questionStartedAt: Date.now() });
     let remaining = QUESTION_SECONDS;
     VocabularyOddOneOutUI.renderTimer({ seconds: remaining, mode: "question" });
     questionTimerId = setInterval(() => {
@@ -113,11 +114,16 @@ window.VocabularyOddOneOutGame = window.VocabularyOddOneOutGame || {};
     try {
       const result = await VocabularyOddOneOutApi.check({ setId: set.id, selectedWordId });
       const nextStreak = result.correct ? state.streak + 1 : 0;
+      const answerMs = Math.max(0, Date.now() - Number(state.questionStartedAt || Date.now()));
       VocabularyOddOneOutState.set({
         correct: state.correct + (result.correct ? 1 : 0),
         streak: nextStreak,
         comboBreak: !result.correct && state.streak >= 3 ? state.streak : null,
         lastResult: result,
+        wrong: state.wrong + (result.correct ? 0 : 1),
+        answeredCount: state.answeredCount + 1,
+        totalAnswerMs: state.totalAnswerMs + answerMs,
+        bestStreak: Math.max(Number(state.bestStreak || 0), nextStreak),
       });
       VocabularyOddOneOutUI.renderFeedback({
         selectedWordId,
@@ -150,6 +156,10 @@ window.VocabularyOddOneOutGame = window.VocabularyOddOneOutGame || {};
         streak: 0,
         comboBreak: state.streak >= 3 ? state.streak : null,
         lastResult: result,
+        wrong: state.wrong + 1,
+        answeredCount: state.answeredCount + 1,
+        totalAnswerMs: state.totalAnswerMs + QUESTION_SECONDS * 1000,
+        timeouts: state.timeouts + 1,
       });
       VocabularyOddOneOutUI.renderFeedback({
         selectedWordId: null,
@@ -175,5 +185,31 @@ window.VocabularyOddOneOutGame = window.VocabularyOddOneOutGame || {};
       lastResult: null,
     });
     VocabularyOddOneOutUI.renderPuzzle();
+  };
+
+  VocabularyOddOneOutGame.recordSession = async function () {
+    const state = VocabularyOddOneOutState.get();
+    if (state.analyticsSaved) return;
+    VocabularyOddOneOutState.set({ analyticsSaved: true });
+    const user = window.WebsiteAuthState?.getUser?.() || null;
+    const telegramId = window.getTelegramId?.() || user?.telegram_id || null;
+    const totalSetsPlayed = Math.max(0, Number(state.answeredCount || 0));
+    if (!totalSetsPlayed) return;
+    const totalMs = Math.max(0, Date.now() - Number(state.sessionStartedAt || Date.now()));
+    try {
+      await VocabularyOddOneOutApi.recordAttempt({
+        user_id: user?.id || null,
+        telegram_id: telegramId ? Number(telegramId) : null,
+        total_sets_played: totalSetsPlayed,
+        correct_answers: Number(state.correct || 0),
+        wrong_answers: Number(state.wrong || 0),
+        timeouts: Number(state.timeouts || 0),
+        best_streak: Number(state.bestStreak || 0),
+        average_answer_time: totalSetsPlayed ? Number(state.totalAnswerMs || 0) / totalSetsPlayed / 1000 : 0,
+        total_time_seconds: Math.max(0, Math.round(totalMs / 1000)),
+      });
+    } catch (error) {
+      console.error("Odd One Out analytics save error:", error);
+    }
   };
 })();

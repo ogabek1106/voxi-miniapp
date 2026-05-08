@@ -2,9 +2,10 @@ import random
 from datetime import datetime
 
 from fastapi import HTTPException
+from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
 
-from app.models import VocabularyPuzzleSet, VocabularyPuzzleWord
+from app.models import User, VocabularyOddOneOutAttempt, VocabularyPuzzleSet, VocabularyPuzzleWord
 
 
 VALID_LEVELS = {"easy", "medium", "hard"}
@@ -202,3 +203,106 @@ def check_answer(db: Session, set_id: int, selected_word_id: int | None, timed_o
             for word in puzzle_set.words
         ],
     }
+
+
+def record_attempt(db: Session, payload) -> VocabularyOddOneOutAttempt:
+    total_sets = max(0, int(payload.total_sets_played or 0))
+    correct = max(0, int(payload.correct_answers or 0))
+    wrong = max(0, int(payload.wrong_answers or 0))
+    timeouts = max(0, int(payload.timeouts or 0))
+    attempt = VocabularyOddOneOutAttempt(
+        user_id=payload.user_id,
+        telegram_id=payload.telegram_id,
+        total_sets_played=total_sets,
+        correct_answers=correct,
+        wrong_answers=wrong,
+        timeouts=timeouts,
+        best_streak=max(0, int(payload.best_streak or 0)),
+        average_answer_time=payload.average_answer_time,
+        total_time_seconds=max(0, int(payload.total_time_seconds or 0)),
+        completed_at=datetime.utcnow(),
+    )
+    db.add(attempt)
+    db.commit()
+    db.refresh(attempt)
+    return attempt
+
+
+def _user_name(user: User | None, attempt: VocabularyOddOneOutAttempt) -> str | None:
+    if not user:
+        return str(attempt.telegram_id) if attempt.telegram_id else None
+    full_name = " ".join(part for part in [user.name, user.surname] if part)
+    return full_name or user.email or (str(user.telegram_id) if user.telegram_id else None)
+
+
+def _login_method(user: User | None, attempt: VocabularyOddOneOutAttempt) -> str | None:
+    if user:
+        if user.google_id:
+            return "Google"
+        if user.email and user.password_hash:
+            return "Email"
+        if user.telegram_id:
+            return "Telegram"
+    if attempt.telegram_id:
+        return "Telegram"
+    return None
+
+
+def list_admin_stats(db: Session) -> dict:
+    attempts = (
+        db.query(VocabularyOddOneOutAttempt, User)
+        .outerjoin(
+            User,
+            or_(
+                VocabularyOddOneOutAttempt.user_id == User.id,
+                VocabularyOddOneOutAttempt.telegram_id == User.telegram_id,
+            )
+        )
+        .order_by(VocabularyOddOneOutAttempt.completed_at.desc())
+        .all()
+    )
+    attempt_rows = [row[0] for row in attempts]
+    total_attempts = len(attempt_rows)
+    unique_keys = {
+        attempt.user_id or attempt.telegram_id
+        for attempt in attempt_rows
+        if attempt.user_id or attempt.telegram_id
+    }
+    total_sets = sum(int(attempt.total_sets_played or 0) for attempt in attempt_rows)
+    total_correct = sum(int(attempt.correct_answers or 0) for attempt in attempt_rows)
+    total_time = sum(int(attempt.total_time_seconds or 0) for attempt in attempt_rows)
+    total_timeouts = sum(int(attempt.timeouts or 0) for attempt in attempt_rows)
+    weighted_answer_time_total = sum(
+        float(attempt.average_answer_time or 0) * int(attempt.total_sets_played or 0)
+        for attempt in attempt_rows
+    )
+    summary = {
+        "total_attempts": total_attempts,
+        "unique_users": len(unique_keys),
+        "average_accuracy": (total_correct / total_sets * 100) if total_sets else 0,
+        "average_answer_time": (weighted_answer_time_total / total_sets) if total_sets else 0,
+        "total_time_seconds": total_time,
+        "highest_streak": max([int(attempt.best_streak or 0) for attempt in attempt_rows] or [0]),
+        "total_timeouts": total_timeouts,
+    }
+    items = []
+    for attempt, user in attempts:
+        sets_played = int(attempt.total_sets_played or 0)
+        correct = int(attempt.correct_answers or 0)
+        wrong = int(attempt.wrong_answers or 0)
+        items.append({
+            "attempt_id": attempt.id,
+            "telegram_id": attempt.telegram_id,
+            "user_name": _user_name(user, attempt),
+            "login_method": _login_method(user, attempt),
+            "total_sets_played": sets_played,
+            "correct_answers": correct,
+            "wrong_answers": wrong,
+            "timeouts": int(attempt.timeouts or 0),
+            "accuracy": (correct / sets_played * 100) if sets_played else 0,
+            "best_streak": int(attempt.best_streak or 0),
+            "average_answer_time": float(attempt.average_answer_time or 0),
+            "total_time_seconds": int(attempt.total_time_seconds or 0),
+            "completed_at": attempt.completed_at.isoformat() if attempt.completed_at else None,
+        })
+    return {"summary": summary, "items": items}

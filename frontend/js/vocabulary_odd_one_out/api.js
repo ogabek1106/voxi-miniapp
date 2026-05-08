@@ -12,4 +12,8 @@ window.VocabularyOddOneOutApi = window.VocabularyOddOneOutApi || {};
       timed_out: Boolean(timedOut),
     });
   };
+
+  VocabularyOddOneOutApi.recordAttempt = function (payload) {
+    return apiPost("/vocabulary/odd-one-out/attempts", payload);
+  };
 })();

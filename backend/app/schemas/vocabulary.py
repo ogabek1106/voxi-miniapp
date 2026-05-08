@@ -47,3 +47,15 @@ class VocabularyPuzzleCheckIn(BaseModel):
     set_id: int
     selected_word_id: Optional[int] = None
     timed_out: bool = False
+
+
+class VocabularyOddOneOutAttemptIn(BaseModel):
+    user_id: Optional[int] = None
+    telegram_id: Optional[int] = None
+    total_sets_played: int = 0
+    correct_answers: int = 0
+    wrong_answers: int = 0
+    timeouts: int = 0
+    best_streak: int = 0
+    average_answer_time: Optional[float] = None
+    total_time_seconds: int = 0

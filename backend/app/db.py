@@ -1033,3 +1033,67 @@ def ensure_vocabulary_puzzle_schema():
             "CREATE INDEX IF NOT EXISTS ix_vocabulary_puzzle_words_set_id "
             "ON vocabulary_puzzle_words (set_id);"
         ))
+
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS vocabulary_odd_one_out_attempts ("
+            "id SERIAL PRIMARY KEY, "
+            "user_id INTEGER NULL, "
+            "telegram_id BIGINT NULL, "
+            "total_sets_played INTEGER NOT NULL DEFAULT 0, "
+            "correct_answers INTEGER NOT NULL DEFAULT 0, "
+            "wrong_answers INTEGER NOT NULL DEFAULT 0, "
+            "timeouts INTEGER NOT NULL DEFAULT 0, "
+            "best_streak INTEGER NOT NULL DEFAULT 0, "
+            "average_answer_time DOUBLE PRECISION NULL, "
+            "total_time_seconds INTEGER NOT NULL DEFAULT 0, "
+            "completed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()"
+            ");"
+        ))
+        conn.execute(text(
+            "ALTER TABLE vocabulary_odd_one_out_attempts "
+            "ADD COLUMN IF NOT EXISTS user_id INTEGER;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE vocabulary_odd_one_out_attempts "
+            "ADD COLUMN IF NOT EXISTS telegram_id BIGINT;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE vocabulary_odd_one_out_attempts "
+            "ADD COLUMN IF NOT EXISTS total_sets_played INTEGER NOT NULL DEFAULT 0;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE vocabulary_odd_one_out_attempts "
+            "ADD COLUMN IF NOT EXISTS correct_answers INTEGER NOT NULL DEFAULT 0;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE vocabulary_odd_one_out_attempts "
+            "ADD COLUMN IF NOT EXISTS wrong_answers INTEGER NOT NULL DEFAULT 0;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE vocabulary_odd_one_out_attempts "
+            "ADD COLUMN IF NOT EXISTS timeouts INTEGER NOT NULL DEFAULT 0;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE vocabulary_odd_one_out_attempts "
+            "ADD COLUMN IF NOT EXISTS best_streak INTEGER NOT NULL DEFAULT 0;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE vocabulary_odd_one_out_attempts "
+            "ADD COLUMN IF NOT EXISTS average_answer_time DOUBLE PRECISION;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE vocabulary_odd_one_out_attempts "
+            "ADD COLUMN IF NOT EXISTS total_time_seconds INTEGER NOT NULL DEFAULT 0;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE vocabulary_odd_one_out_attempts "
+            "ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_vocab_ooo_attempts_telegram_id "
+            "ON vocabulary_odd_one_out_attempts (telegram_id);"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_vocab_ooo_attempts_completed_at "
+            "ON vocabulary_odd_one_out_attempts (completed_at);"
+        ))

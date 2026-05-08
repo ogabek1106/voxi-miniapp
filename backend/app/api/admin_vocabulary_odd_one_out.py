@@ -69,3 +69,9 @@ def draft_set(set_id: int, telegram_id: int, db: Session = Depends(get_db)):
     if not puzzle_set:
         raise HTTPException(status_code=404, detail="vocabulary_puzzle_set_not_found")
     return {"ok": True, "set": service.serialize_set(puzzle_set)}
+
+
+@router.get("/stats")
+def get_stats(telegram_id: int, db: Session = Depends(get_db)):
+    require_admin(telegram_id)
+    return {"ok": True, **service.list_admin_stats(db)}

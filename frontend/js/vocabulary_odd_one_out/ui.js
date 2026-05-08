@@ -157,6 +157,7 @@ window.VocabularyOddOneOutUI = window.VocabularyOddOneOutUI || {};
     const screen = VocabularyOddOneOutUI.screen();
     if (!screen) return;
     const state = VocabularyOddOneOutState.get();
+    VocabularyOddOneOutGame.recordSession?.();
     screen.innerHTML = `
       <div class="vocab-game-page">
         <div class="vocab-ooo-result">

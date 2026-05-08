@@ -9,6 +9,14 @@ window.VocabularyOddOneOutState = window.VocabularyOddOneOutState || {};
     comboBreak: null,
     answered: false,
     lastResult: null,
+    sessionStartedAt: null,
+    questionStartedAt: null,
+    totalAnswerMs: 0,
+    answeredCount: 0,
+    wrong: 0,
+    timeouts: 0,
+    bestStreak: 0,
+    analyticsSaved: false,
   };
 
   VocabularyOddOneOutState.set = function (patch) {
@@ -28,6 +36,14 @@ window.VocabularyOddOneOutState = window.VocabularyOddOneOutState || {};
       comboBreak: null,
       answered: false,
       lastResult: null,
+      sessionStartedAt: Date.now(),
+      questionStartedAt: null,
+      totalAnswerMs: 0,
+      answeredCount: 0,
+      wrong: 0,
+      timeouts: 0,
+      bestStreak: 0,
+      analyticsSaved: false,
     };
   };
 })();

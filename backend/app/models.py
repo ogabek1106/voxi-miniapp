@@ -100,6 +100,22 @@ class VocabularyPuzzleWord(Base):
     set = relationship("VocabularyPuzzleSet", back_populates="words")
 
 
+class VocabularyOddOneOutAttempt(Base):
+    __tablename__ = "vocabulary_odd_one_out_attempts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, nullable=True, index=True)
+    telegram_id = Column(BigInteger, index=True, nullable=True)
+    total_sets_played = Column(Integer, nullable=False, default=0)
+    correct_answers = Column(Integer, nullable=False, default=0)
+    wrong_answers = Column(Integer, nullable=False, default=0)
+    timeouts = Column(Integer, nullable=False, default=0)
+    best_streak = Column(Integer, nullable=False, default=0)
+    average_answer_time = Column(Float, nullable=True)
+    total_time_seconds = Column(Integer, nullable=False, default=0)
+    completed_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+
+
 class ReadingTestStatus(enum.Enum):
     draft = "draft"
     published = "published"
