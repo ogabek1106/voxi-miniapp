@@ -16,7 +16,7 @@ window.VocabularyOddOneOutState = window.VocabularyOddOneOutState || {};
     wrong: 0,
     timeouts: 0,
     bestStreak: 0,
-    analyticsSaved: false,
+    analyticsAttemptId: null,
   };
 
   VocabularyOddOneOutState.set = function (patch) {
@@ -43,7 +43,7 @@ window.VocabularyOddOneOutState = window.VocabularyOddOneOutState || {};
       wrong: 0,
       timeouts: 0,
       bestStreak: 0,
-      analyticsSaved: false,
+      analyticsAttemptId: null,
     };
   };
 })();

@@ -7,6 +7,7 @@ window.VocabularyOddOneOutGame = window.VocabularyOddOneOutGame || {};
   let explanationTimerId = null;
   let explanationAdvanceTimerId = null;
   let cleanupTimerId = null;
+  let analyticsSavePromise = Promise.resolve();
 
   function clearTimer(id) {
     if (id) clearInterval(id);
@@ -132,6 +133,7 @@ window.VocabularyOddOneOutGame = window.VocabularyOddOneOutGame || {};
         explanation: result.explanation,
         timedOut: false,
       });
+      VocabularyOddOneOutGame.recordSession();
       VocabularyOddOneOutGame.startExplanationTimer({ timedOut: false });
     } catch (error) {
       console.error("Odd One Out check error:", error);
@@ -168,6 +170,7 @@ window.VocabularyOddOneOutGame = window.VocabularyOddOneOutGame || {};
         explanation: result.explanation,
         timedOut: true,
       });
+      VocabularyOddOneOutGame.recordSession();
       VocabularyOddOneOutGame.startExplanationTimer({ timedOut: true });
     } catch (error) {
       console.error("Odd One Out timeout error:", error);
@@ -187,29 +190,34 @@ window.VocabularyOddOneOutGame = window.VocabularyOddOneOutGame || {};
     VocabularyOddOneOutUI.renderPuzzle();
   };
 
-  VocabularyOddOneOutGame.recordSession = async function () {
-    const state = VocabularyOddOneOutState.get();
-    if (state.analyticsSaved) return;
-    VocabularyOddOneOutState.set({ analyticsSaved: true });
-    const user = window.WebsiteAuthState?.getUser?.() || null;
-    const telegramId = window.getTelegramId?.() || user?.telegram_id || null;
-    const totalSetsPlayed = Math.max(0, Number(state.answeredCount || 0));
-    if (!totalSetsPlayed) return;
-    const totalMs = Math.max(0, Date.now() - Number(state.sessionStartedAt || Date.now()));
-    try {
-      await VocabularyOddOneOutApi.recordAttempt({
-        user_id: user?.id || null,
-        telegram_id: telegramId ? Number(telegramId) : null,
-        total_sets_played: totalSetsPlayed,
-        correct_answers: Number(state.correct || 0),
-        wrong_answers: Number(state.wrong || 0),
-        timeouts: Number(state.timeouts || 0),
-        best_streak: Number(state.bestStreak || 0),
-        average_answer_time: totalSetsPlayed ? Number(state.totalAnswerMs || 0) / totalSetsPlayed / 1000 : 0,
-        total_time_seconds: Math.max(0, Math.round(totalMs / 1000)),
-      });
-    } catch (error) {
-      console.error("Odd One Out analytics save error:", error);
-    }
+  VocabularyOddOneOutGame.recordSession = function () {
+    analyticsSavePromise = analyticsSavePromise.catch(() => null).then(async () => {
+      const state = VocabularyOddOneOutState.get();
+      const user = window.WebsiteAuthState?.getUser?.() || null;
+      const telegramId = window.getTelegramId?.() || user?.telegram_id || null;
+      const totalSetsPlayed = Math.max(0, Number(state.answeredCount || 0));
+      if (!totalSetsPlayed) return;
+      const totalMs = Math.max(0, Date.now() - Number(state.sessionStartedAt || Date.now()));
+      try {
+        const response = await VocabularyOddOneOutApi.recordAttempt({
+          attempt_id: state.analyticsAttemptId || null,
+          user_id: user?.id || null,
+          telegram_id: telegramId ? Number(telegramId) : null,
+          total_sets_played: totalSetsPlayed,
+          correct_answers: Number(state.correct || 0),
+          wrong_answers: Number(state.wrong || 0),
+          timeouts: Number(state.timeouts || 0),
+          best_streak: Number(state.bestStreak || 0),
+          average_answer_time: totalSetsPlayed ? Number(state.totalAnswerMs || 0) / totalSetsPlayed / 1000 : 0,
+          total_time_seconds: Math.max(0, Math.round(totalMs / 1000)),
+        });
+        if (response?.attempt_id) {
+          VocabularyOddOneOutState.set({ analyticsAttemptId: Number(response.attempt_id) });
+        }
+      } catch (error) {
+        console.error("Odd One Out analytics save error:", error);
+      }
+    });
+    return analyticsSavePromise;
   };
 })();

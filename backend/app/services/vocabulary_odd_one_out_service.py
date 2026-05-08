@@ -210,19 +210,26 @@ def record_attempt(db: Session, payload) -> VocabularyOddOneOutAttempt:
     correct = max(0, int(payload.correct_answers or 0))
     wrong = max(0, int(payload.wrong_answers or 0))
     timeouts = max(0, int(payload.timeouts or 0))
-    attempt = VocabularyOddOneOutAttempt(
-        user_id=payload.user_id,
-        telegram_id=payload.telegram_id,
-        total_sets_played=total_sets,
-        correct_answers=correct,
-        wrong_answers=wrong,
-        timeouts=timeouts,
-        best_streak=max(0, int(payload.best_streak or 0)),
-        average_answer_time=payload.average_answer_time,
-        total_time_seconds=max(0, int(payload.total_time_seconds or 0)),
-        completed_at=datetime.utcnow(),
-    )
-    db.add(attempt)
+    attempt = None
+    if payload.attempt_id:
+        attempt = (
+            db.query(VocabularyOddOneOutAttempt)
+            .filter(VocabularyOddOneOutAttempt.id == int(payload.attempt_id))
+            .first()
+        )
+    if not attempt:
+        attempt = VocabularyOddOneOutAttempt()
+        db.add(attempt)
+    attempt.user_id = payload.user_id
+    attempt.telegram_id = payload.telegram_id
+    attempt.total_sets_played = total_sets
+    attempt.correct_answers = correct
+    attempt.wrong_answers = wrong
+    attempt.timeouts = timeouts
+    attempt.best_streak = max(0, int(payload.best_streak or 0))
+    attempt.average_answer_time = payload.average_answer_time
+    attempt.total_time_seconds = max(0, int(payload.total_time_seconds or 0))
+    attempt.completed_at = datetime.utcnow()
     db.commit()
     db.refresh(attempt)
     return attempt

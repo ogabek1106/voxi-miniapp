@@ -50,6 +50,7 @@ class VocabularyPuzzleCheckIn(BaseModel):
 
 
 class VocabularyOddOneOutAttemptIn(BaseModel):
+    attempt_id: Optional[int] = None
     user_id: Optional[int] = None
     telegram_id: Optional[int] = None
     total_sets_played: int = 0
