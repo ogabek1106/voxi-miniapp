@@ -253,6 +253,11 @@ body #screen-home .home-card:hover::before {
 }
 
 @media (max-width: 700px) {
+  body.view-miniapp #screen-home .home-shell,
+  body.mobile-browser-view #screen-home .home-shell {
+    gap: 8px;
+  }
+
   .home-feature-row {
     grid-template-columns: 1fr;
   }
