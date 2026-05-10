@@ -1207,3 +1207,56 @@ def ensure_word_merge_schema():
         conn.execute(text("CREATE INDEX IF NOT EXISTS ix_word_merge_stages_family_id ON word_merge_stages (family_id);"))
         conn.execute(text("CREATE INDEX IF NOT EXISTS ix_word_merge_sessions_telegram_id ON word_merge_sessions (telegram_id);"))
         conn.execute(text("CREATE INDEX IF NOT EXISTS ix_word_merge_moves_session_id ON word_merge_moves (session_id);"))
+
+
+def ensure_word_shuffle_schema():
+    with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS word_shuffle_entries ("
+            "id SERIAL PRIMARY KEY, "
+            "word VARCHAR NOT NULL, "
+            "translation VARCHAR NOT NULL, "
+            "example_sentence TEXT NULL, "
+            "cefr_level VARCHAR NULL, "
+            "category VARCHAR NULL, "
+            "difficulty VARCHAR NOT NULL DEFAULT 'easy', "
+            "status VARCHAR NOT NULL DEFAULT 'inactive', "
+            "created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), "
+            "updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()"
+            ");"
+        ))
+        conn.execute(text("ALTER TABLE word_shuffle_entries ADD COLUMN IF NOT EXISTS word VARCHAR;"))
+        conn.execute(text("ALTER TABLE word_shuffle_entries ADD COLUMN IF NOT EXISTS translation VARCHAR;"))
+        conn.execute(text("ALTER TABLE word_shuffle_entries ADD COLUMN IF NOT EXISTS example_sentence TEXT;"))
+        conn.execute(text("ALTER TABLE word_shuffle_entries ADD COLUMN IF NOT EXISTS cefr_level VARCHAR;"))
+        conn.execute(text("ALTER TABLE word_shuffle_entries ADD COLUMN IF NOT EXISTS category VARCHAR;"))
+        conn.execute(text("ALTER TABLE word_shuffle_entries ADD COLUMN IF NOT EXISTS difficulty VARCHAR NOT NULL DEFAULT 'easy';"))
+        conn.execute(text("ALTER TABLE word_shuffle_entries ADD COLUMN IF NOT EXISTS status VARCHAR NOT NULL DEFAULT 'inactive';"))
+        conn.execute(text("ALTER TABLE word_shuffle_entries ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text("ALTER TABLE word_shuffle_entries ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS word_shuffle_sessions ("
+            "id SERIAL PRIMARY KEY, "
+            "user_id INTEGER NULL, "
+            "telegram_id BIGINT NULL, "
+            "score INTEGER NOT NULL DEFAULT 0, "
+            "solved_count INTEGER NOT NULL DEFAULT 0, "
+            "best_streak INTEGER NOT NULL DEFAULT 0, "
+            "status VARCHAR NOT NULL DEFAULT 'started', "
+            "started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), "
+            "finished_at TIMESTAMPTZ NULL"
+            ");"
+        ))
+        conn.execute(text("ALTER TABLE word_shuffle_sessions ADD COLUMN IF NOT EXISTS user_id INTEGER;"))
+        conn.execute(text("ALTER TABLE word_shuffle_sessions ADD COLUMN IF NOT EXISTS telegram_id BIGINT;"))
+        conn.execute(text("ALTER TABLE word_shuffle_sessions ADD COLUMN IF NOT EXISTS score INTEGER NOT NULL DEFAULT 0;"))
+        conn.execute(text("ALTER TABLE word_shuffle_sessions ADD COLUMN IF NOT EXISTS solved_count INTEGER NOT NULL DEFAULT 0;"))
+        conn.execute(text("ALTER TABLE word_shuffle_sessions ADD COLUMN IF NOT EXISTS best_streak INTEGER NOT NULL DEFAULT 0;"))
+        conn.execute(text("ALTER TABLE word_shuffle_sessions ADD COLUMN IF NOT EXISTS status VARCHAR NOT NULL DEFAULT 'started';"))
+        conn.execute(text("ALTER TABLE word_shuffle_sessions ADD COLUMN IF NOT EXISTS started_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text("ALTER TABLE word_shuffle_sessions ADD COLUMN IF NOT EXISTS finished_at TIMESTAMPTZ;"))
+
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_word_shuffle_entries_status ON word_shuffle_entries (status);"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_word_shuffle_entries_difficulty ON word_shuffle_entries (difficulty);"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_word_shuffle_sessions_telegram_id ON word_shuffle_sessions (telegram_id);"))

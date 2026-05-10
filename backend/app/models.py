@@ -175,6 +175,35 @@ class WordMergeMove(Base):
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
 
 
+class WordShuffleEntry(Base):
+    __tablename__ = "word_shuffle_entries"
+
+    id = Column(Integer, primary_key=True, index=True)
+    word = Column(String, nullable=False)
+    translation = Column(String, nullable=False)
+    example_sentence = Column(Text, nullable=True)
+    cefr_level = Column(String, nullable=True)
+    category = Column(String, nullable=True)
+    difficulty = Column(String, nullable=False, default="easy")
+    status = Column(String, nullable=False, default="inactive")
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+
+class WordShuffleSession(Base):
+    __tablename__ = "word_shuffle_sessions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, nullable=True, index=True)
+    telegram_id = Column(BigInteger, nullable=True, index=True)
+    score = Column(Integer, nullable=False, default=0)
+    solved_count = Column(Integer, nullable=False, default=0)
+    best_streak = Column(Integer, nullable=False, default=0)
+    status = Column(String, nullable=False, default="started")
+    started_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    finished_at = Column(DateTime(timezone=True), nullable=True)
+
+
 class ReadingTestStatus(enum.Enum):
     draft = "draft"
     published = "published"
