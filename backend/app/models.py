@@ -116,6 +116,65 @@ class VocabularyOddOneOutAttempt(Base):
     completed_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
 
 
+class WordMergeFamily(Base):
+    __tablename__ = "word_merge_families"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=False)
+    cefr_level = Column(String, nullable=True)
+    category = Column(String, nullable=True)
+    status = Column(String, nullable=False, default="inactive")
+    mastery_target = Column(Integer, nullable=False, default=128)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    stages = relationship(
+        "WordMergeStage",
+        back_populates="family",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        order_by="WordMergeStage.order_index",
+    )
+
+
+class WordMergeStage(Base):
+    __tablename__ = "word_merge_stages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    family_id = Column(Integer, ForeignKey("word_merge_families.id", ondelete="CASCADE"), nullable=False)
+    english_word = Column(String, nullable=False)
+    uzbek_meaning = Column(String, nullable=False)
+    order_index = Column(Integer, nullable=False, default=0)
+
+    family = relationship("WordMergeFamily", back_populates="stages")
+
+
+class WordMergeSession(Base):
+    __tablename__ = "word_merge_sessions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, nullable=True, index=True)
+    telegram_id = Column(BigInteger, nullable=True, index=True)
+    score = Column(Integer, nullable=False, default=0)
+    mastered_count = Column(Integer, nullable=False, default=0)
+    moves_count = Column(Integer, nullable=False, default=0)
+    status = Column(String, nullable=False, default="started")
+    board_state = Column(JSON, nullable=True)
+    started_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    finished_at = Column(DateTime(timezone=True), nullable=True)
+
+
+class WordMergeMove(Base):
+    __tablename__ = "word_merge_moves"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_id = Column(Integer, ForeignKey("word_merge_sessions.id", ondelete="CASCADE"), nullable=False)
+    direction = Column(String, nullable=False)
+    score_after = Column(Integer, nullable=False, default=0)
+    mastered_after = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+
+
 class ReadingTestStatus(enum.Enum):
     draft = "draft"
     published = "published"

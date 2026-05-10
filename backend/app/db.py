@@ -1097,3 +1097,113 @@ def ensure_vocabulary_puzzle_schema():
             "CREATE INDEX IF NOT EXISTS ix_vocab_ooo_attempts_completed_at "
             "ON vocabulary_odd_one_out_attempts (completed_at);"
         ))
+
+
+def ensure_word_merge_schema():
+    with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS word_merge_families ("
+            "id SERIAL PRIMARY KEY, "
+            "title VARCHAR NOT NULL, "
+            "cefr_level VARCHAR NULL, "
+            "category VARCHAR NULL, "
+            "status VARCHAR NOT NULL DEFAULT 'inactive', "
+            "mastery_target INTEGER NOT NULL DEFAULT 128, "
+            "created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), "
+            "updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()"
+            ");"
+        ))
+        conn.execute(text("ALTER TABLE word_merge_families ADD COLUMN IF NOT EXISTS title VARCHAR;"))
+        conn.execute(text("ALTER TABLE word_merge_families ADD COLUMN IF NOT EXISTS cefr_level VARCHAR;"))
+        conn.execute(text("ALTER TABLE word_merge_families ADD COLUMN IF NOT EXISTS category VARCHAR;"))
+        conn.execute(text("ALTER TABLE word_merge_families ADD COLUMN IF NOT EXISTS status VARCHAR NOT NULL DEFAULT 'inactive';"))
+        conn.execute(text("ALTER TABLE word_merge_families ADD COLUMN IF NOT EXISTS mastery_target INTEGER NOT NULL DEFAULT 128;"))
+        conn.execute(text("ALTER TABLE word_merge_families ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text("ALTER TABLE word_merge_families ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS word_merge_stages ("
+            "id SERIAL PRIMARY KEY, "
+            "family_id INTEGER NOT NULL, "
+            "english_word VARCHAR NOT NULL, "
+            "uzbek_meaning VARCHAR NOT NULL, "
+            "order_index INTEGER NOT NULL DEFAULT 0"
+            ");"
+        ))
+        conn.execute(text("ALTER TABLE word_merge_stages ADD COLUMN IF NOT EXISTS family_id INTEGER;"))
+        conn.execute(text("ALTER TABLE word_merge_stages ADD COLUMN IF NOT EXISTS english_word VARCHAR;"))
+        conn.execute(text("ALTER TABLE word_merge_stages ADD COLUMN IF NOT EXISTS uzbek_meaning VARCHAR;"))
+        conn.execute(text("ALTER TABLE word_merge_stages ADD COLUMN IF NOT EXISTS order_index INTEGER NOT NULL DEFAULT 0;"))
+        conn.execute(text(
+            "DO $$ "
+            "BEGIN "
+            "IF NOT EXISTS ("
+            "SELECT 1 FROM information_schema.table_constraints "
+            "WHERE constraint_name = 'word_merge_stages_family_id_fkey'"
+            ") THEN "
+            "ALTER TABLE word_merge_stages "
+            "ADD CONSTRAINT word_merge_stages_family_id_fkey "
+            "FOREIGN KEY (family_id) REFERENCES word_merge_families(id) ON DELETE CASCADE; "
+            "END IF; "
+            "END "
+            "$$;"
+        ))
+
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS word_merge_sessions ("
+            "id SERIAL PRIMARY KEY, "
+            "user_id INTEGER NULL, "
+            "telegram_id BIGINT NULL, "
+            "score INTEGER NOT NULL DEFAULT 0, "
+            "mastered_count INTEGER NOT NULL DEFAULT 0, "
+            "moves_count INTEGER NOT NULL DEFAULT 0, "
+            "status VARCHAR NOT NULL DEFAULT 'started', "
+            "board_state JSON NULL, "
+            "started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), "
+            "finished_at TIMESTAMPTZ NULL"
+            ");"
+        ))
+        conn.execute(text("ALTER TABLE word_merge_sessions ADD COLUMN IF NOT EXISTS user_id INTEGER;"))
+        conn.execute(text("ALTER TABLE word_merge_sessions ADD COLUMN IF NOT EXISTS telegram_id BIGINT;"))
+        conn.execute(text("ALTER TABLE word_merge_sessions ADD COLUMN IF NOT EXISTS score INTEGER NOT NULL DEFAULT 0;"))
+        conn.execute(text("ALTER TABLE word_merge_sessions ADD COLUMN IF NOT EXISTS mastered_count INTEGER NOT NULL DEFAULT 0;"))
+        conn.execute(text("ALTER TABLE word_merge_sessions ADD COLUMN IF NOT EXISTS moves_count INTEGER NOT NULL DEFAULT 0;"))
+        conn.execute(text("ALTER TABLE word_merge_sessions ADD COLUMN IF NOT EXISTS status VARCHAR NOT NULL DEFAULT 'started';"))
+        conn.execute(text("ALTER TABLE word_merge_sessions ADD COLUMN IF NOT EXISTS board_state JSON;"))
+        conn.execute(text("ALTER TABLE word_merge_sessions ADD COLUMN IF NOT EXISTS started_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text("ALTER TABLE word_merge_sessions ADD COLUMN IF NOT EXISTS finished_at TIMESTAMPTZ;"))
+
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS word_merge_moves ("
+            "id SERIAL PRIMARY KEY, "
+            "session_id INTEGER NOT NULL, "
+            "direction VARCHAR NOT NULL, "
+            "score_after INTEGER NOT NULL DEFAULT 0, "
+            "mastered_after INTEGER NOT NULL DEFAULT 0, "
+            "created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()"
+            ");"
+        ))
+        conn.execute(text("ALTER TABLE word_merge_moves ADD COLUMN IF NOT EXISTS session_id INTEGER;"))
+        conn.execute(text("ALTER TABLE word_merge_moves ADD COLUMN IF NOT EXISTS direction VARCHAR;"))
+        conn.execute(text("ALTER TABLE word_merge_moves ADD COLUMN IF NOT EXISTS score_after INTEGER NOT NULL DEFAULT 0;"))
+        conn.execute(text("ALTER TABLE word_merge_moves ADD COLUMN IF NOT EXISTS mastered_after INTEGER NOT NULL DEFAULT 0;"))
+        conn.execute(text("ALTER TABLE word_merge_moves ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text(
+            "DO $$ "
+            "BEGIN "
+            "IF NOT EXISTS ("
+            "SELECT 1 FROM information_schema.table_constraints "
+            "WHERE constraint_name = 'word_merge_moves_session_id_fkey'"
+            ") THEN "
+            "ALTER TABLE word_merge_moves "
+            "ADD CONSTRAINT word_merge_moves_session_id_fkey "
+            "FOREIGN KEY (session_id) REFERENCES word_merge_sessions(id) ON DELETE CASCADE; "
+            "END IF; "
+            "END "
+            "$$;"
+        ))
+
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_word_merge_families_status ON word_merge_families (status);"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_word_merge_stages_family_id ON word_merge_stages (family_id);"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_word_merge_sessions_telegram_id ON word_merge_sessions (telegram_id);"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_word_merge_moves_session_id ON word_merge_moves (session_id);"))

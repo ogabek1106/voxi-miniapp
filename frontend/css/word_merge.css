@@ -1,0 +1,249 @@
+#screen-mocks .word-merge-screen {
+  width: min(100% - 28px, 760px);
+  margin: 0 auto;
+  padding: 10px 0 34px;
+  color: #17212b;
+  font-family: Nunito, Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+  text-align: left;
+}
+
+.word-merge-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.word-merge-top h2 {
+  margin: 0;
+  font-size: clamp(32px, 5vw, 52px);
+  line-height: 0.98;
+  font-weight: 950;
+  letter-spacing: -0.035em;
+}
+
+.word-merge-top p {
+  margin: 6px 0 0;
+  color: #667584;
+  font-weight: 850;
+}
+
+.word-merge-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.word-merge-actions button,
+.word-merge-back,
+.word-merge-result button {
+  min-height: 42px;
+  border: 0;
+  border-radius: 16px;
+  padding: 0 14px;
+  background: #ffffff;
+  color: #17212b;
+  box-shadow: 0 10px 26px rgba(20, 40, 60, 0.10);
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.word-merge-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.word-merge-stats div {
+  padding: 14px 16px;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 12px 30px rgba(20, 40, 60, 0.08);
+}
+
+.word-merge-stats span {
+  display: block;
+  color: #667584;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.word-merge-stats strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 24px;
+  font-weight: 950;
+}
+
+.word-merge-board {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  padding: 12px;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 22px 54px rgba(15, 23, 42, 0.10);
+  touch-action: none;
+  user-select: none;
+}
+
+.word-merge-cell {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 20px;
+  background: #edf5fb;
+}
+
+.word-merge-tile {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px;
+  border-radius: inherit;
+  background: linear-gradient(145deg, #ffffff, #f4fbff);
+  box-shadow: 0 12px 28px rgba(0, 186, 255, 0.12);
+  text-align: center;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.word-merge-tile strong {
+  display: block;
+  color: #17212b;
+  font-size: clamp(13px, 2.5vw, 22px);
+  line-height: 1;
+  font-weight: 950;
+}
+
+.word-merge-tile span {
+  display: block;
+  color: #64748b;
+  font-size: clamp(10px, 1.6vw, 13px);
+  line-height: 1.1;
+  font-weight: 850;
+}
+
+.word-merge-tile em {
+  display: inline-flex;
+  margin-top: 2px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(0, 186, 255, 0.12);
+  color: #00a2df;
+  font-style: normal;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.word-merge-tile.level-3 { background: linear-gradient(145deg, #f7fdff, #e8f8ff); }
+.word-merge-tile.level-4 { background: linear-gradient(145deg, #f5fff9, #e8fff1); }
+.word-merge-tile.level-5 { background: linear-gradient(145deg, #fffaf0, #fff3d8); }
+.word-merge-tile.level-6 { background: linear-gradient(145deg, #fff4f4, #ffe7e7); }
+.word-merge-tile.level-7,
+.word-merge-tile.level-8 {
+  background: linear-gradient(145deg, #fff7ed, #ffe3c2);
+  box-shadow: 0 16px 34px rgba(249, 115, 22, 0.20);
+}
+
+.word-merge-tile.is-new {
+  animation: wordMergePop 220ms ease-out;
+}
+
+.word-merge-tile.is-merged {
+  animation: wordMergeMerge 260ms ease-out;
+}
+
+.word-merge-hint {
+  margin: 12px 0 0;
+  text-align: center;
+  color: #667584;
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.word-merge-empty,
+.word-merge-result {
+  padding: 24px;
+  border-radius: 28px;
+  background: #ffffff;
+  box-shadow: 0 18px 44px rgba(20, 40, 60, 0.09);
+  font-weight: 900;
+  text-align: center;
+}
+
+.word-merge-result {
+  margin-top: 14px;
+}
+
+.word-merge-result strong {
+  display: block;
+  font-size: 26px;
+  font-weight: 950;
+}
+
+.word-merge-result span {
+  display: block;
+  margin: 6px 0 12px;
+  color: #667584;
+  font-weight: 850;
+}
+
+@keyframes wordMergePop {
+  0% { opacity: 0; transform: scale(0.55); }
+  80% { opacity: 1; transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+
+@keyframes wordMergeMerge {
+  0% { transform: scale(1); }
+  48% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+@media (max-width: 620px) {
+  #screen-mocks .word-merge-screen {
+    width: min(100% - 18px, 520px);
+    padding-top: 0;
+  }
+
+  .word-merge-top {
+    align-items: center;
+  }
+
+  .word-merge-top h2 {
+    font-size: 30px;
+  }
+
+  .word-merge-actions button {
+    min-height: 38px;
+    padding: 0 11px;
+  }
+
+  .word-merge-stats {
+    gap: 8px;
+  }
+
+  .word-merge-stats div {
+    padding: 10px;
+  }
+
+  .word-merge-stats strong {
+    font-size: 20px;
+  }
+
+  .word-merge-board {
+    gap: 8px;
+    padding: 8px;
+    border-radius: 22px;
+  }
+
+  .word-merge-cell {
+    border-radius: 16px;
+  }
+}

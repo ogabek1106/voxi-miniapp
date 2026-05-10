@@ -1,0 +1,288 @@
+.admin-word-merge-screen {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 10px 12px 34px;
+  box-sizing: border-box;
+  color: #17212b;
+  font-family: Nunito, Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.admin-word-merge-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.admin-word-merge-head h2 {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 950;
+}
+
+.admin-word-merge-head p {
+  margin: 6px 0 0;
+  color: #667584;
+  font-weight: 850;
+}
+
+.admin-word-merge-head-actions,
+.admin-word-merge-actions,
+.admin-word-merge-set-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-word-merge-layout {
+  display: grid;
+  grid-template-columns: minmax(340px, 0.95fr) minmax(380px, 1.05fr);
+  gap: 14px;
+}
+
+.admin-word-merge-card,
+.admin-word-merge-empty {
+  background: #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 14px 34px rgba(20, 40, 60, 0.08);
+  border: 1px solid rgba(20, 40, 60, 0.05);
+  padding: 18px;
+}
+
+.admin-word-merge-card h3 {
+  margin: 0 0 14px;
+  font-size: 20px;
+  font-weight: 950;
+}
+
+.admin-word-merge-card label {
+  display: block;
+  margin: 12px 0 6px;
+  color: #667584;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.admin-word-merge-card input,
+.admin-word-merge-card select {
+  width: 100%;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: 16px;
+  background: #f5f9fc;
+  padding: 13px 14px;
+  color: #17212b;
+  font-size: 15px;
+  font-weight: 800;
+  outline: none;
+}
+
+.admin-word-merge-two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.admin-word-merge-stage-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.admin-word-merge-stages {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-word-merge-stage-row {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  padding: 8px;
+  border-radius: 18px;
+  background: #f8fbff;
+}
+
+.admin-word-merge-stage-row span {
+  color: #00a2df;
+  font-weight: 950;
+}
+
+.admin-word-merge-primary,
+.admin-word-merge-secondary,
+.admin-word-merge-danger,
+.admin-word-merge-set-actions button {
+  min-height: 42px;
+  border: 0;
+  border-radius: 16px;
+  padding: 0 14px;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.admin-word-merge-primary {
+  background: #00baff;
+  color: #ffffff;
+}
+
+.admin-word-merge-secondary,
+.admin-word-merge-set-actions button {
+  background: #ffffff;
+  color: #17212b;
+  box-shadow: 0 10px 26px rgba(20, 40, 60, 0.08);
+}
+
+.admin-word-merge-danger,
+.admin-word-merge-set-actions .is-danger {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.admin-word-merge-preview {
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 20px;
+  background: #f8fbff;
+}
+
+.admin-word-merge-preview > strong {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: 950;
+}
+
+.admin-word-merge-ladder-row {
+  display: grid;
+  grid-template-columns: 54px 1fr 1.2fr;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 0;
+  border-top: 1px solid rgba(20, 40, 60, 0.06);
+}
+
+.admin-word-merge-ladder-row span,
+.admin-word-merge-ladder-row strong {
+  font-weight: 950;
+}
+
+.admin-word-merge-ladder-row em {
+  color: #667584;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.admin-word-merge-ladder-row.is-mastered strong {
+  color: #16a34a;
+}
+
+.admin-word-merge-message {
+  padding: 10px 12px;
+  border-radius: 14px;
+  font-weight: 900;
+  margin-bottom: 12px;
+}
+
+.admin-word-merge-message.is-error {
+  background: rgba(239, 68, 68, 0.10);
+  color: #b91c1c;
+}
+
+.admin-word-merge-message.is-success {
+  background: rgba(34, 197, 94, 0.12);
+  color: #15803d;
+}
+
+.admin-word-merge-family-list {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-word-merge-family-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 18px;
+  background: #f8fbff;
+}
+
+.admin-word-merge-family-card h4,
+.admin-word-merge-family-card p {
+  margin: 0;
+}
+
+.admin-word-merge-family-card h4 {
+  font-size: 17px;
+  font-weight: 950;
+}
+
+.admin-word-merge-family-card p,
+.admin-word-merge-family-card span {
+  display: block;
+  margin-top: 5px;
+  color: #667584;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.admin-word-merge-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.admin-word-merge-summary div {
+  padding: 18px;
+  border-radius: 22px;
+  background: #ffffff;
+  box-shadow: 0 14px 34px rgba(20, 40, 60, 0.08);
+}
+
+.admin-word-merge-summary span {
+  display: block;
+  color: #667584;
+  font-weight: 850;
+}
+
+.admin-word-merge-summary strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 28px;
+  font-weight: 950;
+}
+
+.admin-word-merge-table-wrap {
+  overflow-x: auto;
+}
+
+.admin-word-merge-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 720px;
+}
+
+.admin-word-merge-table th,
+.admin-word-merge-table td {
+  padding: 10px;
+  border-bottom: 1px solid rgba(20, 40, 60, 0.08);
+  text-align: left;
+  font-weight: 800;
+}
+
+@media (max-width: 860px) {
+  .admin-word-merge-layout,
+  .admin-word-merge-two,
+  .admin-word-merge-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-word-merge-family-card,
+  .admin-word-merge-stage-row {
+    grid-template-columns: 1fr;
+  }
+}
