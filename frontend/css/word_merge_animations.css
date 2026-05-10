@@ -1,0 +1,66 @@
+.word-merge-tile.is-new {
+  animation: wordMergeSpawnPop 260ms cubic-bezier(.2, 1.35, .35, 1);
+}
+
+.word-merge-tile.is-merged {
+  animation: wordMergeUpgradePulse 360ms ease-out;
+}
+
+.word-merge-tile.is-merged .word-merge-tile-shine {
+  animation: wordMergeLightSweep 430ms ease-out;
+}
+
+.word-merge-tile.level-7,
+.word-merge-tile.level-8 {
+  animation-duration: 420ms;
+}
+
+@keyframes wordMergeSpawnPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.78) rotate(-1.5deg);
+    filter: saturate(0.7);
+  }
+  74% {
+    opacity: 1;
+    transform: scale(1.055) rotate(0.8deg);
+    filter: saturate(1.08);
+  }
+  100% {
+    transform: scale(1) rotate(0);
+    filter: saturate(1);
+  }
+}
+
+@keyframes wordMergeUpgradePulse {
+  0% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  38% {
+    transform: scale(1.13);
+    filter: brightness(1.12) saturate(1.2);
+  }
+  72% {
+    transform: scale(0.985);
+    filter: brightness(1.03) saturate(1.08);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1) saturate(1);
+  }
+}
+
+@keyframes wordMergeLightSweep {
+  0% {
+    opacity: 0;
+    transform: translateX(-80%);
+  }
+  34% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0.42;
+    transform: translateX(84%);
+  }
+}

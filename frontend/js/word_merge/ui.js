@@ -26,12 +26,13 @@ window.WordMergeUI = window.WordMergeUI || {};
   function tileMarkup(tile) {
     if (!tile) return `<div class="word-merge-cell"></div>`;
     const label = WordMergeEngine.tileLabel(tile);
-    const level = Math.min(8, Math.max(1, Math.log2(Number(tile.value || 2))));
+    const theme = WordMergeTheme.tileTheme(tile);
     return `
       <div class="word-merge-cell has-tile">
-        <div class="word-merge-tile level-${level} ${tile.merged ? "is-merged" : ""} ${tile.justSpawned ? "is-new" : ""}">
+        <div class="word-merge-tile level-${theme.level} ${theme.className} ${tile.merged ? "is-merged" : ""} ${tile.justSpawned ? "is-new" : ""}" style="${theme.style}">
+          <span class="word-merge-tile-shine" aria-hidden="true"></span>
           <strong>${WordMergeUI.escape(label.english_word)}</strong>
-          <span>${WordMergeUI.escape(label.uzbek_meaning)}</span>
+          <span class="word-merge-uzbek">${WordMergeUI.escape(label.uzbek_meaning)}</span>
           <em>x${Number(tile.value || 2)}</em>
         </div>
       </div>
@@ -76,6 +77,7 @@ window.WordMergeUI = window.WordMergeUI || {};
           <div><span>Mastered</span><strong>${Number(state.mastered || 0)}</strong></div>
           <div><span>Moves</span><strong>${Number(state.moves || 0)}</strong></div>
         </div>
+        <div class="word-merge-family-strip">${WordMergeTheme.familyChips(state.activeFamilyIds)}</div>
         <section class="word-merge-board" aria-label="Voxi Word Merge board">
           ${(state.board || []).map((row) => row.map(tileMarkup).join("")).join("")}
         </section>
