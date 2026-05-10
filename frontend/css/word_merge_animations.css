@@ -7,7 +7,7 @@
 }
 
 .word-merge-tile.is-merged .word-merge-tile-shine {
-  animation: wordMergeLightSweep 430ms ease-out;
+  animation: wordMergeSharpFlash 260ms ease-out;
 }
 
 .word-merge-tile.level-7,
@@ -19,12 +19,12 @@
   0% {
     opacity: 0;
     transform: scale(0.78) rotate(-1.5deg);
-    filter: saturate(0.7);
+    filter: saturate(0.9);
   }
   74% {
     opacity: 1;
     transform: scale(1.055) rotate(0.8deg);
-    filter: saturate(1.08);
+    filter: saturate(1.18);
   }
   100% {
     transform: scale(1) rotate(0);
@@ -39,11 +39,11 @@
   }
   38% {
     transform: scale(1.13);
-    filter: brightness(1.12) saturate(1.2);
+    filter: brightness(1.18) saturate(1.35);
   }
   72% {
     transform: scale(0.985);
-    filter: brightness(1.03) saturate(1.08);
+    filter: brightness(1.06) saturate(1.18);
   }
   100% {
     transform: scale(1);
@@ -51,16 +51,16 @@
   }
 }
 
-@keyframes wordMergeLightSweep {
+@keyframes wordMergeSharpFlash {
   0% {
     opacity: 0;
-    transform: translateX(-80%);
+    transform: translateX(-24%);
   }
-  34% {
-    opacity: 0.95;
+  40% {
+    opacity: 0.75;
   }
   100% {
-    opacity: 0.42;
-    transform: translateX(84%);
+    opacity: 0.28;
+    transform: translateX(24%);
   }
 }

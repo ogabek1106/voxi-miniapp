@@ -2,14 +2,14 @@ window.WordMergeTheme = window.WordMergeTheme || {};
 
 (function () {
   const PALETTES = [
-    { key: "cyan", hue: 194, soft: "#e7f8ff", mid: "#00baff", deep: "#0284c7" },
-    { key: "rose", hue: 348, soft: "#fff1f5", mid: "#fb7185", deep: "#e11d48" },
-    { key: "violet", hue: 266, soft: "#f5f0ff", mid: "#a855f7", deep: "#7e22ce" },
-    { key: "green", hue: 145, soft: "#ecfdf5", mid: "#22c55e", deep: "#15803d" },
-    { key: "orange", hue: 28, soft: "#fff7ed", mid: "#fb923c", deep: "#ea580c" },
-    { key: "amber", hue: 42, soft: "#fffbeb", mid: "#f59e0b", deep: "#b45309" },
-    { key: "indigo", hue: 228, soft: "#eef2ff", mid: "#6366f1", deep: "#4338ca" },
-    { key: "teal", hue: 174, soft: "#ecfeff", mid: "#14b8a6", deep: "#0f766e" },
+    { key: "cyan", hue: 190, soft: "#dff7ff", mid: "#0891b2", deep: "#155e75" },
+    { key: "rose", hue: 348, soft: "#ffe4ec", mid: "#e11d48", deep: "#9f1239" },
+    { key: "violet", hue: 264, soft: "#ede9fe", mid: "#7c3aed", deep: "#4c1d95" },
+    { key: "green", hue: 145, soft: "#dcfce7", mid: "#16a34a", deep: "#166534" },
+    { key: "orange", hue: 22, soft: "#ffedd5", mid: "#ea580c", deep: "#9a3412" },
+    { key: "amber", hue: 38, soft: "#fef3c7", mid: "#d97706", deep: "#92400e" },
+    { key: "indigo", hue: 228, soft: "#e0e7ff", mid: "#4f46e5", deep: "#312e81" },
+    { key: "teal", hue: 174, soft: "#ccfbf1", mid: "#0d9488", deep: "#115e59" },
   ];
 
   const CATEGORY_HINTS = [
@@ -43,10 +43,11 @@ window.WordMergeTheme = window.WordMergeTheme || {};
     const palette = paletteForFamily(family);
     const level = levelForValue(tile.value);
     const power = Math.min(1, Math.max(0, (level - 1) / 6));
-    const glow = 0.16 + power * 0.32;
-    const saturation = 74 + power * 12;
-    const lightTop = 99 - power * 8;
-    const lightBottom = 95 - power * 15;
+    const saturation = 68 + power * 20;
+    const lightTop = 42 - power * 8;
+    const lightBottom = 31 - power * 10;
+    const borderLight = 54 + power * 10;
+    const depth = 0.18 + power * 0.18;
     return {
       level,
       className: `family-${palette.key} power-${level >= 6 ? "high" : level >= 4 ? "mid" : "low"}`,
@@ -57,8 +58,10 @@ window.WordMergeTheme = window.WordMergeTheme || {};
         `--wm-family-deep:${palette.deep}`,
         `--wm-tile-top:hsl(${palette.hue} ${saturation}% ${lightTop}%)`,
         `--wm-tile-bottom:hsl(${palette.hue} ${saturation}% ${lightBottom}%)`,
-        `--wm-glow:hsla(${palette.hue}, 92%, 55%, ${glow})`,
-        `--wm-ink:hsl(${palette.hue} 58% 22%)`,
+        `--wm-tile-border:hsl(${palette.hue} ${Math.min(96, saturation + 4)}% ${borderLight}%)`,
+        `--wm-depth:rgba(15, 23, 42, ${depth})`,
+        `--wm-ink:#ffffff`,
+        `--wm-muted:rgba(255, 255, 255, 0.76)`,
       ].join(";"),
     };
   };

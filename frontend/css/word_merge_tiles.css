@@ -3,15 +3,14 @@
   overflow: hidden;
   gap: 5px;
   padding: 9px;
-  border: 1px solid color-mix(in srgb, var(--wm-family-mid) 20%, #ffffff);
+  border: 1px solid var(--wm-tile-border);
   background:
-    radial-gradient(circle at 22% 16%, rgba(255,255,255,0.96), transparent 34%),
-    linear-gradient(150deg, var(--wm-tile-top), var(--wm-tile-bottom));
+    linear-gradient(155deg, var(--wm-tile-top), var(--wm-tile-bottom));
   box-shadow:
-    0 14px 30px var(--wm-glow),
-    0 8px 18px rgba(15, 23, 42, 0.08),
-    inset 0 1px 0 rgba(255,255,255,0.94),
-    inset 0 -12px 24px color-mix(in srgb, var(--wm-family-mid) 14%, transparent);
+    0 9px 0 color-mix(in srgb, var(--wm-family-deep) 78%, #000 22%),
+    0 14px 20px var(--wm-depth),
+    inset 0 1px 0 rgba(255,255,255,0.22),
+    inset 0 -10px 18px rgba(0,0,0,0.12);
   color: var(--wm-ink);
 }
 
@@ -24,17 +23,11 @@
 .word-merge-tile.level-7,
 .word-merge-tile.level-8 {
   background:
-    radial-gradient(circle at 22% 16%, rgba(255,255,255,0.96), transparent 34%),
-    linear-gradient(150deg, var(--wm-tile-top), var(--wm-tile-bottom));
+    linear-gradient(155deg, var(--wm-tile-top), var(--wm-tile-bottom));
 }
 
 .word-merge-tile::after {
-  content: "";
-  position: absolute;
-  inset: auto -20% -38% -20%;
-  height: 58%;
-  z-index: -1;
-  background: radial-gradient(circle, color-mix(in srgb, var(--wm-family-mid) 18%, transparent), transparent 68%);
+  content: none;
 }
 
 .word-merge-tile-shine {
@@ -42,83 +35,82 @@
   inset: 0;
   z-index: -1;
   background:
-    linear-gradient(115deg, transparent 0 32%, rgba(255,255,255,0.46) 46%, transparent 61%),
-    radial-gradient(circle at 78% 16%, rgba(255,255,255,0.68), transparent 24%);
-  opacity: 0.68;
-  transform: translateX(-14%);
+    linear-gradient(112deg, transparent 0 36%, rgba(255,255,255,0.20) 47%, transparent 60%);
+  opacity: 0.46;
+  transform: translateX(-18%);
 }
 
 .word-merge-tile strong {
   max-width: 100%;
-  color: var(--wm-ink);
+  color: #ffffff;
   font-size: clamp(14px, 2.4vw, 23px);
   line-height: 0.96;
   font-weight: 1000;
   text-wrap: balance;
-  text-shadow: 0 1px 0 rgba(255,255,255,0.52);
+  text-shadow: 0 2px 2px rgba(0,0,0,0.18);
 }
 
 .word-merge-tile .word-merge-uzbek {
   max-width: 100%;
-  color: color-mix(in srgb, var(--wm-ink) 62%, #64748b);
+  color: var(--wm-muted);
   font-size: clamp(10px, 1.35vw, 13px);
   line-height: 1.08;
   font-weight: 800;
-  opacity: 0.72;
+  opacity: 1;
   text-wrap: balance;
 }
 
 .word-merge-tile em {
   min-height: 22px;
   align-items: center;
-  border: 1px solid rgba(255,255,255,0.72);
+  border: 1px solid rgba(255,255,255,0.38);
   background:
-    linear-gradient(180deg, rgba(255,255,255,0.82), rgba(255,255,255,0.42)),
-    color-mix(in srgb, var(--wm-family-mid) 18%, transparent);
-  color: var(--wm-family-deep);
+    linear-gradient(180deg, rgba(255,255,255,0.26), rgba(255,255,255,0.10));
+  color: #ffffff;
   box-shadow:
-    0 7px 16px color-mix(in srgb, var(--wm-family-mid) 20%, transparent),
-    inset 0 1px 0 rgba(255,255,255,0.8);
+    inset 0 1px 0 rgba(255,255,255,0.32),
+    0 2px 4px rgba(0,0,0,0.10);
   font-size: 12px;
   letter-spacing: 0;
 }
 
 .word-merge-tile.power-mid {
-  border-color: color-mix(in srgb, var(--wm-family-mid) 32%, #ffffff);
+  border-color: var(--wm-tile-border);
   box-shadow:
-    0 18px 38px var(--wm-glow),
-    0 10px 22px rgba(15, 23, 42, 0.10),
-    inset 0 1px 0 rgba(255,255,255,0.9),
-    inset 0 -14px 28px color-mix(in srgb, var(--wm-family-mid) 18%, transparent);
+    0 10px 0 color-mix(in srgb, var(--wm-family-deep) 82%, #000 18%),
+    0 16px 22px var(--wm-depth),
+    inset 0 1px 0 rgba(255,255,255,0.22),
+    inset 0 -12px 18px rgba(0,0,0,0.16);
 }
 
 .word-merge-tile.power-high {
-  border-color: color-mix(in srgb, var(--wm-family-mid) 58%, #ffffff);
+  border-color: color-mix(in srgb, var(--wm-tile-border) 78%, #ffffff 22%);
   box-shadow:
-    0 0 0 2px color-mix(in srgb, var(--wm-family-mid) 18%, transparent),
-    0 22px 48px var(--wm-glow),
-    0 12px 28px rgba(15, 23, 42, 0.12),
-    inset 0 1px 0 rgba(255,255,255,0.88),
-    inset 0 -16px 34px color-mix(in srgb, var(--wm-family-mid) 25%, transparent);
+    0 0 0 2px rgba(255,255,255,0.18),
+    0 11px 0 color-mix(in srgb, var(--wm-family-deep) 88%, #000 12%),
+    0 18px 25px var(--wm-depth),
+    inset 0 1px 0 rgba(255,255,255,0.26),
+    inset 0 -14px 20px rgba(0,0,0,0.18);
 }
 
 .word-merge-tile.level-7,
 .word-merge-tile.level-8 {
   box-shadow:
-    0 0 0 2px color-mix(in srgb, var(--wm-family-mid) 28%, transparent),
-    0 0 30px color-mix(in srgb, var(--wm-family-mid) 34%, transparent),
-    0 24px 52px var(--wm-glow),
-    inset 0 1px 0 rgba(255,255,255,0.86);
+    0 0 0 2px rgba(255,255,255,0.24),
+    0 12px 0 color-mix(in srgb, var(--wm-family-deep) 90%, #000 10%),
+    0 21px 28px var(--wm-depth),
+    inset 0 1px 0 rgba(255,255,255,0.28),
+    inset 0 -15px 22px rgba(0,0,0,0.20);
 }
 
 .word-merge-tile.level-7 em,
 .word-merge-tile.level-8 em {
   color: #ffffff;
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--wm-family-mid) 82%, #ffffff 18%), var(--wm-family-deep));
+    linear-gradient(180deg, rgba(255,255,255,0.34), rgba(255,255,255,0.12));
   box-shadow:
-    0 8px 18px color-mix(in srgb, var(--wm-family-mid) 34%, transparent),
-    inset 0 1px 0 rgba(255,255,255,0.42);
+    inset 0 1px 0 rgba(255,255,255,0.42),
+    0 2px 4px rgba(0,0,0,0.12);
 }
 
 @media (max-width: 620px) {
