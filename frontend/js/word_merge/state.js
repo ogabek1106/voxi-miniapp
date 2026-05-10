@@ -9,6 +9,10 @@ window.WordMergeState = window.WordMergeState || {};
     moves: 0,
     sessionId: null,
     activeFamilyIds: [],
+    familyQueue: [],
+    primaryFamilyId: null,
+    secondaryFamilyId: null,
+    masteredByFamily: {},
     gameOver: false,
   };
 
@@ -29,6 +33,10 @@ window.WordMergeState = window.WordMergeState || {};
       moves: 0,
       sessionId: null,
       activeFamilyIds: [],
+      familyQueue: (Array.isArray(families) ? families : []).map((family) => Number(family.id)),
+      primaryFamilyId: null,
+      secondaryFamilyId: null,
+      masteredByFamily: {},
       gameOver: false,
     };
   };

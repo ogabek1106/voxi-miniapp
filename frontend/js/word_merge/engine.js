@@ -1,20 +1,11 @@
 window.WordMergeEngine = window.WordMergeEngine || {};
 
 (function () {
-  const SIZE = 4;
-  const SPAWN_VALUE = 2;
   let tileId = 1;
 
-  function cloneBoard(board) {
-    return board.map((row) => row.map((tile) => tile ? { ...tile } : null));
-  }
-
-  function boardsEqual(a, b) {
-    return JSON.stringify(a) === JSON.stringify(b);
-  }
-
-  function emptyBoard() {
-    return Array.from({ length: SIZE }, () => Array.from({ length: SIZE }, () => null));
+  function nextTileId() {
+    tileId += 1;
+    return tileId;
   }
 
   function getFamilyById(id) {
@@ -31,49 +22,6 @@ window.WordMergeEngine = window.WordMergeEngine || {};
     };
   }
 
-  function activeFamilies(board) {
-    const ids = new Set();
-    board.flat().forEach((tile) => {
-      if (tile) ids.add(Number(tile.familyId));
-    });
-    return Array.from(ids);
-  }
-
-  function randomItem(items) {
-    return items[Math.floor(Math.random() * items.length)];
-  }
-
-  function chooseSpawnFamily(board) {
-    const state = WordMergeState.get();
-    const families = state.families || [];
-    if (!families.length) return null;
-    const activeIds = activeFamilies(board);
-    const active = activeIds.map(getFamilyById).filter(Boolean);
-    if (active.length && (active.length >= 4 || Math.random() < 0.78)) {
-      return randomItem(active);
-    }
-    const candidates = families.filter((family) => !activeIds.includes(Number(family.id)));
-    return randomItem(candidates.length ? candidates : families);
-  }
-
-  function spawnTile(board) {
-    const empty = [];
-    board.forEach((row, r) => row.forEach((tile, c) => {
-      if (!tile) empty.push({ r, c });
-    }));
-    if (!empty.length) return board;
-    const family = chooseSpawnFamily(board);
-    if (!family) return board;
-    const spot = randomItem(empty);
-    board[spot.r][spot.c] = {
-      id: tileId++,
-      familyId: Number(family.id),
-      value: SPAWN_VALUE,
-      justSpawned: true,
-    };
-    return board;
-  }
-
   function targetForTile(tile) {
     return Number(getFamilyById(tile.familyId)?.mastery_target || 128);
   }
@@ -83,6 +31,7 @@ window.WordMergeEngine = window.WordMergeEngine || {};
     const result = [];
     let scoreAdd = 0;
     let masteredAdd = 0;
+    const masteredFamilyIds = [];
     for (let index = 0; index < compact.length; index += 1) {
       const current = compact[index];
       const next = compact[index + 1];
@@ -91,9 +40,10 @@ window.WordMergeEngine = window.WordMergeEngine || {};
         if (mergedValue >= targetForTile(current)) {
           scoreAdd += mergedValue;
           masteredAdd += 1;
+          masteredFamilyIds.push(Number(current.familyId));
         } else {
           result.push({
-            id: tileId++,
+            id: nextTileId(),
             familyId: current.familyId,
             value: mergedValue,
             merged: true,
@@ -105,14 +55,15 @@ window.WordMergeEngine = window.WordMergeEngine || {};
         result.push(current);
       }
     }
-    while (result.length < SIZE) result.push(null);
-    return { line: result, scoreAdd, masteredAdd };
+    while (result.length < WordMergeBoard.SIZE) result.push(null);
+    return { line: result, scoreAdd, masteredAdd, masteredFamilyIds };
   }
 
   function moveBoard(board, direction) {
-    const next = emptyBoard();
+    const next = WordMergeBoard.empty();
     let scoreAdd = 0;
     let masteredAdd = 0;
+    let masteredFamilyIds = [];
     const readLine = (i) => {
       if (direction === "left") return board[i];
       if (direction === "right") return [...board[i]].reverse();
@@ -126,20 +77,21 @@ window.WordMergeEngine = window.WordMergeEngine || {};
         else next[j][i] = tile;
       });
     };
-    for (let i = 0; i < SIZE; i += 1) {
+    for (let i = 0; i < WordMergeBoard.SIZE; i += 1) {
       const merged = mergeLine(readLine(i));
       scoreAdd += merged.scoreAdd;
       masteredAdd += merged.masteredAdd;
+      masteredFamilyIds = masteredFamilyIds.concat(merged.masteredFamilyIds);
       writeLine(i, merged.line);
     }
-    const changed = !boardsEqual(board, next);
-    return { board: next, changed, scoreAdd, masteredAdd };
+    const changed = !WordMergeBoard.equals(board, next);
+    return { board: next, changed, scoreAdd, masteredAdd, masteredFamilyIds };
   }
 
   function canMove(board) {
     if (board.flat().some((tile) => !tile)) return true;
-    for (let r = 0; r < SIZE; r += 1) {
-      for (let c = 0; c < SIZE; c += 1) {
+    for (let r = 0; r < WordMergeBoard.SIZE; r += 1) {
+      for (let c = 0; c < WordMergeBoard.SIZE; c += 1) {
         const tile = board[r][c];
         const right = board[r]?.[c + 1];
         const down = board[r + 1]?.[c];
@@ -151,14 +103,17 @@ window.WordMergeEngine = window.WordMergeEngine || {};
   }
 
   WordMergeEngine.newGame = function () {
-    let board = emptyBoard();
-    board = spawnTile(spawnTile(board));
+    tileId = 1;
+    let board = WordMergeBoard.empty();
+    WordMergeFamilyRotation.ensurePair(board);
+    board = WordMergeSpawnManager.spawnTile(board, nextTileId);
+    board = WordMergeSpawnManager.spawnTile(board, nextTileId);
     WordMergeState.set({
       board,
       score: 0,
       mastered: 0,
       moves: 0,
-      activeFamilyIds: activeFamilies(board),
+      activeFamilyIds: WordMergeState.get().activeFamilyIds,
       gameOver: false,
     });
   };
@@ -166,16 +121,23 @@ window.WordMergeEngine = window.WordMergeEngine || {};
   WordMergeEngine.move = function (direction) {
     const state = WordMergeState.get();
     if (state.gameOver) return false;
-    const moved = moveBoard(cloneBoard(state.board), direction);
+    const moved = moveBoard(WordMergeBoard.clone(state.board), direction);
     if (!moved.changed) return false;
-    const board = spawnTile(moved.board);
+    WordMergeFamilyRotation.afterMove(moved.board, moved.masteredFamilyIds);
+    const board = WordMergeSpawnManager.spawnTile(moved.board, nextTileId);
+    WordMergeFamilyRotation.afterMove(board, []);
     const gameOver = !canMove(board);
+    const masteredByFamily = { ...(state.masteredByFamily || {}) };
+    moved.masteredFamilyIds.forEach((familyId) => {
+      masteredByFamily[familyId] = Number(masteredByFamily[familyId] || 0) + 1;
+    });
     WordMergeState.set({
       board,
       score: state.score + moved.scoreAdd,
       mastered: state.mastered + moved.masteredAdd,
       moves: state.moves + 1,
-      activeFamilyIds: activeFamilies(board),
+      activeFamilyIds: WordMergeState.get().activeFamilyIds,
+      masteredByFamily,
       gameOver,
     });
     return true;
