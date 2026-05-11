@@ -47,6 +47,10 @@
   box-shadow: 0 20px 42px rgba(15, 23, 42, 0.16);
 }
 
+.word-shuffle-back--desktop {
+  display: none;
+}
+
 .word-shuffle-hud {
   display: grid;
   grid-template-columns: 1.1fr 1fr 1fr 1.15fr;
@@ -208,7 +212,7 @@
   .word-shuffle-title h2 {
     max-width: none;
     white-space: nowrap;
-    font-size: clamp(25px, 1.82vw, 34px);
+    font-size: clamp(26px, 1.7vw, 34px);
     line-height: 0.98;
   }
 
@@ -219,7 +223,14 @@
     line-height: 1.25;
   }
 
-  .word-shuffle-back {
+  .word-shuffle-back--top {
+    display: none;
+  }
+
+  .word-shuffle-back--desktop {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     position: absolute;
     left: clamp(14px, 1.3vw, 22px);
     bottom: clamp(14px, 1.3vw, 22px);

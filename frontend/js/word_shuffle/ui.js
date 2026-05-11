@@ -44,7 +44,7 @@ window.WordShuffleUI = window.WordShuffleUI || {};
                 <p>Drag letters into the slots before time runs out.</p>
               </div>
             </div>
-            <button class="word-shuffle-back" onclick="WordShuffleLoader.exit()">Back</button>
+            <button class="word-shuffle-back word-shuffle-back--top" onclick="WordShuffleLoader.exit()">Back</button>
           </div>
 
           <div class="word-shuffle-hud">
@@ -75,6 +75,7 @@ window.WordShuffleUI = window.WordShuffleUI || {};
           </section>
 
           <div id="word-shuffle-learn-card" class="word-shuffle-learn-card" aria-live="polite"></div>
+          <button class="word-shuffle-back word-shuffle-back--desktop" onclick="WordShuffleLoader.exit()">Back</button>
         </div>
       </div>
     `;

@@ -2,6 +2,8 @@ window.WordShuffleDrag = window.WordShuffleDrag || {};
 
 (function () {
   let active = null;
+  let rafId = null;
+  let lastPoint = null;
 
   function pointerPosition(event) {
     return { x: event.clientX, y: event.clientY };
@@ -21,8 +23,32 @@ window.WordShuffleDrag = window.WordShuffleDrag || {};
     return best?.slot || null;
   }
 
+  function applyPoint(point) {
+    if (!active?.el) return;
+    active.el.style.transform = `translate3d(${point.x - active.rect.width / 2}px, ${point.y - active.rect.height / 2}px, 0) scale(1.08)`;
+  }
+
+  function scheduleMove(point) {
+    lastPoint = point;
+    if (rafId) return;
+    rafId = window.requestAnimationFrame(() => {
+      rafId = null;
+      applyPoint(lastPoint);
+    });
+  }
+
   function clearMagnet() {
     document.querySelectorAll(".word-shuffle-slot.is-magnetic").forEach((slot) => slot.classList.remove("is-magnetic"));
+  }
+
+  function scatterBackToTable() {
+    if (!active?.el) return;
+    const x = Math.round(12 + Math.random() * 76);
+    const y = Math.round(18 + Math.random() * 64);
+    const rot = Math.round((Math.random() * 24) - 12);
+    active.el.style.setProperty("--x", `${x}%`);
+    active.el.style.setProperty("--y", `${y}%`);
+    active.el.style.setProperty("--rot", `${rot}deg`);
   }
 
   function start(event) {
@@ -41,13 +67,15 @@ window.WordShuffleDrag = window.WordShuffleDrag || {};
       nextSibling: target.nextSibling,
       rect: target.getBoundingClientRect(),
     };
-    target.style.left = `${active.rect.left + active.rect.width / 2}px`;
-    target.style.top = `${active.rect.top + active.rect.height / 2}px`;
     target.style.position = "fixed";
-    target.style.transform = "translate(-50%, -50%) rotate(0deg) scale(1.08)";
+    target.style.left = "0";
+    target.style.top = "0";
+    applyPoint(point);
     target.classList.add("is-dragging");
-    target.setPointerCapture?.(event.pointerId);
     document.body.appendChild(target);
+    document.addEventListener("pointermove", move, { passive: false });
+    document.addEventListener("pointerup", end, { passive: false });
+    document.addEventListener("pointercancel", end, { passive: false });
   }
 
   function move(event) {
@@ -56,9 +84,7 @@ window.WordShuffleDrag = window.WordShuffleDrag || {};
     const point = pointerPosition(event);
     active.dx = point.x - active.startX;
     active.dy = point.y - active.startY;
-    active.el.style.left = `${point.x}px`;
-    active.el.style.top = `${point.y}px`;
-    active.el.style.transform = "translate(-50%, -50%) rotate(0deg) scale(1.08)";
+    scheduleMove(point);
     clearMagnet();
     nearestSlot(point)?.classList.add("is-magnetic");
   }
@@ -77,12 +103,17 @@ window.WordShuffleDrag = window.WordShuffleDrag || {};
 
   function end(event) {
     if (!active) return;
+    event.preventDefault();
     const point = pointerPosition(event);
     const slot = nearestSlot(point);
     clearMagnet();
     const letterId = active.id;
+    if (!slot) scatterBackToTable();
     resetLetter();
     active = null;
+    document.removeEventListener("pointermove", move);
+    document.removeEventListener("pointerup", end);
+    document.removeEventListener("pointercancel", end);
     if (!slot) return;
     WordShuffleEngine.tryPlace(letterId, Number(slot.dataset.slotIndex));
   }
@@ -91,8 +122,5 @@ window.WordShuffleDrag = window.WordShuffleDrag || {};
     const table = document.getElementById("word-shuffle-table");
     if (!table) return;
     table.onpointerdown = start;
-    table.onpointermove = move;
-    table.onpointerup = end;
-    table.onpointercancel = end;
   };
 })();
