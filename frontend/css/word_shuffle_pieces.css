@@ -40,7 +40,7 @@
 }
 
 .word-shuffle-letter.is-dragging {
-  z-index: 30;
+  z-index: 1000;
   cursor: grabbing;
   filter: saturate(1.22) brightness(1.05);
   box-shadow:

@@ -39,7 +39,6 @@ window.WordShuffleUI = window.WordShuffleUI || {};
         <div class="word-shuffle-shell">
           <div class="word-shuffle-top">
             <div class="word-shuffle-title">
-              <div class="word-shuffle-logo" aria-hidden="true">W</div>
               <div>
                 <h2>Voxi Word Shuffle</h2>
                 <p>Drag letters into the slots before time runs out.</p>
@@ -51,7 +50,7 @@ window.WordShuffleUI = window.WordShuffleUI || {};
           <div class="word-shuffle-hud">
             <div class="word-shuffle-stat"><span>Score</span><strong id="word-shuffle-score">${Number(state.score || 0)}</strong></div>
             <div class="word-shuffle-stat"><span>Solved</span><strong id="word-shuffle-solved">${Number(state.solvedCount || 0)}</strong></div>
-            <div class="word-shuffle-stat"><span id="word-shuffle-streak-label">${escape(WordShuffleStreak.label(state.streak))}</span><strong id="word-shuffle-streak">${Number(state.streak || 0)}x</strong></div>
+            <div class="word-shuffle-stat"><span id="word-shuffle-streak-label">Streak</span><strong id="word-shuffle-streak">${Number(state.streak || 0)}x</strong></div>
             <div id="word-shuffle-timer" class="word-shuffle-stat word-shuffle-timer"><span>Time</span><strong>${Math.ceil(state.seconds)}s</strong></div>
           </div>
 
@@ -61,7 +60,7 @@ window.WordShuffleUI = window.WordShuffleUI || {};
                 <div class="word-shuffle-stage-kicker">Current word</div>
                 <div class="word-shuffle-stage-name">${escape(state.current?.category || state.current?.difficulty || "Vocabulary")}</div>
               </div>
-              <div class="word-shuffle-stage-tag">${escape(state.current?.cefr_level || "Arcade")}</div>
+              ${state.current?.cefr_level ? `<div class="word-shuffle-stage-tag">${escape(state.current.cefr_level)}</div>` : ""}
             </div>
             <div class="word-shuffle-slots" id="word-shuffle-slots">
               ${state.slots.map((slot, index) => `
@@ -102,7 +101,7 @@ window.WordShuffleUI = window.WordShuffleUI || {};
     if (score) score.textContent = Number(state.score || 0);
     if (solved) solved.textContent = Number(state.solvedCount || 0);
     if (streak) streak.textContent = `${Number(state.streak || 0)}x`;
-    if (label) label.textContent = WordShuffleStreak.label(state.streak);
+    if (label) label.textContent = "Streak";
   };
 
   WordShuffleUI.renderSlots = function () {

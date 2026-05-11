@@ -47,6 +47,8 @@
 }
 
 .word-shuffle-slots {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
@@ -95,6 +97,7 @@
 
 .word-shuffle-table {
   position: relative;
+  z-index: 1;
   min-height: clamp(330px, 43vh, 430px);
   border-radius: 30px;
   overflow: hidden;
@@ -152,6 +155,7 @@
     display: flex;
     flex-direction: column;
     padding: clamp(16px, 1.35vw, 24px);
+    overflow: visible;
   }
 
   .word-shuffle-stage-head {

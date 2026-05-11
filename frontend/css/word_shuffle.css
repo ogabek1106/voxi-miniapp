@@ -135,5 +135,6 @@ body.word-shuffle-active #screen-mocks.container.word-shuffle-host {
     align-items: stretch;
     border-radius: 32px;
     padding: clamp(14px, 1.3vw, 22px);
+    padding-bottom: clamp(72px, 5.4vw, 94px);
   }
 }
