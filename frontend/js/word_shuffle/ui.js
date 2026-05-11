@@ -18,7 +18,10 @@ window.WordShuffleUI = window.WordShuffleUI || {};
     if (typeof setBottomNavVisible === "function") setBottomNavVisible(false);
     document.body.classList.add("word-shuffle-active");
     const screen = document.getElementById("screen-mocks");
-    if (screen) screen.style.display = "block";
+    if (screen) {
+      screen.classList.add("word-shuffle-host");
+      screen.style.display = "block";
+    }
     return screen;
   };
 

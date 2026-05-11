@@ -16,7 +16,7 @@ window.AdminWordShuffleUI = window.AdminWordShuffleUI || {};
     if (typeof setBottomNavVisible === "function") setBottomNavVisible(false);
     const screen = document.getElementById("screen-mocks");
     if (screen) {
-      screen.classList.remove("vocab-ooo-host", "shadow-writing-host");
+      screen.classList.remove("vocab-ooo-host", "shadow-writing-host", "word-shuffle-host");
       screen.style.display = "block";
     }
     return screen;

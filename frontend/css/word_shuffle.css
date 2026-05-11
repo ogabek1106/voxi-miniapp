@@ -9,6 +9,15 @@ body.word-shuffle-active #screen-mocks {
     linear-gradient(180deg, #f4f8fc 0%, #edf5fb 100%);
 }
 
+body.word-shuffle-active #screen-mocks.container.word-shuffle-host {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  margin: 0;
+  text-align: initial;
+  display: block;
+}
+
 .word-shuffle-screen {
   --shuffle-ink: #17202c;
   --shuffle-muted: #64748b;
@@ -104,10 +113,16 @@ body.word-shuffle-active #screen-mocks {
     overflow: hidden;
   }
 
+  body.word-shuffle-active.view-website #content {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
   .word-shuffle-screen {
-    width: min(100% - 32px, 1780px);
-    height: calc(100dvh - var(--website-header-height, 86px) - 24px);
-    padding: 12px 0;
+    width: 100%;
+    max-width: none;
+    height: calc(100dvh - var(--website-header-height, 86px));
+    padding: 10px clamp(18px, 2vw, 34px);
   }
 
   .word-shuffle-shell {
