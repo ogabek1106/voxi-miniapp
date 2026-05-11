@@ -33,35 +33,47 @@ window.WordShuffleUI = window.WordShuffleUI || {};
     if (!screen || !state.current) return;
     screen.innerHTML = `
       <div class="word-shuffle-screen">
-        <div class="word-shuffle-top">
-          <div class="word-shuffle-title">
-            <h2>Voxi Word Shuffle</h2>
-            <p>Drag letters into the slots before time runs out.</p>
+        <div class="word-shuffle-shell">
+          <div class="word-shuffle-top">
+            <div class="word-shuffle-title">
+              <div class="word-shuffle-logo" aria-hidden="true">W</div>
+              <div>
+                <h2>Voxi Word Shuffle</h2>
+                <p>Drag letters into the slots before time runs out.</p>
+              </div>
+            </div>
+            <button class="word-shuffle-back" onclick="WordShuffleLoader.exit()">Back</button>
           </div>
-          <button class="word-shuffle-back" onclick="WordShuffleLoader.exit()">Back</button>
+
+          <div class="word-shuffle-hud">
+            <div class="word-shuffle-stat"><span>Score</span><strong id="word-shuffle-score">${Number(state.score || 0)}</strong></div>
+            <div class="word-shuffle-stat"><span>Solved</span><strong id="word-shuffle-solved">${Number(state.solvedCount || 0)}</strong></div>
+            <div class="word-shuffle-stat"><span id="word-shuffle-streak-label">${escape(WordShuffleStreak.label(state.streak))}</span><strong id="word-shuffle-streak">${Number(state.streak || 0)}x</strong></div>
+            <div id="word-shuffle-timer" class="word-shuffle-stat word-shuffle-timer"><span>Time</span><strong>${Math.ceil(state.seconds)}s</strong></div>
+          </div>
+
+          <section id="word-shuffle-stage" class="word-shuffle-stage">
+            <div class="word-shuffle-stage-head">
+              <div>
+                <div class="word-shuffle-stage-kicker">Current word</div>
+                <div class="word-shuffle-stage-name">${escape(state.current?.category || state.current?.difficulty || "Vocabulary")}</div>
+              </div>
+              <div class="word-shuffle-stage-tag">${escape(state.current?.cefr_level || "Arcade")}</div>
+            </div>
+            <div class="word-shuffle-slots" id="word-shuffle-slots">
+              ${state.slots.map((slot, index) => `
+                <div class="word-shuffle-slot ${slot.value ? "is-filled" : ""}" data-slot-index="${index}">${escape(slot.value || "")}</div>
+              `).join("")}
+            </div>
+            <div class="word-shuffle-table" id="word-shuffle-table">
+              ${state.letters.map((letter) => `
+                <button class="word-shuffle-letter ${letter.used ? "is-used" : ""}" type="button" data-letter-id="${escape(letter.id)}" style="--x:${letter.x}%;--y:${letter.y}%;--rot:${letter.rot}deg">${escape(letter.char)}</button>
+              `).join("")}
+            </div>
+          </section>
+
+          <div id="word-shuffle-learn-card" class="word-shuffle-learn-card" aria-live="polite"></div>
         </div>
-
-        <div class="word-shuffle-hud">
-          <div class="word-shuffle-stat"><span>Score</span><strong id="word-shuffle-score">${Number(state.score || 0)}</strong></div>
-          <div class="word-shuffle-stat"><span>Solved</span><strong id="word-shuffle-solved">${Number(state.solvedCount || 0)}</strong></div>
-          <div class="word-shuffle-stat"><span id="word-shuffle-streak-label">${escape(WordShuffleStreak.label(state.streak))}</span><strong id="word-shuffle-streak">${Number(state.streak || 0)}x</strong></div>
-          <div id="word-shuffle-timer" class="word-shuffle-stat word-shuffle-timer"><span>Time</span><strong>${Math.ceil(state.seconds)}s</strong></div>
-        </div>
-
-        <section id="word-shuffle-stage" class="word-shuffle-stage">
-          <div class="word-shuffle-slots" id="word-shuffle-slots">
-            ${state.slots.map((slot, index) => `
-              <div class="word-shuffle-slot ${slot.value ? "is-filled" : ""}" data-slot-index="${index}">${escape(slot.value || "")}</div>
-            `).join("")}
-          </div>
-          <div class="word-shuffle-table" id="word-shuffle-table">
-            ${state.letters.map((letter) => `
-              <button class="word-shuffle-letter ${letter.used ? "is-used" : ""}" type="button" data-letter-id="${escape(letter.id)}" style="--x:${letter.x}%;--y:${letter.y}%;--rot:${letter.rot}deg">${escape(letter.char)}</button>
-            `).join("")}
-          </div>
-        </section>
-
-        <div id="word-shuffle-learn-card" class="word-shuffle-learn-card" aria-live="polite"></div>
       </div>
     `;
     WordShuffleDrag.bind();
