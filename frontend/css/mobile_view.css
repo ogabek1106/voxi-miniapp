@@ -138,6 +138,10 @@ body.mobile-browser-view .website-footer-links {
   justify-content: center;
 }
 
+body.mobile-browser-view.word-shuffle-active .word-shuffle-screen {
+  padding-top: 10px;
+}
+
 body.mobile-browser-view img,
 body.mobile-browser-view svg,
 body.mobile-browser-view canvas,
