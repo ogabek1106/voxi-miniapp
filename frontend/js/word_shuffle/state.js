@@ -11,7 +11,7 @@ window.WordShuffleState = window.WordShuffleState || {};
     solvedCount: 0,
     streak: 0,
     bestStreak: 0,
-    seconds: 15,
+    seconds: 60,
     sessionId: null,
     gameOver: false,
     solving: false,
@@ -36,7 +36,7 @@ window.WordShuffleState = window.WordShuffleState || {};
     state.solvedCount = 0;
     state.streak = 0;
     state.bestStreak = 0;
-    state.seconds = 15;
+    state.seconds = 60;
     state.sessionId = null;
     state.gameOver = false;
     state.solving = false;

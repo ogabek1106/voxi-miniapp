@@ -32,22 +32,44 @@ window.WordShuffleEngine = window.WordShuffleEngine || {};
     const letter = state.letters.find((item) => item.id === letterId);
     if (!slot || !letter || letter.used || slot.value) return false;
 
-    if (String(letter.char).toLowerCase() !== String(slot.expected).toLowerCase()) {
-      WordShuffleStreak.break();
-      WordShuffleUI.updateHud();
-      WordShuffleUI.showWrong(letterId);
-      return false;
-    }
-
-    slot.value = slot.expected;
+    slot.value = letter.char;
+    slot.letterId = letter.id;
     letter.used = true;
     WordShuffleUI.renderSlots();
     WordShuffleUI.markLetterUsed(letterId);
 
     if (state.slots.every((item) => item.value)) {
-      WordShuffleEngine.solveCurrent();
+      const typed = state.slots.map((item) => item.value).join("").toLowerCase();
+      const expected = state.slots.map((item) => item.expected).join("").toLowerCase();
+      if (typed === expected) {
+        WordShuffleEngine.solveCurrent();
+      } else {
+        WordShuffleEngine.rejectCurrent();
+      }
     }
     return true;
+  };
+
+  WordShuffleEngine.rejectCurrent = function () {
+    const state = WordShuffleState.get();
+    state.solving = true;
+    WordShuffleStreak.break();
+    WordShuffleUI.updateHud();
+    WordShuffleUI.showSlotError();
+    window.setTimeout(() => {
+      state.slots.forEach((slot) => {
+        const letter = state.letters.find((item) => item.id === slot.letterId);
+        if (letter) {
+          letter.used = false;
+          WordShuffleLogic.placeLetterNearTable(letter, state.letters);
+        }
+        slot.value = "";
+        slot.letterId = null;
+      });
+      WordShuffleUI.renderSlots();
+      WordShuffleUI.renderLetters();
+      state.solving = false;
+    }, 420);
   };
 
   WordShuffleEngine.solveCurrent = function () {

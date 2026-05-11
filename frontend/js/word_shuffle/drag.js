@@ -41,14 +41,27 @@ window.WordShuffleDrag = window.WordShuffleDrag || {};
     document.querySelectorAll(".word-shuffle-slot.is-magnetic").forEach((slot) => slot.classList.remove("is-magnetic"));
   }
 
-  function scatterBackToTable() {
+  function tablePositionFromPoint(point) {
+    const table = document.getElementById("word-shuffle-table");
+    const box = table?.getBoundingClientRect();
+    if (!box) return null;
+    const inside = point.x >= box.left && point.x <= box.right && point.y >= box.top && point.y <= box.bottom;
+    if (!inside) return null;
+    return {
+      x: ((point.x - box.left) / box.width) * 100,
+      y: ((point.y - box.top) / box.height) * 100,
+    };
+  }
+
+  function placeBackToTable(point) {
     if (!active?.el) return;
-    const x = Math.round(12 + Math.random() * 76);
-    const y = Math.round(18 + Math.random() * 64);
-    const rot = Math.round((Math.random() * 24) - 12);
-    active.el.style.setProperty("--x", `${x}%`);
-    active.el.style.setProperty("--y", `${y}%`);
-    active.el.style.setProperty("--rot", `${rot}deg`);
+    const state = WordShuffleState.get();
+    const letter = state.letters.find((item) => String(item.id) === String(active.id));
+    if (!letter) return;
+    WordShuffleLogic.placeLetterNearTable(letter, state.letters, tablePositionFromPoint(point));
+    active.el.style.setProperty("--x", `${letter.x}%`);
+    active.el.style.setProperty("--y", `${letter.y}%`);
+    active.el.style.setProperty("--rot", `${letter.rot}deg`);
   }
 
   function start(event) {
@@ -108,7 +121,7 @@ window.WordShuffleDrag = window.WordShuffleDrag || {};
     const slot = nearestSlot(point);
     clearMagnet();
     const letterId = active.id;
-    if (!slot) scatterBackToTable();
+    if (!slot) placeBackToTable(point);
     resetLetter();
     active = null;
     document.removeEventListener("pointermove", move);

@@ -41,6 +41,46 @@ window.WordShuffleLogic = window.WordShuffleLogic || {};
 
   WordShuffleLogic.shuffle = shuffle;
 
+  function distance(a, b) {
+    return Math.hypot(Number(a.x) - Number(b.x), Number(a.y) - Number(b.y));
+  }
+
+  function collides(candidate, letters, activeId) {
+    return letters.some((letter) => {
+      if (!letter || letter.id === activeId || letter.used) return false;
+      return distance(candidate, letter) < 13;
+    });
+  }
+
+  WordShuffleLogic.safeTablePosition = function (letters, activeId, preferred) {
+    const clamp = (value, min, max) => Math.max(min, Math.min(max, Number(value)));
+    let candidate = {
+      x: clamp(preferred?.x ?? (12 + Math.random() * 76), 8, 92),
+      y: clamp(preferred?.y ?? (18 + Math.random() * 64), 12, 88),
+    };
+    if (!collides(candidate, letters, activeId)) return candidate;
+
+    for (let radius = 8; radius <= 34; radius += 6) {
+      for (let angle = 0; angle < 360; angle += 35) {
+        const radians = angle * Math.PI / 180;
+        const next = {
+          x: clamp(candidate.x + Math.cos(radians) * radius, 8, 92),
+          y: clamp(candidate.y + Math.sin(radians) * radius, 12, 88),
+        };
+        if (!collides(next, letters, activeId)) return next;
+      }
+    }
+    return candidate;
+  };
+
+  WordShuffleLogic.placeLetterNearTable = function (letter, letters, preferred) {
+    const position = WordShuffleLogic.safeTablePosition(letters, letter.id, preferred);
+    letter.x = position.x;
+    letter.y = position.y;
+    letter.rot = Math.round((Math.random() * 24) - 12);
+    return letter;
+  };
+
   WordShuffleLogic.buildPuzzle = function (entry) {
     const wordLetters = lettersFromWord(entry?.word || "");
     const extra = [];
@@ -53,7 +93,7 @@ window.WordShuffleLogic = window.WordShuffleLogic || {};
       const pos = TABLE_POSITIONS[index % TABLE_POSITIONS.length];
       const jitterX = (Math.random() * 8) - 4;
       const jitterY = (Math.random() * 8) - 4;
-      return {
+      const letter = {
         id: `${Date.now()}-${index}-${char}`,
         char,
         used: false,
@@ -61,6 +101,7 @@ window.WordShuffleLogic = window.WordShuffleLogic || {};
         y: Math.max(12, Math.min(88, pos[1] + jitterY)),
         rot: Math.round((Math.random() * 24) - 12),
       };
+      return letter;
     });
 
     return {

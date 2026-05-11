@@ -21,7 +21,7 @@ window.WordShuffleTimer = window.WordShuffleTimer || {};
 
   WordShuffleTimer.add = function (seconds) {
     const state = WordShuffleState.get();
-    state.seconds = Math.min(30, Number(state.seconds || 0) + Number(seconds || 0));
+    state.seconds = Math.min(90, Number(state.seconds || 0) + Number(seconds || 0));
     WordShuffleUI.renderTimer();
   };
 })();

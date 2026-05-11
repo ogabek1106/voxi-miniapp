@@ -114,6 +114,20 @@ window.WordShuffleUI = window.WordShuffleUI || {};
     `).join("");
   };
 
+  WordShuffleUI.renderLetters = function () {
+    const state = WordShuffleState.get();
+    const host = document.getElementById("word-shuffle-table");
+    if (!host) return;
+    host.querySelectorAll(".word-shuffle-letter").forEach((el) => {
+      const letter = state.letters.find((item) => String(item.id) === String(el.dataset.letterId));
+      if (!letter) return;
+      el.classList.toggle("is-used", Boolean(letter.used));
+      el.style.setProperty("--x", `${letter.x}%`);
+      el.style.setProperty("--y", `${letter.y}%`);
+      el.style.setProperty("--rot", `${letter.rot}deg`);
+    });
+  };
+
   WordShuffleUI.markLetterUsed = function (letterId) {
     document.querySelector(`.word-shuffle-letter[data-letter-id="${CSS.escape(String(letterId))}"]`)?.classList.add("is-used");
   };
@@ -124,6 +138,14 @@ window.WordShuffleUI = window.WordShuffleUI || {};
     el.classList.remove("is-wrong");
     void el.offsetWidth;
     el.classList.add("is-wrong");
+  };
+
+  WordShuffleUI.showSlotError = function () {
+    document.querySelectorAll(".word-shuffle-slot").forEach((slot) => {
+      slot.classList.remove("is-wrong");
+      void slot.offsetWidth;
+      slot.classList.add("is-wrong");
+    });
   };
 
   WordShuffleUI.showSolvedInfo = function () {
