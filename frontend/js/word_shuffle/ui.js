@@ -51,6 +51,7 @@ window.WordShuffleUI = window.WordShuffleUI || {};
             <div class="word-shuffle-stat"><span>Score</span><strong id="word-shuffle-score">${Number(state.score || 0)}</strong></div>
             <div class="word-shuffle-stat"><span>Solved</span><strong id="word-shuffle-solved">${Number(state.solvedCount || 0)}</strong></div>
             <div class="word-shuffle-stat"><span id="word-shuffle-streak-label">Streak</span><strong id="word-shuffle-streak">${Number(state.streak || 0)}x</strong></div>
+            <div id="word-shuffle-learn-card" class="word-shuffle-learn-card" aria-live="polite"></div>
             <div id="word-shuffle-timer" class="word-shuffle-stat word-shuffle-timer"><span>Time</span><strong>${Math.ceil(state.seconds)}s</strong></div>
           </div>
 
@@ -76,7 +77,6 @@ window.WordShuffleUI = window.WordShuffleUI || {};
             </div>
           </section>
 
-          <div id="word-shuffle-learn-card" class="word-shuffle-learn-card" aria-live="polite"></div>
           <button class="word-shuffle-back word-shuffle-back--desktop" onclick="WordShuffleLoader.exit()">Back</button>
         </div>
       </div>
@@ -176,9 +176,11 @@ window.WordShuffleUI = window.WordShuffleUI || {};
     }
     if (!card) return;
     card.innerHTML = `
+      <span class="word-shuffle-learn-label">Nice find</span>
       <h3>${escape(entry.word)}</h3>
-      <p>${escape(entry.translation || "")}</p>
+      ${entry.translation ? `<p>${escape(entry.translation)}</p>` : ""}
       ${entry.example_sentence ? `<em>${escape(entry.example_sentence)}</em>` : ""}
+      <button type="button" class="word-shuffle-next" onclick="WordShuffleEngine.continueAfterSolved()">Next</button>
     `;
     card.classList.add("is-visible");
   };

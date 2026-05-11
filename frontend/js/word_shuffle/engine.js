@@ -1,6 +1,13 @@
 window.WordShuffleEngine = window.WordShuffleEngine || {};
 
 (function () {
+  let solveTimeoutId = null;
+
+  function clearSolveTimeout() {
+    if (solveTimeoutId) window.clearTimeout(solveTimeoutId);
+    solveTimeoutId = null;
+  }
+
   function nextEntry() {
     const state = WordShuffleState.get();
     if (!state.entries.length) return null;
@@ -10,6 +17,7 @@ window.WordShuffleEngine = window.WordShuffleEngine || {};
   }
 
   WordShuffleEngine.loadNext = function () {
+    clearSolveTimeout();
     const state = WordShuffleState.get();
     const entry = nextEntry();
     if (!entry) {
@@ -96,6 +104,7 @@ window.WordShuffleEngine = window.WordShuffleEngine || {};
 
   WordShuffleEngine.solveCurrent = function () {
     const state = WordShuffleState.get();
+    clearSolveTimeout();
     state.solving = true;
     const elapsed = Math.max(0.1, (Date.now() - state.wordStartedAt) / 1000);
     const fastBonus = elapsed <= 5 ? 2 : elapsed <= 8 ? 1 : 0;
@@ -105,14 +114,21 @@ window.WordShuffleEngine = window.WordShuffleEngine || {};
     WordShuffleTimer.add(3 + fastBonus);
     WordShuffleUI.updateHud();
     WordShuffleUI.showSolvedInfo();
-    window.setTimeout(() => {
-      if (!WordShuffleState.get().gameOver) WordShuffleEngine.loadNext();
-    }, 1500);
+    solveTimeoutId = window.setTimeout(() => {
+      WordShuffleEngine.continueAfterSolved();
+    }, 5000);
+  };
+
+  WordShuffleEngine.continueAfterSolved = function () {
+    const state = WordShuffleState.get();
+    clearSolveTimeout();
+    if (!state.gameOver && state.solving) WordShuffleEngine.loadNext();
   };
 
   WordShuffleEngine.gameOver = function () {
     const state = WordShuffleState.get();
     if (state.gameOver) return;
+    clearSolveTimeout();
     state.gameOver = true;
     state.solving = false;
     WordShuffleTimer.stop();
