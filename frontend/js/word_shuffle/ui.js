@@ -51,7 +51,7 @@ window.WordShuffleUI = window.WordShuffleUI || {};
             <div class="word-shuffle-stat"><span>Score</span><strong id="word-shuffle-score">${Number(state.score || 0)}</strong></div>
             <div class="word-shuffle-stat"><span>Solved</span><strong id="word-shuffle-solved">${Number(state.solvedCount || 0)}</strong></div>
             <div class="word-shuffle-stat"><span id="word-shuffle-streak-label">Streak</span><strong id="word-shuffle-streak">${Number(state.streak || 0)}x</strong></div>
-            <div id="word-shuffle-learn-card" class="word-shuffle-learn-card" aria-live="polite"></div>
+            <div class="word-shuffle-learn-card word-shuffle-learn-card--hud" aria-live="polite"></div>
             <div id="word-shuffle-timer" class="word-shuffle-stat word-shuffle-timer"><span>Time</span><strong>${Math.ceil(state.seconds)}s</strong></div>
           </div>
 
@@ -71,6 +71,7 @@ window.WordShuffleUI = window.WordShuffleUI || {};
               `).join("")}
             </div>
             <div class="word-shuffle-table" id="word-shuffle-table">
+              <div class="word-shuffle-learn-card word-shuffle-learn-card--tray" aria-live="polite"></div>
               ${state.letters.map((letter) => `
                 ${WordShuffleUI.renderLetterButton(letter, false)}
               `).join("")}
@@ -167,22 +168,25 @@ window.WordShuffleUI = window.WordShuffleUI || {};
   WordShuffleUI.showSolvedInfo = function () {
     const state = WordShuffleState.get();
     const entry = state.current || {};
-    const card = document.getElementById("word-shuffle-learn-card");
+    const cards = document.querySelectorAll(".word-shuffle-learn-card");
     const stage = document.getElementById("word-shuffle-stage");
     if (stage) {
       stage.classList.remove("is-solved");
       void stage.offsetWidth;
       stage.classList.add("is-solved");
     }
-    if (!card) return;
-    card.innerHTML = `
+    if (!cards.length) return;
+    const content = `
       <span class="word-shuffle-learn-label">Nice find</span>
       <h3>${escape(entry.word)}</h3>
       ${entry.translation ? `<p>${escape(entry.translation)}</p>` : ""}
       ${entry.example_sentence ? `<em>${escape(entry.example_sentence)}</em>` : ""}
       <button type="button" class="word-shuffle-next" onclick="WordShuffleEngine.continueAfterSolved()">Next</button>
     `;
-    card.classList.add("is-visible");
+    cards.forEach((card) => {
+      card.innerHTML = content;
+      card.classList.add("is-visible");
+    });
   };
 
   WordShuffleUI.renderGameOver = function () {

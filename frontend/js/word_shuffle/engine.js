@@ -116,7 +116,7 @@ window.WordShuffleEngine = window.WordShuffleEngine || {};
     WordShuffleUI.showSolvedInfo();
     solveTimeoutId = window.setTimeout(() => {
       WordShuffleEngine.continueAfterSolved();
-    }, 5000);
+    }, 10000);
   };
 
   WordShuffleEngine.continueAfterSolved = function () {

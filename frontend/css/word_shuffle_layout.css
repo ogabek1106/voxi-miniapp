@@ -138,6 +138,10 @@
   pointer-events: auto;
 }
 
+.word-shuffle-learn-card--tray {
+  display: none;
+}
+
 .word-shuffle-learn-label {
   display: block;
   margin-bottom: 5px;
@@ -183,10 +187,10 @@
   cursor: pointer;
 }
 
-@media (max-width: 700px) {
+@media (max-width: 900px) {
   .word-shuffle-top {
-    gap: 10px;
-    margin-bottom: 12px;
+    gap: 8px;
+    margin-bottom: 7px;
   }
 
   .word-shuffle-logo {
@@ -201,26 +205,92 @@
   }
 
   .word-shuffle-title h2 {
-    font-size: 27px;
+    font-size: 22px;
+    letter-spacing: -0.025em;
   }
 
   .word-shuffle-title p {
-    font-size: 12px;
+    margin-top: 2px;
+    font-size: 10px;
+    line-height: 1.15;
   }
 
   .word-shuffle-back {
-    padding: 10px 13px;
+    padding: 8px 11px;
+    font-size: 12px;
   }
 
   .word-shuffle-hud {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-    margin-bottom: 11px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 5px;
+    margin-bottom: 7px;
   }
 
   .word-shuffle-stat {
-    padding: 11px 12px;
-    border-radius: 17px;
+    padding: 7px 7px;
+    border-radius: 14px;
+  }
+
+  .word-shuffle-stat::after {
+    left: 8px;
+    right: 8px;
+    height: 2px;
+  }
+
+  .word-shuffle-stat span {
+    font-size: 8px;
+    letter-spacing: 0.04em;
+  }
+
+  .word-shuffle-stat strong {
+    margin-top: 2px;
+    font-size: 17px;
+  }
+
+  .word-shuffle-timer strong {
+    font-size: 24px;
+  }
+
+  .word-shuffle-learn-card--hud {
+    display: none;
+  }
+
+  .word-shuffle-learn-card--tray {
+    position: absolute;
+    inset: 12px;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-height: none;
+    margin: 0;
+    padding: 0 16px;
+    text-align: center;
+  }
+
+  .word-shuffle-learn-card--tray.is-visible {
+    max-height: none;
+    padding: 14px 16px;
+  }
+
+  .word-shuffle-learn-card h3 {
+    font-size: 24px;
+  }
+
+  .word-shuffle-learn-card p {
+    margin-top: 5px;
+  }
+
+  .word-shuffle-learn-card em {
+    margin-top: 6px;
+    font-size: 12px;
+    line-height: 1.25;
+  }
+
+  .word-shuffle-next {
+    margin-top: 10px;
+    padding: 9px 12px;
+    border-radius: 14px;
   }
 }
 

@@ -91,15 +91,30 @@ body.word-shuffle-active #screen-mocks.container.word-shuffle-host {
   font-size: 18px;
 }
 
-@media (max-width: 700px) {
+@media (max-width: 900px) {
+  body.word-shuffle-active {
+    overflow: hidden;
+  }
+
+  body.word-shuffle-active #screen-mocks {
+    height: calc(100dvh - var(--website-header-height, 86px));
+    overflow: hidden;
+  }
+
   .word-shuffle-screen {
-    width: min(100% - 14px, 520px);
-    padding-top: 8px;
+    width: min(100% - 8px, 520px);
+    height: calc(100dvh - var(--website-header-height, 86px));
+    padding: 3px 0 6px;
+    overflow: hidden;
   }
 
   .word-shuffle-shell {
-    border-radius: 30px;
-    padding: 13px;
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    border-radius: 24px;
+    padding: 8px;
   }
 }
 

@@ -136,14 +136,28 @@
   border: 2px dashed rgba(255, 255, 255, 0.22);
 }
 
-@media (max-width: 700px) {
+@media (max-width: 900px) {
   .word-shuffle-stage {
-    padding: 11px;
-    border-radius: 28px;
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
+    border-radius: 22px;
   }
 
   .word-shuffle-stage-head {
-    margin-bottom: 9px;
+    align-items: center;
+    margin-bottom: 5px;
+  }
+
+  .word-shuffle-stage-kicker {
+    display: none;
+  }
+
+  .word-shuffle-stage-name {
+    margin-top: 0;
+    font-size: 15px;
   }
 
   .word-shuffle-stage-tag {
@@ -151,13 +165,33 @@
   }
 
   .word-shuffle-slots {
-    padding: 9px;
-    margin-bottom: 10px;
+    flex: 0 0 auto;
+    gap: 5px;
+    padding: 6px;
+    margin-bottom: 7px;
+    border-radius: 18px;
+  }
+
+  .word-shuffle-slot {
+    width: clamp(32px, 10vw, 48px);
+    height: clamp(38px, 11vw, 54px);
+    border-radius: 14px;
   }
 
   .word-shuffle-table {
-    min-height: 330px;
-    border-radius: 24px;
+    flex: 1 1 auto;
+    min-height: 0;
+    border-radius: 20px;
+  }
+
+  .word-shuffle-table::before {
+    inset: 10px;
+    border-radius: 17px;
+  }
+
+  .word-shuffle-stage.is-solved .word-shuffle-table .word-shuffle-letter {
+    opacity: 0;
+    pointer-events: none;
   }
 }
 
