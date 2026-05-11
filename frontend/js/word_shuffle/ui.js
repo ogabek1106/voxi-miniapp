@@ -64,12 +64,14 @@ window.WordShuffleUI = window.WordShuffleUI || {};
             </div>
             <div class="word-shuffle-slots" id="word-shuffle-slots">
               ${state.slots.map((slot, index) => `
-                <div class="word-shuffle-slot ${slot.value ? "is-filled" : ""}" data-slot-index="${index}">${escape(slot.value || "")}</div>
+                <div class="word-shuffle-slot ${slot.value ? "is-filled" : ""}" data-slot-index="${index}">
+                  ${slot.letterId ? WordShuffleUI.renderLetterButton(state.letters.find((item) => String(item.id) === String(slot.letterId)), true) : ""}
+                </div>
               `).join("")}
             </div>
             <div class="word-shuffle-table" id="word-shuffle-table">
               ${state.letters.map((letter) => `
-                <button class="word-shuffle-letter ${letter.used ? "is-used" : ""}" type="button" data-letter-id="${escape(letter.id)}" style="--x:${letter.x}%;--y:${letter.y}%;--rot:${letter.rot}deg">${escape(letter.char)}</button>
+                ${WordShuffleUI.renderLetterButton(letter, false)}
               `).join("")}
             </div>
           </section>
@@ -81,6 +83,18 @@ window.WordShuffleUI = window.WordShuffleUI || {};
     `;
     WordShuffleDrag.bind();
     WordShuffleUI.renderTimer();
+  };
+
+  WordShuffleUI.renderLetterButton = function (letter, inSlot) {
+    if (!letter) return "";
+    return `
+      <button
+        class="word-shuffle-letter word-shuffle-letter--tone-${Number(letter.tone || 0)} ${letter.used && !inSlot ? "is-used" : ""} ${inSlot ? "is-in-slot" : ""}"
+        type="button"
+        data-letter-id="${escape(letter.id)}"
+        style="--x:${Number(letter.x || 50)}%;--y:${Number(letter.y || 50)}%;--rot:${Number(letter.rot || 0)}deg"
+      >${escape(letter.char)}</button>
+    `;
   };
 
   WordShuffleUI.renderTimer = function () {
@@ -110,7 +124,9 @@ window.WordShuffleUI = window.WordShuffleUI || {};
     const host = document.getElementById("word-shuffle-slots");
     if (!host) return;
     host.innerHTML = state.slots.map((slot, index) => `
-      <div class="word-shuffle-slot ${slot.value ? "is-filled" : ""}" data-slot-index="${index}">${escape(slot.value || "")}</div>
+      <div class="word-shuffle-slot ${slot.value ? "is-filled" : ""}" data-slot-index="${index}">
+        ${slot.letterId ? WordShuffleUI.renderLetterButton(state.letters.find((item) => String(item.id) === String(slot.letterId)), true) : ""}
+      </div>
     `).join("");
   };
 

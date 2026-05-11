@@ -16,7 +16,8 @@ window.WordShuffleDrag = window.WordShuffleDrag || {};
       const cx = box.left + box.width / 2;
       const cy = box.top + box.height / 2;
       const distance = Math.hypot(point.x - cx, point.y - cy);
-      if (distance < 78 && (!best || distance < best.distance)) {
+      const inside = point.x >= box.left && point.x <= box.right && point.y >= box.top && point.y <= box.bottom;
+      if ((inside || distance < 46) && (!best || distance < best.distance)) {
         best = { slot, distance };
       }
     });
@@ -72,6 +73,7 @@ window.WordShuffleDrag = window.WordShuffleDrag || {};
     active = {
       el: target,
       id: target.dataset.letterId,
+      fromSlot: target.closest(".word-shuffle-slot")?.dataset?.slotIndex ?? null,
       startX: point.x,
       startY: point.y,
       dx: 0,
@@ -83,9 +85,12 @@ window.WordShuffleDrag = window.WordShuffleDrag || {};
     target.style.position = "fixed";
     target.style.left = "0";
     target.style.top = "0";
+    target.style.width = `${active.rect.width}px`;
+    target.style.height = `${active.rect.height}px`;
     applyPoint(point);
     target.classList.add("is-dragging");
     document.body.appendChild(target);
+    WordShuffleEngine.liftLetter(active.id);
     document.addEventListener("pointermove", move, { passive: false });
     document.addEventListener("pointerup", end, { passive: false });
     document.addEventListener("pointercancel", end, { passive: false });
@@ -108,9 +113,13 @@ window.WordShuffleDrag = window.WordShuffleDrag || {};
     active.el.style.position = "";
     active.el.style.left = "";
     active.el.style.top = "";
+    active.el.style.width = "";
+    active.el.style.height = "";
     active.el.style.transform = "";
-    if (active.originalParent) {
+    if (active.originalParent?.isConnected) {
       active.originalParent.insertBefore(active.el, active.nextSibling);
+    } else {
+      active.el.remove();
     }
   }
 
@@ -127,13 +136,16 @@ window.WordShuffleDrag = window.WordShuffleDrag || {};
     document.removeEventListener("pointermove", move);
     document.removeEventListener("pointerup", end);
     document.removeEventListener("pointercancel", end);
-    if (!slot) return;
+    if (!slot) {
+      WordShuffleUI.renderLetters();
+      return;
+    }
     WordShuffleEngine.tryPlace(letterId, Number(slot.dataset.slotIndex));
   }
 
   WordShuffleDrag.bind = function () {
-    const table = document.getElementById("word-shuffle-table");
-    if (!table) return;
-    table.onpointerdown = start;
+    const stage = document.getElementById("word-shuffle-stage");
+    if (!stage) return;
+    stage.onpointerdown = start;
   };
 })();

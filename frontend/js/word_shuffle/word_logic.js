@@ -96,6 +96,7 @@ window.WordShuffleLogic = window.WordShuffleLogic || {};
       const letter = {
         id: `${Date.now()}-${index}-${char}`,
         char,
+        tone: index % 4,
         used: false,
         x: Math.max(7, Math.min(93, pos[0] + jitterX)),
         y: Math.max(12, Math.min(88, pos[1] + jitterY)),

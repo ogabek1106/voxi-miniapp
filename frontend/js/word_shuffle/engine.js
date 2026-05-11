@@ -25,23 +25,56 @@ window.WordShuffleEngine = window.WordShuffleEngine || {};
     WordShuffleUI.render();
   };
 
+  function expectedWord() {
+    const state = WordShuffleState.get();
+    return state.slots.map((item) => item.expected).join("").toLowerCase();
+  }
+
+  function currentWord() {
+    const state = WordShuffleState.get();
+    return state.slots.map((item) => item.value).join("").toLowerCase();
+  }
+
+  WordShuffleEngine.liftLetter = function (letterId) {
+    const state = WordShuffleState.get();
+    const slot = state.slots.find((item) => String(item.letterId) === String(letterId));
+    const letter = state.letters.find((item) => String(item.id) === String(letterId));
+    if (!slot || !letter) return;
+    slot.value = "";
+    slot.letterId = null;
+    letter.used = false;
+    WordShuffleUI.renderSlots();
+  };
+
   WordShuffleEngine.tryPlace = function (letterId, slotIndex) {
     const state = WordShuffleState.get();
     if (state.gameOver || state.solving) return false;
     const slot = state.slots[slotIndex];
     const letter = state.letters.find((item) => item.id === letterId);
-    if (!slot || !letter || letter.used || slot.value) return false;
+    if (!slot || !letter) return false;
+
+    const oldSlot = state.slots.find((item) => String(item.letterId) === String(letterId));
+    if (oldSlot) {
+      oldSlot.value = "";
+      oldSlot.letterId = null;
+    }
+
+    if (slot.letterId && String(slot.letterId) !== String(letterId)) {
+      const displaced = state.letters.find((item) => String(item.id) === String(slot.letterId));
+      if (displaced) {
+        displaced.used = false;
+        WordShuffleLogic.placeLetterNearTable(displaced, state.letters);
+      }
+    }
 
     slot.value = letter.char;
     slot.letterId = letter.id;
     letter.used = true;
     WordShuffleUI.renderSlots();
-    WordShuffleUI.markLetterUsed(letterId);
+    WordShuffleUI.renderLetters();
 
     if (state.slots.every((item) => item.value)) {
-      const typed = state.slots.map((item) => item.value).join("").toLowerCase();
-      const expected = state.slots.map((item) => item.expected).join("").toLowerCase();
-      if (typed === expected) {
+      if (currentWord() === expectedWord()) {
         WordShuffleEngine.solveCurrent();
       } else {
         WordShuffleEngine.rejectCurrent();
@@ -57,17 +90,6 @@ window.WordShuffleEngine = window.WordShuffleEngine || {};
     WordShuffleUI.updateHud();
     WordShuffleUI.showSlotError();
     window.setTimeout(() => {
-      state.slots.forEach((slot) => {
-        const letter = state.letters.find((item) => item.id === slot.letterId);
-        if (letter) {
-          letter.used = false;
-          WordShuffleLogic.placeLetterNearTable(letter, state.letters);
-        }
-        slot.value = "";
-        slot.letterId = null;
-      });
-      WordShuffleUI.renderSlots();
-      WordShuffleUI.renderLetters();
       state.solving = false;
     }, 420);
   };
