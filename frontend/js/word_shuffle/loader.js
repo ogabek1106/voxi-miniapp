@@ -36,8 +36,9 @@ window.WordShuffleLoader = window.WordShuffleLoader || {};
       WordShuffleState.reset(WordShuffleLogic.shuffle(entries));
       if (!entries.length) {
         const screen = WordShuffleUI.screen();
+        const backAction = WordShuffleState.get().returnToAdmin ? "showAdminWordShuffle()" : "goHome()";
         if (screen) {
-          screen.innerHTML = `<div class="word-shuffle-screen"><div class="word-shuffle-empty">Activate at least one Word Shuffle word first.</div><button class="word-shuffle-back" onclick="showAdminWordShuffle()">Back</button></div>`;
+          screen.innerHTML = `<div class="word-shuffle-screen"><div class="word-shuffle-empty">Word Shuffle is being prepared.</div><button class="word-shuffle-back" onclick="${backAction}">Back</button></div>`;
         }
         return;
       }
@@ -48,7 +49,8 @@ window.WordShuffleLoader = window.WordShuffleLoader || {};
     } catch (error) {
       console.error("Word Shuffle load error:", error);
       const screen = WordShuffleUI.screen();
-      if (screen) screen.innerHTML = `<div class="word-shuffle-screen"><div class="word-shuffle-empty">Could not load Word Shuffle.</div><button class="word-shuffle-back" onclick="showAdminWordShuffle()">Back</button></div>`;
+      const backAction = WordShuffleState.get().returnToAdmin ? "showAdminWordShuffle()" : "goHome()";
+      if (screen) screen.innerHTML = `<div class="word-shuffle-screen"><div class="word-shuffle-empty">Could not load Word Shuffle.</div><button class="word-shuffle-back" onclick="${backAction}">Back</button></div>`;
     }
   };
 
@@ -61,6 +63,15 @@ window.WordShuffleLoader = window.WordShuffleLoader || {};
     WordShuffleTimer.stop();
     await WordShuffleLoader.finishIfNeeded("finished");
     document.body.classList.remove("word-shuffle-active");
-    if (typeof showAdminWordShuffle === "function") showAdminWordShuffle();
+    if (WordShuffleState.get().returnToAdmin && typeof showAdminWordShuffle === "function") {
+      showAdminWordShuffle();
+    } else if (typeof goHome === "function") {
+      goHome();
+    }
   };
 })();
+
+window.showWordShuffleEntry = function () {
+  WordShuffleState.set({ returnToAdmin: false });
+  WordShuffleLoader.start();
+};

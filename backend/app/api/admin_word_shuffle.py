@@ -20,6 +20,12 @@ def list_entries(telegram_id: int, db: Session = Depends(get_db)):
     return {"ok": True, "entries": [service.serialize_entry(item) for item in service.list_entries(db)]}
 
 
+@router.get("/stats")
+def get_stats(telegram_id: int, db: Session = Depends(get_db)):
+    require_admin(telegram_id)
+    return {"ok": True, **service.list_admin_stats(db)}
+
+
 @router.post("/entries")
 def create_entry(payload: WordShuffleEntryIn, telegram_id: int, db: Session = Depends(get_db)):
     require_admin(telegram_id)

@@ -19,6 +19,7 @@ window.WordShuffleState = window.WordShuffleState || {};
     gameOver: false,
     solving: false,
     wordStartedAt: 0,
+    returnToAdmin: false,
   };
 
   WordShuffleState.get = function () {
@@ -30,6 +31,7 @@ window.WordShuffleState = window.WordShuffleState || {};
   };
 
   WordShuffleState.reset = function (entries) {
+    const returnToAdmin = Boolean(state.returnToAdmin);
     state.entries = Array.isArray(entries) ? entries.slice() : [];
     state.entryIndex = 0;
     state.current = null;
@@ -47,5 +49,6 @@ window.WordShuffleState = window.WordShuffleState || {};
     state.gameOver = false;
     state.solving = false;
     state.wordStartedAt = 0;
+    state.returnToAdmin = returnToAdmin;
   };
 })();

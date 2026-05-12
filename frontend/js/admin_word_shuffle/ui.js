@@ -33,7 +33,7 @@ window.AdminWordShuffleUI = window.AdminWordShuffleUI || {};
             <p>Manage drag-and-drop vocabulary arcade words.</p>
           </div>
           <div class="admin-word-shuffle-head-actions">
-            <button class="admin-word-shuffle-secondary" onclick="WordShuffleLoader.start()">Test game</button>
+            <button class="admin-word-shuffle-secondary" onclick="WordShuffleState.set({ returnToAdmin: true }); WordShuffleLoader.start()">Test game</button>
             <button class="admin-word-shuffle-secondary" onclick="showAdminPanel()">Back</button>
           </div>
         </div>

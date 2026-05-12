@@ -316,6 +316,7 @@ window.showAdminPanel = function () {
     <button onclick="showAdminVocabularyOddOneOutStats()">Odd One Out Stats</button>
     <button onclick="showAdminWordMerge()">Voxi Word Merge</button>
     <button onclick="showAdminWordShuffle()">Voxi Word Shuffle</button>
+    <button onclick="showAdminWordShuffleStats()">Word Shuffle Stats</button>
     <button onclick="showAnnouncementAdmin()">📢 Announcement</button>
     <button onclick="showDbStats()">📊 Database Stats</button>
     <button onclick="goHome()">⬅ Back</button>
