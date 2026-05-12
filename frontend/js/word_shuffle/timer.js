@@ -9,7 +9,7 @@ window.WordShuffleTimer = window.WordShuffleTimer || {};
       const state = WordShuffleState.get();
       if (state.gameOver || state.solving) return;
       state.seconds = Number(state.seconds || 0) + 0.25;
-      state.helpAvailable = state.slots.length > 2 && state.seconds >= 90 && !state.helpUsed;
+      state.helpAvailable = state.slots.length > 2 && state.seconds >= 45 && !state.helpUsed;
       WordShuffleUI.renderTimer();
       WordShuffleUI.renderHelp();
     }, 250);
