@@ -1,0 +1,237 @@
+.admin-live-screen {
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 10px 12px 34px;
+  box-sizing: border-box;
+  color: #17212b;
+  font-family: Nunito, Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.admin-live-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.admin-live-head h2 {
+  margin: 0;
+  font-size: 30px;
+  line-height: 1.08;
+  font-weight: 950;
+}
+
+.admin-live-head p {
+  margin: 6px 0 0;
+  color: #667584;
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.admin-live-back {
+  min-height: 44px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #17212b;
+  box-shadow: 0 10px 26px rgba(20, 40, 60, 0.08);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.admin-live-section {
+  margin-top: 16px;
+}
+
+.admin-live-section h3 {
+  margin: 0 0 10px;
+  font-size: 17px;
+  font-weight: 950;
+}
+
+.admin-live-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.admin-live-grid--live {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.admin-live-card,
+.admin-live-table-card,
+.admin-live-empty,
+.admin-live-feature-list article {
+  background: #ffffff;
+  border: 1px solid rgba(20, 40, 60, 0.05);
+  border-radius: 22px;
+  box-shadow: 0 12px 30px rgba(20, 40, 60, 0.08);
+}
+
+.admin-live-card {
+  padding: 15px;
+}
+
+.admin-live-card span {
+  display: block;
+  color: #667584;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.admin-live-card strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 24px;
+  font-weight: 950;
+  color: #00a7e6;
+}
+
+.admin-live-card--live strong {
+  color: #16a34a;
+}
+
+.admin-live-two-col {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.admin-live-feature-list {
+  display: grid;
+  gap: 8px;
+}
+
+.admin-live-feature-list article {
+  padding: 12px 14px;
+}
+
+.admin-live-feature-list span,
+.admin-live-feature-list em {
+  display: block;
+  color: #667584;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 850;
+}
+
+.admin-live-feature-list strong {
+  display: block;
+  margin: 5px 0;
+  color: #17212b;
+  font-size: 20px;
+  font-weight: 950;
+}
+
+.admin-live-table-card {
+  overflow: hidden;
+}
+
+.admin-live-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.admin-live-table {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: collapse;
+}
+
+.admin-live-table th,
+.admin-live-table td {
+  padding: 13px 14px;
+  border-bottom: 1px solid rgba(20, 40, 60, 0.08);
+  text-align: left;
+  vertical-align: top;
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.admin-live-table th {
+  position: sticky;
+  top: 0;
+  background: #f5f9fc;
+  color: #667584;
+  font-size: 12px;
+  font-weight: 950;
+  z-index: 1;
+}
+
+.admin-live-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(100, 116, 139, 0.12);
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.admin-live-status--online {
+  background: rgba(34, 197, 94, 0.14);
+  color: #16a34a;
+}
+
+.admin-live-status--idle {
+  background: rgba(245, 158, 11, 0.16);
+  color: #d97706;
+}
+
+.admin-live-empty {
+  padding: 18px;
+  color: #667584;
+}
+
+.admin-live-empty strong,
+.admin-live-empty span {
+  display: block;
+}
+
+.admin-live-empty strong {
+  color: #17212b;
+  font-size: 17px;
+  font-weight: 950;
+}
+
+.admin-live-empty span {
+  margin-top: 6px;
+  font-size: 14px;
+  font-weight: 750;
+}
+
+@media (max-width: 900px) {
+  .admin-live-grid,
+  .admin-live-grid--live,
+  .admin-live-two-col {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-live-head,
+  .admin-live-two-col {
+    display: block;
+  }
+
+  .admin-live-back {
+    margin-top: 12px;
+  }
+
+  .admin-live-grid,
+  .admin-live-grid--live {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-live-two-col > div + div {
+    margin-top: 16px;
+  }
+}

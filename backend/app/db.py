@@ -1260,3 +1260,51 @@ def ensure_word_shuffle_schema():
         conn.execute(text("CREATE INDEX IF NOT EXISTS ix_word_shuffle_entries_status ON word_shuffle_entries (status);"))
         conn.execute(text("CREATE INDEX IF NOT EXISTS ix_word_shuffle_entries_difficulty ON word_shuffle_entries (difficulty);"))
         conn.execute(text("CREATE INDEX IF NOT EXISTS ix_word_shuffle_sessions_telegram_id ON word_shuffle_sessions (telegram_id);"))
+
+
+def ensure_activity_schema():
+    with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS app_activity_sessions ("
+            "id SERIAL PRIMARY KEY, "
+            "session_key VARCHAR NOT NULL UNIQUE, "
+            "visitor_key VARCHAR NULL, "
+            "user_id INTEGER NULL, "
+            "telegram_id BIGINT NULL, "
+            "user_name VARCHAR NULL, "
+            "current_page VARCHAR NULL, "
+            "device_type VARCHAR NULL, "
+            "last_feature_counted VARCHAR NULL, "
+            "started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), "
+            "last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW()"
+            ");"
+        ))
+        conn.execute(text("ALTER TABLE app_activity_sessions ADD COLUMN IF NOT EXISTS visitor_key VARCHAR;"))
+        conn.execute(text("ALTER TABLE app_activity_sessions ADD COLUMN IF NOT EXISTS user_id INTEGER;"))
+        conn.execute(text("ALTER TABLE app_activity_sessions ADD COLUMN IF NOT EXISTS telegram_id BIGINT;"))
+        conn.execute(text("ALTER TABLE app_activity_sessions ADD COLUMN IF NOT EXISTS user_name VARCHAR;"))
+        conn.execute(text("ALTER TABLE app_activity_sessions ADD COLUMN IF NOT EXISTS current_page VARCHAR;"))
+        conn.execute(text("ALTER TABLE app_activity_sessions ADD COLUMN IF NOT EXISTS device_type VARCHAR;"))
+        conn.execute(text("ALTER TABLE app_activity_sessions ADD COLUMN IF NOT EXISTS last_feature_counted VARCHAR;"))
+        conn.execute(text("ALTER TABLE app_activity_sessions ADD COLUMN IF NOT EXISTS started_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text("ALTER TABLE app_activity_sessions ADD COLUMN IF NOT EXISTS last_seen TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS feature_usage_counters ("
+            "id SERIAL PRIMARY KEY, "
+            "feature_name VARCHAR NOT NULL, "
+            "usage_date DATE NOT NULL, "
+            "count INTEGER NOT NULL DEFAULT 0, "
+            "updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), "
+            "UNIQUE(feature_name, usage_date)"
+            ");"
+        ))
+        conn.execute(text("ALTER TABLE feature_usage_counters ADD COLUMN IF NOT EXISTS feature_name VARCHAR;"))
+        conn.execute(text("ALTER TABLE feature_usage_counters ADD COLUMN IF NOT EXISTS usage_date DATE;"))
+        conn.execute(text("ALTER TABLE feature_usage_counters ADD COLUMN IF NOT EXISTS count INTEGER NOT NULL DEFAULT 0;"))
+        conn.execute(text("ALTER TABLE feature_usage_counters ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_app_activity_sessions_last_seen ON app_activity_sessions (last_seen);"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_app_activity_sessions_telegram_id ON app_activity_sessions (telegram_id);"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_app_activity_sessions_visitor_key ON app_activity_sessions (visitor_key);"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_feature_usage_counters_feature_date ON feature_usage_counters (feature_name, usage_date);"))

@@ -3,7 +3,7 @@ from sqlalchemy import Column, Integer, String, BigInteger, Text, ForeignKey, JS
 from sqlalchemy.orm import relationship
 import enum
 from .db import Base
-from sqlalchemy import DateTime
+from sqlalchemy import Date, DateTime
 from datetime import datetime
 
 class User(Base):
@@ -29,6 +29,32 @@ class AppAnnouncement(Base):
     text = Column(Text, nullable=True)
     image_url = Column(String, nullable=True)
     updated_at = Column(DateTime(timezone=True), nullable=True)
+
+
+class AppActivitySession(Base):
+    __tablename__ = "app_activity_sessions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    session_key = Column(String, unique=True, index=True, nullable=False)
+    visitor_key = Column(String, index=True, nullable=True)
+    user_id = Column(Integer, nullable=True, index=True)
+    telegram_id = Column(BigInteger, index=True, nullable=True)
+    user_name = Column(String, nullable=True)
+    current_page = Column(String, nullable=True)
+    device_type = Column(String, nullable=True)
+    last_feature_counted = Column(String, nullable=True)
+    started_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    last_seen = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+
+
+class FeatureUsageCounter(Base):
+    __tablename__ = "feature_usage_counters"
+
+    id = Column(Integer, primary_key=True, index=True)
+    feature_name = Column(String, index=True, nullable=False)
+    usage_date = Column(Date, index=True, nullable=False)
+    count = Column(Integer, nullable=False, default=0)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
 
 
 class ShadowWritingEssay(Base):
