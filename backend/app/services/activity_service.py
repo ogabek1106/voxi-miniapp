@@ -1,6 +1,6 @@
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timezone, timedelta
 
-from sqlalchemy import case, func
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models import (
@@ -19,7 +19,7 @@ GAME_FEATURES = {"word_shuffle", "word_merge", "odd_one_out", "shadow_writing"}
 
 
 def record_heartbeat(db: Session, payload) -> AppActivitySession:
-    now = datetime.utcnow()
+    now = _utcnow()
     session = (
         db.query(AppActivitySession)
         .filter(AppActivitySession.session_key == payload.session_key)
@@ -57,16 +57,16 @@ def record_heartbeat(db: Session, payload) -> AppActivitySession:
 
 
 def build_dashboard(db: Session) -> dict:
-    now = datetime.utcnow()
-    today_start = datetime(now.year, now.month, now.day)
+    now = _utcnow()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     today = now.date()
     online_cutoff = now - timedelta(seconds=ONLINE_SECONDS)
     idle_cutoff = now - timedelta(seconds=IDLE_SECONDS)
 
     sessions = db.query(AppActivitySession).all()
-    online_sessions = [session for session in sessions if session.last_seen and session.last_seen >= online_cutoff]
-    active_sessions = [session for session in sessions if session.last_seen and session.last_seen >= idle_cutoff]
-    today_sessions = [session for session in sessions if session.started_at and session.started_at >= today_start]
+    online_sessions = [session for session in sessions if _as_utc(session.last_seen) and _as_utc(session.last_seen) >= online_cutoff]
+    active_sessions = [session for session in sessions if _as_utc(session.last_seen) and _as_utc(session.last_seen) >= idle_cutoff]
+    today_sessions = [session for session in sessions if _as_utc(session.started_at) and _as_utc(session.started_at) >= today_start]
 
     registered_today = db.query(User).filter(User.created_at >= today_start).count()
     registered_total = db.query(User).count()
@@ -102,7 +102,7 @@ def build_dashboard(db: Session) -> dict:
         "all_time": all_time,
         "today": today_stats,
         "feature_usage": _feature_usage(db, today),
-        "users": [_serialize_live_user(session, now, online_cutoff, idle_cutoff) for session in sorted(active_sessions, key=lambda item: item.last_seen or item.started_at, reverse=True)[:80]],
+        "users": [_serialize_live_user(session, now, online_cutoff, idle_cutoff) for session in sorted(active_sessions, key=lambda item: _as_utc(item.last_seen) or _as_utc(item.started_at), reverse=True)[:80]],
     }
 
 
@@ -124,7 +124,7 @@ def _increment_feature(db: Session, feature_name: str, usage_date: date) -> None
         counter = FeatureUsageCounter(feature_name=feature_name, usage_date=usage_date, count=0)
         db.add(counter)
     counter.count = int(counter.count or 0) + 1
-    counter.updated_at = datetime.utcnow()
+    counter.updated_at = _utcnow()
 
 
 def _count_by_device(sessions: list[AppActivitySession], device_type: str) -> int:
@@ -141,10 +141,11 @@ def _returning_visitors_today(sessions: list[AppActivitySession], today_start: d
     for session in sessions:
         if not session.visitor_key or not session.started_at:
             continue
-        first_seen[session.visitor_key] = min(first_seen.get(session.visitor_key, session.started_at), session.started_at)
-        if session.started_at >= today_start:
+        started_at = _as_utc(session.started_at)
+        first_seen[session.visitor_key] = min(first_seen.get(session.visitor_key, started_at), started_at)
+        if started_at >= today_start:
             today_visitors.add(session.visitor_key)
-    return len([visitor for visitor in today_visitors if first_seen.get(visitor) and first_seen[visitor] < today_start])
+    return len([visitor for visitor in today_visitors if first_seen.get(visitor) and _as_utc(first_seen[visitor]) < today_start])
 
 
 def _total_games_played(db: Session) -> int:
@@ -165,9 +166,9 @@ def _games_played_today(db: Session, today_start: datetime) -> int:
 
 def _average_duration(sessions: list[AppActivitySession], now: datetime) -> int:
     durations = [
-        max(0, int(((session.last_seen or now) - session.started_at).total_seconds()))
+        max(0, int(((_as_utc(session.last_seen) or now) - _as_utc(session.started_at)).total_seconds()))
         for session in sessions
-        if session.started_at
+        if _as_utc(session.started_at)
     ]
     if not durations:
         return 0
@@ -175,30 +176,27 @@ def _average_duration(sessions: list[AppActivitySession], now: datetime) -> int:
 
 
 def _feature_usage(db: Session, today: date) -> list[dict]:
-    rows = (
-        db.query(
-            FeatureUsageCounter.feature_name,
-            func.sum(FeatureUsageCounter.count).label("total_count"),
-            func.sum(case((FeatureUsageCounter.usage_date == today, FeatureUsageCounter.count), else_=0)).label("today_count"),
-        )
-        .group_by(FeatureUsageCounter.feature_name)
-        .order_by(func.sum(FeatureUsageCounter.count).desc())
-        .all()
-    )
+    rows = db.query(FeatureUsageCounter).all()
+    by_feature = {}
+    for row in rows:
+        feature = row.feature_name or "unknown"
+        item = by_feature.setdefault(feature, {"feature": feature, "total": 0, "today": 0})
+        count = int(row.count or 0)
+        item["total"] += count
+        if row.usage_date == today:
+            item["today"] += count
     return [
-        {
-            "feature": row.feature_name,
-            "total": int(row.total_count or 0),
-            "today": int(row.today_count or 0),
-        }
-        for row in rows
+        by_feature[key]
+        for key in sorted(by_feature, key=lambda item: by_feature[item]["total"], reverse=True)
     ]
 
 
 def _serialize_live_user(session: AppActivitySession, now: datetime, online_cutoff: datetime, idle_cutoff: datetime) -> dict:
-    if session.last_seen and session.last_seen >= online_cutoff:
+    last_seen = _as_utc(session.last_seen)
+    started_at = _as_utc(session.started_at)
+    if last_seen and last_seen >= online_cutoff:
         status = "online"
-    elif session.last_seen and session.last_seen >= idle_cutoff:
+    elif last_seen and last_seen >= idle_cutoff:
         status = "idle"
     else:
         status = "offline"
@@ -208,6 +206,18 @@ def _serialize_live_user(session: AppActivitySession, now: datetime, online_cuto
         "current_page": session.current_page or "unknown",
         "device_type": session.device_type or "unknown",
         "status": status,
-        "session_duration": max(0, int(((session.last_seen or now) - session.started_at).total_seconds())) if session.started_at else 0,
-        "last_seen": session.last_seen.isoformat() if session.last_seen else None,
+        "session_duration": max(0, int(((last_seen or now) - started_at).total_seconds())) if started_at else 0,
+        "last_seen": last_seen.isoformat() if last_seen else None,
     }
+
+
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def _as_utc(value: datetime | None) -> datetime | None:
+    if not value:
+        return None
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
