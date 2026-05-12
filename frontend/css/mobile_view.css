@@ -139,7 +139,13 @@ body.mobile-browser-view .website-footer-links {
 }
 
 body.mobile-browser-view.word-shuffle-active .word-shuffle-screen {
+  height: calc(100dvh - var(--website-header-height, 86px) - 16px);
   padding-top: 10px;
+  padding-bottom: 0;
+}
+
+body.mobile-browser-view.word-shuffle-active.view-website #content {
+  padding-bottom: 0;
 }
 
 body.mobile-browser-view img,

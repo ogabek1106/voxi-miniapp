@@ -105,15 +105,6 @@
   background: var(--timer-color);
 }
 
-.word-shuffle-timer.is-warm {
-  --timer-color: #f59e0b;
-}
-
-.word-shuffle-timer.is-hot {
-  --timer-color: var(--shuffle-red);
-  animation: wordShuffleUrgent 0.5s ease-in-out infinite alternate;
-}
-
 .word-shuffle-learn-card {
   grid-column: 1 / -1;
   overflow: hidden;
@@ -164,6 +155,14 @@
   margin: 7px 0 0;
   color: #166534;
   font-weight: 900;
+}
+
+.word-shuffle-solve-bonus {
+  display: inline-flex;
+  margin-top: 8px;
+  color: var(--shuffle-blue);
+  font-size: 13px;
+  font-weight: 950;
 }
 
 .word-shuffle-learn-card em {

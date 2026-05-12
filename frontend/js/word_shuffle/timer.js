@@ -8,9 +8,10 @@ window.WordShuffleTimer = window.WordShuffleTimer || {};
     timerId = window.setInterval(() => {
       const state = WordShuffleState.get();
       if (state.gameOver || state.solving) return;
-      state.seconds = Math.max(0, Number(state.seconds || 0) - 0.25);
+      state.seconds = Number(state.seconds || 0) + 0.25;
+      state.helpAvailable = state.slots.length > 2 && state.seconds >= 90 && !state.helpUsed;
       WordShuffleUI.renderTimer();
-      if (state.seconds <= 0) WordShuffleEngine.gameOver();
+      WordShuffleUI.renderHelp();
     }, 250);
   };
 
@@ -19,9 +20,16 @@ window.WordShuffleTimer = window.WordShuffleTimer || {};
     timerId = null;
   };
 
-  WordShuffleTimer.add = function (seconds) {
+  WordShuffleTimer.resetPuzzle = function () {
     const state = WordShuffleState.get();
-    state.seconds = Math.min(90, Number(state.seconds || 0) + Number(seconds || 0));
+    state.seconds = 0;
+    state.helpAvailable = false;
+    state.helpUsed = false;
+    WordShuffleUI.renderTimer();
+    WordShuffleUI.renderHelp();
+  };
+
+  WordShuffleTimer.add = function () {
     WordShuffleUI.renderTimer();
   };
 })();

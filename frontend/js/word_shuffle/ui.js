@@ -41,7 +41,7 @@ window.WordShuffleUI = window.WordShuffleUI || {};
             <div class="word-shuffle-title">
               <div>
                 <h2>Voxi Word Shuffle</h2>
-                <p>Drag letters into the slots before time runs out.</p>
+                <p>Drag letters into the slots and solve as fast as you can.</p>
               </div>
             </div>
             <button class="word-shuffle-back word-shuffle-back--top" onclick="WordShuffleLoader.exit()">Back</button>
@@ -71,6 +71,7 @@ window.WordShuffleUI = window.WordShuffleUI || {};
               `).join("")}
             </div>
             <div class="word-shuffle-table" id="word-shuffle-table">
+              <button class="word-shuffle-help" type="button" onclick="WordShuffleHelp.apply()">Help</button>
               <div class="word-shuffle-learn-card word-shuffle-learn-card--tray" aria-live="polite"></div>
               ${state.letters.map((letter) => `
                 ${WordShuffleUI.renderLetterButton(letter, false)}
@@ -84,6 +85,7 @@ window.WordShuffleUI = window.WordShuffleUI || {};
     `;
     WordShuffleDrag.bind();
     WordShuffleUI.renderTimer();
+    WordShuffleUI.renderHelp();
   };
 
   WordShuffleUI.renderLetterButton = function (letter, inSlot) {
@@ -105,7 +107,14 @@ window.WordShuffleUI = window.WordShuffleUI || {};
     timer.classList.toggle("is-warm", state.seconds <= 8 && state.seconds > 4);
     timer.classList.toggle("is-hot", state.seconds <= 4);
     const strong = timer.querySelector("strong");
-    if (strong) strong.textContent = `${Math.ceil(state.seconds)}s`;
+    if (strong) strong.textContent = `${Number(state.seconds || 0).toFixed(1)}s`;
+  };
+
+  WordShuffleUI.renderHelp = function () {
+    const state = WordShuffleState.get();
+    const help = document.querySelector(".word-shuffle-help");
+    if (!help) return;
+    help.classList.toggle("is-visible", Boolean(state.helpAvailable && !state.helpUsed && state.slots.length > 2));
   };
 
   WordShuffleUI.updateHud = function () {
@@ -168,6 +177,7 @@ window.WordShuffleUI = window.WordShuffleUI || {};
   WordShuffleUI.showSolvedInfo = function () {
     const state = WordShuffleState.get();
     const entry = state.current || {};
+    const solve = state.lastSolve || {};
     const cards = document.querySelectorAll(".word-shuffle-learn-card");
     const stage = document.getElementById("word-shuffle-stage");
     if (stage) {
@@ -179,6 +189,7 @@ window.WordShuffleUI = window.WordShuffleUI || {};
     const content = `
       <span class="word-shuffle-learn-label">Nice find</span>
       <h3>${escape(entry.word)}</h3>
+      <strong class="word-shuffle-solve-bonus">+${Number(solve.points || 0)} • ${Number(solve.seconds || 0).toFixed(1)}s</strong>
       ${entry.translation ? `<p>${escape(entry.translation)}</p>` : ""}
       ${entry.example_sentence ? `<em>${escape(entry.example_sentence)}</em>` : ""}
       <button type="button" class="word-shuffle-next" onclick="WordShuffleEngine.continueAfterSolved()">Next</button>

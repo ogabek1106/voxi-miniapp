@@ -11,9 +11,13 @@ window.WordShuffleEngine = window.WordShuffleEngine || {};
   function nextEntry() {
     const state = WordShuffleState.get();
     if (!state.entries.length) return null;
-    const entry = state.entries[state.entryIndex % state.entries.length];
-    state.entryIndex += 1;
-    return entry;
+    for (let attempt = 0; attempt < state.entries.length; attempt += 1) {
+      const entry = state.entries[state.entryIndex % state.entries.length];
+      state.entryIndex += 1;
+      const level = String(entry?.cefr_level || "").toUpperCase();
+      if (level !== "C1" || state.streak >= 6) return entry;
+    }
+    return state.entries.find((entry) => String(entry?.cefr_level || "").toUpperCase() !== "C1") || state.entries[0];
   }
 
   WordShuffleEngine.loadNext = function () {
@@ -29,7 +33,9 @@ window.WordShuffleEngine = window.WordShuffleEngine || {};
     state.slots = puzzle.slots;
     state.letters = puzzle.letters;
     state.solving = false;
+    state.lastSolve = null;
     state.wordStartedAt = Date.now();
+    WordShuffleTimer.resetPuzzle();
     WordShuffleUI.render();
   };
 
@@ -107,11 +113,16 @@ window.WordShuffleEngine = window.WordShuffleEngine || {};
     clearSolveTimeout();
     state.solving = true;
     const elapsed = Math.max(0.1, (Date.now() - state.wordStartedAt) / 1000);
-    const fastBonus = elapsed <= 5 ? 2 : elapsed <= 8 ? 1 : 0;
     const streak = WordShuffleStreak.success();
+    const points = WordShuffleScoring.calculate({
+      entry: state.current,
+      seconds: elapsed,
+      streak,
+      helpUsed: state.helpUsed,
+    });
     state.solvedCount += 1;
-    state.score += Math.round((state.slots.length * 10) + (streak * 4) + (fastBonus * 12));
-    WordShuffleTimer.add(3 + fastBonus);
+    state.score += points;
+    state.lastSolve = { seconds: elapsed, points };
     WordShuffleUI.updateHud();
     WordShuffleUI.showSolvedInfo();
     solveTimeoutId = window.setTimeout(() => {
