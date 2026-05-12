@@ -132,6 +132,10 @@
   top: 8px;
   right: 8px;
   z-index: 4;
+  width: auto;
+  min-width: 0;
+  max-width: none;
+  height: auto;
   border: 0;
   border-radius: 999px;
   padding: 4px 7px;
