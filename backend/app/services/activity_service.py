@@ -66,6 +66,11 @@ def build_dashboard(db: Session) -> dict:
     sessions = db.query(AppActivitySession).all()
     online_sessions = [session for session in sessions if _as_utc(session.last_seen) and _as_utc(session.last_seen) >= online_cutoff]
     active_sessions = [session for session in sessions if _as_utc(session.last_seen) and _as_utc(session.last_seen) >= idle_cutoff]
+    recent_sessions = sorted(
+        sessions,
+        key=lambda item: _as_utc(item.last_seen) or _as_utc(item.started_at) or datetime.min.replace(tzinfo=timezone.utc),
+        reverse=True,
+    )
     today_sessions = [session for session in sessions if _as_utc(session.started_at) and _as_utc(session.started_at) >= today_start]
 
     registered_today = db.query(User).filter(User.created_at >= today_start).count()
@@ -102,7 +107,7 @@ def build_dashboard(db: Session) -> dict:
         "all_time": all_time,
         "today": today_stats,
         "feature_usage": _feature_usage(db, today),
-        "users": [_serialize_live_user(session, now, online_cutoff, idle_cutoff) for session in sorted(active_sessions, key=lambda item: _as_utc(item.last_seen) or _as_utc(item.started_at), reverse=True)[:80]],
+        "users": [_serialize_live_user(session, now, online_cutoff, idle_cutoff) for session in recent_sessions[:80]],
     }
 
 

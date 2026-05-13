@@ -1,8 +1,14 @@
-#screen-mocks.admin-live-host {
-  width: 100%;
-  max-width: none;
-  padding-left: 0;
-  padding-right: 0;
+#screen-mocks.container.admin-live-host {
+  display: block;
+  width: 100% !important;
+  max-width: none !important;
+  height: auto;
+  min-height: 0;
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  text-align: left;
 }
 
 .admin-live-screen {
@@ -141,7 +147,8 @@
 
 .admin-live-table-scroll {
   width: 100%;
-  overflow-x: auto;
+  max-height: 552px;
+  overflow: auto;
 }
 
 .admin-live-table {
@@ -226,6 +233,10 @@
 @media (max-width: 640px) {
   .admin-live-screen {
     width: min(100%, calc(100vw - 24px));
+  }
+
+  .admin-live-table-scroll {
+    max-height: 548px;
   }
 
   .admin-live-head,

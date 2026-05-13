@@ -51,7 +51,9 @@ window.AdminLiveDashboardUI = window.AdminLiveDashboardUI || {};
     const screen = document.getElementById("screen-mocks");
     if (!screen) return;
     screen.classList.add("admin-live-host");
-    const previousTableScrollLeft = screen.querySelector(".admin-live-table-scroll")?.scrollLeft || 0;
+    const previousTableScroll = screen.querySelector(".admin-live-table-scroll");
+    const previousTableScrollLeft = previousTableScroll?.scrollLeft || 0;
+    const previousTableScrollTop = previousTableScroll?.scrollTop || 0;
     const data = AdminLiveDashboardState.get();
     screen.innerHTML = `
       <div class="admin-live-screen">
@@ -111,7 +113,10 @@ window.AdminLiveDashboardUI = window.AdminLiveDashboardUI || {};
       </div>
     `;
     const tableScroll = screen.querySelector(".admin-live-table-scroll");
-    if (tableScroll) tableScroll.scrollLeft = previousTableScrollLeft;
+    if (tableScroll) {
+      tableScroll.scrollLeft = previousTableScrollLeft;
+      tableScroll.scrollTop = previousTableScrollTop;
+    }
   };
 
   AdminLiveDashboardUI.renderError = function (message) {
