@@ -10,6 +10,7 @@ from app.config import ADMIN_IDS
 from app.deps import get_db
 from app.models import ReadingPassage, ReadingProgress, ReadingQuestion, ReadingTest, User
 from app.services.telegram_sub_gate import check_reading_access, check_channel_membership
+from app.services.vcoin_service import require_paid_access_or_spend
 
 router = APIRouter(prefix="/mock-tests", tags=["mock-tests"])
 
@@ -60,6 +61,20 @@ def _get_user_by_telegram(db: Session, telegram_id: int) -> User:
 
 def _is_admin_user(user: User) -> bool:
     return int(user.telegram_id) in ADMIN_IDS
+
+
+def _require_reading_paid_access(db: Session, telegram_id: int, mock_id: int, progress: ReadingProgress | None, is_admin: bool) -> None:
+    if is_admin:
+        return
+    if progress and not progress.is_submitted:
+        return
+    require_paid_access_or_spend(
+        db=db,
+        telegram_id=telegram_id,
+        content_type="separate_block",
+        reference_id=f"reading:{mock_id}",
+        full_mock_reference_id=mock_id,
+    )
 
 
 def _extract_payload_value(raw: Any) -> Any:
@@ -245,6 +260,8 @@ def start_reading_test(mock_id: int, telegram_id: int, db: Session = Depends(get
         result = _evaluate_reading(questions, progress.answers or {})
         return _build_submitted_start_response(progress, result, mock_id, test)
 
+    _require_reading_paid_access(db, telegram_id, mock_id, progress, is_admin)
+
     if not progress:
         progress = ReadingProgress(
             user_id=user.id,
@@ -365,6 +382,7 @@ def submit_reading_test(mock_id: int, payload: ReadingSubmitIn, db: Session = De
     )
 
     if not progress:
+        _require_reading_paid_access(db, payload.telegram_id, mock_id, progress, is_admin)
         progress = ReadingProgress(
             user_id=user.id,
             test_id=test.id,
@@ -410,6 +428,7 @@ def save_reading_progress(mock_id: int, payload: ReadingSaveIn, db: Session = De
     )
 
     if not progress:
+        _require_reading_paid_access(db, payload.telegram_id, mock_id, progress, is_admin)
         progress = ReadingProgress(
             user_id=user.id,
             test_id=test.id,

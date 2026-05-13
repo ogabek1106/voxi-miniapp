@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.config import ADMIN_IDS
 from app.deps import get_db
 from app.models import WritingProgress, WritingTask, WritingTest
+from app.services.vcoin_service import require_paid_access_or_spend
 from app.services.writing_ai_checker import check_writing_progress
 
 router = APIRouter(prefix="/mock-tests", tags=["writing"])
@@ -89,6 +90,20 @@ def _resolve_test_for_mock(db: Session, mock_id: int, telegram_id: int) -> Writi
     return test
 
 
+def _require_writing_paid_access(db: Session, telegram_id: int, mock_id: int, progress: WritingProgress | None, is_admin: bool) -> None:
+    if is_admin:
+        return
+    if progress and not progress.is_submitted:
+        return
+    require_paid_access_or_spend(
+        db=db,
+        telegram_id=telegram_id,
+        content_type="separate_block",
+        reference_id=f"writing:{mock_id}",
+        full_mock_reference_id=mock_id,
+    )
+
+
 def _serialize_tasks(db: Session, test_id: int):
     tasks = (
         db.query(WritingTask)
@@ -159,6 +174,8 @@ def start_writing(mock_id: int, payload: WritingStartIn, db: Session = Depends(g
             "tasks": _serialize_tasks(db, test.id),
             "progress": _serialize_progress(progress)
         }
+
+    _require_writing_paid_access(db, payload.telegram_id, mock_id, progress, is_admin)
 
     if not progress:
         progress = WritingProgress(
@@ -248,6 +265,7 @@ def save_writing(mock_id: int, payload: WritingSaveIn, db: Session = Depends(get
     )
 
     if not progress:
+        _require_writing_paid_access(db, payload.telegram_id, mock_id, progress, is_admin)
         progress = WritingProgress(
             test_id=test.id,
             telegram_id=payload.telegram_id,
@@ -303,6 +321,7 @@ def submit_writing(mock_id: int, payload: WritingSubmitIn, db: Session = Depends
         .first()
     )
     if not progress:
+        _require_writing_paid_access(db, payload.telegram_id, mock_id, progress, is_admin)
         progress = WritingProgress(
             test_id=test.id,
             telegram_id=payload.telegram_id,

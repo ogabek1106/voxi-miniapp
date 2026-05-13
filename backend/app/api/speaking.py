@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.config import ADMIN_IDS
 from app.deps import get_db
 from app.models import SpeakingPart, SpeakingProgress, SpeakingResult, SpeakingTest
+from app.services.vcoin_service import require_paid_access_or_spend
 from app.services.speaking_ai_checker import check_speaking_progress
 
 import os
@@ -63,6 +64,20 @@ def _resolve_test_for_mock(db: Session, mock_id: int) -> SpeakingTest:
     if not test:
         raise HTTPException(status_code=404, detail="Speaking test not found for this mock")
     return test
+
+
+def _require_speaking_paid_access(db: Session, telegram_id: int, mock_id: int, progress: SpeakingProgress | None, is_admin: bool) -> None:
+    if is_admin:
+        return
+    if progress and not progress.is_submitted:
+        return
+    require_paid_access_or_spend(
+        db=db,
+        telegram_id=telegram_id,
+        content_type="separate_block",
+        reference_id=f"speaking:{mock_id}",
+        full_mock_reference_id=mock_id,
+    )
 
 
 def _deadline(progress: SpeakingProgress, test: SpeakingTest) -> datetime | None:
@@ -185,6 +200,8 @@ def start_speaking(mock_id: int, payload: SpeakingStartIn, db: Session = Depends
             "is_admin": bool(is_admin),
         }
 
+    _require_speaking_paid_access(db, payload.telegram_id, mock_id, progress, is_admin)
+
     if not progress:
         progress = SpeakingProgress(
             test_id=test.id,
@@ -246,6 +263,7 @@ def save_speaking(mock_id: int, payload: SpeakingSaveIn, db: Session = Depends(g
     )
 
     if not progress:
+        _require_speaking_paid_access(db, payload.telegram_id, mock_id, progress, is_admin)
         progress = SpeakingProgress(
             test_id=test.id,
             telegram_id=payload.telegram_id,
@@ -290,6 +308,7 @@ def submit_speaking(mock_id: int, payload: SpeakingSubmitIn, db: Session = Depen
         .first()
     )
     if not progress:
+        _require_speaking_paid_access(db, payload.telegram_id, mock_id, progress, is_admin)
         progress = SpeakingProgress(
             test_id=test.id,
             telegram_id=payload.telegram_id,

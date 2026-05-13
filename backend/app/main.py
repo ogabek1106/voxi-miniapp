@@ -18,6 +18,7 @@ from app.api.admin_writing import router as admin_writing_router
 from app.api.admin_speaking import router as admin_speaking_router
 from app.api.writing import router as writing_router
 from app.api.speaking import router as speaking_router
+from app.api.listening import router as listening_router
 from app.api.full_mock import router as full_mock_router
 from app.api.vcoins import router as vcoins_router
 from app.api.announcement import router as announcement_router
@@ -82,6 +83,7 @@ app.include_router(admin_speaking_router)
 app.include_router(mock_tests_router)
 app.include_router(writing_router)
 app.include_router(speaking_router)
+app.include_router(listening_router)
 app.include_router(full_mock_router)
 app.include_router(me_router)
 app.include_router(admin_router)

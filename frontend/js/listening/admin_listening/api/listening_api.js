@@ -177,11 +177,13 @@ AdminListeningApi.saveDraft = async function (packId, state) {
   }
   const prepared = await AdminListeningApi._prepareStateForSave(state);
   const payload = AdminListeningApi._serialize(prepared);
-  return await apiPut(`/admin/listening/mock-packs/${packId}`, payload);
+  const adminId = typeof window.getTelegramId === "function" ? window.getTelegramId() : "";
+  return await apiPut(`/admin/listening/mock-packs/${packId}?admin_id=${encodeURIComponent(adminId)}`, payload);
 };
 
 AdminListeningApi.loadDraft = async function (packId) {
-  const data = await apiGet(`/admin/listening/mock-packs/${packId}`);
+  const adminId = typeof window.getTelegramId === "function" ? window.getTelegramId() : "";
+  const data = await apiGet(`/admin/listening/mock-packs/${packId}?admin_id=${encodeURIComponent(adminId)}`);
   const hydrated = AdminListeningState.buildFromApi(data || {});
   return hydrated;
 };

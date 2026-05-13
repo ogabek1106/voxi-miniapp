@@ -86,6 +86,21 @@ def get_recent_ledger(db: Session, telegram_id: int, limit: Optional[int] = None
     return query.all()
 
 
+def has_spend_for_content(db: Session, telegram_id: int, content_type: str, reference_id) -> bool:
+    return (
+        db.query(CoinLedger.id)
+        .filter(
+            CoinLedger.telegram_id == int(telegram_id),
+            CoinLedger.delta < 0,
+            CoinLedger.reason == f"{content_type}_spend",
+            CoinLedger.reference_type == content_type,
+            CoinLedger.reference_id == str(reference_id),
+        )
+        .first()
+        is not None
+    )
+
+
 def add_coins(
     db: Session,
     telegram_id: int,
@@ -190,6 +205,14 @@ def spend_once_for_content(db: Session, telegram_id: int, content_type: str, ref
     cost = cost_for_content(content_type)
     reference = str(reference_id)
     reason = f"{content_type}_spend"
+    if has_spend_for_content(db, telegram_id, content_type, reference):
+        return VCoinSpendResult(
+            ok=True,
+            telegram_id=int(telegram_id),
+            balance=get_balance(db, telegram_id),
+            required=cost,
+            reason="already_paid",
+        )
     balance_after = spend_coins(
         db=db,
         telegram_id=telegram_id,
@@ -205,3 +228,39 @@ def spend_once_for_content(db: Session, telegram_id: int, content_type: str, ref
         required=cost,
         reason="spent",
     )
+
+
+def require_paid_access_or_spend(
+    db: Session,
+    telegram_id: int,
+    content_type: str,
+    reference_id,
+    *,
+    already_active: bool = False,
+    full_mock_reference_id=None,
+) -> VCoinSpendResult:
+    if already_active:
+        return VCoinSpendResult(
+            ok=True,
+            telegram_id=int(telegram_id),
+            balance=get_balance(db, telegram_id),
+            reason="active_attempt",
+        )
+
+    if full_mock_reference_id is not None and has_spend_for_content(db, telegram_id, "full_mock", full_mock_reference_id):
+        return VCoinSpendResult(
+            ok=True,
+            telegram_id=int(telegram_id),
+            balance=get_balance(db, telegram_id),
+            reason="full_mock_paid",
+        )
+
+    if has_spend_for_content(db, telegram_id, content_type, reference_id):
+        return VCoinSpendResult(
+            ok=True,
+            telegram_id=int(telegram_id),
+            balance=get_balance(db, telegram_id),
+            reason="already_paid",
+        )
+
+    return spend_once_for_content(db, telegram_id, content_type, reference_id)

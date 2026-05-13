@@ -1,11 +1,12 @@
 from datetime import datetime
 from typing import Any, List, Optional
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.deps import get_db
+from app.config import ADMIN_IDS
 from app.models import ListeningBlock, ListeningQuestion, ListeningSection, ListeningTest
 
 router = APIRouter(prefix="/admin/listening", tags=["admin-listening"])
@@ -56,7 +57,9 @@ class ListeningTestSaveIn(BaseModel):
 
 
 @router.get("/mock-packs/{pack_id}")
-def get_listening_by_mock_pack(pack_id: int, db: Session = Depends(get_db)):
+def get_listening_by_mock_pack(pack_id: int, admin_id: int = Query(...), db: Session = Depends(get_db)):
+    if int(admin_id) not in ADMIN_IDS:
+        raise HTTPException(status_code=403, detail="admin_only")
     # Pack-linked storage without schema changes:
     # listening_tests.id is used as pack id.
     test = db.query(ListeningTest).filter(ListeningTest.id == pack_id).first()
@@ -147,7 +150,9 @@ def get_listening_by_mock_pack(pack_id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/mock-packs/{pack_id}")
-def save_listening_by_mock_pack(pack_id: int, payload: ListeningTestSaveIn, db: Session = Depends(get_db)):
+def save_listening_by_mock_pack(pack_id: int, payload: ListeningTestSaveIn, admin_id: int = Query(...), db: Session = Depends(get_db)):
+    if int(admin_id) not in ADMIN_IDS:
+        raise HTTPException(status_code=403, detail="admin_only")
     test = db.query(ListeningTest).filter(ListeningTest.id == pack_id).first()
     if not test:
         test = ListeningTest(id=pack_id, created_at=datetime.utcnow())

@@ -437,8 +437,9 @@ window.startListeningMock = async function (mockId, options = {}) {
   }
 
   try {
-    MockDebug.log("startListeningMock.api.loadAdminListening", { mockId });
-    const dataRaw = await apiGet(`/admin/listening/mock-packs/${mockId}`);
+    const telegramId = window.getTelegramId();
+    MockDebug.log("startListeningMock.api.startListening", { mockId, telegramId });
+    const dataRaw = await apiGet(`/mock-tests/${mockId}/listening/start?telegram_id=${telegramId}`);
     const data = normalizeListeningStartPayload(dataRaw, mockId);
 
     if (!data || !Array.isArray(data.sections)) {
