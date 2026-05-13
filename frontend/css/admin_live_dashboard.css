@@ -1,8 +1,15 @@
-.admin-live-screen {
+#screen-mocks.admin-live-host {
   width: 100%;
-  max-width: 1240px;
+  max-width: none;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.admin-live-screen {
+  width: min(100%, calc(100vw - 48px));
+  max-width: none;
   margin: 0 auto;
-  padding: 10px 12px 34px;
+  padding: 10px 0 34px;
   box-sizing: border-box;
   color: #17212b;
   font-family: Nunito, Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -217,6 +224,10 @@
 }
 
 @media (max-width: 640px) {
+  .admin-live-screen {
+    width: min(100%, calc(100vw - 24px));
+  }
+
   .admin-live-head,
   .admin-live-two-col {
     display: block;

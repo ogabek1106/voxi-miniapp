@@ -27,7 +27,10 @@ window.AdminLiveDashboardUI = window.AdminLiveDashboardUI || {};
     if (typeof hideAnnouncement === "function") hideAnnouncement();
     if (typeof setBottomNavVisible === "function") setBottomNavVisible(false);
     const screen = document.getElementById("screen-mocks");
-    if (screen) screen.style.display = "block";
+    if (screen) {
+      screen.classList.add("admin-live-host");
+      screen.style.display = "block";
+    }
     return screen;
   };
 
@@ -47,6 +50,8 @@ window.AdminLiveDashboardUI = window.AdminLiveDashboardUI || {};
   AdminLiveDashboardUI.render = function () {
     const screen = document.getElementById("screen-mocks");
     if (!screen) return;
+    screen.classList.add("admin-live-host");
+    const previousTableScrollLeft = screen.querySelector(".admin-live-table-scroll")?.scrollLeft || 0;
     const data = AdminLiveDashboardState.get();
     screen.innerHTML = `
       <div class="admin-live-screen">
@@ -105,6 +110,8 @@ window.AdminLiveDashboardUI = window.AdminLiveDashboardUI || {};
         </section>
       </div>
     `;
+    const tableScroll = screen.querySelector(".admin-live-table-scroll");
+    if (tableScroll) tableScroll.scrollLeft = previousTableScrollLeft;
   };
 
   AdminLiveDashboardUI.renderError = function (message) {
