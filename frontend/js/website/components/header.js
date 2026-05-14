@@ -21,10 +21,10 @@ window.WebsiteHeader = window.WebsiteHeader || {};
     header.id = "website-header";
     header.className = "website-header";
     header.innerHTML = `
-      <button class="website-brand" id="website-brand-home" type="button" aria-label="Go to homepage">
+      <div class="website-brand" id="website-brand-home" role="button" tabindex="0" aria-label="Go to homepage">
         <img class="website-brand-logo" src="./assets/ebai-header-logo.png" alt="">
         <span class="website-brand-text">EBAI Academy</span>
-      </button>
+      </div>
 
       <div class="website-header-actions">
         <button class="website-balance-button" data-vcoin-open="1" aria-label="Open V-Coin balance">
@@ -44,12 +44,19 @@ window.WebsiteHeader = window.WebsiteHeader || {};
     `;
 
     app.prepend(header);
-    document.getElementById("website-brand-home")?.addEventListener("click", () => {
+    const brand = document.getElementById("website-brand-home");
+    const goHomeFromBrand = () => {
       if (window.ExamExitGuard?.goHomeWithGuard) {
         window.ExamExitGuard.goHomeWithGuard();
         return;
       }
       if (typeof window.goHome === "function") window.goHome();
+    };
+    brand?.addEventListener("click", goHomeFromBrand);
+    brand?.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      goHomeFromBrand();
     });
     if (!window.WebsiteHeader._scrollBound) {
       window.WebsiteHeader._scrollBound = true;
