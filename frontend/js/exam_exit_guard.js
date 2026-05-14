@@ -127,3 +127,49 @@ ExamExitGuard.confirmExit = function (onExit) {
     };
   }
 };
+
+ExamExitGuard.goHome = function () {
+  if (typeof window.goHome === "function") {
+    window.goHome();
+  }
+};
+
+ExamExitGuard.isVisible = function (selector) {
+  const el = document.querySelector(selector);
+  return !!el && getComputedStyle(el).display !== "none";
+};
+
+ExamExitGuard.goHomeWithGuard = function () {
+  const activePart = String(window.__activeExamPart || "").toLowerCase();
+
+  if (activePart === "listening" && ExamExitGuard.isVisible("#screen-reading") && !window.UserListening?.__isSubmitted) {
+    window.UserListening?.goBack?.();
+    return;
+  }
+
+  if (activePart === "reading" && ExamExitGuard.isVisible("#screen-reading") && !window.UserReading?.__isSubmitted) {
+    window.UserReading?.goBack?.();
+    return;
+  }
+
+  if (activePart === "writing" && ExamExitGuard.isVisible("#screen-writing") && !window.UserWritingState?.get?.().isSubmitted) {
+    window.UserWritingLoader?.requestExitToHome?.();
+    return;
+  }
+
+  if (activePart === "speaking" && ExamExitGuard.isVisible("#screen-speaking") && !window.UserSpeakingState?.get?.().isSubmitted) {
+    window.UserSpeakingLoader?.requestExitToHome?.();
+    return;
+  }
+
+  if (window.MockFlow?.active && window.ExamExitGuard?.confirmExit) {
+    window.ExamExitGuard.confirmExit(function () {
+      window.MockFlow?.deactivate?.();
+      window.__activeExamPart = null;
+      ExamExitGuard.goHome();
+    });
+    return;
+  }
+
+  ExamExitGuard.goHome();
+};

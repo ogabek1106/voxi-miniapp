@@ -216,6 +216,7 @@ window.startMock = async function (mockId, options = {}) {
   }
 
   hideAllScreens();
+  window.__activeExamPart = "reading";
   hideAnnouncement();
   if (typeof setBottomNavVisible === "function") {
     setBottomNavVisible(false);
@@ -275,6 +276,7 @@ window.startWritingMock = async function (mockId, options = {}) {
   }
 
   hideAllScreens();
+  window.__activeExamPart = "writing";
   hideAnnouncement();
   if (typeof setBottomNavVisible === "function") {
     setBottomNavVisible(false);
@@ -309,6 +311,7 @@ window.startListeningMock = async function (mockId, options = {}) {
   }
 
   hideAllScreens();
+  window.__activeExamPart = "listening";
   hideAnnouncement();
   if (typeof setBottomNavVisible === "function") {
     setBottomNavVisible(false);
@@ -470,6 +473,7 @@ window.startSpeakingMock = async function (mockId, options = {}) {
   }
 
   hideAllScreens();
+  window.__activeExamPart = "speaking";
   hideAnnouncement();
   if (typeof setBottomNavVisible === "function") {
     setBottomNavVisible(false);

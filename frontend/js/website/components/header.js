@@ -21,10 +21,10 @@ window.WebsiteHeader = window.WebsiteHeader || {};
     header.id = "website-header";
     header.className = "website-header";
     header.innerHTML = `
-      <div class="website-brand" aria-label="EBAI Academy">
+      <button class="website-brand" id="website-brand-home" type="button" aria-label="Go to homepage">
         <img class="website-brand-logo" src="./assets/ebai-header-logo.png" alt="">
         <span class="website-brand-text">EBAI Academy</span>
-      </div>
+      </button>
 
       <div class="website-header-actions">
         <button class="website-balance-button" data-vcoin-open="1" aria-label="Open V-Coin balance">
@@ -44,6 +44,13 @@ window.WebsiteHeader = window.WebsiteHeader || {};
     `;
 
     app.prepend(header);
+    document.getElementById("website-brand-home")?.addEventListener("click", () => {
+      if (window.ExamExitGuard?.goHomeWithGuard) {
+        window.ExamExitGuard.goHomeWithGuard();
+        return;
+      }
+      if (typeof window.goHome === "function") window.goHome();
+    });
     if (!window.WebsiteHeader._scrollBound) {
       window.WebsiteHeader._scrollBound = true;
       app.addEventListener("scroll", () => window.WebsiteHeader.updateScrollState(), { passive: true });

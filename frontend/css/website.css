@@ -146,6 +146,12 @@ body.view-website .website-header.is-compact {
   align-items: center;
   gap: 12px;
   flex: 0 0 auto;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
 }
 
 .website-brand-logo {

@@ -206,6 +206,7 @@ UserReading.exitToHome = function () {
     UserReading.saveProgress(UserReading.__mockId, { keepalive: true }).catch(() => {});
   }
 
+  window.__activeExamPart = null;
   if (typeof window.goHome === "function") {
     window.goHome();
     return;

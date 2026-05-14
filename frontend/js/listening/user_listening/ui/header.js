@@ -188,6 +188,7 @@ UserListening.exitToHome = function () {
     UserListening.__currentAudio = null;
   }
 
+  window.__activeExamPart = null;
   if (typeof window.goHome === "function") {
     window.goHome();
     return;

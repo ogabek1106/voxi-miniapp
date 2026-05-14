@@ -25,34 +25,37 @@ UserWritingLoader.mount = function (container, data) {
   }
 };
 
+UserWritingLoader.exitToHome = async function () {
+  try {
+    const state = UserWritingState.get();
+    if (!state.isSubmitted) {
+      const answers = UserWritingUI.readAnswers();
+      await UserWritingApi.save(state.mockId, answers, { keepalive: true });
+    }
+  } catch (_) {}
+
+  window.__activeExamPart = null;
+  if (typeof window.goHome === "function") {
+    window.goHome();
+  }
+};
+
+UserWritingLoader.requestExitToHome = function () {
+  if (window.ExamExitGuard?.confirmExit && !UserWritingState.get().isSubmitted) {
+    window.ExamExitGuard.confirmExit(UserWritingLoader.exitToHome);
+    return;
+  }
+
+  UserWritingLoader.exitToHome();
+};
+
 UserWritingLoader.bindEvents = function (data) {
   const backBtn = document.getElementById("writing-back-btn");
   const submitBtn = document.getElementById("writing-submit-btn");
   const content = document.getElementById("writing-user-content");
 
   if (backBtn) {
-    backBtn.onclick = async function () {
-      const exitToHome = async function () {
-        try {
-          const state = UserWritingState.get();
-          if (!state.isSubmitted) {
-            const answers = UserWritingUI.readAnswers();
-            await UserWritingApi.save(state.mockId, answers, { keepalive: true });
-          }
-        } catch (_) {}
-
-        if (typeof window.goHome === "function") {
-          window.goHome();
-        }
-      };
-
-      if (window.ExamExitGuard?.confirmExit && !UserWritingState.get().isSubmitted) {
-        window.ExamExitGuard.confirmExit(exitToHome);
-        return;
-      }
-
-      exitToHome();
-    };
+    backBtn.onclick = UserWritingLoader.requestExitToHome;
   }
 
   if (content) {
