@@ -21,7 +21,7 @@ window.WebsiteHeader = window.WebsiteHeader || {};
     header.id = "website-header";
     header.className = "website-header";
     header.innerHTML = `
-      <div class="website-brand" id="website-brand-home" role="button" tabindex="0" aria-label="Go to homepage">
+      <div class="website-brand" id="website-brand-home" aria-label="EBAI Academy">
         <img class="website-brand-logo" src="./assets/ebai-header-logo.png" alt="">
         <span class="website-brand-text">EBAI Academy</span>
       </div>
@@ -53,11 +53,6 @@ window.WebsiteHeader = window.WebsiteHeader || {};
       if (typeof window.goHome === "function") window.goHome();
     };
     brand?.addEventListener("click", goHomeFromBrand);
-    brand?.addEventListener("keydown", (event) => {
-      if (event.key !== "Enter" && event.key !== " ") return;
-      event.preventDefault();
-      goHomeFromBrand();
-    });
     if (!window.WebsiteHeader._scrollBound) {
       window.WebsiteHeader._scrollBound = true;
       app.addEventListener("scroll", () => window.WebsiteHeader.updateScrollState(), { passive: true });
