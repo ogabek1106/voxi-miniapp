@@ -95,6 +95,8 @@ AdminListeningApi._prepareStateForSave = async function (state) {
 };
 
 AdminListeningApi._serialize = function (state) {
+  window.AdminListeningTypeRegistry?.syncAllFromDom?.(state);
+
   const payload = {
     title: state.title || "",
     audio_url: null,
@@ -155,6 +157,8 @@ AdminListeningApi._serialize = function (state) {
 };
 
 AdminListeningApi.validateState = function (state) {
+  window.AdminListeningTypeRegistry?.syncAllFromDom?.(state);
+
   const errors = [];
   (state.sections || []).forEach((section, sectionIndex) => {
     (section.blocks || []).forEach((block, blockIndex) => {
@@ -171,6 +175,8 @@ AdminListeningApi.validateState = function (state) {
 };
 
 AdminListeningApi.saveDraft = async function (packId, state) {
+  window.AdminListeningTypeRegistry?.syncAllFromDom?.(state);
+
   const errors = AdminListeningApi.validateState(state);
   if (errors.length) {
     throw new Error(errors.join("\n"));

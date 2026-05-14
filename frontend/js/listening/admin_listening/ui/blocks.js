@@ -125,6 +125,7 @@ AdminListeningBlocks.renderBlock = function (ctx) {
   addQ.className = "listening-secondary-btn";
   addQ.textContent = "Add question";
   addQ.onclick = () => {
+    window.AdminListeningTypeRegistry?.syncBlockFromDom?.(block, card);
     AdminListeningState.addQuestion(sectionIndex, blockIndex);
     onRebuild();
   };
@@ -135,6 +136,7 @@ AdminListeningBlocks.renderBlock = function (ctx) {
   removeQ.className = "listening-secondary-btn";
   removeQ.textContent = "Remove last question";
   removeQ.onclick = () => {
+    window.AdminListeningTypeRegistry?.syncBlockFromDom?.(block, card);
     AdminListeningState.removeLastQuestion(sectionIndex, blockIndex);
     onRebuild();
   };

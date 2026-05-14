@@ -50,6 +50,19 @@ window.AdminListeningTypeRegistry = window.AdminListeningTypeRegistry || {};
     return [...staticErrors, ...dynamicErrors];
   };
 
+  AdminListeningTypeRegistry.syncBlockFromDom = function (block, root) {
+    const mod = AdminListeningTypeRegistry.getModule(block?.type);
+    if (mod?.syncFromDom) mod.syncFromDom(block, root);
+  };
+
+  AdminListeningTypeRegistry.syncAllFromDom = function (state) {
+    (state?.sections || []).forEach((section) => {
+      (section?.blocks || []).forEach((block) => {
+        AdminListeningTypeRegistry.syncBlockFromDom(block);
+      });
+    });
+  };
+
   AdminListeningTypeRegistry.renderTypeEditor = function (ctx) {
     const type = ctx?.block?.type;
     const mod = AdminListeningTypeRegistry.getModule(type);
