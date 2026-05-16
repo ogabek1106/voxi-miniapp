@@ -98,7 +98,7 @@ ExamExitGuard.confirmExit = function (onExit) {
     <div class="exam-exit-guard-card" role="dialog" aria-modal="true" aria-labelledby="exam-exit-guard-title">
       <div id="exam-exit-guard-title" class="exam-exit-guard-title">Leaving is prohibited during the exam</div>
       <div class="exam-exit-guard-text">
-        If you leave now, your answers will not be accepted and your V-Coins will not be refunded.
+        If you leave now, your current answers will be submitted immediately. You cannot continue this attempt and your V-Coins will not be refunded.
       </div>
       <div class="exam-exit-guard-actions">
         <button type="button" class="exam-exit-guard-back">Back to the test</button>

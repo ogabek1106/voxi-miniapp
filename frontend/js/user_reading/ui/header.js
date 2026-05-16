@@ -201,11 +201,29 @@ UserReading.renderSubmitSection = function () {
   `;
 };
 
-UserReading.exitToHome = function () {
-  if (UserReading.__mockId && !UserReading.__isSubmitted && typeof UserReading.saveProgress === "function") {
-    UserReading.saveProgress(UserReading.__mockId, { keepalive: true }).catch(() => {});
+UserReading.exitToHome = async function () {
+  if (UserReading.__mockId && !UserReading.__isSubmitted) {
+    UserReading.__isSubmitted = true;
+    UserReading.__timerAutoSubmitted = true;
+    UserReading.stopAutoSave?.();
+    if (window.__userReadingTimer) {
+      clearInterval(window.__userReadingTimer);
+      window.__userReadingTimer = null;
+    }
+
+    try {
+      if (typeof UserReading.saveProgress === "function") {
+        await UserReading.saveProgress(UserReading.__mockId);
+      }
+      if (typeof UserReading.submitProgress === "function") {
+        await UserReading.submitProgress(UserReading.__mockId);
+      }
+    } catch (error) {
+      console.error("Reading exit submit failed:", error);
+    }
   }
 
+  window.MockFlow?.deactivate?.();
   window.__activeExamPart = null;
   if (typeof window.goHome === "function") {
     window.goHome();

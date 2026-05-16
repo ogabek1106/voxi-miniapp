@@ -33,7 +33,7 @@ UserSpeakingLoader.setPartIndex = function (index) {
   UserSpeakingState.set({ partIndex: Number(index || 0) });
 };
 
-UserSpeakingLoader.exitToHome = function () {
+UserSpeakingLoader.exitToHome = async function () {
   const state = UserSpeakingState.get();
   const recorder = state.recorder;
   if (state.intervals?.recordTick) {
@@ -45,6 +45,32 @@ UserSpeakingLoader.exitToHome = function () {
   if (state.intervals?.prepRaf) {
     cancelAnimationFrame(state.intervals.prepRaf);
   }
+  if (!state.isSubmitted && state.mockId) {
+    try {
+      const nextProgress = { ...(state.progress || {}) };
+      if (recorder && typeof recorder.stop === "function") {
+        const part = UserSpeakingLoader.getPartByIndex(state.partIndex);
+        const result = await recorder.stop();
+        if (result?.blob) {
+          const partNumber = Number(part?.part_number || (state.partIndex + 1));
+          const ext = (result.blob?.type || "").includes("mp4") ? "m4a" : "webm";
+          const fileName = `speaking_part${partNumber}.${ext}`;
+          const audioUrl = await UserSpeakingApi.uploadAudio(result.blob, fileName);
+          await UserSpeakingApi.savePart(state.mockId, partNumber, audioUrl);
+          nextProgress[`part${partNumber}_audio_url`] = audioUrl;
+        }
+      }
+
+      await UserSpeakingApi.submit(state.mockId, {
+        part1_audio_url: nextProgress.part1_audio_url || null,
+        part2_audio_url: nextProgress.part2_audio_url || null,
+        part3_audio_url: nextProgress.part3_audio_url || null
+      }, "exit");
+    } catch (error) {
+      console.error("Speaking exit submit failed:", error);
+    }
+  }
+
   if (recorder && typeof recorder.cleanup === "function") {
     recorder.cleanup();
   }
@@ -54,7 +80,9 @@ UserSpeakingLoader.exitToHome = function () {
   if (state.audioContext && typeof state.audioContext.close === "function") {
     state.audioContext.close().catch(() => {});
   }
+
   UserSpeakingState.set({
+    isSubmitted: true,
     recorder: null,
     audioContext: null,
     stream: null,
@@ -65,6 +93,7 @@ UserSpeakingLoader.exitToHome = function () {
       recordTick: null
     }
   });
+  window.MockFlow?.deactivate?.();
   window.__activeExamPart = null;
   if (typeof window.goHome === "function") {
     window.goHome();

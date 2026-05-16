@@ -140,15 +140,33 @@ UserListening.renderSubmitSection = function () {
   `;
 };
 
-UserListening.exitToHome = function () {
+UserListening.exitToHome = async function () {
   if (typeof UserListening.cancelListeningPlayback === "function") {
     UserListening.cancelListeningPlayback();
   }
 
-  if (UserListening.__mockId && !UserListening.__isSubmitted && typeof UserListening.saveProgress === "function") {
-    UserListening.saveProgress(UserListening.__mockId, { keepalive: true }).catch(() => {});
+  if (window.__UserListeningTimer) {
+    clearInterval(window.__UserListeningTimer);
+    window.__UserListeningTimer = null;
   }
 
+  if (UserListening.__mockId && !UserListening.__isSubmitted) {
+    UserListening.__isSubmitted = true;
+    UserListening.__timerAutoSubmitted = true;
+    UserListening.stopAutoSave?.();
+    try {
+      if (typeof UserListening.saveProgress === "function") {
+        await UserListening.saveProgress(UserListening.__mockId);
+      }
+      if (typeof UserListening.submitProgress === "function") {
+        await UserListening.submitProgress(UserListening.__mockId);
+      }
+    } catch (error) {
+      console.error("Listening exit submit failed:", error);
+    }
+  }
+
+  window.MockFlow?.deactivate?.();
   window.__activeExamPart = null;
   if (typeof window.goHome === "function") {
     window.goHome();
