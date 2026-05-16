@@ -11,6 +11,19 @@ window.WebsiteHeader = window.WebsiteHeader || {};
       .replace(/'/g, "&#039;");
   }
 
+  function notificationBellMarkup() {
+    if (window.VoxiNotificationsUI?.getBellMarkup) return window.VoxiNotificationsUI.getBellMarkup();
+    return `
+      <span class="voxi-notification-bell-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M18 9.8c0-3.1-2-5.2-5-5.7V3a1 1 0 0 0-2 0v1.1c-3 .5-5 2.6-5 5.7v3.1c0 .7-.3 1.4-.8 1.9l-.6.6c-.6.6-.2 1.6.7 1.6h13.4c.9 0 1.3-1 .7-1.6l-.6-.6c-.5-.5-.8-1.2-.8-1.9V9.8Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+          <path d="M9.8 19a2.3 2.3 0 0 0 4.4 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <span class="voxi-notification-badge" hidden>0</span>
+    `;
+  }
+
   window.WebsiteHeader.mount = function () {
     if (document.getElementById("website-header")) return;
 
@@ -32,8 +45,7 @@ window.WebsiteHeader = window.WebsiteHeader || {};
           <span id="website-balance-value">0</span>
         </button>
         <button class="voxi-notification-bell" type="button" aria-label="Open notifications">
-          <span class="voxi-notification-bell-icon" aria-hidden="true">🔔</span>
-          <span class="voxi-notification-badge" hidden>0</span>
+          ${notificationBellMarkup()}
         </button>
         <button class="website-profile-button" id="website-profile-button" aria-label="Open profile">
           <span class="website-profile-button-avatar" aria-hidden="true">
@@ -93,8 +105,7 @@ window.WebsiteHeader = window.WebsiteHeader || {};
         <span id="website-balance-value">${window.SharedUser?.getBalance(user) || 0}</span>
       </button>
       <button class="voxi-notification-bell" type="button" aria-label="Open notifications">
-        <span class="voxi-notification-bell-icon" aria-hidden="true">🔔</span>
-        <span class="voxi-notification-badge" hidden>0</span>
+        ${notificationBellMarkup()}
       </button>
       <button class="website-profile-button" id="website-profile-button" aria-label="Open profile">
         <span class="website-profile-button-avatar" aria-hidden="true">

@@ -22,28 +22,45 @@ window.VoxiNotificationsUI = window.VoxiNotificationsUI || {};
     return String(url).startsWith("http") ? String(url) : `${window.API}${url}`;
   }
 
+  function bellSvg() {
+    return `
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M18 9.8c0-3.1-2-5.2-5-5.7V3a1 1 0 0 0-2 0v1.1c-3 .5-5 2.6-5 5.7v3.1c0 .7-.3 1.4-.8 1.9l-.6.6c-.6.6-.2 1.6.7 1.6h13.4c.9 0 1.3-1 .7-1.6l-.6-.6c-.5-.5-.8-1.2-.8-1.9V9.8Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M9.8 19a2.3 2.3 0 0 0 4.4 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    `;
+  }
+
+  VoxiNotificationsUI.getBellMarkup = function () {
+    return `
+      <span class="voxi-notification-bell-icon" aria-hidden="true">${bellSvg()}</span>
+      <span class="voxi-notification-badge" hidden>0</span>
+    `;
+  };
+
   VoxiNotificationsUI.mountBell = function (target) {
     if (!target || target.querySelector(".voxi-notification-bell")) return;
     const button = document.createElement("button");
     button.type = "button";
     button.className = "voxi-notification-bell";
     button.setAttribute("aria-label", "Open notifications");
-    button.innerHTML = `
-      <span class="voxi-notification-bell-icon" aria-hidden="true">🔔</span>
-      <span class="voxi-notification-badge" hidden>0</span>
-    `;
+    button.innerHTML = VoxiNotificationsUI.getBellMarkup();
     button.addEventListener("click", () => window.VoxiNotifications?.toggle?.());
     target.appendChild(button);
   };
 
   VoxiNotificationsUI.updateBells = function () {
-    const { unreadCount } = VoxiNotificationsState.get();
+    const { unreadCount, isOpen } = VoxiNotificationsState.get();
     document.querySelectorAll(".voxi-notification-bell").forEach((button) => {
-      button.classList.toggle("has-unread", unreadCount > 0);
+      const hasUnread = unreadCount > 0;
+      button.classList.toggle("has-unread", hasUnread);
+      button.classList.toggle("is-active", Boolean(isOpen));
+      if (!hasUnread) button.classList.remove("is-attention");
+
       const badge = button.querySelector(".voxi-notification-badge");
       if (!badge) return;
-      badge.hidden = unreadCount <= 0;
-      badge.textContent = unreadCount > 9 ? "9+" : String(unreadCount);
+      badge.hidden = !hasUnread;
+      badge.textContent = hasUnread ? (unreadCount > 9 ? "9+" : String(unreadCount)) : "";
     });
   };
 
@@ -57,9 +74,7 @@ window.VoxiNotificationsUI = window.VoxiNotificationsUI || {};
       <div class="voxi-notification-panel" role="dialog" aria-modal="true" aria-label="Notifications">
         <div class="voxi-notification-top">
           <strong>Notifications</strong>
-          <button type="button" class="voxi-notification-close" aria-label="Close">×</button>
         </div>
-        <button type="button" class="voxi-notification-read-all">Mark all as read</button>
         <div class="voxi-notification-list">
           ${state.items.length ? state.items.map((item) => `
             <button type="button" class="voxi-notification-card ${item.is_read ? "is-read" : "is-unread"}" data-id="${Number(item.id)}">
@@ -71,7 +86,10 @@ window.VoxiNotificationsUI = window.VoxiNotificationsUI || {};
               </span>
               ${item.is_read ? "" : `<span class="voxi-notification-dot" aria-hidden="true"></span>`}
             </button>
-          `).join("") : `<div class="voxi-notification-empty">No notifications yet ✨</div>`}
+          `).join("") : `<div class="voxi-notification-empty">No notifications yet &#10024;</div>`}
+        </div>
+        <div class="voxi-notification-bottom">
+          <button type="button" class="voxi-notification-read-all">Mark all as read</button>
         </div>
       </div>
     `;
@@ -79,7 +97,6 @@ window.VoxiNotificationsUI = window.VoxiNotificationsUI || {};
     drawer.addEventListener("click", (event) => {
       if (event.target === drawer) window.VoxiNotifications?.close?.();
     });
-    drawer.querySelector(".voxi-notification-close")?.addEventListener("click", () => window.VoxiNotifications?.close?.());
     drawer.querySelector(".voxi-notification-read-all")?.addEventListener("click", () => window.VoxiNotifications?.markAllRead?.());
     drawer.querySelectorAll(".voxi-notification-card").forEach((card) => {
       card.addEventListener("click", () => window.VoxiNotifications?.openItem?.(Number(card.dataset.id)));

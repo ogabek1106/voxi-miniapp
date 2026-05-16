@@ -2,6 +2,7 @@ window.VoxiNotifications = window.VoxiNotifications || {};
 
 (function () {
   let refreshTimer = null;
+  let attentionTimer = null;
 
   async function refresh() {
     try {
@@ -13,10 +14,22 @@ window.VoxiNotifications = window.VoxiNotifications || {};
       VoxiNotificationsUI.updateBells();
       if (VoxiNotificationsState.get().isOpen) {
         VoxiNotificationsUI.renderDrawer();
+        VoxiNotificationsUI.updateBells();
       }
     } catch (error) {
       console.error("Failed to load notifications:", error);
     }
+  }
+
+  function runAttentionPulse() {
+    const state = VoxiNotificationsState.get();
+    if (state.unreadCount <= 0) return;
+    document.querySelectorAll(".voxi-notification-bell").forEach((button) => {
+      button.classList.remove("is-attention");
+      void button.offsetWidth;
+      button.classList.add("is-attention");
+      window.setTimeout(() => button.classList.remove("is-attention"), 1100);
+    });
   }
 
   function mountMiniBell() {
@@ -36,6 +49,9 @@ window.VoxiNotifications = window.VoxiNotifications || {};
     if (!refreshTimer) {
       refreshTimer = window.setInterval(refresh, 45000);
     }
+    if (!attentionTimer) {
+      attentionTimer = window.setInterval(runAttentionPulse, 120000);
+    }
     VoxiNotificationsState.subscribe(() => VoxiNotificationsUI.updateBells());
   };
 
@@ -43,12 +59,16 @@ window.VoxiNotifications = window.VoxiNotifications || {};
 
   VoxiNotifications.open = function () {
     VoxiNotificationsState.set({ isOpen: true });
+    document.body.classList.add("notifications-open");
     VoxiNotificationsUI.renderDrawer();
+    VoxiNotificationsUI.updateBells();
   };
 
   VoxiNotifications.close = function () {
     VoxiNotificationsState.set({ isOpen: false });
+    document.body.classList.remove("notifications-open");
     document.getElementById("voxi-notification-drawer")?.remove();
+    VoxiNotificationsUI.updateBells();
   };
 
   VoxiNotifications.toggle = function () {
