@@ -284,8 +284,8 @@ UserListening.getCompletionTemplate = function (group) {
     || "";
 };
 
-UserListening.renderListeningTextInput = function (question, className = "question-input") {
-  return `
+UserListening.renderListeningTextInput = function (question, className = "question-input", displayNumber = null) {
+  const input = `
     <input
       type="text"
       name="q_${question.id}"
@@ -296,13 +296,23 @@ UserListening.renderListeningTextInput = function (question, className = "questi
       spellcheck="false"
     />
   `;
+
+  if (displayNumber == null || displayNumber === "") return input;
+
+  return `
+    <span class="summary-inline-blank">
+      <span class="summary-blank-label">${UserListening.escapeHtml(displayNumber)}</span>
+      ${input}
+    </span>
+  `;
 };
 
 UserListening.renderTemplateWithGapInputs = function (template, questions, inputClass = "summary-blank-input") {
   const byGap = new Map();
   (questions || []).forEach((question, index) => {
-    const gap = String(question?.meta?.gap || index + 1);
-    byGap.set(gap, question);
+    [question?.meta?.gap, question?.number, index + 1]
+      .filter((key) => key != null && key !== "")
+      .forEach((key) => byGap.set(String(key), question));
   });
 
   let fallbackIndex = 0;
@@ -318,7 +328,8 @@ UserListening.renderTemplateWithGapInputs = function (template, questions, input
       ? byGap.get(String(match[1]))
       : questions?.[fallbackIndex++];
     if (question) {
-      html += UserListening.renderListeningTextInput(question, inputClass);
+      const displayNumber = match[1] || question.number || question.meta?.gap || "";
+      html += UserListening.renderListeningTextInput(question, inputClass, displayNumber);
       inserted += 1;
     }
     lastIndex = regex.lastIndex;
@@ -326,7 +337,7 @@ UserListening.renderTemplateWithGapInputs = function (template, questions, input
 
   html += UserListening.escapeHtml(String(template || "").slice(lastIndex));
   if (inserted === 0 && questions?.length === 1) {
-    html += ` ${UserListening.renderListeningTextInput(questions[0], inputClass)}`;
+    html += ` ${UserListening.renderListeningTextInput(questions[0], inputClass, questions[0]?.number || "")}`;
   }
   return html;
 };
