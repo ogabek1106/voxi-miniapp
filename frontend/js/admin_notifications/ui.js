@@ -54,6 +54,11 @@ window.AdminNotificationsUI = window.AdminNotificationsUI || {};
     return "Sent now";
   }
 
+  function lastSentLabel(item) {
+    if (!item.last_sent_at) return "Last sent: not yet";
+    return `Last sent: ${formatDate(item.last_sent_at)}`;
+  }
+
   AdminNotificationsUI.render = function (items = []) {
     const screen = document.getElementById("screen-mocks");
     if (!screen) return;
@@ -142,6 +147,7 @@ window.AdminNotificationsUI = window.AdminNotificationsUI || {};
                 <strong>${escape(item.title)}</strong>
                 <p>${escape(item.message)}</p>
                 <span>${escape(pretty(item.category || "custom_manual_notification"))} &middot; ${escape(scheduleLabel(item))}</span>
+                <span>Seen: ${Number(item.seen_24h || 0)}/${Number(item.seen_total || 0)} &middot; ${escape(lastSentLabel(item))}</span>
                 <span>${escape(item.link_type || "none")}${item.link_url ? ` &middot; ${escape(item.link_url)}` : ""}</span>
                 <span class="admin-notification-kind">${item.is_template ? "Schedule/Repeat rule" : "Sent notification"}</span>
               </div>

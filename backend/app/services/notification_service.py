@@ -76,6 +76,60 @@ def serialize_notification(notification: AppNotification, read_ids: set[int] | N
     }
 
 
+def read_identity(read: AppNotificationRead) -> str:
+    if read.user_id:
+        return f"user:{read.user_id}"
+    if read.telegram_id:
+        return f"tg:{read.telegram_id}"
+    return f"read:{read.id}"
+
+
+def seen_summary(db: Session, notification: AppNotification) -> dict:
+    if notification.is_template:
+        delivered_ids = [
+            row_id for (row_id,) in db.query(AppNotification.id)
+            .filter(AppNotification.source_template_id == notification.id)
+            .all()
+        ]
+    else:
+        delivered_ids = [notification.id]
+
+    if not delivered_ids:
+        return {"seen_24h": 0, "seen_total": 0, "delivered_count": 0}
+
+    reads = (
+        db.query(AppNotificationRead)
+        .filter(AppNotificationRead.notification_id.in_(delivered_ids))
+        .all()
+    )
+    now = datetime.now(timezone.utc) if any(read.read_at and read.read_at.tzinfo for read in reads) else datetime.utcnow()
+    since = now - timedelta(hours=24)
+    def is_recent(read: AppNotificationRead) -> bool:
+        if not read.read_at:
+            return False
+        value = read.read_at
+        boundary = since
+        if value.tzinfo and not boundary.tzinfo:
+            boundary = boundary.replace(tzinfo=timezone.utc)
+        if boundary.tzinfo and not value.tzinfo:
+            value = value.replace(tzinfo=timezone.utc)
+        return value >= boundary
+
+    total_identities = {read_identity(read) for read in reads}
+    recent_identities = {read_identity(read) for read in reads if is_recent(read)}
+    return {
+        "seen_24h": len(recent_identities),
+        "seen_total": len(total_identities),
+        "delivered_count": len(delivered_ids),
+    }
+
+
+def serialize_admin_notification(db: Session, notification: AppNotification) -> dict:
+    data = serialize_notification(notification)
+    data.update(seen_summary(db, notification))
+    return data
+
+
 def clone_delivery_from_template(db: Session, template: AppNotification, now: datetime) -> AppNotification:
     notification = AppNotification(
         category=normalize_category(template.category),
@@ -257,7 +311,16 @@ def delete_notification(db: Session, notification_id: int) -> bool:
     row = db.query(AppNotification).filter(AppNotification.id == notification_id).first()
     if not row:
         return False
-    db.query(AppNotificationRead).filter(AppNotificationRead.notification_id == notification_id).delete(synchronize_session=False)
+    notification_ids = [notification_id]
+    if row.is_template:
+        notification_ids.extend([
+            row_id for (row_id,) in db.query(AppNotification.id)
+            .filter(AppNotification.source_template_id == notification_id)
+            .all()
+        ])
+    db.query(AppNotificationRead).filter(AppNotificationRead.notification_id.in_(notification_ids)).delete(synchronize_session=False)
+    if row.is_template:
+        db.query(AppNotification).filter(AppNotification.source_template_id == notification_id).delete(synchronize_session=False)
     db.delete(row)
     db.commit()
     return True
@@ -346,8 +409,9 @@ def list_admin_notifications(db: Session) -> list[dict]:
     dispatch_due_notifications(db)
     rows = (
         db.query(AppNotification)
+        .filter(or_(AppNotification.is_template == True, AppNotification.source_template_id.is_(None)))  # noqa: E712
         .order_by(AppNotification.created_at.desc(), AppNotification.id.desc())
         .limit(150)
         .all()
     )
-    return [serialize_notification(row) for row in rows]
+    return [serialize_admin_notification(db, row) for row in rows]
