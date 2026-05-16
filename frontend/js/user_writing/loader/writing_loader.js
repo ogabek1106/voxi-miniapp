@@ -286,23 +286,28 @@ UserWritingLoader.runAiCheckAndShowResult = async function (mockId) {
   }
 };
 
-UserWritingLoader.start = async function (mockId, container) {
+UserWritingLoader.start = async function (mockId, container, options = {}) {
   const target = container || document.getElementById("screen-writing");
   if (!target) return;
 
   UserWritingUI.renderLoading(target);
 
   try {
-    const data = await UserWritingApi.start(mockId);
+    const data = await UserWritingApi.start(mockId, options);
     UserWritingState.set({
       mockId: Number(mockId),
       testId: Number(data?.test_id || 0) || null,
+      sessionMode: options.sessionMode || "single_block",
       isSubmitted: false,
       autoSaveDirty: false,
       autoSaveInFlight: false
     });
     if (data?.already_submitted) {
-      await UserWritingLoader.runAiCheckAndShowResult(Number(mockId));
+      window.TestReentry?.showCompleted?.({
+        container: target,
+        onSeeResult: () => UserWritingLoader.runAiCheckAndShowResult(Number(mockId)),
+        onRetake: options.onRetake
+      });
       return;
     }
 

@@ -6,10 +6,15 @@ UserWritingApi.getTelegramUserId = function () {
     || null;
 };
 
-UserWritingApi.start = async function (mockId) {
+UserWritingApi.start = async function (mockId, options = {}) {
   const telegramId = UserWritingApi.getTelegramUserId();
   if (!telegramId || !mockId) throw new Error("Missing telegram_id or mock id");
-  return await apiPost(`/mock-tests/${mockId}/writing/start`, { telegram_id: telegramId });
+  return await apiPost(`/mock-tests/${mockId}/writing/start`, {
+    telegram_id: telegramId,
+    session_mode: options.sessionMode || "single_block",
+    retake: Boolean(options.retakePaymentReferenceId),
+    retake_payment_reference_id: options.retakePaymentReferenceId || null
+  });
 };
 
 UserWritingApi.save = async function (mockId, payload, options = {}) {
@@ -18,6 +23,7 @@ UserWritingApi.save = async function (mockId, payload, options = {}) {
 
   const body = {
     telegram_id: telegramId,
+    session_mode: window.UserWritingState?.get?.()?.sessionMode || "single_block",
     task1_text: payload?.task1_text || "",
     task1_image_url: payload?.task1_image_url || null,
     task2_text: payload?.task2_text || "",
@@ -48,6 +54,7 @@ UserWritingApi.submit = async function (mockId, payload, finishType = "manual") 
 
   return await apiPost(`/mock-tests/${mockId}/writing/submit`, {
     telegram_id: telegramId,
+    session_mode: window.UserWritingState?.get?.()?.sessionMode || "single_block",
     task1_text: payload?.task1_text || "",
     task1_image_url: payload?.task1_image_url || null,
     task2_text: payload?.task2_text || "",
@@ -61,14 +68,15 @@ UserWritingApi.check = async function (mockId) {
   if (!telegramId || !mockId) throw new Error("Missing telegram_id or mock id");
 
   return await apiPost(`/mock-tests/${mockId}/writing/check`, {
-    telegram_id: telegramId
+    telegram_id: telegramId,
+    session_mode: window.UserWritingState?.get?.()?.sessionMode || "single_block"
   });
 };
 
 UserWritingApi.resume = async function (mockId) {
   const telegramId = UserWritingApi.getTelegramUserId();
   if (!telegramId || !mockId) return null;
-  return await apiGet(`/mock-tests/${mockId}/writing/resume?telegram_id=${telegramId}`);
+  return await apiGet(`/mock-tests/${mockId}/writing/resume?telegram_id=${telegramId}&session_mode=${encodeURIComponent(window.UserWritingState?.get?.()?.sessionMode || "single_block")}`);
 };
 
 UserWritingApi.uploadImage = async function (file) {

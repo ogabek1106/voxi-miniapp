@@ -23,16 +23,21 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 class SpeakingStartIn(BaseModel):
     telegram_id: int
+    session_mode: str = "single_block"
+    retake: bool = False
+    retake_payment_reference_id: Optional[str] = None
 
 
 class SpeakingSaveIn(BaseModel):
     telegram_id: int
+    session_mode: str = "single_block"
     part_number: int
     audio_url: Optional[str] = None
 
 
 class SpeakingSubmitIn(BaseModel):
     telegram_id: int
+    session_mode: str = "single_block"
     part1_audio_url: Optional[str] = None
     part2_audio_url: Optional[str] = None
     part3_audio_url: Optional[str] = None
@@ -41,6 +46,7 @@ class SpeakingSubmitIn(BaseModel):
 
 class SpeakingCheckIn(BaseModel):
     telegram_id: int
+    session_mode: str = "single_block"
 
 
 def _utcnow() -> datetime:
@@ -64,6 +70,10 @@ def _resolve_test_for_mock(db: Session, mock_id: int) -> SpeakingTest:
     if not test:
         raise HTTPException(status_code=404, detail="Speaking test not found for this mock")
     return test
+
+
+def _session_mode(value: str | None) -> str:
+    return "full_mock" if str(value or "").strip().lower() == "full_mock" else "single_block"
 
 
 def _require_speaking_paid_access(db: Session, telegram_id: int, mock_id: int, progress: SpeakingProgress | None, is_admin: bool) -> None:
@@ -161,9 +171,20 @@ def start_speaking(mock_id: int, payload: SpeakingStartIn, db: Session = Depends
         .filter(
             SpeakingProgress.test_id == test.id,
             SpeakingProgress.telegram_id == payload.telegram_id,
+            SpeakingProgress.session_mode == _session_mode(payload.session_mode),
         )
+        .order_by(SpeakingProgress.id.desc())
         .first()
     )
+
+    if payload.retake and progress and progress.is_submitted and not is_admin:
+        require_paid_access_or_spend(
+            db=db,
+            telegram_id=payload.telegram_id,
+            content_type="full_mock" if _session_mode(payload.session_mode) == "full_mock" else "separate_block",
+            reference_id=payload.retake_payment_reference_id or f"{_session_mode(payload.session_mode)}:speaking:{mock_id}:retake",
+        )
+        progress = None
 
     if progress and progress.is_submitted and not is_admin:
         existing_result = (
@@ -206,6 +227,7 @@ def start_speaking(mock_id: int, payload: SpeakingStartIn, db: Session = Depends
         progress = SpeakingProgress(
             test_id=test.id,
             telegram_id=payload.telegram_id,
+            session_mode=_session_mode(payload.session_mode),
             started_at=now,
             is_submitted=False,
         )
@@ -258,7 +280,9 @@ def save_speaking(mock_id: int, payload: SpeakingSaveIn, db: Session = Depends(g
         .filter(
             SpeakingProgress.test_id == test.id,
             SpeakingProgress.telegram_id == payload.telegram_id,
+            SpeakingProgress.session_mode == _session_mode(payload.session_mode),
         )
+        .order_by(SpeakingProgress.id.desc())
         .first()
     )
 
@@ -267,6 +291,7 @@ def save_speaking(mock_id: int, payload: SpeakingSaveIn, db: Session = Depends(g
         progress = SpeakingProgress(
             test_id=test.id,
             telegram_id=payload.telegram_id,
+            session_mode=_session_mode(payload.session_mode),
             started_at=now,
             is_submitted=False,
         )
@@ -304,7 +329,9 @@ def submit_speaking(mock_id: int, payload: SpeakingSubmitIn, db: Session = Depen
         .filter(
             SpeakingProgress.test_id == test.id,
             SpeakingProgress.telegram_id == payload.telegram_id,
+            SpeakingProgress.session_mode == _session_mode(payload.session_mode),
         )
+        .order_by(SpeakingProgress.id.desc())
         .first()
     )
     if not progress:
@@ -312,6 +339,7 @@ def submit_speaking(mock_id: int, payload: SpeakingSubmitIn, db: Session = Depen
         progress = SpeakingProgress(
             test_id=test.id,
             telegram_id=payload.telegram_id,
+            session_mode=_session_mode(payload.session_mode),
             started_at=now,
             is_submitted=False,
         )
@@ -346,7 +374,9 @@ def check_speaking(mock_id: int, payload: SpeakingCheckIn, db: Session = Depends
         .filter(
             SpeakingProgress.test_id == test.id,
             SpeakingProgress.telegram_id == payload.telegram_id,
+            SpeakingProgress.session_mode == _session_mode(payload.session_mode),
         )
+        .order_by(SpeakingProgress.id.desc())
         .first()
     )
     if not progress:

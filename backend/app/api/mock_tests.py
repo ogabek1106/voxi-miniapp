@@ -29,11 +29,13 @@ class SubmitResultOut(BaseModel):
 
 class ReadingSubmitIn(BaseModel):
     telegram_id: int
+    session_mode: str = "single_block"
     answers: Dict[str, dict] = Field(default_factory=dict)
 
 
 class ReadingSaveIn(BaseModel):
     telegram_id: int
+    session_mode: str = "single_block"
     answers: Dict[str, dict] = Field(default_factory=dict)
 
 class ReadingEntryCheckIn(BaseModel):
@@ -57,6 +59,10 @@ def _get_user_by_telegram(db: Session, telegram_id: int) -> User:
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
+
+
+def _session_mode(value: str | None) -> str:
+    return "full_mock" if str(value or "").strip().lower() == "full_mock" else "single_block"
 
 
 def _is_admin_user(user: User) -> bool:
@@ -243,17 +249,35 @@ def reading_entry_check(mock_id: int, payload: ReadingEntryCheckIn, db: Session 
     }
 
 @router.get("/{mock_id}/reading/start")
-def start_reading_test(mock_id: int, telegram_id: int, db: Session = Depends(get_db)):
+def start_reading_test(
+    mock_id: int,
+    telegram_id: int,
+    session_mode: str = "single_block",
+    retake: bool = False,
+    retake_payment_reference_id: Optional[str] = None,
+    db: Session = Depends(get_db),
+):
     test = _get_test_for_mock(db, mock_id)
     user = _get_user_by_telegram(db, telegram_id)
     is_admin = _is_admin_user(user)
     now = _utcnow()
 
+    mode = _session_mode(session_mode)
     progress = (
         db.query(ReadingProgress)
-        .filter(ReadingProgress.user_id == user.id, ReadingProgress.test_id == test.id)
+        .filter(ReadingProgress.user_id == user.id, ReadingProgress.test_id == test.id, ReadingProgress.session_mode == mode)
+        .order_by(ReadingProgress.id.desc())
         .first()
     )
+
+    if retake and progress and progress.is_submitted and not is_admin:
+        require_paid_access_or_spend(
+            db=db,
+            telegram_id=telegram_id,
+            content_type="full_mock" if mode == "full_mock" else "separate_block",
+            reference_id=retake_payment_reference_id or f"{mode}:reading:{mock_id}:retake",
+        )
+        progress = None
 
     if progress and progress.is_submitted and not is_admin:
         questions = _query_questions_for_test(db, test.id)
@@ -266,6 +290,7 @@ def start_reading_test(mock_id: int, telegram_id: int, db: Session = Depends(get
         progress = ReadingProgress(
             user_id=user.id,
             test_id=test.id,
+            session_mode=mode,
             answers={},
             started_at=now,
             ends_at=now + timedelta(minutes=max(int(test.time_limit_minutes or 60), 1)),    
@@ -377,7 +402,8 @@ def submit_reading_test(mock_id: int, payload: ReadingSubmitIn, db: Session = De
 
     progress = (
         db.query(ReadingProgress)
-        .filter(ReadingProgress.user_id == user.id, ReadingProgress.test_id == test.id)
+        .filter(ReadingProgress.user_id == user.id, ReadingProgress.test_id == test.id, ReadingProgress.session_mode == _session_mode(payload.session_mode))
+        .order_by(ReadingProgress.id.desc())
         .first()
     )
 
@@ -386,6 +412,7 @@ def submit_reading_test(mock_id: int, payload: ReadingSubmitIn, db: Session = De
         progress = ReadingProgress(
             user_id=user.id,
             test_id=test.id,
+            session_mode=_session_mode(payload.session_mode),
             answers={},
             started_at=now,
             ends_at=now + timedelta(minutes=max(int(test.time_limit_minutes or 60), 1)),
@@ -423,7 +450,8 @@ def save_reading_progress(mock_id: int, payload: ReadingSaveIn, db: Session = De
 
     progress = (
         db.query(ReadingProgress)
-        .filter(ReadingProgress.user_id == user.id, ReadingProgress.test_id == test.id)
+        .filter(ReadingProgress.user_id == user.id, ReadingProgress.test_id == test.id, ReadingProgress.session_mode == _session_mode(payload.session_mode))
+        .order_by(ReadingProgress.id.desc())
         .first()
     )
 
@@ -432,6 +460,7 @@ def save_reading_progress(mock_id: int, payload: ReadingSaveIn, db: Session = De
         progress = ReadingProgress(
             user_id=user.id,
             test_id=test.id,
+            session_mode=_session_mode(payload.session_mode),
             answers=payload.answers or {},
             started_at=now,
             ends_at=now + timedelta(minutes=max(int(test.time_limit_minutes or 60), 1)),
@@ -471,14 +500,15 @@ def save_reading_progress(mock_id: int, payload: ReadingSaveIn, db: Session = De
 
 
 @router.get("/{mock_id}/reading/resume")
-def resume_reading_progress(mock_id: int, telegram_id: int, db: Session = Depends(get_db)):
+def resume_reading_progress(mock_id: int, telegram_id: int, session_mode: str = "single_block", db: Session = Depends(get_db)):
     test = _get_test_for_mock(db, mock_id)
     user = _get_user_by_telegram(db, telegram_id)
     now = _utcnow()
 
     progress = (
         db.query(ReadingProgress)
-        .filter(ReadingProgress.user_id == user.id, ReadingProgress.test_id == test.id)
+        .filter(ReadingProgress.user_id == user.id, ReadingProgress.test_id == test.id, ReadingProgress.session_mode == _session_mode(session_mode))
+        .order_by(ReadingProgress.id.desc())
         .first()
     )
 

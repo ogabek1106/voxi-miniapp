@@ -1,7 +1,8 @@
 // frontend/js/mock_start.js
 window.MockFlow = window.MockFlow || {
   active: false,
-  mockId: null
+  mockId: null,
+  retakePaymentReferenceId: null
 };
 
 window.MockDebug = window.MockDebug || {};
@@ -18,9 +19,10 @@ MockDebug.log = function (tag, payload) {
   console.log(`[MockDebug#${MockDebug.seq}] ${ts} ${tag}`, payload);
 };
 
-MockFlow.activate = function (mockId) {
+MockFlow.activate = function (mockId, options = {}) {
   MockFlow.active = true;
   MockFlow.mockId = Number(mockId || 0) || null;
+  MockFlow.retakePaymentReferenceId = options.retakePaymentReferenceId || null;
   MockDebug.log("MockFlow.activate", { mockId: MockFlow.mockId });
 };
 
@@ -28,6 +30,7 @@ MockFlow.deactivate = function () {
   MockDebug.log("MockFlow.deactivate", { mockId: MockFlow.mockId });
   MockFlow.active = false;
   MockFlow.mockId = null;
+  MockFlow.retakePaymentReferenceId = null;
   if (window.MockTransitionPage?.cleanup) {
     MockDebug.log("MockFlow.deactivate.cleanupTransition");
     window.MockTransitionPage.cleanup();
@@ -60,6 +63,17 @@ async function requirePaidAccess(payload) {
   return window.VCoinUI.ensureAccess(payload);
 }
 
+async function confirmPaidRetake({ mode, section, mockId, serviceName }) {
+  const contentType = mode === "full_mock" ? "full_mock" : "separate_block";
+  const referenceId = window.TestReentry?.retakeReference?.({ mode, section, mockId }) || `${mode}:${section}:${mockId}:retake:${Date.now()}`;
+  const allowed = await requirePaidAccess({
+    contentType,
+    referenceId,
+    serviceName
+  });
+  return allowed ? referenceId : null;
+}
+
 MockFlow.goToNextPart = function (currentPart, mockId, container) {
   MockDebug.log("MockFlow.goToNextPart.enter", { currentPart, mockId, active: MockFlow.active, flowMockId: MockFlow.mockId });
   if (!MockFlow.isActive(mockId) || !window.MockTransitionPage?.show) {
@@ -89,16 +103,20 @@ MockFlow.goToNextPart = function (currentPart, mockId, container) {
     durationSeconds: 60,
     onReady: async function () {
       MockDebug.log("MockFlow.goToNextPart.onReady", { next, mockId: MockFlow.mockId });
+      const nextOptions = {
+        fromFlow: true,
+        retakePaymentReferenceId: MockFlow.retakePaymentReferenceId || null
+      };
       if (next === "reading") {
-        await window.startMock(MockFlow.mockId, { fromFlow: true });
+        await window.startMock(MockFlow.mockId, nextOptions);
         return;
       }
       if (next === "writing") {
-        await window.startWritingMock(MockFlow.mockId, { fromFlow: true });
+        await window.startWritingMock(MockFlow.mockId, nextOptions);
         return;
       }
       if (next === "speaking") {
-        await window.startSpeakingMock(MockFlow.mockId, { fromFlow: true });
+        await window.startSpeakingMock(MockFlow.mockId, nextOptions);
         return;
       }
       MockDebug.log("MockFlow.goToNextPart.onReady.unknownNext", { next });
@@ -189,8 +207,58 @@ window.openMockWarning = function (packId, title) {
   `;
 };
 
+async function showCompletedFullMock(mockId, existingResult) {
+  const container = screenMocks || document.getElementById("screen-mocks") || document.getElementById("content");
+  window.TestReentry?.showCompleted?.({
+    container,
+    onSeeResult: () => {
+      if (window.UserReading?.renderResultPage) {
+        container.innerHTML = "";
+        window.UserReading.renderResultPage(container, {
+          sectionType: "full_mock",
+          overallLabel: "Full IELTS Mock Result",
+          band: Number(existingResult?.overall_band || 0),
+          correct: 0,
+          total: 0,
+          hideScore: true,
+          breakdown: {
+            listening: existingResult?.listening_band,
+            reading: existingResult?.reading_band,
+            writing: existingResult?.writing_band,
+            speaking: existingResult?.speaking_band,
+          },
+          backTarget: "home"
+        });
+      }
+    },
+    onRetake: async () => {
+      const paidRef = await confirmPaidRetake({
+        mode: "full_mock",
+        section: "full",
+        mockId,
+        serviceName: "Full Mock Test"
+      });
+      if (!paidRef) return;
+      MockFlow.activate(mockId, { retakePaymentReferenceId: paidRef });
+      await window.startListeningMock(mockId, { fromFlow: true, retakePaymentReferenceId: paidRef });
+    }
+  });
+}
+
 window.startFullMock = async function (mockId) {
   MockDebug.log("startFullMock.enter", { mockId });
+  const telegramId = window.getTelegramId?.();
+  if (telegramId) {
+    try {
+      const existing = await apiPost(`/mock-tests/${mockId}/full-result`, { telegram_id: telegramId });
+      if (existing?.status === "completed") {
+        await showCompletedFullMock(mockId, existing);
+        return;
+      }
+    } catch (_) {
+      // If the full-result endpoint is pending or incomplete, keep the normal start flow.
+    }
+  }
   const allowed = await requirePaidAccess({
     contentType: "full_mock",
     referenceId: mockId,
@@ -232,14 +300,32 @@ window.startMock = async function (mockId, options = {}) {
   try {
 
     const telegramId = window.getTelegramId();
+    UserReading.__sessionMode = options.fromFlow ? "full_mock" : "single_block";
     MockDebug.log("startMock.api.startReading", { mockId, telegramId });
-    const data = await apiGet(`/mock-tests/${mockId}/reading/start?telegram_id=${telegramId}`);
+    const sessionMode = options.fromFlow ? "full_mock" : "single_block";
+    const retakeParam = options.retakePaymentReferenceId
+      ? `&retake=1&retake_payment_reference_id=${encodeURIComponent(options.retakePaymentReferenceId)}`
+      : "";
+    const data = await apiGet(`/mock-tests/${mockId}/reading/start?telegram_id=${telegramId}&session_mode=${sessionMode}${retakeParam}`);
 
     if (data?.already_submitted) {
-      UserReading.showResultScreen({
+      const resultPayload = {
         band: data?.result?.band ?? 0,
         correct: data?.result?.score ?? 0,
         total: data?.result?.total ?? 40
+      };
+      window.TestReentry?.showCompleted?.({
+        container: screenReading,
+        onSeeResult: () => UserReading.showResultScreen(resultPayload),
+        onRetake: async () => {
+          const paidRef = await confirmPaidRetake({
+            mode: sessionMode,
+            section: "reading",
+            mockId,
+            serviceName: sessionMode === "full_mock" ? "Full Mock Test" : "Reading section"
+          });
+          if (paidRef) await window.startMock(mockId, { ...options, retakePaymentReferenceId: paidRef });
+        }
       });
       return;
     }
@@ -293,7 +379,20 @@ window.startWritingMock = async function (mockId, options = {}) {
     return;
   }
 
-  await window.UserWritingLoader.start(mockId, screenWriting);
+  await window.UserWritingLoader.start(mockId, screenWriting, {
+    sessionMode: options.fromFlow ? "full_mock" : "single_block",
+    retakePaymentReferenceId: options.retakePaymentReferenceId || null,
+    onRetake: async () => {
+      const sessionMode = options.fromFlow ? "full_mock" : "single_block";
+      const paidRef = await confirmPaidRetake({
+        mode: sessionMode,
+        section: "writing",
+        mockId,
+        serviceName: sessionMode === "full_mock" ? "Full Mock Test" : "Writing section"
+      });
+      if (paidRef) await window.startWritingMock(mockId, { ...options, retakePaymentReferenceId: paidRef });
+    }
+  });
   MockDebug.log("startWritingMock.loaderDone", { mockId });
 };
 
@@ -490,6 +589,19 @@ window.startSpeakingMock = async function (mockId, options = {}) {
     return;
   }
 
-  await window.UserSpeakingLoader.start(mockId, screenSpeaking);
+  await window.UserSpeakingLoader.start(mockId, screenSpeaking, {
+    sessionMode: options.fromFlow ? "full_mock" : "single_block",
+    retakePaymentReferenceId: options.retakePaymentReferenceId || null,
+    onRetake: async () => {
+      const sessionMode = options.fromFlow ? "full_mock" : "single_block";
+      const paidRef = await confirmPaidRetake({
+        mode: sessionMode,
+        section: "speaking",
+        mockId,
+        serviceName: sessionMode === "full_mock" ? "Full Mock Test" : "Speaking section"
+      });
+      if (paidRef) await window.startSpeakingMock(mockId, { ...options, retakePaymentReferenceId: paidRef });
+    }
+  });
   MockDebug.log("startSpeakingMock.loaderDone", { mockId });
 };

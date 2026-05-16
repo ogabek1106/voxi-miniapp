@@ -92,7 +92,9 @@ def _get_reading_band(db: Session, mock_id: int, telegram_id: int) -> float | No
         .filter(
             ReadingProgress.test_id == test.id,
             ReadingProgress.user_id == user.id,
+            ReadingProgress.session_mode == "full_mock",
         )
+        .order_by(ReadingProgress.id.desc())
         .first()
     )
     if not progress:
@@ -109,7 +111,9 @@ def _get_writing_band(db: Session, mock_id: int, telegram_id: int) -> float | No
         .filter(
             WritingProgress.test_id == test.id,
             WritingProgress.telegram_id == telegram_id,
+            WritingProgress.session_mode == "full_mock",
         )
+        .order_by(WritingProgress.id.desc())
         .first()
     )
     if not progress or not progress.is_submitted:
@@ -149,7 +153,9 @@ def _get_speaking_band(db: Session, mock_id: int, telegram_id: int) -> float | N
         .filter(
             SpeakingProgress.test_id == test.id,
             SpeakingProgress.telegram_id == telegram_id,
+            SpeakingProgress.session_mode == "full_mock",
         )
+        .order_by(SpeakingProgress.id.desc())
         .first()
     )
     if not progress:

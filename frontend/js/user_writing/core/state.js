@@ -3,6 +3,7 @@ window.UserWritingState = window.UserWritingState || {};
 UserWritingState.state = {
   mockId: null,
   testId: null,
+  sessionMode: "single_block",
   isSubmitted: false,
   autoSaveDirty: false,
   autoSaveInFlight: false,

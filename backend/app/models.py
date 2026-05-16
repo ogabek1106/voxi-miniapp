@@ -305,6 +305,7 @@ class ReadingProgress(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
     test_id = Column(Integer, ForeignKey("reading_tests.id", ondelete="CASCADE"))
+    session_mode = Column(String, nullable=False, default="single_block")
 
     answers = Column(JSON, nullable=False, default=dict)
     started_at = Column(DateTime(timezone=True), nullable=True)   # ⏱ when test started
@@ -473,6 +474,7 @@ class WritingProgress(Base):
     id = Column(Integer, primary_key=True, index=True)
     test_id = Column(Integer, ForeignKey("writing_tests.id", ondelete="CASCADE"), nullable=False)
     telegram_id = Column(BigInteger, index=True, nullable=False)
+    session_mode = Column(String, nullable=False, default="single_block")
     task1_text = Column(Text, nullable=True)
     task1_image_url = Column(String, nullable=True)
     task2_text = Column(Text, nullable=True)
@@ -533,6 +535,7 @@ class SpeakingProgress(Base):
     id = Column(Integer, primary_key=True, index=True)
     test_id = Column(Integer, ForeignKey("speaking_tests.id", ondelete="CASCADE"), nullable=False)
     telegram_id = Column(BigInteger, index=True, nullable=False)
+    session_mode = Column(String, nullable=False, default="single_block")
     part1_audio_url = Column(String, nullable=True)
     part2_audio_url = Column(String, nullable=True)
     part3_audio_url = Column(String, nullable=True)

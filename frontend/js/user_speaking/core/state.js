@@ -9,6 +9,7 @@ UserSpeakingState.TIMING = {
 UserSpeakingState._state = {
   mockId: null,
   testId: null,
+  sessionMode: "single_block",
   title: "",
   isAdmin: false,
   isSubmitted: false,

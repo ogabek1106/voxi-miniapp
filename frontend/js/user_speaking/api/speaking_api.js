@@ -6,10 +6,15 @@ UserSpeakingApi.getTelegramUserId = function () {
     || null;
 };
 
-UserSpeakingApi.start = async function (mockId) {
+UserSpeakingApi.start = async function (mockId, options = {}) {
   const telegramId = UserSpeakingApi.getTelegramUserId();
   if (!telegramId || !mockId) throw new Error("Missing telegram_id or mock id");
-  return apiPost(`/mock-tests/${mockId}/speaking/start`, { telegram_id: telegramId });
+  return apiPost(`/mock-tests/${mockId}/speaking/start`, {
+    telegram_id: telegramId,
+    session_mode: options.sessionMode || "single_block",
+    retake: Boolean(options.retakePaymentReferenceId),
+    retake_payment_reference_id: options.retakePaymentReferenceId || null
+  });
 };
 
 UserSpeakingApi.savePart = async function (mockId, partNumber, audioUrl) {
@@ -18,6 +23,7 @@ UserSpeakingApi.savePart = async function (mockId, partNumber, audioUrl) {
 
   return apiPost(`/mock-tests/${mockId}/speaking/save`, {
     telegram_id: telegramId,
+    session_mode: window.UserSpeakingState?.get?.()?.sessionMode || "single_block",
     part_number: Number(partNumber),
     audio_url: audioUrl || null
   });
@@ -29,6 +35,7 @@ UserSpeakingApi.submit = async function (mockId, payload, finishType = "manual")
 
   return apiPost(`/mock-tests/${mockId}/speaking/submit`, {
     telegram_id: telegramId,
+    session_mode: window.UserSpeakingState?.get?.()?.sessionMode || "single_block",
     part1_audio_url: payload?.part1_audio_url || null,
     part2_audio_url: payload?.part2_audio_url || null,
     part3_audio_url: payload?.part3_audio_url || null,
@@ -41,7 +48,8 @@ UserSpeakingApi.check = async function (mockId) {
   if (!telegramId || !mockId) throw new Error("Missing telegram_id or mock id");
 
   return apiPost(`/mock-tests/${mockId}/speaking/check`, {
-    telegram_id: telegramId
+    telegram_id: telegramId,
+    session_mode: window.UserSpeakingState?.get?.()?.sessionMode || "single_block"
   });
 };
 

@@ -16,10 +16,14 @@ router = APIRouter(prefix="/mock-tests", tags=["writing"])
 
 class WritingStartIn(BaseModel):
     telegram_id: int
+    session_mode: str = "single_block"
+    retake: bool = False
+    retake_payment_reference_id: Optional[str] = None
 
 
 class WritingSaveIn(BaseModel):
     telegram_id: int
+    session_mode: str = "single_block"
     task1_text: Optional[str] = None
     task1_image_url: Optional[str] = None
     task2_text: Optional[str] = None
@@ -32,6 +36,7 @@ class WritingSubmitIn(WritingSaveIn):
 
 class WritingCheckIn(BaseModel):
     telegram_id: int
+    session_mode: str = "single_block"
 
 
 def _utcnow() -> datetime:
@@ -88,6 +93,10 @@ def _resolve_test_for_mock(db: Session, mock_id: int, telegram_id: int) -> Writi
         raise HTTPException(status_code=404, detail="Writing test not found for this mock")
 
     return test
+
+
+def _session_mode(value: str | None) -> str:
+    return "full_mock" if str(value or "").strip().lower() == "full_mock" else "single_block"
 
 
 def _require_writing_paid_access(db: Session, telegram_id: int, mock_id: int, progress: WritingProgress | None, is_admin: bool) -> None:
@@ -153,10 +162,21 @@ def start_writing(mock_id: int, payload: WritingStartIn, db: Session = Depends(g
         db.query(WritingProgress)
         .filter(
             WritingProgress.test_id == test.id,
-            WritingProgress.telegram_id == payload.telegram_id
+            WritingProgress.telegram_id == payload.telegram_id,
+            WritingProgress.session_mode == _session_mode(payload.session_mode)
         )
+        .order_by(WritingProgress.id.desc())
         .first()
     )
+
+    if payload.retake and progress and progress.is_submitted and not is_admin:
+        require_paid_access_or_spend(
+            db=db,
+            telegram_id=payload.telegram_id,
+            content_type="full_mock" if _session_mode(payload.session_mode) == "full_mock" else "separate_block",
+            reference_id=payload.retake_payment_reference_id or f"{_session_mode(payload.session_mode)}:writing:{mock_id}:retake",
+        )
+        progress = None
 
     if progress and progress.is_submitted and not is_admin:
         deadline = _writing_deadline(progress, test)
@@ -181,6 +201,7 @@ def start_writing(mock_id: int, payload: WritingStartIn, db: Session = Depends(g
         progress = WritingProgress(
             test_id=test.id,
             telegram_id=payload.telegram_id,
+            session_mode=_session_mode(payload.session_mode),
             started_at=now,
             updated_at=now,
             is_submitted=False,
@@ -259,8 +280,10 @@ def save_writing(mock_id: int, payload: WritingSaveIn, db: Session = Depends(get
         db.query(WritingProgress)
         .filter(
             WritingProgress.test_id == test.id,
-            WritingProgress.telegram_id == payload.telegram_id
+            WritingProgress.telegram_id == payload.telegram_id,
+            WritingProgress.session_mode == _session_mode(payload.session_mode)
         )
+        .order_by(WritingProgress.id.desc())
         .first()
     )
 
@@ -269,6 +292,7 @@ def save_writing(mock_id: int, payload: WritingSaveIn, db: Session = Depends(get
         progress = WritingProgress(
             test_id=test.id,
             telegram_id=payload.telegram_id,
+            session_mode=_session_mode(payload.session_mode),
             started_at=now,
             updated_at=now,
             is_submitted=False
@@ -316,8 +340,10 @@ def submit_writing(mock_id: int, payload: WritingSubmitIn, db: Session = Depends
         db.query(WritingProgress)
         .filter(
             WritingProgress.test_id == test.id,
-            WritingProgress.telegram_id == payload.telegram_id
+            WritingProgress.telegram_id == payload.telegram_id,
+            WritingProgress.session_mode == _session_mode(payload.session_mode)
         )
+        .order_by(WritingProgress.id.desc())
         .first()
     )
     if not progress:
@@ -325,6 +351,7 @@ def submit_writing(mock_id: int, payload: WritingSubmitIn, db: Session = Depends
         progress = WritingProgress(
             test_id=test.id,
             telegram_id=payload.telegram_id,
+            session_mode=_session_mode(payload.session_mode),
             started_at=now,
             updated_at=now,
             is_submitted=False
@@ -367,7 +394,7 @@ def submit_writing(mock_id: int, payload: WritingSubmitIn, db: Session = Depends
 
 
 @router.get("/{mock_id}/writing/resume")
-def resume_writing(mock_id: int, telegram_id: int, db: Session = Depends(get_db)):
+def resume_writing(mock_id: int, telegram_id: int, session_mode: str = "single_block", db: Session = Depends(get_db)):
     test = _resolve_test_for_mock(db, mock_id, telegram_id)
     now = _utcnow()
 
@@ -375,8 +402,10 @@ def resume_writing(mock_id: int, telegram_id: int, db: Session = Depends(get_db)
         db.query(WritingProgress)
         .filter(
             WritingProgress.test_id == test.id,
-            WritingProgress.telegram_id == telegram_id
+            WritingProgress.telegram_id == telegram_id,
+            WritingProgress.session_mode == _session_mode(session_mode)
         )
+        .order_by(WritingProgress.id.desc())
         .first()
     )
 
@@ -407,8 +436,10 @@ def check_writing(mock_id: int, payload: WritingCheckIn, db: Session = Depends(g
         db.query(WritingProgress)
         .filter(
             WritingProgress.test_id == test.id,
-            WritingProgress.telegram_id == payload.telegram_id
+            WritingProgress.telegram_id == payload.telegram_id,
+            WritingProgress.session_mode == _session_mode(payload.session_mode)
         )
+        .order_by(WritingProgress.id.desc())
         .first()
     )
     if not progress:

@@ -15,6 +15,7 @@ UserReading.saveProgress = async function (mockId, options = {}) {
   const answers = UserReading.collectSaveableAnswers();
   const payload = {
     telegram_id: userId,
+    session_mode: UserReading.__sessionMode || "single_block",
     answers
   };
 
@@ -41,7 +42,7 @@ UserReading.loadProgress = async function (mockId) {
   const userId = UserReading.getTelegramUserId();
   if (!userId || !mockId) return null;
 
-  return apiGet(`/mock-tests/${mockId}/reading/resume?telegram_id=${userId}`);
+  return apiGet(`/mock-tests/${mockId}/reading/resume?telegram_id=${userId}&session_mode=${encodeURIComponent(UserReading.__sessionMode || "single_block")}`);
 };
 
 UserReading.submitProgress = async function (mockId) {
@@ -54,6 +55,7 @@ UserReading.submitProgress = async function (mockId) {
 
   return apiPost(`/mock-tests/${mockId}/reading/submit`, {
     telegram_id: userId,
+    session_mode: UserReading.__sessionMode || "single_block",
     answers
   });
 };

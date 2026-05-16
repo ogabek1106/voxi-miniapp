@@ -56,6 +56,14 @@ def ensure_reading_progress_columns():
             "ALTER TABLE reading_progress "
             "ADD COLUMN IF NOT EXISTS band_score DOUBLE PRECISION;"
         ))
+        conn.execute(text(
+            "ALTER TABLE reading_progress "
+            "ADD COLUMN IF NOT EXISTS session_mode VARCHAR NOT NULL DEFAULT 'single_block';"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_reading_progress_mode "
+            "ON reading_progress (user_id, test_id, session_mode, id);"
+        ))
 
         conn.commit()
 
@@ -328,6 +336,14 @@ def ensure_writing_schema():
         conn.execute(text(
             "ALTER TABLE writing_progress "
             "ADD COLUMN IF NOT EXISTS ai_task2_result JSON;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE writing_progress "
+            "ADD COLUMN IF NOT EXISTS session_mode VARCHAR NOT NULL DEFAULT 'single_block';"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_writing_progress_mode "
+            "ON writing_progress (telegram_id, test_id, session_mode, id);"
         ))
         conn.execute(text(
             "DO $$ "
@@ -633,6 +649,14 @@ def ensure_full_mock_results_schema():
         conn.execute(text(
             "ALTER TABLE speaking_progress "
             "ADD COLUMN IF NOT EXISTS is_submitted BOOLEAN NOT NULL DEFAULT FALSE;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE speaking_progress "
+            "ADD COLUMN IF NOT EXISTS session_mode VARCHAR NOT NULL DEFAULT 'single_block';"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_speaking_progress_mode "
+            "ON speaking_progress (telegram_id, test_id, session_mode, id);"
         ))
         conn.execute(text(
             "DO $$ "

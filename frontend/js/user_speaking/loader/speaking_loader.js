@@ -484,7 +484,7 @@ UserSpeakingLoader.bindForceSubmitButton = function () {
   };
 };
 
-UserSpeakingLoader.start = async function (mockId, container) {
+UserSpeakingLoader.start = async function (mockId, container, options = {}) {
   window.MockDebug?.log?.("Speaking.start.enter", {
     mockId,
     hasContainer: !!container
@@ -520,17 +520,18 @@ UserSpeakingLoader.start = async function (mockId, container) {
 
   try {
     window.MockDebug?.log?.("Speaking.start.api.start", { mockId });
-    const data = await UserSpeakingApi.start(mockId);
+    const data = await UserSpeakingApi.start(mockId, options);
     window.MockDebug?.log?.("Speaking.start.api.done", {
       hasData: !!data,
       alreadySubmitted: !!data?.already_submitted
     });
     UserSpeakingState.set({
-      mockId: Number(data?.mock_id || mockId || 0) || null
+      mockId: Number(data?.mock_id || mockId || 0) || null,
+      sessionMode: options.sessionMode || "single_block"
     });
     if (data?.already_submitted) {
-      if (data?.result?.overall_band) {
-        if (window.UserReading?.renderResultPage) {
+      const showResult = async () => {
+        if (data?.result?.overall_band && window.UserReading?.renderResultPage) {
           target.innerHTML = "";
           window.UserReading.renderResultPage(target, {
             sectionType: "speaking",
@@ -541,8 +542,13 @@ UserSpeakingLoader.start = async function (mockId, container) {
           });
           return;
         }
-      }
-      await UserSpeakingLoader.runCheckAndShowResult();
+        await UserSpeakingLoader.runCheckAndShowResult();
+      };
+      window.TestReentry?.showCompleted?.({
+        container: target,
+        onSeeResult: showResult,
+        onRetake: options.onRetake
+      });
       return;
     }
 
