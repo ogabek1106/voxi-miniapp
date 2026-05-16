@@ -3,7 +3,6 @@ from sqlalchemy.orm import Session
 
 from app.config import ADMIN_IDS
 from app.deps import get_db
-from app.models import AppNotification
 from app.schemas.notifications import NotificationIn, NotificationReadIn
 from app.services.auth_service import get_session_user
 from app.services import notification_service as service
@@ -53,13 +52,7 @@ def mark_all_notifications_read(
 @router.get("/admin/notifications")
 def list_admin_notifications(admin_id: int, db: Session = Depends(get_db)):
     require_admin(admin_id)
-    rows = (
-        db.query(AppNotification)
-        .order_by(AppNotification.created_at.desc(), AppNotification.id.desc())
-        .limit(100)
-        .all()
-    )
-    return {"ok": True, "notifications": [service.serialize_notification(row) for row in rows]}
+    return {"ok": True, "notifications": service.list_admin_notifications(db)}
 
 
 @router.post("/admin/notifications")
@@ -71,12 +64,25 @@ def create_admin_notification(payload: NotificationIn, db: Session = Depends(get
         raise HTTPException(status_code=422, detail="title_required")
     if not message:
         raise HTTPException(status_code=422, detail="message_required")
+    schedule_mode = service.normalize_schedule_mode(payload.schedule_mode)
+    repeat_hours = service.normalize_repeat_hours(payload.repeat_interval_hours)
+    if schedule_mode == "scheduled" and not payload.scheduled_at:
+        raise HTTPException(status_code=422, detail="scheduled_at_required")
+    if schedule_mode == "repeat" and not repeat_hours:
+        raise HTTPException(status_code=422, detail="repeat_interval_required")
     row = service.create_notification(
         db,
+        category=payload.category,
         title=title,
         message=message,
         image_url=payload.image_url,
         link_url=payload.link_url,
         link_type=payload.link_type,
+        schedule_mode=schedule_mode,
+        scheduled_at=payload.scheduled_at,
+        repeat_interval_hours=repeat_hours,
+        max_send_count=payload.max_send_count,
+        cooldown_hours=payload.cooldown_hours,
+        is_enabled=payload.is_enabled,
     )
     return {"ok": True, "notification": service.serialize_notification(row)}

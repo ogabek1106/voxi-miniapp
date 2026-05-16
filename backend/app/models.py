@@ -61,11 +61,23 @@ class AppNotification(Base):
     __tablename__ = "app_notifications"
 
     id = Column(Integer, primary_key=True, index=True)
+    category = Column(String, nullable=False, default="custom_manual_notification")
     title = Column(String, nullable=False)
     message = Column(Text, nullable=False)
     image_url = Column(String, nullable=True)
     link_url = Column(String, nullable=True)
     link_type = Column(String, nullable=False, default="none")
+    schedule_mode = Column(String, nullable=False, default="now")
+    scheduled_at = Column(DateTime(timezone=True), nullable=True)
+    repeat_interval_hours = Column(Integer, nullable=True)
+    next_send_at = Column(DateTime(timezone=True), nullable=True)
+    last_sent_at = Column(DateTime(timezone=True), nullable=True)
+    sent_count = Column(Integer, nullable=False, default=0)
+    max_send_count = Column(Integer, nullable=True)
+    cooldown_hours = Column(Integer, nullable=True)
+    is_enabled = Column(Boolean, nullable=False, default=True)
+    is_template = Column(Boolean, nullable=False, default=False)
+    source_template_id = Column(Integer, nullable=True, index=True)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 

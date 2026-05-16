@@ -885,16 +885,40 @@ def ensure_notification_schema():
             "updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()"
             ");"
         ))
+        conn.execute(text("ALTER TABLE app_notifications ADD COLUMN IF NOT EXISTS category VARCHAR NOT NULL DEFAULT 'custom_manual_notification';"))
         conn.execute(text("ALTER TABLE app_notifications ADD COLUMN IF NOT EXISTS title VARCHAR;"))
         conn.execute(text("ALTER TABLE app_notifications ADD COLUMN IF NOT EXISTS message TEXT;"))
         conn.execute(text("ALTER TABLE app_notifications ADD COLUMN IF NOT EXISTS image_url VARCHAR;"))
         conn.execute(text("ALTER TABLE app_notifications ADD COLUMN IF NOT EXISTS link_url VARCHAR;"))
         conn.execute(text("ALTER TABLE app_notifications ADD COLUMN IF NOT EXISTS link_type VARCHAR NOT NULL DEFAULT 'none';"))
+        conn.execute(text("ALTER TABLE app_notifications ADD COLUMN IF NOT EXISTS schedule_mode VARCHAR NOT NULL DEFAULT 'now';"))
+        conn.execute(text("ALTER TABLE app_notifications ADD COLUMN IF NOT EXISTS scheduled_at TIMESTAMPTZ NULL;"))
+        conn.execute(text("ALTER TABLE app_notifications ADD COLUMN IF NOT EXISTS repeat_interval_hours INTEGER NULL;"))
+        conn.execute(text("ALTER TABLE app_notifications ADD COLUMN IF NOT EXISTS next_send_at TIMESTAMPTZ NULL;"))
+        conn.execute(text("ALTER TABLE app_notifications ADD COLUMN IF NOT EXISTS last_sent_at TIMESTAMPTZ NULL;"))
+        conn.execute(text("ALTER TABLE app_notifications ADD COLUMN IF NOT EXISTS sent_count INTEGER NOT NULL DEFAULT 0;"))
+        conn.execute(text("ALTER TABLE app_notifications ADD COLUMN IF NOT EXISTS max_send_count INTEGER NULL;"))
+        conn.execute(text("ALTER TABLE app_notifications ADD COLUMN IF NOT EXISTS cooldown_hours INTEGER NULL;"))
+        conn.execute(text("ALTER TABLE app_notifications ADD COLUMN IF NOT EXISTS is_enabled BOOLEAN NOT NULL DEFAULT TRUE;"))
+        conn.execute(text("ALTER TABLE app_notifications ADD COLUMN IF NOT EXISTS is_template BOOLEAN NOT NULL DEFAULT FALSE;"))
+        conn.execute(text("ALTER TABLE app_notifications ADD COLUMN IF NOT EXISTS source_template_id INTEGER NULL;"))
         conn.execute(text("ALTER TABLE app_notifications ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
         conn.execute(text("ALTER TABLE app_notifications ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
         conn.execute(text(
             "CREATE INDEX IF NOT EXISTS ix_app_notifications_created_at "
             "ON app_notifications (created_at DESC);"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_app_notifications_category "
+            "ON app_notifications (category);"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_app_notifications_schedule_due "
+            "ON app_notifications (is_template, is_enabled, next_send_at);"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_app_notifications_source_template_id "
+            "ON app_notifications (source_template_id);"
         ))
 
         conn.execute(text(

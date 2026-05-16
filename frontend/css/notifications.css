@@ -309,6 +309,11 @@ body.notifications-open #screen-home .home-header {
   font-weight: 900;
 }
 
+.admin-notification-form label[hidden],
+.admin-notification-schedule-fields[hidden] {
+  display: none !important;
+}
+
 .admin-notification-form input,
 .admin-notification-form textarea,
 .admin-notification-form select {
@@ -319,6 +324,20 @@ body.notifications-open #screen-home .home-header {
   padding: 12px 14px;
   box-sizing: border-box;
   font: inherit;
+}
+
+.admin-notification-toggle {
+  display: inline-flex !important;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px !important;
+}
+
+.admin-notification-toggle input {
+  width: 18px;
+  height: 18px;
+  padding: 0;
 }
 
 .admin-notification-grid {
@@ -341,6 +360,11 @@ body.notifications-open #screen-home .home-header {
   gap: 12px;
   padding: 12px;
   margin-bottom: 10px;
+}
+
+.admin-notification-row.is-template {
+  border: 1px solid rgba(0, 186, 255, 0.18);
+  background: rgba(234, 247, 255, 0.54);
 }
 
 .admin-notification-row img {

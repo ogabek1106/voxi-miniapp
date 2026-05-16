@@ -1,10 +1,7 @@
-from datetime import datetime
-from typing import Optional
+window.AdminNotificationsConstants = window.AdminNotificationsConstants || {};
 
-from pydantic import BaseModel
-
-
-NOTIFICATION_CATEGORIES = {
+(function () {
+  AdminNotificationsConstants.categories = [
     "low_balance",
     "inactive_user",
     "abandoned_activity",
@@ -48,24 +45,18 @@ NOTIFICATION_CATEGORIES = {
     "test_expiring",
     "mock_available_again",
     "custom_manual_notification",
-}
+  ];
 
+  AdminNotificationsConstants.internalLinks = [
+    "odd-one-out",
+    "shadow-writing",
+    "word-shuffle",
+    "ielts-mock-test",
+    "reading",
+    "listening",
+    "writing",
+    "speaking",
+  ];
 
-class NotificationIn(BaseModel):
-    admin_id: int
-    category: str = "custom_manual_notification"
-    title: str
-    message: str
-    image_url: Optional[str] = None
-    link_url: Optional[str] = None
-    link_type: Optional[str] = "none"
-    schedule_mode: str = "now"
-    scheduled_at: Optional[datetime] = None
-    repeat_interval_hours: Optional[int] = None
-    max_send_count: Optional[int] = None
-    cooldown_hours: Optional[int] = None
-    is_enabled: bool = True
-
-
-class NotificationReadIn(BaseModel):
-    telegram_id: Optional[int] = None
+  AdminNotificationsConstants.repeatIntervals = [1, 4, 24, 48, 72];
+})();
