@@ -146,4 +146,12 @@ window.WordShuffleEngine = window.WordShuffleEngine || {};
     WordShuffleLoader.finishIfNeeded("game_over");
     WordShuffleUI.renderGameOver();
   };
+
+  WordShuffleEngine.stop = function () {
+    const state = WordShuffleState.get();
+    clearSolveTimeout();
+    state.gameOver = true;
+    state.solving = false;
+    WordShuffleTimer.stop();
+  };
 })();

@@ -148,6 +148,15 @@ window.VoxiActivity = window.VoxiActivity || {};
     send();
   };
 
+  window.VoxiActivity.endSession = function () {
+    currentPage = "homepage";
+    try {
+      sessionStorage.removeItem(SESSION_KEY);
+    } catch (_error) {
+      // Session storage can be blocked; auth logout still clears the account session.
+    }
+  };
+
   window.VoxiActivity.start = start;
   window.VoxiActivity.ping = send;
   window.VoxiActivity.wrapNavigation = wrapNavigation;

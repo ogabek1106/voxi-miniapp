@@ -104,8 +104,12 @@ window.WebsiteProfileSheet = window.WebsiteProfileSheet || {};
       const me = window.WebsiteAuthState.getUser() || await window.SharedUser.loadMe();
       backdrop.innerHTML = renderProfile(me || {});
       document.getElementById("website-profile-logout")?.addEventListener("click", async () => {
-        await window.WebsiteAuthState.logout();
-        close();
+        const button = document.getElementById("website-profile-logout");
+        if (button) {
+          button.disabled = true;
+          button.textContent = "Logging out...";
+        }
+        await window.WebsiteLogoutFlow?.run?.();
       });
       document.getElementById("website-profile-edit")?.addEventListener("click", () => {
         window.WebsiteProfileEditor?.open(me || {});

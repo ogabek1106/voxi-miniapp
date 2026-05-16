@@ -47,7 +47,10 @@ window.WebsiteAuthState = window.WebsiteAuthState || {};
   };
 
   window.WebsiteAuthState.logout = async function () {
-    await window.WebsiteAuthApi.logout();
-    window.WebsiteAuthState.setUser(null);
+    try {
+      await window.WebsiteAuthApi.logout();
+    } finally {
+      window.WebsiteAuthState.setUser(null);
+    }
   };
 })();
