@@ -78,8 +78,20 @@ class AppNotification(Base):
     is_enabled = Column(Boolean, nullable=False, default=True)
     is_template = Column(Boolean, nullable=False, default=False)
     source_template_id = Column(Integer, nullable=True, index=True)
+    audience_type = Column(String, nullable=False, default="all")
+    recipient_count = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+
+class AppNotificationRecipient(Base):
+    __tablename__ = "app_notification_recipients"
+
+    id = Column(Integer, primary_key=True, index=True)
+    notification_id = Column(Integer, ForeignKey("app_notifications.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True)
+    telegram_id = Column(BigInteger, nullable=True, index=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
 
 
 class AppNotificationRead(Base):

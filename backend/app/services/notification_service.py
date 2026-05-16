@@ -6,8 +6,9 @@ from typing import Optional
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
-from app.models import AppNotification, AppNotificationRead, User
+from app.models import AppNotification, AppNotificationRead, AppNotificationRecipient, User
 from app.schemas.notifications import NOTIFICATION_CATEGORIES
+from app.services.notification_audience_service import audience_label, resolve_audience
 
 
 REPEAT_INTERVALS = {1, 4, 24, 48, 72}
@@ -71,6 +72,9 @@ def serialize_notification(notification: AppNotification, read_ids: set[int] | N
         "is_enabled": bool(notification.is_enabled),
         "is_template": bool(notification.is_template),
         "source_template_id": notification.source_template_id,
+        "audience_type": notification.audience_type or "all",
+        "audience_label": audience_label(notification.audience_type or "all"),
+        "recipient_count": notification.recipient_count or 0,
         "created_at": iso(notification.created_at),
         "is_read": notification.id in read_ids,
     }
@@ -144,11 +148,69 @@ def clone_delivery_from_template(db: Session, template: AppNotification, now: da
         is_enabled=True,
         is_template=False,
         source_template_id=template.id,
+        audience_type=template.audience_type or "all",
+        recipient_count=0,
         created_at=now,
         updated_at=now,
     )
     db.add(notification)
     return notification
+
+
+def clear_recipients(db: Session, notification_id: int) -> None:
+    db.query(AppNotificationRecipient).filter(
+        AppNotificationRecipient.notification_id == notification_id
+    ).delete(synchronize_session=False)
+
+
+def materialize_recipients(db: Session, notification: AppNotification) -> None:
+    if notification.is_template:
+        notification.audience_type = notification.audience_type or "all"
+        notification.recipient_count = notification.recipient_count or 0
+        return
+
+    clear_recipients(db, int(notification.id))
+    audience = resolve_audience(db, notification.category)
+    notification.audience_type = audience.audience_type
+    if audience.audience_type == "all":
+        notification.recipient_count = 0
+        return
+
+    seen: set[str] = set()
+    count = 0
+    for user in audience.users:
+        user_id = int(user.id) if user.id else None
+        telegram_id = int(user.telegram_id) if user.telegram_id else None
+        key = f"user:{user_id}" if user_id else f"tg:{telegram_id}"
+        if key in seen or (not user_id and not telegram_id):
+            continue
+        seen.add(key)
+        db.add(AppNotificationRecipient(
+            notification_id=int(notification.id),
+            user_id=user_id,
+            telegram_id=telegram_id,
+            created_at=datetime.utcnow(),
+        ))
+        count += 1
+    notification.recipient_count = count
+
+
+def set_template_audience_preview(db: Session, template: AppNotification) -> None:
+    audience = resolve_audience(db, template.category)
+    template.audience_type = audience.audience_type
+    template.recipient_count = 0 if audience.audience_type == "all" else len(audience.users)
+
+
+def sync_template_audience_from_latest_delivery(db: Session, template: AppNotification) -> None:
+    latest = (
+        db.query(AppNotification)
+        .filter(AppNotification.source_template_id == template.id)
+        .order_by(AppNotification.created_at.desc(), AppNotification.id.desc())
+        .first()
+    )
+    if latest:
+        template.audience_type = latest.audience_type or template.audience_type or "all"
+        template.recipient_count = latest.recipient_count or 0
 
 
 def dispatch_due_notifications(db: Session) -> int:
@@ -170,7 +232,10 @@ def dispatch_due_notifications(db: Session) -> int:
             template.updated_at = now
             continue
 
-        clone_delivery_from_template(db, template, now)
+        delivery = clone_delivery_from_template(db, template, now)
+        db.flush()
+        materialize_recipients(db, delivery)
+        sync_template_audience_from_latest_delivery(db, template)
         template.sent_count = (template.sent_count or 0) + 1
         template.last_sent_at = now
         template.updated_at = now
@@ -236,15 +301,24 @@ def create_notification(
         cooldown_hours=cooldown_hours if cooldown_hours and cooldown_hours > 0 else None,
         is_enabled=bool(is_enabled),
         is_template=is_template,
+        audience_type="all",
+        recipient_count=0,
         last_sent_at=None if is_template else now,
         sent_count=0 if is_template else 1,
         created_at=now,
         updated_at=now,
     )
     db.add(notification)
+    db.flush()
+    if not notification.is_template:
+        materialize_recipients(db, notification)
+    else:
+        set_template_audience_preview(db, notification)
     if should_send_repeat_now and notification.is_enabled:
+        delivery = clone_delivery_from_template(db, notification, now)
         db.flush()
-        clone_delivery_from_template(db, notification, now)
+        materialize_recipients(db, delivery)
+        sync_template_audience_from_latest_delivery(db, notification)
         notification.sent_count = 1
         notification.last_sent_at = now
         notification.updated_at = now
@@ -302,6 +376,11 @@ def update_notification(
         row.next_send_at = None
         row.is_template = False
     row.updated_at = now
+    db.flush()
+    if not row.is_template:
+        materialize_recipients(db, row)
+    else:
+        set_template_audience_preview(db, row)
     db.commit()
     db.refresh(row)
     return row
@@ -319,6 +398,7 @@ def delete_notification(db: Session, notification_id: int) -> bool:
             .all()
         ])
     db.query(AppNotificationRead).filter(AppNotificationRead.notification_id.in_(notification_ids)).delete(synchronize_session=False)
+    db.query(AppNotificationRecipient).filter(AppNotificationRecipient.notification_id.in_(notification_ids)).delete(synchronize_session=False)
     if row.is_template:
         db.query(AppNotification).filter(AppNotification.source_template_id == notification_id).delete(synchronize_session=False)
     db.delete(row)
@@ -345,6 +425,46 @@ def read_filters(user: User | None, telegram_id: int | None):
     return filters
 
 
+def visible_notification_filter(db: Session, user: User | None, telegram_id: int | None):
+    base_filters = [
+        AppNotification.audience_type == "all",
+        AppNotification.audience_type.is_(None),
+    ]
+    recipient_filters = []
+    if user and user.id:
+        recipient_filters.append(AppNotificationRecipient.user_id == user.id)
+    if user and user.telegram_id:
+        recipient_filters.append(AppNotificationRecipient.telegram_id == user.telegram_id)
+    if telegram_id:
+        recipient_filters.append(AppNotificationRecipient.telegram_id == telegram_id)
+    if not recipient_filters:
+        return or_(*base_filters)
+
+    targeted_ids = (
+        db.query(AppNotificationRecipient.notification_id)
+        .filter(or_(*recipient_filters))
+        .subquery()
+    )
+    base_filters.append(AppNotification.id.in_(targeted_ids))
+    return or_(*base_filters)
+
+
+def can_view_notification(db: Session, notification: AppNotification, user: User | None, telegram_id: int | None) -> bool:
+    if not notification.audience_type or notification.audience_type == "all":
+        return True
+    recipient_filters = [AppNotificationRecipient.notification_id == notification.id]
+    identity_filters = []
+    if user and user.id:
+        identity_filters.append(AppNotificationRecipient.user_id == user.id)
+    if user and user.telegram_id:
+        identity_filters.append(AppNotificationRecipient.telegram_id == user.telegram_id)
+    if telegram_id:
+        identity_filters.append(AppNotificationRecipient.telegram_id == telegram_id)
+    if not identity_filters:
+        return False
+    return db.query(AppNotificationRecipient.id).filter(*recipient_filters).filter(or_(*identity_filters)).first() is not None
+
+
 def list_notifications(db: Session, *, user: User | None = None, telegram_id: int | None = None) -> dict:
     dispatch_due_notifications(db)
     filters = read_filters(user, telegram_id)
@@ -355,7 +475,11 @@ def list_notifications(db: Session, *, user: User | None = None, telegram_id: in
 
     notifications = (
         db.query(AppNotification)
-        .filter(AppNotification.is_template == False, AppNotification.is_enabled == True)  # noqa: E712
+        .filter(
+            AppNotification.is_template == False,  # noqa: E712
+            AppNotification.is_enabled == True,  # noqa: E712
+            visible_notification_filter(db, user, telegram_id),
+        )
         .order_by(AppNotification.created_at.desc(), AppNotification.id.desc())
         .limit(50)
         .all()
@@ -374,6 +498,8 @@ def mark_read(db: Session, notification_id: int, *, user: User | None = None, te
         .first()
     )
     if not notification:
+        return False
+    if not can_view_notification(db, notification, user, telegram_id):
         return False
 
     identity_user_id = user.id if user else None
@@ -400,9 +526,9 @@ def mark_read(db: Session, notification_id: int, *, user: User | None = None, te
 
 
 def mark_all_read(db: Session, *, user: User | None = None, telegram_id: int | None = None) -> None:
-    notifications = db.query(AppNotification.id).filter(AppNotification.is_template == False).all()  # noqa: E712
-    for (notification_id,) in notifications:
-        mark_read(db, int(notification_id), user=user, telegram_id=telegram_id)
+    data = list_notifications(db, user=user, telegram_id=telegram_id)
+    for item in data.get("notifications", []):
+        mark_read(db, int(item["id"]), user=user, telegram_id=telegram_id)
 
 
 def list_admin_notifications(db: Session) -> list[dict]:

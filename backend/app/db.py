@@ -902,6 +902,8 @@ def ensure_notification_schema():
         conn.execute(text("ALTER TABLE app_notifications ADD COLUMN IF NOT EXISTS is_enabled BOOLEAN NOT NULL DEFAULT TRUE;"))
         conn.execute(text("ALTER TABLE app_notifications ADD COLUMN IF NOT EXISTS is_template BOOLEAN NOT NULL DEFAULT FALSE;"))
         conn.execute(text("ALTER TABLE app_notifications ADD COLUMN IF NOT EXISTS source_template_id INTEGER NULL;"))
+        conn.execute(text("ALTER TABLE app_notifications ADD COLUMN IF NOT EXISTS audience_type VARCHAR NOT NULL DEFAULT 'all';"))
+        conn.execute(text("ALTER TABLE app_notifications ADD COLUMN IF NOT EXISTS recipient_count INTEGER NOT NULL DEFAULT 0;"))
         conn.execute(text("ALTER TABLE app_notifications ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
         conn.execute(text("ALTER TABLE app_notifications ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
         conn.execute(text(
@@ -919,6 +921,36 @@ def ensure_notification_schema():
         conn.execute(text(
             "CREATE INDEX IF NOT EXISTS ix_app_notifications_source_template_id "
             "ON app_notifications (source_template_id);"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_app_notifications_audience_type "
+            "ON app_notifications (audience_type);"
+        ))
+
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS app_notification_recipients ("
+            "id SERIAL PRIMARY KEY, "
+            "notification_id INTEGER NOT NULL, "
+            "user_id INTEGER NULL, "
+            "telegram_id BIGINT NULL, "
+            "created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()"
+            ");"
+        ))
+        conn.execute(text("ALTER TABLE app_notification_recipients ADD COLUMN IF NOT EXISTS notification_id INTEGER;"))
+        conn.execute(text("ALTER TABLE app_notification_recipients ADD COLUMN IF NOT EXISTS user_id INTEGER;"))
+        conn.execute(text("ALTER TABLE app_notification_recipients ADD COLUMN IF NOT EXISTS telegram_id BIGINT;"))
+        conn.execute(text("ALTER TABLE app_notification_recipients ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_app_notification_recipients_notification_id "
+            "ON app_notification_recipients (notification_id);"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_app_notification_recipients_user_id "
+            "ON app_notification_recipients (user_id);"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_app_notification_recipients_telegram_id "
+            "ON app_notification_recipients (telegram_id);"
         ))
 
         conn.execute(text(
