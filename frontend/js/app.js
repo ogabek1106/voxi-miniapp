@@ -240,6 +240,8 @@ document.addEventListener("DOMContentLoaded", () => {
   if (window.AppViewMode?.isWebsite?.()) {
     window.WebsiteLayout?.init?.();
     markAppReady();
+    window.VoxiNotifications?.init?.();
+    window.VoxiDeepLinks?.handleCurrentUrl?.();
 
     document.addEventListener("visibilitychange", () => {
       if (!document.hidden) {
@@ -258,6 +260,8 @@ document.addEventListener("DOMContentLoaded", () => {
   renderHomeIdentity();
   loadMe();
   markAppReady();
+  window.VoxiNotifications?.init?.();
+  window.VoxiDeepLinks?.handleCurrentUrl?.();
 
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) {

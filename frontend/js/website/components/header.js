@@ -31,6 +31,10 @@ window.WebsiteHeader = window.WebsiteHeader || {};
           <img class="vcoin-icon" src="./assets/vcoin.png" alt="" aria-hidden="true">
           <span id="website-balance-value">0</span>
         </button>
+        <button class="voxi-notification-bell" type="button" aria-label="Open notifications">
+          <span class="voxi-notification-bell-icon" aria-hidden="true">🔔</span>
+          <span class="voxi-notification-badge" hidden>0</span>
+        </button>
         <button class="website-profile-button" id="website-profile-button" aria-label="Open profile">
           <span class="website-profile-button-avatar" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none">
@@ -88,6 +92,10 @@ window.WebsiteHeader = window.WebsiteHeader || {};
         <img class="vcoin-icon" src="./assets/vcoin.png" alt="" aria-hidden="true">
         <span id="website-balance-value">${window.SharedUser?.getBalance(user) || 0}</span>
       </button>
+      <button class="voxi-notification-bell" type="button" aria-label="Open notifications">
+        <span class="voxi-notification-bell-icon" aria-hidden="true">🔔</span>
+        <span class="voxi-notification-badge" hidden>0</span>
+      </button>
       <button class="website-profile-button" id="website-profile-button" aria-label="Open profile">
         <span class="website-profile-button-avatar" aria-hidden="true">
           ${user.photo_url ? `<img src="${escapeHtml(user.photo_url)}" alt="">` : `
@@ -101,6 +109,8 @@ window.WebsiteHeader = window.WebsiteHeader || {};
       </button>
     `;
     document.getElementById("website-profile-button")?.addEventListener("click", () => window.WebsiteProfileSheet?.open());
+    document.querySelector("#website-header .voxi-notification-bell")?.addEventListener("click", () => window.VoxiNotifications?.toggle?.());
+    window.VoxiNotificationsUI?.updateBells?.();
   };
 
   window.WebsiteHeader.update = function (me) {

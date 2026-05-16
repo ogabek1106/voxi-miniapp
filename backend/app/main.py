@@ -31,6 +31,7 @@ from app.api.word_merge import router as word_merge_router
 from app.api.admin_word_shuffle import router as admin_word_shuffle_router
 from app.api.word_shuffle import router as word_shuffle_router
 from app.api.activity import router as activity_router
+from app.api.notifications import router as notifications_router
 from app.api.auth import router as auth_router
 from app.api.auth_google import router as auth_google_router
 from .db import (
@@ -49,7 +50,8 @@ from .db import (
     ensure_vocabulary_puzzle_schema,
     ensure_word_merge_schema,
     ensure_word_shuffle_schema,
-    ensure_activity_schema
+    ensure_activity_schema,
+    ensure_notification_schema,
 )
 from app.api.admin_upload import router as admin_upload_router
 from app.api.result_images import router as result_images_router
@@ -73,6 +75,7 @@ ensure_vocabulary_puzzle_schema()
 ensure_word_merge_schema()
 ensure_word_shuffle_schema()
 ensure_activity_schema()
+ensure_notification_schema()
 app = FastAPI(title="Voxi Mini App API")
 app.include_router(mock_list.router)
 app.include_router(admin_upload_router)
@@ -101,6 +104,7 @@ app.include_router(word_merge_router)
 app.include_router(admin_word_shuffle_router)
 app.include_router(word_shuffle_router)
 app.include_router(activity_router)
+app.include_router(notifications_router)
 app.include_router(auth_router)
 app.include_router(auth_google_router)
 app.mount("/media", StaticFiles(directory="/data/media"), name="media")

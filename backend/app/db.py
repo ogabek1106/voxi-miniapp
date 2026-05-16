@@ -871,6 +871,59 @@ def ensure_announcement_schema():
         ))
 
 
+def ensure_notification_schema():
+    with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS app_notifications ("
+            "id SERIAL PRIMARY KEY, "
+            "title VARCHAR NOT NULL, "
+            "message TEXT NOT NULL, "
+            "image_url VARCHAR NULL, "
+            "link_url VARCHAR NULL, "
+            "link_type VARCHAR NOT NULL DEFAULT 'none', "
+            "created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), "
+            "updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()"
+            ");"
+        ))
+        conn.execute(text("ALTER TABLE app_notifications ADD COLUMN IF NOT EXISTS title VARCHAR;"))
+        conn.execute(text("ALTER TABLE app_notifications ADD COLUMN IF NOT EXISTS message TEXT;"))
+        conn.execute(text("ALTER TABLE app_notifications ADD COLUMN IF NOT EXISTS image_url VARCHAR;"))
+        conn.execute(text("ALTER TABLE app_notifications ADD COLUMN IF NOT EXISTS link_url VARCHAR;"))
+        conn.execute(text("ALTER TABLE app_notifications ADD COLUMN IF NOT EXISTS link_type VARCHAR NOT NULL DEFAULT 'none';"))
+        conn.execute(text("ALTER TABLE app_notifications ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text("ALTER TABLE app_notifications ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_app_notifications_created_at "
+            "ON app_notifications (created_at DESC);"
+        ))
+
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS app_notification_reads ("
+            "id SERIAL PRIMARY KEY, "
+            "notification_id INTEGER NOT NULL, "
+            "user_id INTEGER NULL, "
+            "telegram_id BIGINT NULL, "
+            "read_at TIMESTAMPTZ NOT NULL DEFAULT NOW()"
+            ");"
+        ))
+        conn.execute(text("ALTER TABLE app_notification_reads ADD COLUMN IF NOT EXISTS notification_id INTEGER;"))
+        conn.execute(text("ALTER TABLE app_notification_reads ADD COLUMN IF NOT EXISTS user_id INTEGER;"))
+        conn.execute(text("ALTER TABLE app_notification_reads ADD COLUMN IF NOT EXISTS telegram_id BIGINT;"))
+        conn.execute(text("ALTER TABLE app_notification_reads ADD COLUMN IF NOT EXISTS read_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_app_notification_reads_notification_id "
+            "ON app_notification_reads (notification_id);"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_app_notification_reads_user_id "
+            "ON app_notification_reads (user_id);"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_app_notification_reads_telegram_id "
+            "ON app_notification_reads (telegram_id);"
+        ))
+
+
 def ensure_shadow_writing_schema():
     with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
         conn.execute(text(

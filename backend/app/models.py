@@ -57,6 +57,29 @@ class FeatureUsageCounter(Base):
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
 
 
+class AppNotification(Base):
+    __tablename__ = "app_notifications"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=False)
+    message = Column(Text, nullable=False)
+    image_url = Column(String, nullable=True)
+    link_url = Column(String, nullable=True)
+    link_type = Column(String, nullable=False, default="none")
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+
+class AppNotificationRead(Base):
+    __tablename__ = "app_notification_reads"
+
+    id = Column(Integer, primary_key=True, index=True)
+    notification_id = Column(Integer, ForeignKey("app_notifications.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True)
+    telegram_id = Column(BigInteger, nullable=True, index=True)
+    read_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+
+
 class ShadowWritingEssay(Base):
     __tablename__ = "shadow_writing_essays"
 

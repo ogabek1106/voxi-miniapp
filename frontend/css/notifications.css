@@ -1,0 +1,333 @@
+.voxi-notification-bell {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  margin: 0;
+  border: 0;
+  border-radius: 18px;
+  background: #ffffff;
+  color: #17212B;
+  box-shadow: 0 12px 30px rgba(20, 40, 60, 0.08);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.voxi-notification-bell-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.voxi-notification-bell.has-unread {
+  box-shadow: 0 12px 30px rgba(0, 186, 255, 0.16);
+}
+
+.voxi-notification-bell.has-unread .voxi-notification-bell-icon {
+  animation: voxiBellPulse 1.8s ease-in-out infinite;
+}
+
+.voxi-notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -4px;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 900;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+body.view-website .website-header.is-compact .voxi-notification-bell {
+  width: 34px;
+  height: 34px;
+  border-radius: 14px;
+}
+
+#screen-home .home-notification-slot {
+  margin-left: auto;
+}
+
+#screen-home .home-notification-slot + .home-balance {
+  margin-left: 8px;
+}
+
+.voxi-notification-drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 99980;
+  background: rgba(15, 23, 42, 0.28);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  padding: 86px 18px 18px;
+  box-sizing: border-box;
+}
+
+.voxi-notification-panel {
+  width: min(390px, 100%);
+  max-height: min(680px, calc(100dvh - 104px));
+  overflow: auto;
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.2);
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.voxi-notification-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  color: #17212B;
+}
+
+.voxi-notification-top strong {
+  font-size: 19px;
+  font-weight: 900;
+}
+
+.voxi-notification-close,
+.voxi-notification-read-all {
+  border: 0;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.voxi-notification-close {
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  background: #f1f5f9;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.voxi-notification-read-all {
+  width: 100%;
+  height: 38px;
+  border-radius: 14px;
+  background: #eaf7ff;
+  color: #0284c7;
+  margin-bottom: 12px;
+}
+
+.voxi-notification-list {
+  display: grid;
+  gap: 10px;
+}
+
+.voxi-notification-card {
+  position: relative;
+  width: 100%;
+  border: 0;
+  border-radius: 18px;
+  padding: 10px;
+  background: #ffffff;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.07);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  text-align: left;
+  cursor: pointer;
+  color: #17212B;
+}
+
+.voxi-notification-card img {
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  object-fit: cover;
+}
+
+.voxi-notification-card-body {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.voxi-notification-card-title {
+  font-weight: 900;
+  font-size: 14px;
+}
+
+.voxi-notification-card-message {
+  color: #667085;
+  font-size: 13px;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.voxi-notification-card.is-expanded .voxi-notification-card-message {
+  display: block;
+}
+
+.voxi-notification-card-time {
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.voxi-notification-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: #00baff;
+  align-self: start;
+  margin-top: 6px;
+}
+
+.voxi-notification-empty {
+  padding: 22px 10px;
+  text-align: center;
+  color: #667085;
+  font-weight: 800;
+}
+
+.admin-notifications-page {
+  width: min(100%, 980px);
+  margin: 0 auto;
+  text-align: left;
+  padding: 16px;
+}
+
+.admin-notifications-head,
+.admin-notification-form,
+.admin-notification-row {
+  background: #ffffff;
+  border-radius: 22px;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.07);
+}
+
+.admin-notifications-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+  padding: 18px;
+  margin-bottom: 14px;
+}
+
+.admin-notifications-head h2 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.admin-notifications-head p {
+  margin: 4px 0 0;
+  color: #667085;
+  font-weight: 800;
+}
+
+.admin-notifications-head button,
+.admin-notification-form button {
+  border: 0;
+  border-radius: 16px;
+  min-height: 44px;
+  padding: 0 18px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.admin-notification-form {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  margin-bottom: 16px;
+}
+
+.admin-notification-form label {
+  display: grid;
+  gap: 6px;
+  color: #475569;
+  font-weight: 900;
+}
+
+.admin-notification-form input,
+.admin-notification-form textarea,
+.admin-notification-form select {
+  width: 100%;
+  border: 0;
+  border-radius: 14px;
+  background: #f1f5f9;
+  padding: 12px 14px;
+  box-sizing: border-box;
+  font: inherit;
+}
+
+.admin-notification-grid {
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr;
+  gap: 12px;
+}
+
+.admin-notification-form button[type="submit"] {
+  background: #00baff;
+  color: #ffffff;
+}
+
+.admin-notification-library h3 {
+  margin: 0 0 10px;
+}
+
+.admin-notification-row {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+
+.admin-notification-row img {
+  width: 58px;
+  height: 58px;
+  border-radius: 14px;
+  object-fit: cover;
+}
+
+.admin-notification-row strong,
+.admin-notification-row p,
+.admin-notification-row span {
+  display: block;
+}
+
+.admin-notification-row p {
+  margin: 4px 0;
+  color: #475569;
+}
+
+.admin-notification-row span,
+.admin-notification-empty {
+  color: #94a3b8;
+  font-weight: 800;
+}
+
+@keyframes voxiBellPulse {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  35% { transform: rotate(-8deg) scale(1.06); }
+  65% { transform: rotate(8deg) scale(1.06); }
+}
+
+@media (max-width: 700px) {
+  .voxi-notification-drawer {
+    justify-content: center;
+    padding: 74px 12px 12px;
+  }
+
+  .admin-notification-grid {
+    grid-template-columns: 1fr;
+  }
+}
