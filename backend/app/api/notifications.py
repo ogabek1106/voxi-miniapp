@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.config import ADMIN_IDS
 from app.deps import get_db
-from app.schemas.notifications import NotificationIn, NotificationReadIn
+from app.schemas.notifications import NotificationIn, NotificationReadIn, NotificationUpdateIn
 from app.services.auth_service import get_session_user
 from app.services import notification_service as service
 
@@ -86,3 +86,47 @@ def create_admin_notification(payload: NotificationIn, db: Session = Depends(get
         is_enabled=payload.is_enabled,
     )
     return {"ok": True, "notification": service.serialize_notification(row)}
+
+
+@router.put("/admin/notifications/{notification_id}")
+def update_admin_notification(notification_id: int, payload: NotificationUpdateIn, db: Session = Depends(get_db)):
+    require_admin(payload.admin_id)
+    title = (payload.title or "").strip()
+    message = (payload.message or "").strip()
+    if not title:
+        raise HTTPException(status_code=422, detail="title_required")
+    if not message:
+        raise HTTPException(status_code=422, detail="message_required")
+    schedule_mode = service.normalize_schedule_mode(payload.schedule_mode)
+    repeat_hours = service.normalize_repeat_hours(payload.repeat_interval_hours)
+    if schedule_mode == "scheduled" and not payload.scheduled_at:
+        raise HTTPException(status_code=422, detail="scheduled_at_required")
+    if schedule_mode == "repeat" and not repeat_hours:
+        raise HTTPException(status_code=422, detail="repeat_interval_required")
+    row = service.update_notification(
+        db,
+        notification_id,
+        category=payload.category,
+        title=title,
+        message=message,
+        image_url=payload.image_url,
+        link_url=payload.link_url,
+        link_type=payload.link_type,
+        schedule_mode=schedule_mode,
+        scheduled_at=payload.scheduled_at,
+        repeat_interval_hours=repeat_hours,
+        max_send_count=payload.max_send_count,
+        cooldown_hours=payload.cooldown_hours,
+        is_enabled=payload.is_enabled,
+    )
+    if not row:
+        raise HTTPException(status_code=404, detail="notification_not_found")
+    return {"ok": True, "notification": service.serialize_notification(row)}
+
+
+@router.delete("/admin/notifications/{notification_id}")
+def delete_admin_notification(notification_id: int, admin_id: int, db: Session = Depends(get_db)):
+    require_admin(admin_id)
+    if not service.delete_notification(db, notification_id):
+        raise HTTPException(status_code=404, detail="notification_not_found")
+    return {"ok": True}

@@ -3,6 +3,7 @@ window.VoxiNotifications = window.VoxiNotifications || {};
 (function () {
   let refreshTimer = null;
   let attentionTimer = null;
+  const visibleReadTimers = new Map();
 
   async function refresh() {
     try {
@@ -30,6 +31,11 @@ window.VoxiNotifications = window.VoxiNotifications || {};
       button.classList.add("is-attention");
       window.setTimeout(() => button.classList.remove("is-attention"), 1100);
     });
+  }
+
+  function clearVisibleReadTimers() {
+    visibleReadTimers.forEach((timer) => window.clearTimeout(timer));
+    visibleReadTimers.clear();
   }
 
   function mountMiniBell() {
@@ -67,6 +73,7 @@ window.VoxiNotifications = window.VoxiNotifications || {};
   VoxiNotifications.close = function () {
     VoxiNotificationsState.set({ isOpen: false });
     document.body.classList.remove("notifications-open");
+    clearVisibleReadTimers();
     document.getElementById("voxi-notification-drawer")?.remove();
     VoxiNotificationsUI.updateBells();
   };
@@ -81,11 +88,50 @@ window.VoxiNotifications = window.VoxiNotifications || {};
     await refresh();
   };
 
+  VoxiNotifications.markVisibleRead = async function (id) {
+    const notificationId = Number(id);
+    const state = VoxiNotificationsState.get();
+    const item = state.items.find((entry) => Number(entry.id) === notificationId);
+    if (!item || item.is_read) return;
+    try {
+      await VoxiNotificationsApi.markRead(notificationId);
+      const items = state.items.map((entry) => (
+        Number(entry.id) === notificationId ? { ...entry, is_read: true } : entry
+      ));
+      VoxiNotificationsState.set({
+        items,
+        unreadCount: Math.max(0, Number(state.unreadCount || 0) - 1)
+      });
+      const card = document.querySelector(`.voxi-notification-card[data-id="${notificationId}"]`);
+      if (card) {
+        card.classList.remove("is-unread");
+        card.classList.add("is-read");
+        card.querySelector(".voxi-notification-dot")?.remove();
+      }
+    } catch (error) {
+      console.error("Notification read failed:", error);
+    }
+  };
+
+  VoxiNotifications.trackVisibleRead = function (card, isVisible) {
+    const id = Number(card?.dataset?.id || 0);
+    if (!id || card.classList.contains("is-read")) return;
+    if (!isVisible) {
+      const timer = visibleReadTimers.get(id);
+      if (timer) window.clearTimeout(timer);
+      visibleReadTimers.delete(id);
+      return;
+    }
+    if (visibleReadTimers.has(id)) return;
+    visibleReadTimers.set(id, window.setTimeout(() => {
+      visibleReadTimers.delete(id);
+      VoxiNotifications.markVisibleRead(id);
+    }, 2000));
+  };
+
   VoxiNotifications.openItem = async function (id) {
     const item = VoxiNotificationsState.get().items.find((entry) => Number(entry.id) === Number(id));
     if (!item) return;
-    await VoxiNotificationsApi.markRead(id).catch((error) => console.error("Notification read failed:", error));
-    await refresh();
 
     if (item.link_type === "internal" && item.link_url) {
       const openValue = window.VoxiDeepLinks?.extractOpenValue?.(item.link_url);

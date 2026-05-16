@@ -16,6 +16,17 @@ window.AdminNotificationsApi = window.AdminNotificationsApi || {};
     });
   };
 
+  AdminNotificationsApi.update = function (id, payload) {
+    return apiPut(`/admin/notifications/${Number(id)}`, {
+      ...payload,
+      admin_id: adminId()
+    });
+  };
+
+  AdminNotificationsApi.delete = function (id) {
+    return apiDelete(`/admin/notifications/${Number(id)}?admin_id=${encodeURIComponent(adminId() || "")}`);
+  };
+
   AdminNotificationsApi.uploadImage = async function (file) {
     const formData = new FormData();
     formData.append("file", file);

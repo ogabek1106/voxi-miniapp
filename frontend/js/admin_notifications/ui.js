@@ -30,9 +30,7 @@ window.AdminNotificationsUI = window.AdminNotificationsUI || {};
 
   function categoryOptions() {
     const categories = window.AdminNotificationsConstants?.categories || ["custom_manual_notification"];
-    return categories.map((category) => (
-      `<option value="${escape(category)}">${escape(pretty(category))}</option>`
-    )).join("");
+    return categories.map((category) => `<option value="${escape(category)}">${escape(pretty(category))}</option>`).join("");
   }
 
   function internalLinkOptions() {
@@ -47,10 +45,10 @@ window.AdminNotificationsUI = window.AdminNotificationsUI || {};
 
   function scheduleLabel(item) {
     if (item.is_template && item.schedule_mode === "repeat") {
-      return `Repeats ${item.repeat_interval_hours || "?"}h · next ${formatDate(item.next_send_at) || "not set"} · sent ${item.sent_count || 0}`;
+      return `Repeats ${item.repeat_interval_hours || "?"}h - next ${formatDate(item.next_send_at) || "not set"} - sent ${item.sent_count || 0}`;
     }
     if (item.is_template && item.schedule_mode === "scheduled") {
-      return `Scheduled · ${formatDate(item.next_send_at || item.scheduled_at) || "not set"}`;
+      return `Scheduled - ${formatDate(item.next_send_at || item.scheduled_at) || "not set"}`;
     }
     if (item.source_template_id) return `Delivered from schedule #${Number(item.source_template_id)}`;
     return "Sent now";
@@ -65,7 +63,7 @@ window.AdminNotificationsUI = window.AdminNotificationsUI || {};
         <div class="admin-notifications-head">
           <div>
             <h2>Notifications</h2>
-            <p>Create manual, scheduled, and repeating app notifications.</p>
+            <p>Create, schedule, repeat, update, and delete notifications.</p>
           </div>
           <button type="button" onclick="showAdminPanel()">Back</button>
         </div>
@@ -84,6 +82,11 @@ window.AdminNotificationsUI = window.AdminNotificationsUI || {};
           </div>
           <label>Title<input name="title" required maxlength="120"></label>
           <label>Message<textarea name="message" rows="4" required></textarea></label>
+          <input name="existing_image_url" type="hidden">
+          <div class="admin-notification-editing" id="admin-notification-editing" hidden>
+            <span>Editing selected notification</span>
+            <button type="button" id="admin-notification-new">Create new instead</button>
+          </div>
           <label>Image<input name="image" type="file" accept="image/*"></label>
           <div class="admin-notification-grid">
             <label>Link type
@@ -128,7 +131,7 @@ window.AdminNotificationsUI = window.AdminNotificationsUI || {};
             <input name="is_enabled" type="checkbox" checked>
             Enabled
           </label>
-          <button type="submit">Create notification</button>
+          <button type="submit" id="admin-notification-submit">Create notification</button>
         </form>
         <div class="admin-notification-library">
           <h3>Recent notifications</h3>
@@ -138,8 +141,13 @@ window.AdminNotificationsUI = window.AdminNotificationsUI || {};
               <div>
                 <strong>${escape(item.title)}</strong>
                 <p>${escape(item.message)}</p>
-                <span>${escape(pretty(item.category || "custom_manual_notification"))} · ${escape(scheduleLabel(item))}</span>
-                <span>${escape(item.link_type || "none")}${item.link_url ? ` · ${escape(item.link_url)}` : ""}</span>
+                <span>${escape(pretty(item.category || "custom_manual_notification"))} &middot; ${escape(scheduleLabel(item))}</span>
+                <span>${escape(item.link_type || "none")}${item.link_url ? ` &middot; ${escape(item.link_url)}` : ""}</span>
+                <span class="admin-notification-kind">${item.is_template ? "Schedule/Repeat rule" : "Sent notification"}</span>
+              </div>
+              <div class="admin-notification-actions">
+                <button type="button" class="admin-notification-select" data-id="${Number(item.id)}">Manage</button>
+                <button type="button" class="admin-notification-delete" data-id="${Number(item.id)}">Delete</button>
               </div>
             </div>
           `).join("") : `<div class="admin-notification-empty">No notifications yet.</div>`}

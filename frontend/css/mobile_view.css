@@ -110,9 +110,19 @@ body.mobile-browser-view .website-header-actions {
   gap: 8px;
 }
 
+body.mobile-browser-view .website-header-actions .voxi-notification-bell {
+  width: 38px;
+  height: 38px;
+  border-radius: 15px;
+  flex: 0 0 38px;
+}
+
 body.mobile-browser-view .website-balance-button {
+  height: 38px;
+  min-width: 62px;
   padding-left: 10px;
   padding-right: 10px;
+  flex: 0 0 auto;
 }
 
 body.mobile-browser-view .website-profile-button {

@@ -101,6 +101,25 @@ window.VoxiNotificationsUI = window.VoxiNotificationsUI || {};
     drawer.querySelectorAll(".voxi-notification-card").forEach((card) => {
       card.addEventListener("click", () => window.VoxiNotifications?.openItem?.(Number(card.dataset.id)));
     });
+    VoxiNotificationsUI.observeVisibleCards(drawer);
+  };
+
+  VoxiNotificationsUI.observeVisibleCards = function (drawer) {
+    const list = drawer?.querySelector(".voxi-notification-list");
+    const cards = Array.from(drawer?.querySelectorAll(".voxi-notification-card.is-unread") || []);
+    if (!list || !cards.length || !("IntersectionObserver" in window)) {
+      cards.forEach((card) => window.VoxiNotifications?.trackVisibleRead?.(card, true));
+      return;
+    }
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        window.VoxiNotifications?.trackVisibleRead?.(entry.target, entry.isIntersecting && entry.intersectionRatio >= 0.8);
+      });
+    }, {
+      root: list,
+      threshold: [0, 0.8, 1]
+    });
+    cards.forEach((card) => observer.observe(card));
   };
 
   VoxiNotificationsUI.expandMessage = function (item) {

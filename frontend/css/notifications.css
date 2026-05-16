@@ -82,11 +82,35 @@ body.notifications-open #screen-home .home-header {
 }
 
 #screen-home .home-notification-slot {
-  margin-left: auto;
+  margin-left: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 #screen-home .home-notification-slot + .home-balance {
   margin-left: 8px;
+}
+
+body.view-miniapp #screen-home .home-header,
+body.mobile-browser-view #screen-home .home-header {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 8px;
+}
+
+body.view-miniapp #screen-home .home-notification-slot .voxi-notification-bell,
+body.mobile-browser-view #screen-home .home-notification-slot .voxi-notification-bell {
+  width: 40px;
+  height: 40px;
+  border-radius: 16px;
+}
+
+body.view-miniapp #screen-home .home-balance,
+body.mobile-browser-view #screen-home .home-balance {
+  min-width: 74px;
+  height: 40px;
+  padding: 8px 10px;
+  gap: 6px;
 }
 
 .voxi-notification-drawer {
@@ -340,6 +364,29 @@ body.notifications-open #screen-home .home-header {
   padding: 0;
 }
 
+.admin-notification-editing {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-radius: 16px;
+  background: #eaf7ff;
+  color: #0284c7;
+  padding: 10px 12px;
+  font-weight: 900;
+}
+
+.admin-notification-editing[hidden] {
+  display: none !important;
+}
+
+.admin-notification-editing button {
+  min-height: 34px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #0284c7;
+}
+
 .admin-notification-grid {
   display: grid;
   grid-template-columns: 0.8fr 1.2fr;
@@ -360,6 +407,7 @@ body.notifications-open #screen-home .home-header {
   gap: 12px;
   padding: 12px;
   margin-bottom: 10px;
+  align-items: flex-start;
 }
 
 .admin-notification-row.is-template {
@@ -391,6 +439,36 @@ body.notifications-open #screen-home .home-header {
   font-weight: 800;
 }
 
+.admin-notification-kind {
+  color: #00a9ea !important;
+}
+
+.admin-notification-actions {
+  margin-left: auto;
+  display: grid;
+  gap: 8px;
+  min-width: 96px;
+}
+
+.admin-notification-actions button {
+  border: 0;
+  border-radius: 13px;
+  min-height: 34px;
+  padding: 0 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.admin-notification-select {
+  background: #eaf7ff;
+  color: #0284c7;
+}
+
+.admin-notification-delete {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
 @keyframes voxiBellAttention {
   0%, 100% { transform: rotate(0deg) scale(1); }
   24% { transform: rotate(-7deg) scale(1.04); }
@@ -406,5 +484,14 @@ body.notifications-open #screen-home .home-header {
 
   .admin-notification-grid {
     grid-template-columns: 1fr;
+  }
+
+  .admin-notification-row {
+    flex-wrap: wrap;
+  }
+
+  .admin-notification-actions {
+    width: 100%;
+    grid-template-columns: 1fr 1fr;
   }
 }

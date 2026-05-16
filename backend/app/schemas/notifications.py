@@ -67,5 +67,9 @@ class NotificationIn(BaseModel):
     is_enabled: bool = True
 
 
+class NotificationUpdateIn(NotificationIn):
+    pass
+
+
 class NotificationReadIn(BaseModel):
     telegram_id: Optional[int] = None

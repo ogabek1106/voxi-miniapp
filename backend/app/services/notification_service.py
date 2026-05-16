@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from sqlalchemy import or_
@@ -40,6 +40,14 @@ def normalize_repeat_hours(value: int | None) -> int | None:
 
 def iso(value: datetime | None) -> str | None:
     return value.isoformat() if value else None
+
+
+def utc_naive(value: datetime | None) -> datetime | None:
+    if not value:
+        return None
+    if value.tzinfo:
+        return value.astimezone(timezone.utc).replace(tzinfo=None)
+    return value
 
 
 def serialize_notification(notification: AppNotification, read_ids: set[int] | None = None) -> dict:
@@ -145,13 +153,19 @@ def create_notification(
 ) -> AppNotification:
     mode = normalize_schedule_mode(schedule_mode)
     repeat_hours = normalize_repeat_hours(repeat_interval_hours)
+    scheduled_at = utc_naive(scheduled_at)
     now = datetime.utcnow()
     is_template = mode in {"scheduled", "repeat"}
     next_send_at = None
+    should_send_repeat_now = False
     if mode == "scheduled":
         next_send_at = scheduled_at
     elif mode == "repeat":
-        next_send_at = scheduled_at or now + timedelta(hours=repeat_hours or 24)
+        if scheduled_at and scheduled_at > now:
+            next_send_at = scheduled_at
+        else:
+            should_send_repeat_now = True
+            next_send_at = now + timedelta(hours=repeat_hours or 24)
 
     notification = AppNotification(
         category=normalize_category(category),
@@ -174,9 +188,79 @@ def create_notification(
         updated_at=now,
     )
     db.add(notification)
+    if should_send_repeat_now and notification.is_enabled:
+        db.flush()
+        clone_delivery_from_template(db, notification, now)
+        notification.sent_count = 1
+        notification.last_sent_at = now
+        notification.updated_at = now
+        if notification.max_send_count and notification.sent_count >= notification.max_send_count:
+            notification.is_enabled = False
     db.commit()
     db.refresh(notification)
     return notification
+
+
+def update_notification(
+    db: Session,
+    notification_id: int,
+    *,
+    title: str,
+    message: str,
+    category: str | None = None,
+    image_url: str | None = None,
+    link_url: str | None = None,
+    link_type: str | None = None,
+    schedule_mode: str | None = None,
+    scheduled_at: datetime | None = None,
+    repeat_interval_hours: int | None = None,
+    max_send_count: int | None = None,
+    cooldown_hours: int | None = None,
+    is_enabled: bool = True,
+) -> AppNotification | None:
+    row = db.query(AppNotification).filter(AppNotification.id == notification_id).first()
+    if not row:
+        return None
+
+    mode = normalize_schedule_mode(schedule_mode)
+    repeat_hours = normalize_repeat_hours(repeat_interval_hours)
+    scheduled_at = utc_naive(scheduled_at)
+    now = datetime.utcnow()
+    row.category = normalize_category(category)
+    row.title = (title or "").strip()
+    row.message = (message or "").strip()
+    row.image_url = (image_url or "").strip() or None
+    row.link_url = (link_url or "").strip() or None
+    row.link_type = normalize_link_type(link_type)
+    row.schedule_mode = mode
+    row.scheduled_at = scheduled_at
+    row.repeat_interval_hours = repeat_hours
+    row.max_send_count = max_send_count if max_send_count and max_send_count > 0 else None
+    row.cooldown_hours = cooldown_hours if cooldown_hours and cooldown_hours > 0 else None
+    row.is_enabled = bool(is_enabled)
+    row.is_template = mode in {"scheduled", "repeat"}
+    if mode == "scheduled":
+        row.next_send_at = scheduled_at
+    elif mode == "repeat":
+        if not row.next_send_at or row.next_send_at <= now:
+            row.next_send_at = (scheduled_at if scheduled_at and scheduled_at > now else now + timedelta(hours=repeat_hours or 24))
+    else:
+        row.next_send_at = None
+        row.is_template = False
+    row.updated_at = now
+    db.commit()
+    db.refresh(row)
+    return row
+
+
+def delete_notification(db: Session, notification_id: int) -> bool:
+    row = db.query(AppNotification).filter(AppNotification.id == notification_id).first()
+    if not row:
+        return False
+    db.query(AppNotificationRead).filter(AppNotificationRead.notification_id == notification_id).delete(synchronize_session=False)
+    db.delete(row)
+    db.commit()
+    return True
 
 
 def resolve_user(db: Session, telegram_id: int | None, session_user: User | None) -> User | None:
