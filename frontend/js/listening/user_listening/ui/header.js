@@ -18,37 +18,8 @@ UserListening.renderHeader = function () {
         gap: 6px;
         height: 30px;
       ">
-        <div id="header-timer" style="
-          flex: 1;
-          position: relative;
-          height: 100%;
-          border-radius: 6px;
-          background: #e5e5ea;
-          overflow: hidden;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: 700;
-          font-size: 12px;
-        ">
-          <div id="timer-fill" style="
-            position: absolute;
-            left: 0;
-            top: 0;
-            height: 100%;
-            width: 100%;
-            background: #0ea5e9;
-            transition: width 1s linear;
-          "></div>
-          <span id="timer-text" style="
-            position: relative;
-            z-index: 2;
-            color: #fff;
-          ">60:00</span>
-        </div>
-
         <div id="header-questions" style="
-          flex: 1;
+          flex: 1 1 100%;
           position: relative;
           height: 100%;
           border-radius: 6px;
@@ -262,7 +233,11 @@ UserListening.applyHighlight = function (range) {
 
 UserListening.initHeader = function (data) {
   UserListening.__timerAutoSubmitted = false;
-  UserListening.initReadingTimer(data?.timer, data);
+  if (window.__UserListeningTimer) {
+    clearInterval(window.__UserListeningTimer);
+    window.__UserListeningTimer = null;
+  }
+  UserListening.__timerLeftSec = Number.POSITIVE_INFINITY;
   UserListening.initQuestionCounter();
   UserListening.initSubmitButton();
 
@@ -531,13 +506,11 @@ UserListening.initQuestionCounter = function () {
     return controls.some(fieldHasValue);
   }
 
-  function buildDropdown(questions, answeredSet, lessThanTenMinLeft) {
+  function buildDropdown(questions, answeredSet) {
     dropdown.innerHTML = questions.map((question) => {
       const answered = answeredSet.has(question.qid);
-      const bg = answered
-        ? "#dcfce7"
-        : (lessThanTenMinLeft ? "#fee2e2" : "#f8fafc");
-      const color = answered ? "#166534" : (lessThanTenMinLeft ? "#991b1b" : "#111827");
+      const bg = answered ? "#dcfce7" : "#f8fafc";
+      const color = answered ? "#166534" : "#111827";
       return `
         <button type="button" data-question-id="${question.qid}" style="
           width: 100%;
@@ -563,12 +536,11 @@ UserListening.initQuestionCounter = function () {
     const solved = answeredSet.size;
     const ratio = total > 0 ? solved / total : 0;
     const percent = ratio * 100;
-    const lessThanTenMinLeft = Number(UserListening.__timerLeftSec || 0) <= 10 * 60;
 
     text.textContent = `${solved}/${total}`;
     fill.style.width = `${percent}%`;
     fill.style.background = UserListening.mixColor([220, 38, 38], [34, 197, 94], ratio);
-    buildDropdown(questions, answeredSet, lessThanTenMinLeft);
+    buildDropdown(questions, answeredSet);
     UserListening.__questionList = questions;
   }
 
@@ -597,12 +569,6 @@ UserListening.initQuestionCounter = function () {
     dropdown.style.display = "none";
   };
   document.addEventListener("click", UserListening.__closeQuestionsDropdown);
-
-  if (UserListening.__timerTickListener) {
-    document.removeEventListener("UserListening:timer-tick", UserListening.__timerTickListener);
-  }
-  UserListening.__timerTickListener = updateQuestionProgress;
-  document.addEventListener("UserListening:timer-tick", UserListening.__timerTickListener);
 
   content.removeEventListener("input", UserListening.__updateQuestionProgress || function () {});
   content.removeEventListener("change", UserListening.__updateQuestionProgress || function () {});
