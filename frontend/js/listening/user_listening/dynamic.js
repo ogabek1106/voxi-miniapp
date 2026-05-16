@@ -95,6 +95,56 @@ UserListening.storeCurrentAnswers = function () {
   };
 };
 
+UserListening.startPlaybackRun = function () {
+  UserListening.__exitRequested = false;
+  UserListening.__playbackRunId = (Number(UserListening.__playbackRunId || 0) || 0) + 1;
+  return UserListening.__playbackRunId;
+};
+
+UserListening.isPlaybackRunActive = function (runId) {
+  return !UserListening.__exitRequested && runId === UserListening.__playbackRunId;
+};
+
+UserListening.stopCurrentAudio = function () {
+  const audio = UserListening.__currentAudio;
+  if (!audio) return;
+
+  try {
+    audio.onended = null;
+    audio.onerror = null;
+    audio.ontimeupdate = null;
+    audio.onloadedmetadata = null;
+    audio.onpause = null;
+    audio.onplay = null;
+    audio.pause();
+    audio.src = "";
+    audio.load?.();
+  } catch (_) {}
+
+  UserListening.__currentAudio = null;
+};
+
+UserListening.cancelListeningPlayback = function () {
+  UserListening.__exitRequested = true;
+  UserListening.__playbackRunId = (Number(UserListening.__playbackRunId || 0) || 0) + 1;
+
+  if (UserListening.__nextPartTimeout) {
+    clearTimeout(UserListening.__nextPartTimeout);
+    UserListening.__nextPartTimeout = null;
+  }
+
+  UserListening.stopCurrentAudio();
+
+  if (UserListening.__checkSoundAudio) {
+    try {
+      UserListening.__checkSoundAudio.pause();
+      UserListening.__checkSoundAudio.src = "";
+      UserListening.__checkSoundAudio.load?.();
+    } catch (_) {}
+    UserListening.__checkSoundAudio = null;
+  }
+};
+
 UserListening.renderReadiness = function (container, data) {
   if (!container) return;
 
@@ -140,6 +190,8 @@ UserListening.startListeningMode = function (container, data) {
     return;
   }
 
+  const runId = UserListening.startPlaybackRun();
+
   container.innerHTML = `
     <div class="listening-intro-screen">
       <div class="listening-intro-card">
@@ -154,9 +206,16 @@ UserListening.startListeningMode = function (container, data) {
   const audio = new Audio(UserListening.toMediaUrl(introAudioUrl));
   audio.preload = "auto";
   UserListening.__currentAudio = audio;
-  audio.onended = () => UserListening.renderTest(container, data, { activeSectionIndex: 0, playPart: true });
-  audio.onerror = () => UserListening.renderTest(container, data, { activeSectionIndex: 0, playPart: true });
+  audio.onended = () => {
+    if (!UserListening.isPlaybackRunActive(runId)) return;
+    UserListening.renderTest(container, data, { activeSectionIndex: 0, playPart: true });
+  };
+  audio.onerror = () => {
+    if (!UserListening.isPlaybackRunActive(runId)) return;
+    UserListening.renderTest(container, data, { activeSectionIndex: 0, playPart: true });
+  };
   audio.play().catch(() => {
+    if (!UserListening.isPlaybackRunActive(runId)) return;
     const status = container.querySelector(".listening-audio-status");
     if (status) {
       status.hidden = false;
@@ -238,11 +297,9 @@ UserListening.updateTrackline = function (audio) {
 
 UserListening.playPartAudioOnce = function (container, data, section, sectionIndex) {
   if (!section?.audio_url) return;
-  if (UserListening.__currentAudio) {
-    UserListening.__currentAudio.pause();
-    UserListening.__currentAudio = null;
-  }
+  UserListening.stopCurrentAudio();
 
+  const runId = UserListening.startPlaybackRun();
   const audio = new Audio(UserListening.toMediaUrl(section.audio_url));
   audio.preload = "auto";
   UserListening.__currentAudio = audio;
@@ -251,14 +308,17 @@ UserListening.playPartAudioOnce = function (container, data, section, sectionInd
   audio.ontimeupdate = () => UserListening.updateTrackline(audio);
   audio.onloadedmetadata = () => UserListening.updateTrackline(audio);
   audio.onended = () => {
+    if (!UserListening.isPlaybackRunActive(runId)) return;
     UserListening.updateTrackline(audio);
     UserListening.advanceListeningPart(container, data, sectionIndex);
   };
   audio.play().catch(() => {
+    if (!UserListening.isPlaybackRunActive(runId)) return;
     const notice = document.getElementById("listening-audio-notice");
     if (notice) {
       notice.textContent = "Audio is ready. Tap here once to start the track.";
       notice.onclick = () => {
+        if (!UserListening.isPlaybackRunActive(runId)) return;
         notice.onclick = null;
         notice.textContent = "Playing audio...";
         audio.play().catch(() => {});
@@ -309,7 +369,60 @@ UserListening.finishListeningFlow = function () {
   }
 
   UserListening.__nextPartTimeout = setTimeout(() => {
+    if (UserListening.__exitRequested) return;
     UserListening.submitReading({ auto: true, skipSave: true });
+  }, 2000);
+};
+
+UserListening.playAfterInstructionThen = function (container, data, section, onDone) {
+  const finishOnce = (() => {
+    let finished = false;
+    return () => {
+      if (finished || UserListening.__exitRequested) return;
+      finished = true;
+      if (typeof onDone === "function") onDone();
+    };
+  })();
+
+  if (!section?.global_instruction_after_audio_url) {
+    UserListening.__nextPartTimeout = setTimeout(finishOnce, 2000);
+    return;
+  }
+
+  UserListening.__nextPartTimeout = setTimeout(() => {
+    if (UserListening.__exitRequested) return;
+    const runId = UserListening.startPlaybackRun();
+    const audio = new Audio(UserListening.toMediaUrl(section.global_instruction_after_audio_url));
+    audio.preload = "auto";
+    UserListening.__currentAudio = audio;
+    UserListening.showTrackline();
+    UserListening.bindAdminAudioControls(audio);
+    audio.ontimeupdate = () => UserListening.updateTrackline(audio);
+    audio.onloadedmetadata = () => UserListening.updateTrackline(audio);
+    audio.onended = () => {
+      if (!UserListening.isPlaybackRunActive(runId)) return;
+      UserListening.updateTrackline(audio);
+      finishOnce();
+    };
+    audio.onerror = () => {
+      if (!UserListening.isPlaybackRunActive(runId)) return;
+      finishOnce();
+    };
+    audio.play().catch(() => {
+      if (!UserListening.isPlaybackRunActive(runId)) return;
+      const notice = document.getElementById("listening-audio-notice");
+      if (notice) {
+        notice.textContent = "Audio is ready. Tap here once to continue.";
+        notice.onclick = () => {
+          if (!UserListening.isPlaybackRunActive(runId)) return;
+          notice.onclick = null;
+          notice.textContent = "Audio will play once only. Pausing and rewinding are not available.";
+          audio.play().catch(finishOnce);
+        };
+      } else {
+        finishOnce();
+      }
+    });
   }, 2000);
 };
 
@@ -319,7 +432,7 @@ UserListening.advanceListeningPart = function (container, data, completedIndex) 
   const nextIndex = completedIndex + 1;
   const current = sections[completedIndex] || {};
   if (nextIndex >= sections.length) {
-    UserListening.finishListeningFlow();
+    UserListening.playAfterInstructionThen(container, data, current, UserListening.finishListeningFlow);
     return;
   }
 
@@ -333,44 +446,7 @@ UserListening.advanceListeningPart = function (container, data, completedIndex) 
     UserListening.__nextPartTimeout = null;
   }
 
-  if (!current.global_instruction_after_audio_url) {
-    UserListening.__nextPartTimeout = setTimeout(renderNext, 2000);
-    return;
-  }
-
-  UserListening.__nextPartTimeout = setTimeout(() => {
-    let moved = false;
-    const moveNextOnce = () => {
-      if (moved) return;
-      moved = true;
-      renderNext();
-    };
-    const audio = new Audio(UserListening.toMediaUrl(current.global_instruction_after_audio_url));
-    audio.preload = "auto";
-    UserListening.__currentAudio = audio;
-    UserListening.showTrackline();
-    UserListening.bindAdminAudioControls(audio);
-    audio.ontimeupdate = () => UserListening.updateTrackline(audio);
-    audio.onloadedmetadata = () => UserListening.updateTrackline(audio);
-    audio.onended = () => {
-      UserListening.updateTrackline(audio);
-      moveNextOnce();
-    };
-    audio.onerror = moveNextOnce;
-    audio.play().catch(() => {
-      const notice = document.getElementById("listening-audio-notice");
-      if (notice) {
-        notice.textContent = "Audio is ready. Tap here once to continue.";
-        notice.onclick = () => {
-          notice.onclick = null;
-          notice.textContent = "Audio will play once only. Pausing and rewinding are not available.";
-          audio.play().catch(moveNextOnce);
-        };
-      } else {
-        moveNextOnce();
-      }
-    });
-  }, 2000);
+  UserListening.playAfterInstructionThen(container, data, current, renderNext);
 };
 
 UserListening.renderPassage = function (section, sectionIndex, startingQuestionNumber = 1) {

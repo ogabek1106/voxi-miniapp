@@ -170,22 +170,12 @@ UserListening.renderSubmitSection = function () {
 };
 
 UserListening.exitToHome = function () {
+  if (typeof UserListening.cancelListeningPlayback === "function") {
+    UserListening.cancelListeningPlayback();
+  }
+
   if (UserListening.__mockId && !UserListening.__isSubmitted && typeof UserListening.saveProgress === "function") {
     UserListening.saveProgress(UserListening.__mockId, { keepalive: true }).catch(() => {});
-  }
-
-  if (UserListening.__nextPartTimeout) {
-    clearTimeout(UserListening.__nextPartTimeout);
-    UserListening.__nextPartTimeout = null;
-  }
-
-  if (UserListening.__currentAudio) {
-    try {
-      UserListening.__currentAudio.pause();
-      UserListening.__currentAudio.src = "";
-      UserListening.__currentAudio.load?.();
-    } catch (_) {}
-    UserListening.__currentAudio = null;
   }
 
   window.__activeExamPart = null;
