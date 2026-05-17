@@ -5,7 +5,7 @@ window.VCoinUI = window.VCoinUI || {};
     full_mock: 10,
     separate_block: 3
   };
-  const BUY_VCOIN_BOT_URL = "https://t.me/voxi_aibot?start=buy_vcoin";
+  const DEFAULT_PURCHASE_AMOUNT = 10;
 
   function normalizeTelegramId(value) {
     const id = Number(value || 0);
@@ -74,7 +74,7 @@ window.VCoinUI = window.VCoinUI || {};
         padding: 16px 16px 20px;
         box-shadow: 0 -14px 40px rgba(20,40,60,0.20);
         display: grid;
-        grid-template-rows: auto auto auto auto minmax(0, 1fr) auto;
+        grid-template-rows: auto auto auto auto auto minmax(0, 1fr) auto;
         font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
       }
 
@@ -152,6 +152,76 @@ window.VCoinUI = window.VCoinUI || {};
         display: grid;
         gap: 8px;
         margin-top: 12px;
+      }
+
+      .vcoin-purchase-box {
+        margin-top: 12px;
+        padding: 12px;
+        border-radius: 18px;
+        background: #f8fbfd;
+        border: 1px solid rgba(0,186,255,0.12);
+        display: grid;
+        gap: 10px;
+      }
+
+      .vcoin-purchase-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .vcoin-amount-input,
+      .vcoin-promo-input {
+        width: 118px;
+        height: 42px;
+        border-radius: 12px;
+        border: 1px solid rgba(20,40,60,0.14);
+        background: #fff;
+        padding: 0 12px;
+        font-weight: 900;
+        color: #17212B;
+        box-sizing: border-box;
+      }
+
+      .vcoin-promo-input {
+        width: 100%;
+      }
+
+      .vcoin-promo-toggle {
+        border: 0;
+        background: transparent;
+        color: #00a6e2;
+        padding: 0;
+        height: auto;
+        font-size: 13px;
+        font-weight: 900;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .vcoin-promo-line {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .vcoin-apply-promo-btn {
+        width: 74px;
+        height: 42px !important;
+        border-radius: 12px !important;
+        background: #eef8ff !important;
+        color: #008fc4 !important;
+      }
+
+      .vcoin-total-line {
+        padding-top: 8px;
+        border-top: 1px solid rgba(20,40,60,0.08);
+      }
+
+      .vcoin-total-line strong {
+        font-size: 18px;
       }
 
       .vcoin-price-row,
@@ -396,6 +466,50 @@ window.VCoinUI = window.VCoinUI || {};
     return Array.isArray(data?.items) ? data.items : [];
   }
 
+  async function fetchSettings() {
+    try {
+      const data = await apiGet("/vcoins/settings");
+      return { exchange_rate_uzs: Number(data?.exchange_rate_uzs || 5000) };
+    } catch (_) {
+      return { exchange_rate_uzs: 5000 };
+    }
+  }
+
+  function formatMoney(amount) {
+    return `${Number(amount || 0).toLocaleString("uz-UZ")} UZS`;
+  }
+
+  async function quotePurchase(coins, promoCode) {
+    const data = await apiPost("/vcoins/quote", {
+      coins: Number(coins || 0),
+      promo_code: promoCode || null
+    });
+    return data?.quote || null;
+  }
+
+  async function createPaymentIntent(telegramId, coins, promoCode) {
+    const data = await apiPost("/vcoins/payment-intents", {
+      telegram_id: Number(telegramId),
+      coins: Number(coins || 0),
+      promo_code: promoCode || null
+    });
+    return data?.payment || null;
+  }
+
+  function renderQuote(quote, fallbackRate) {
+    const rate = Number(quote?.exchange_rate_uzs || fallbackRate || 5000);
+    const coins = Number(quote?.coins || DEFAULT_PURCHASE_AMOUNT);
+    const subtotal = Number(quote?.subtotal_amount || (coins * rate));
+    const discount = Number(quote?.discount_amount || 0);
+    const total = Number(quote?.final_amount ?? (subtotal - discount));
+    return `
+      <div class="vcoin-purchase-row"><span class="vcoin-muted">Rate</span><strong>1 = ${formatMoney(rate)}</strong></div>
+      <div class="vcoin-purchase-row"><span class="vcoin-muted">Subtotal</span><strong>${formatMoney(subtotal)}</strong></div>
+      ${discount > 0 ? `<div class="vcoin-purchase-row"><span class="vcoin-muted">Promo discount</span><strong class="vcoin-delta-plus">-${formatMoney(discount)}</strong></div>` : ""}
+      <div class="vcoin-purchase-row vcoin-total-line"><span class="vcoin-muted">Total to pay</span><strong>${formatMoney(total)}</strong></div>
+    `;
+  }
+
   window.VCoinUI.openBalanceSheet = async function () {
     ensureStyles();
     closeSheet();
@@ -423,13 +537,29 @@ window.VCoinUI = window.VCoinUI || {};
           <div class="vcoin-price-row"><span>Single section</span><strong class="vcoin-price-label">3 <img class="vcoin-icon" src="./assets/vcoin.png" alt="" aria-hidden="true"></strong></div>
         </div>
 
+        <div class="vcoin-purchase-box">
+          <div class="vcoin-purchase-row">
+            <div>
+              <div style="font-weight:900;">Buy custom amount</div>
+              <div class="vcoin-muted">Choose how many V-Coins you need.</div>
+            </div>
+            <input class="vcoin-amount-input" id="vcoin-buy-amount" type="number" min="1" step="1" value="${DEFAULT_PURCHASE_AMOUNT}">
+          </div>
+          <button type="button" class="vcoin-promo-toggle" id="vcoin-promo-toggle">Have a promo code?</button>
+          <div class="vcoin-promo-line" id="vcoin-promo-line" hidden>
+            <input class="vcoin-promo-input" id="vcoin-promo-code" placeholder="Promo code">
+            <button type="button" class="vcoin-apply-promo-btn" id="vcoin-apply-promo">Apply</button>
+          </div>
+          <div id="vcoin-quote-box">${renderQuote(null, 5000)}</div>
+        </div>
+
         <div class="vcoin-history-section">
           <div style="font-size:15px; font-weight:900; margin-bottom:2px;">Balance history</div>
           <div class="vcoin-history-list" id="vcoin-ledger-list">${renderHistorySkeleton()}</div>
         </div>
 
         <div class="vcoin-sheet-actions">
-          <a class="vcoin-buy-btn" href="${BUY_VCOIN_BOT_URL}" target="_blank" rel="noopener">Buy V-Coin</a>
+          <button class="vcoin-buy-btn" id="vcoin-create-payment-btn">Buy V-Coin</button>
           <button class="vcoin-cancel-btn" id="vcoin-close-btn">Close</button>
         </div>
       </div>
@@ -443,12 +573,67 @@ window.VCoinUI = window.VCoinUI || {};
 
     document.getElementById("vcoin-close-btn").onclick = closeSheet;
 
+    let appliedPromo = "";
+    let currentQuote = null;
+    let currentRate = 5000;
+    const amountInput = document.getElementById("vcoin-buy-amount");
+    const quoteBox = document.getElementById("vcoin-quote-box");
+
+    async function refreshQuote() {
+      const coins = Math.max(1, Number(amountInput?.value || DEFAULT_PURCHASE_AMOUNT));
+      if (amountInput) amountInput.value = String(coins);
+      quoteBox.innerHTML = `<div class="vcoin-muted">Calculating...</div>`;
+      try {
+        currentQuote = await quotePurchase(coins, appliedPromo);
+        quoteBox.innerHTML = renderQuote(currentQuote, currentRate);
+      } catch (error) {
+        appliedPromo = "";
+        currentQuote = await quotePurchase(coins, null);
+        quoteBox.innerHTML = `${renderQuote(currentQuote, currentRate)}<div class="vcoin-muted" style="color:#dc2626;">Promo code could not be applied.</div>`;
+      }
+    }
+
+    amountInput?.addEventListener("change", refreshQuote);
+    amountInput?.addEventListener("input", () => {
+      window.clearTimeout(window.__vcoinQuoteTimer);
+      window.__vcoinQuoteTimer = window.setTimeout(refreshQuote, 350);
+    });
+    document.getElementById("vcoin-promo-toggle")?.addEventListener("click", () => {
+      document.getElementById("vcoin-promo-line")?.removeAttribute("hidden");
+      document.getElementById("vcoin-promo-code")?.focus();
+    });
+    document.getElementById("vcoin-apply-promo")?.addEventListener("click", async () => {
+      appliedPromo = String(document.getElementById("vcoin-promo-code")?.value || "").trim().toUpperCase();
+      await refreshQuote();
+    });
+    document.getElementById("vcoin-create-payment-btn")?.addEventListener("click", async () => {
+      const id = await resolveTelegramId();
+      if (!id) {
+        alert("Please log in with Telegram before buying V-Coins.");
+        return;
+      }
+      const button = document.getElementById("vcoin-create-payment-btn");
+      if (button) button.disabled = true;
+      try {
+        const coins = Number(amountInput?.value || DEFAULT_PURCHASE_AMOUNT);
+        const payment = await createPaymentIntent(id, coins, appliedPromo);
+        if (!payment?.bot_link) throw new Error("missing_bot_link");
+        window.open(payment.bot_link, "_blank", "noopener");
+      } catch (error) {
+        alert("Could not create payment. Please try again.");
+      } finally {
+        if (button) button.disabled = false;
+      }
+    });
+
     try {
-      const [balance, ledger] = await Promise.all([fetchBalance(), fetchLedger()]);
+      const [balance, ledger, settings] = await Promise.all([fetchBalance(), fetchLedger(), fetchSettings()]);
+      currentRate = Number(settings?.exchange_rate_uzs || 5000);
       const balanceEl = document.getElementById("vcoin-sheet-balance-value");
       const ledgerEl = document.getElementById("vcoin-ledger-list");
       if (balanceEl) balanceEl.textContent = String(balance);
       if (ledgerEl) ledgerEl.innerHTML = renderLedger(ledger);
+      await refreshQuote();
     } catch (error) {
       const ledgerEl = document.getElementById("vcoin-ledger-list");
       if (ledgerEl) ledgerEl.innerHTML = `<div class="vcoin-muted" style="padding:10px 0;">Could not load balance details.</div>`;
@@ -479,7 +664,7 @@ window.VCoinUI = window.VCoinUI || {};
           ${serviceName} costs ${required} V-Coins. Your balance is ${balance} V-Coins.
         </p>
         <div class="vcoin-sheet-actions">
-          <a class="vcoin-buy-btn" href="${BUY_VCOIN_BOT_URL}" target="_blank" rel="noopener">Buy V-Coin</a>
+          <button class="vcoin-buy-btn" id="vcoin-open-wallet-buy">Buy V-Coin</button>
           <button class="vcoin-cancel-btn" id="vcoin-close-btn">Cancel</button>
         </div>
       </div>
@@ -490,6 +675,7 @@ window.VCoinUI = window.VCoinUI || {};
       if (event.target === backdrop) closeSheet();
     });
     document.getElementById("vcoin-close-btn").onclick = closeSheet;
+    document.getElementById("vcoin-open-wallet-buy").onclick = window.VCoinUI.openBalanceSheet;
   };
 
   window.VCoinUI.ensureAccess = async function ({ contentType, referenceId, serviceName }) {

@@ -763,6 +763,14 @@ def ensure_vcoin_schema():
             "raw_payload JSON NULL"
             ");"
         ))
+        conn.execute(text("ALTER TABLE payment_requests ADD COLUMN IF NOT EXISTS payment_token VARCHAR;"))
+        conn.execute(text("ALTER TABLE payment_requests ADD COLUMN IF NOT EXISTS exchange_rate_uzs INTEGER;"))
+        conn.execute(text("ALTER TABLE payment_requests ADD COLUMN IF NOT EXISTS subtotal_amount INTEGER;"))
+        conn.execute(text("ALTER TABLE payment_requests ADD COLUMN IF NOT EXISTS promo_code VARCHAR;"))
+        conn.execute(text("ALTER TABLE payment_requests ADD COLUMN IF NOT EXISTS discount_percent INTEGER;"))
+        conn.execute(text("ALTER TABLE payment_requests ADD COLUMN IF NOT EXISTS discount_amount INTEGER;"))
+        conn.execute(text("ALTER TABLE payment_requests ADD COLUMN IF NOT EXISTS final_amount INTEGER;"))
+        conn.execute(text("ALTER TABLE payment_requests ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ;"))
         conn.execute(text(
             "CREATE INDEX IF NOT EXISTS ix_payment_requests_telegram_id "
             "ON payment_requests (telegram_id);"
@@ -774,6 +782,55 @@ def ensure_vcoin_schema():
         conn.execute(text(
             "CREATE INDEX IF NOT EXISTS ix_payment_requests_status "
             "ON payment_requests (status);"
+        ))
+        conn.execute(text(
+            "CREATE UNIQUE INDEX IF NOT EXISTS uq_payment_requests_payment_token "
+            "ON payment_requests (payment_token) WHERE payment_token IS NOT NULL;"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_payment_requests_promo_code "
+            "ON payment_requests (promo_code);"
+        ))
+
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS vcoin_payment_settings ("
+            "id INTEGER PRIMARY KEY, "
+            "exchange_rate_uzs INTEGER NOT NULL DEFAULT 5000, "
+            "updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()"
+            ");"
+        ))
+        conn.execute(text("ALTER TABLE vcoin_payment_settings ADD COLUMN IF NOT EXISTS exchange_rate_uzs INTEGER NOT NULL DEFAULT 5000;"))
+        conn.execute(text("ALTER TABLE vcoin_payment_settings ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text(
+            "INSERT INTO vcoin_payment_settings (id, exchange_rate_uzs, updated_at) "
+            "VALUES (1, 5000, NOW()) "
+            "ON CONFLICT (id) DO NOTHING;"
+        ))
+
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS vcoin_promo_codes ("
+            "id SERIAL PRIMARY KEY, "
+            "code VARCHAR NOT NULL UNIQUE, "
+            "discount_percent INTEGER NOT NULL, "
+            "is_active BOOLEAN NOT NULL DEFAULT TRUE, "
+            "expires_at TIMESTAMPTZ NULL, "
+            "usage_limit INTEGER NULL, "
+            "successful_uses INTEGER NOT NULL DEFAULT 0, "
+            "created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), "
+            "updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()"
+            ");"
+        ))
+        conn.execute(text("ALTER TABLE vcoin_promo_codes ADD COLUMN IF NOT EXISTS code VARCHAR;"))
+        conn.execute(text("ALTER TABLE vcoin_promo_codes ADD COLUMN IF NOT EXISTS discount_percent INTEGER;"))
+        conn.execute(text("ALTER TABLE vcoin_promo_codes ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT TRUE;"))
+        conn.execute(text("ALTER TABLE vcoin_promo_codes ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ;"))
+        conn.execute(text("ALTER TABLE vcoin_promo_codes ADD COLUMN IF NOT EXISTS usage_limit INTEGER;"))
+        conn.execute(text("ALTER TABLE vcoin_promo_codes ADD COLUMN IF NOT EXISTS successful_uses INTEGER NOT NULL DEFAULT 0;"))
+        conn.execute(text("ALTER TABLE vcoin_promo_codes ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text("ALTER TABLE vcoin_promo_codes ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text(
+            "CREATE UNIQUE INDEX IF NOT EXISTS uq_vcoin_promo_codes_code "
+            "ON vcoin_promo_codes (code);"
         ))
 
         conn.execute(text(
