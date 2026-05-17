@@ -194,17 +194,25 @@ window.VCoinUI = window.VCoinUI || {};
         color: #00a6e2;
         padding: 0;
         height: auto;
-        font-size: 13px;
+        min-height: 0 !important;
+        width: max-content;
+        justify-self: center;
+        font-size: 12px !important;
         font-weight: 900;
-        text-align: left;
+        text-align: center;
         cursor: pointer;
+        box-shadow: none !important;
       }
 
       .vcoin-promo-line {
-        display: grid;
+        display: none;
         grid-template-columns: 1fr auto;
         gap: 8px;
         align-items: center;
+      }
+
+      .vcoin-promo-line.is-visible {
+        display: grid;
       }
 
       .vcoin-apply-promo-btn {
@@ -531,7 +539,7 @@ window.VCoinUI = window.VCoinUI || {};
             <input class="vcoin-amount-input" id="vcoin-buy-amount" type="number" min="1" step="1" value="${DEFAULT_PURCHASE_AMOUNT}">
           </div>
           <button type="button" class="vcoin-promo-toggle" id="vcoin-promo-toggle">Have a promo code?</button>
-          <div class="vcoin-promo-line" id="vcoin-promo-line" hidden>
+          <div class="vcoin-promo-line" id="vcoin-promo-line">
             <input class="vcoin-promo-input" id="vcoin-promo-code" placeholder="Promo code">
             <button type="button" class="vcoin-apply-promo-btn" id="vcoin-apply-promo">Apply</button>
           </div>
@@ -579,7 +587,8 @@ window.VCoinUI = window.VCoinUI || {};
       window.__vcoinQuoteTimer = window.setTimeout(refreshQuote, 350);
     });
     document.getElementById("vcoin-promo-toggle")?.addEventListener("click", () => {
-      document.getElementById("vcoin-promo-line")?.removeAttribute("hidden");
+      document.getElementById("vcoin-promo-line")?.classList.add("is-visible");
+      document.getElementById("vcoin-promo-toggle")?.setAttribute("hidden", "hidden");
       document.getElementById("vcoin-promo-code")?.focus();
     });
     document.getElementById("vcoin-apply-promo")?.addEventListener("click", async () => {
