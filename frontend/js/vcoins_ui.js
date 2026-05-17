@@ -74,7 +74,7 @@ window.VCoinUI = window.VCoinUI || {};
         padding: 16px 16px 20px;
         box-shadow: 0 -14px 40px rgba(20,40,60,0.20);
         display: grid;
-        grid-template-rows: auto auto auto auto auto minmax(0, 1fr) auto;
+        grid-template-rows: auto auto auto auto minmax(0, 1fr) auto;
         font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
       }
 
@@ -510,7 +510,7 @@ window.VCoinUI = window.VCoinUI || {};
     `;
   }
 
-  window.VCoinUI.openBalanceSheet = async function () {
+  window.VCoinUI.openPurchaseSheet = async function () {
     ensureStyles();
     closeSheet();
 
@@ -520,27 +520,12 @@ window.VCoinUI = window.VCoinUI || {};
     backdrop.innerHTML = `
       <div class="vcoin-sheet" role="dialog" aria-modal="true">
         <div class="vcoin-sheet-handle"></div>
-        <h3 class="vcoin-sheet-title">V-Coin balance</h3>
-        <div class="vcoin-sheet-balance">
-          <div>
-            <div class="vcoin-muted">You have</div>
-            <div class="vcoin-sheet-balance-label">
-              <img class="vcoin-icon" src="./assets/vcoin.png" alt="" aria-hidden="true">
-              <strong id="vcoin-sheet-balance-value">...</strong>
-            </div>
-          </div>
-          <div class="vcoin-muted">V-Coins</div>
-        </div>
-
-        <div class="vcoin-price-grid">
-          <div class="vcoin-price-row"><span>Full Mock Test</span><strong class="vcoin-price-label">10 <img class="vcoin-icon" src="./assets/vcoin.png" alt="" aria-hidden="true"></strong></div>
-          <div class="vcoin-price-row"><span>Single section</span><strong class="vcoin-price-label">3 <img class="vcoin-icon" src="./assets/vcoin.png" alt="" aria-hidden="true"></strong></div>
-        </div>
+        <h3 class="vcoin-sheet-title">Buy V-Coin</h3>
 
         <div class="vcoin-purchase-box">
           <div class="vcoin-purchase-row">
             <div>
-              <div style="font-weight:900;">Buy custom amount</div>
+              <div style="font-weight:900;">Custom amount</div>
               <div class="vcoin-muted">Choose how many V-Coins you need.</div>
             </div>
             <input class="vcoin-amount-input" id="vcoin-buy-amount" type="number" min="1" step="1" value="${DEFAULT_PURCHASE_AMOUNT}">
@@ -553,14 +538,11 @@ window.VCoinUI = window.VCoinUI || {};
           <div id="vcoin-quote-box">${renderQuote(null, 5000)}</div>
         </div>
 
-        <div class="vcoin-history-section">
-          <div style="font-size:15px; font-weight:900; margin-bottom:2px;">Balance history</div>
-          <div class="vcoin-history-list" id="vcoin-ledger-list">${renderHistorySkeleton()}</div>
-        </div>
+        <div class="vcoin-history-section"></div>
 
         <div class="vcoin-sheet-actions">
-          <button class="vcoin-buy-btn" id="vcoin-create-payment-btn">Buy V-Coin</button>
-          <button class="vcoin-cancel-btn" id="vcoin-close-btn">Close</button>
+          <button class="vcoin-buy-btn" id="vcoin-create-payment-btn">Continue in Telegram</button>
+          <button class="vcoin-cancel-btn" id="vcoin-back-to-wallet-btn">Back</button>
         </div>
       </div>
     `;
@@ -570,8 +552,6 @@ window.VCoinUI = window.VCoinUI || {};
     });
     document.body.appendChild(backdrop);
     bindSheetDragToClose(backdrop.querySelector(".vcoin-sheet"));
-
-    document.getElementById("vcoin-close-btn").onclick = closeSheet;
 
     let appliedPromo = "";
     let currentQuote = null;
@@ -606,6 +586,9 @@ window.VCoinUI = window.VCoinUI || {};
       appliedPromo = String(document.getElementById("vcoin-promo-code")?.value || "").trim().toUpperCase();
       await refreshQuote();
     });
+    document.getElementById("vcoin-back-to-wallet-btn")?.addEventListener("click", () => {
+      window.VCoinUI.openBalanceSheet();
+    });
     document.getElementById("vcoin-create-payment-btn")?.addEventListener("click", async () => {
       const id = await resolveTelegramId();
       if (!id) {
@@ -627,13 +610,68 @@ window.VCoinUI = window.VCoinUI || {};
     });
 
     try {
-      const [balance, ledger, settings] = await Promise.all([fetchBalance(), fetchLedger(), fetchSettings()]);
+      const settings = await fetchSettings();
       currentRate = Number(settings?.exchange_rate_uzs || 5000);
+    } catch (_) {
+      currentRate = 5000;
+    }
+    await refreshQuote();
+  };
+
+  window.VCoinUI.openBalanceSheet = async function () {
+    ensureStyles();
+    closeSheet();
+
+    const backdrop = document.createElement("div");
+    backdrop.id = "vcoin-sheet-backdrop";
+    backdrop.className = "vcoin-sheet-backdrop";
+    backdrop.innerHTML = `
+      <div class="vcoin-sheet" role="dialog" aria-modal="true">
+        <div class="vcoin-sheet-handle"></div>
+        <h3 class="vcoin-sheet-title">V-Coin balance</h3>
+        <div class="vcoin-sheet-balance">
+          <div>
+            <div class="vcoin-muted">You have</div>
+            <div class="vcoin-sheet-balance-label">
+              <img class="vcoin-icon" src="./assets/vcoin.png" alt="" aria-hidden="true">
+              <strong id="vcoin-sheet-balance-value">...</strong>
+            </div>
+          </div>
+          <div class="vcoin-muted">V-Coins</div>
+        </div>
+
+        <div class="vcoin-price-grid">
+          <div class="vcoin-price-row"><span>Full Mock Test</span><strong class="vcoin-price-label">10 <img class="vcoin-icon" src="./assets/vcoin.png" alt="" aria-hidden="true"></strong></div>
+          <div class="vcoin-price-row"><span>Single section</span><strong class="vcoin-price-label">3 <img class="vcoin-icon" src="./assets/vcoin.png" alt="" aria-hidden="true"></strong></div>
+        </div>
+
+        <div class="vcoin-history-section">
+          <div style="font-size:15px; font-weight:900; margin-bottom:2px;">Balance history</div>
+          <div class="vcoin-history-list" id="vcoin-ledger-list">${renderHistorySkeleton()}</div>
+        </div>
+
+        <div class="vcoin-sheet-actions">
+          <button class="vcoin-buy-btn" id="vcoin-open-purchase-btn">Buy V-Coin</button>
+          <button class="vcoin-cancel-btn" id="vcoin-close-btn">Close</button>
+        </div>
+      </div>
+    `;
+
+    backdrop.addEventListener("click", (event) => {
+      if (event.target === backdrop) closeSheet();
+    });
+    document.body.appendChild(backdrop);
+    bindSheetDragToClose(backdrop.querySelector(".vcoin-sheet"));
+
+    document.getElementById("vcoin-close-btn").onclick = closeSheet;
+    document.getElementById("vcoin-open-purchase-btn").onclick = window.VCoinUI.openPurchaseSheet;
+
+    try {
+      const [balance, ledger] = await Promise.all([fetchBalance(), fetchLedger()]);
       const balanceEl = document.getElementById("vcoin-sheet-balance-value");
       const ledgerEl = document.getElementById("vcoin-ledger-list");
       if (balanceEl) balanceEl.textContent = String(balance);
       if (ledgerEl) ledgerEl.innerHTML = renderLedger(ledger);
-      await refreshQuote();
     } catch (error) {
       const ledgerEl = document.getElementById("vcoin-ledger-list");
       if (ledgerEl) ledgerEl.innerHTML = `<div class="vcoin-muted" style="padding:10px 0;">Could not load balance details.</div>`;
@@ -675,7 +713,7 @@ window.VCoinUI = window.VCoinUI || {};
       if (event.target === backdrop) closeSheet();
     });
     document.getElementById("vcoin-close-btn").onclick = closeSheet;
-    document.getElementById("vcoin-open-wallet-buy").onclick = window.VCoinUI.openBalanceSheet;
+    document.getElementById("vcoin-open-wallet-buy").onclick = window.VCoinUI.openPurchaseSheet;
   };
 
   window.VCoinUI.ensureAccess = async function ({ contentType, referenceId, serviceName }) {
