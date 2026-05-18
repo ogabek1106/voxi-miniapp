@@ -10,6 +10,7 @@ from app.config import ADMIN_IDS
 from app.deps import get_db
 from app.models import ReadingPassage, ReadingProgress, ReadingQuestion, ReadingTest, User
 from app.services.telegram_sub_gate import check_reading_access, check_channel_membership
+from app.services.premiere_service import has_active_premiere_access, is_active_premiere_pack
 from app.services.vcoin_service import require_paid_access_or_spend
 
 router = APIRouter(prefix="/mock-tests", tags=["mock-tests"])
@@ -74,6 +75,10 @@ def _require_reading_paid_access(db: Session, telegram_id: int, mock_id: int, pr
         return
     if progress and not progress.is_submitted:
         return
+    if has_active_premiere_access(db, telegram_id, mock_id):
+        return
+    if is_active_premiere_pack(db, mock_id):
+        raise HTTPException(status_code=402, detail="premiere_access_required")
     require_paid_access_or_spend(
         db=db,
         telegram_id=telegram_id,

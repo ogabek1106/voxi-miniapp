@@ -375,6 +375,12 @@ class MockPack(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False)
     status = Column(Enum(MockPackStatus), default=MockPackStatus.draft)
+    premiere_is_active = Column(Boolean, nullable=False, default=False)
+    premiere_ends_at = Column(DateTime(timezone=True), nullable=True)
+    premiere_price_uzs = Column(Integer, nullable=True)
+    premiere_label = Column(String, nullable=True)
+    premiere_description = Column(Text, nullable=True)
+    premiere_updated_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     readings = relationship(
@@ -392,6 +398,18 @@ class MockPack(Base):
         backref="mock_pack",
         cascade="all, delete-orphan"
     )
+
+
+class PremiereAccess(Base):
+    __tablename__ = "premiere_accesses"
+
+    id = Column(Integer, primary_key=True, index=True)
+    mock_pack_id = Column(Integer, ForeignKey("mock_packs.id", ondelete="CASCADE"), nullable=False, index=True)
+    telegram_id = Column(BigInteger, index=True, nullable=False)
+    payment_request_id = Column(Integer, nullable=True, index=True)
+    status = Column(String, nullable=False, default="active")
+    created_at = Column(DateTime(timezone=True), nullable=True)
+    expires_at = Column(DateTime(timezone=True), nullable=True)
 
 
 class ListeningTest(Base):
@@ -475,6 +493,23 @@ class ListeningQuestion(Base):
     meta = Column(JSON, nullable=True)
 
     block = relationship("ListeningBlock", back_populates="questions")
+
+
+class ListeningProgress(Base):
+    __tablename__ = "listening_progress"
+
+    id = Column(Integer, primary_key=True, index=True)
+    test_id = Column(Integer, ForeignKey("listening_tests.id", ondelete="CASCADE"), nullable=False)
+    telegram_id = Column(BigInteger, index=True, nullable=False)
+    session_mode = Column(String, nullable=False, default="single_block")
+    answers = Column(JSON, nullable=False, default=dict)
+    started_at = Column(DateTime(timezone=True), nullable=True)
+    updated_at = Column(DateTime(timezone=True), nullable=True)
+    submitted_at = Column(DateTime(timezone=True), nullable=True)
+    is_submitted = Column(Boolean, nullable=False, default=False)
+    raw_score = Column(Integer, nullable=True)
+    max_score = Column(Integer, nullable=True)
+    band_score = Column(Float, nullable=True)
 
 
 class WritingTestStatus(enum.Enum):

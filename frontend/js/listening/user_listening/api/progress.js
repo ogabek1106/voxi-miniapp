@@ -15,6 +15,7 @@ UserListening.saveProgress = async function (mockId, options = {}) {
   const answers = UserListening.collectSaveableAnswers();
   const payload = {
     telegram_id: userId,
+    session_mode: UserListening.__sessionMode || "single_block",
     answers
   };
 
@@ -63,7 +64,8 @@ UserListening.loadProgress = async function (mockId) {
   const userId = UserListening.getTelegramUserId();
   if (!userId || !mockId) return null;
 
-  const response = await fetch(`${window.API}/mock-tests/${mockId}/listening/resume?telegram_id=${userId}`);
+  const sessionMode = encodeURIComponent(UserListening.__sessionMode || "single_block");
+  const response = await fetch(`${window.API}/mock-tests/${mockId}/listening/resume?telegram_id=${userId}&session_mode=${sessionMode}`);
   const text = await response.text();
 
   if (response.status === 404) {
@@ -87,6 +89,7 @@ UserListening.submitProgress = async function (mockId) {
   const answers = UserListening.collectAnswers();
   const payload = {
     telegram_id: userId,
+    session_mode: UserListening.__sessionMode || "single_block",
     answers
   };
 

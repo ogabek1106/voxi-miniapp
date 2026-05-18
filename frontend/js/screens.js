@@ -58,6 +58,7 @@ window.goHome = function () {
   if (typeof window.refreshVcoinBalance === "function") {
     window.refreshVcoinBalance({ animate: true });
   }
+  window.PremiereLoader?.load?.();
 };
 
 window.goProfile = function () {

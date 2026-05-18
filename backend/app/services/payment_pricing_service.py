@@ -149,6 +149,7 @@ def create_payment_intent(
 
 
 def serialize_payment_request(payment: PaymentRequest) -> dict:
+    raw_payload = dict(payment.raw_payload or {})
     return {
         "id": payment.id,
         "telegram_id": payment.telegram_id,
@@ -162,6 +163,9 @@ def serialize_payment_request(payment: PaymentRequest) -> dict:
         "final_amount": payment.final_amount,
         "expected_price": payment.expected_price,
         "status": payment.status,
+        "payment_kind": raw_payload.get("payment_kind"),
+        "mock_pack_id": raw_payload.get("mock_pack_id"),
+        "mock_title": raw_payload.get("mock_title"),
         "expires_at": payment.expires_at.isoformat() if payment.expires_at else None,
         "created_at": payment.created_at.isoformat() if payment.created_at else None,
     }

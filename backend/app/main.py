@@ -32,6 +32,8 @@ from app.api.admin_word_shuffle import router as admin_word_shuffle_router
 from app.api.word_shuffle import router as word_shuffle_router
 from app.api.activity import router as activity_router
 from app.api.notifications import router as notifications_router
+from app.api.premiere import router as premiere_router
+from app.api.admin_premiere import router as admin_premiere_router
 from app.api.auth import router as auth_router
 from app.api.auth_google import router as auth_google_router
 from .db import (
@@ -42,6 +44,7 @@ from .db import (
     ensure_writing_schema,
     ensure_speaking_schema,
     ensure_listening_instruction_schema,
+    ensure_listening_progress_schema,
     ensure_full_mock_results_schema,
     ensure_vcoin_schema,
     ensure_announcement_schema,
@@ -52,6 +55,7 @@ from .db import (
     ensure_word_shuffle_schema,
     ensure_activity_schema,
     ensure_notification_schema,
+    ensure_premiere_schema,
 )
 from app.api.admin_upload import router as admin_upload_router
 from app.api.result_images import router as result_images_router
@@ -105,6 +109,8 @@ app.include_router(admin_word_shuffle_router)
 app.include_router(word_shuffle_router)
 app.include_router(activity_router)
 app.include_router(notifications_router)
+app.include_router(premiere_router)
+app.include_router(admin_premiere_router)
 app.include_router(auth_router)
 app.include_router(auth_google_router)
 app.mount("/media", StaticFiles(directory="/data/media"), name="media")
@@ -127,7 +133,9 @@ app.add_middleware(
 )
 
 Base.metadata.create_all(bind=engine)
+ensure_premiere_schema()
 ensure_listening_instruction_schema()
+ensure_listening_progress_schema()
 
 @app.get("/")
 async def root():

@@ -26,28 +26,44 @@ window.loadMockPacks = async function () {
   try {
     const packs = await apiGet("/admin/mock-packs");
     wrap.innerHTML = packs.length
-      ? packs.map((p) => `
-          <div style="display:flex; gap:6px; margin-bottom:8px;">
-            <button style="flex:1;" onclick="openMockPack(${p.id})">
-              📦 ${p.title} ${p.status === "published" ? "🟢" : "⚪"}
-            </button>
-            <button onclick="toggleMockPack(${p.id})" style="width:70px;">
-              ${p.status === "published" ? "Unpub" : "Publish"}
-            </button>
-            <button
-              onclick="deleteMockPack(${p.id})"
-              style="width:42px; padding:0; display:flex; align-items:center; justify-content:center;"
-            >
-              🗑
-            </button>
-          </div>
-        `).join("")
+      ? packs.map((p) => {
+          const statusDot = p.status === "published" ? "Published" : "Draft";
+          const premiere = p.premiere?.premiere_is_live ? " · PREMIERE" : "";
+          return `
+            <div style="display:grid; grid-template-columns:minmax(0,1fr) 76px 96px 42px; gap:6px; margin-bottom:8px; align-items:stretch; width:100%;">
+              <button style="min-width:0; overflow:hidden; text-overflow:ellipsis;" onclick="openMockPack(${p.id})">
+                📦 ${escapeAdminPackText(p.title)} (${statusDot}${premiere})
+              </button>
+              <button onclick="toggleMockPack(${p.id})">
+                ${p.status === "published" ? "Unpub" : "Publish"}
+              </button>
+              <button onclick="window.AdminPremiereModal?.open(${p.id})">
+                Premiere
+              </button>
+              <button
+                onclick="deleteMockPack(${p.id})"
+                style="padding:0; display:flex; align-items:center; justify-content:center;"
+              >
+                🗑
+              </button>
+            </div>
+          `;
+        }).join("")
       : `<p style="opacity:0.6;">No packs yet</p>`;
   } catch (e) {
     console.error("Load packs error:", e);
     wrap.innerHTML = `<p style="color:red;">Failed to load packs</p>`;
   }
 };
+
+function escapeAdminPackText(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 window.openMockPack = function (packId) {
   hideAllScreens();

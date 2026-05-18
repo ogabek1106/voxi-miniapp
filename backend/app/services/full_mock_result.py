@@ -9,6 +9,8 @@ from sqlalchemy.orm import Session
 
 from app.models import (
     FullMockResult,
+    ListeningProgress,
+    ListeningTest,
     MockPack,
     ReadingProgress,
     ReadingTest,
@@ -171,19 +173,23 @@ def _get_speaking_band(db: Session, mock_id: int, telegram_id: int) -> float | N
 
 
 def _get_listening_band(db: Session, mock_id: int, telegram_id: int) -> float | None:
-    # Listening score persistence is not wired yet on backend.
-    # Keep this source explicit for safe pending state until listening check is connected.
-    existing = (
-        db.query(FullMockResult)
+    test = db.query(ListeningTest).filter(ListeningTest.id == mock_id).first()
+    if not test:
+        return None
+    progress = (
+        db.query(ListeningProgress)
         .filter(
-            FullMockResult.mock_pack_id == mock_id,
-            FullMockResult.telegram_id == telegram_id,
+            ListeningProgress.test_id == test.id,
+            ListeningProgress.telegram_id == telegram_id,
+            ListeningProgress.session_mode == "full_mock",
+            ListeningProgress.is_submitted == True,  # noqa: E712
         )
+        .order_by(ListeningProgress.id.desc())
         .first()
     )
-    if not existing:
+    if not progress:
         return None
-    return _to_valid_band(existing.listening_band)
+    return _to_valid_band(progress.band_score)
 
 
 def _upsert_result_row(

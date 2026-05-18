@@ -95,6 +95,18 @@ UserListening.storeCurrentAnswers = function () {
   };
 };
 
+UserListening.persistCurrentAnswers = function () {
+  UserListening.storeCurrentAnswers();
+  if (!UserListening.__mockId || typeof UserListening.saveProgress !== "function") {
+    return Promise.resolve(null);
+  }
+
+  return UserListening.saveProgress(UserListening.__mockId).catch((error) => {
+    console.error("Listening part save failed:", error);
+    return null;
+  });
+};
+
 UserListening.startPlaybackRun = function () {
   UserListening.__exitRequested = false;
   UserListening.__playbackRunId = (Number(UserListening.__playbackRunId || 0) || 0) + 1;
@@ -362,7 +374,7 @@ UserListening.renderTest = function (container, data, options = {}) {
 };
 
 UserListening.finishListeningFlow = function () {
-  UserListening.storeCurrentAnswers();
+  UserListening.persistCurrentAnswers();
   if (UserListening.__nextPartTimeout) {
     clearTimeout(UserListening.__nextPartTimeout);
     UserListening.__nextPartTimeout = null;
@@ -427,16 +439,18 @@ UserListening.playAfterInstructionThen = function (container, data, section, onD
 };
 
 UserListening.advanceListeningPart = function (container, data, completedIndex) {
-  UserListening.storeCurrentAnswers();
   const sections = (data.sections || data.passages) || [];
   const nextIndex = completedIndex + 1;
   const current = sections[completedIndex] || {};
+  const partSave = UserListening.persistCurrentAnswers();
+
   if (nextIndex >= sections.length) {
     UserListening.playAfterInstructionThen(container, data, current, UserListening.finishListeningFlow);
     return;
   }
 
-  const renderNext = () => {
+  const renderNext = async () => {
+    await partSave;
     UserListening.storeCurrentAnswers();
     UserListening.renderTest(container, data, { activeSectionIndex: nextIndex, playPart: true });
   };

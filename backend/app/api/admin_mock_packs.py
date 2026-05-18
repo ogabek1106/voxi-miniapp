@@ -9,6 +9,7 @@ from app.models import WritingTest, WritingTask
 from app.models import SpeakingTest, SpeakingPart
 from fastapi import HTTPException
 from app.models import MockPackStatus
+from app.services.premiere_service import is_premiere_active, serialize_premiere_pack
 
 router = APIRouter(prefix="/admin/mock-packs", tags=["admin-mock-packs"])
 
@@ -25,6 +26,7 @@ def list_mock_packs(db: Session = Depends(get_db)):
             "id": p.id,
             "title": p.title,
             "status": p.status.value if hasattr(p.status, "value") else str(p.status),
+            "premiere": serialize_premiere_pack(p),
         }
         for p in packs
     ]
@@ -175,6 +177,7 @@ def toggle_mock_pack(pack_id: int, db: Session = Depends(get_db)):
 
     if pack.status == MockPackStatus.published:
         pack.status = MockPackStatus.draft
+        pack.premiere_is_active = False
     else:
         pack.status = MockPackStatus.published
 
@@ -183,5 +186,6 @@ def toggle_mock_pack(pack_id: int, db: Session = Depends(get_db)):
 
     return {
         "id": pack.id,
-        "status": pack.status.value
+        "status": pack.status.value,
+        "premiere_is_live": is_premiere_active(pack),
     }

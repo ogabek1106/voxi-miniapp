@@ -412,6 +412,122 @@ def ensure_listening_instruction_schema():
         ))
 
 
+def ensure_listening_progress_schema():
+    with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS listening_progress ("
+            "id SERIAL PRIMARY KEY, "
+            "test_id INTEGER NOT NULL, "
+            "telegram_id BIGINT NOT NULL, "
+            "session_mode VARCHAR NOT NULL DEFAULT 'single_block', "
+            "answers JSONB NOT NULL DEFAULT '{}'::jsonb, "
+            "started_at TIMESTAMPTZ NULL, "
+            "updated_at TIMESTAMPTZ NULL, "
+            "submitted_at TIMESTAMPTZ NULL, "
+            "is_submitted BOOLEAN NOT NULL DEFAULT FALSE, "
+            "raw_score INTEGER NULL, "
+            "max_score INTEGER NULL, "
+            "band_score DOUBLE PRECISION NULL"
+            ");"
+        ))
+        conn.execute(text("ALTER TABLE listening_progress ADD COLUMN IF NOT EXISTS test_id INTEGER;"))
+        conn.execute(text("ALTER TABLE listening_progress ADD COLUMN IF NOT EXISTS telegram_id BIGINT;"))
+        conn.execute(text("ALTER TABLE listening_progress ADD COLUMN IF NOT EXISTS session_mode VARCHAR NOT NULL DEFAULT 'single_block';"))
+        conn.execute(text("ALTER TABLE listening_progress ADD COLUMN IF NOT EXISTS answers JSONB NOT NULL DEFAULT '{}'::jsonb;"))
+        conn.execute(text("ALTER TABLE listening_progress ADD COLUMN IF NOT EXISTS started_at TIMESTAMPTZ;"))
+        conn.execute(text("ALTER TABLE listening_progress ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ;"))
+        conn.execute(text("ALTER TABLE listening_progress ADD COLUMN IF NOT EXISTS submitted_at TIMESTAMPTZ;"))
+        conn.execute(text("ALTER TABLE listening_progress ADD COLUMN IF NOT EXISTS is_submitted BOOLEAN NOT NULL DEFAULT FALSE;"))
+        conn.execute(text("ALTER TABLE listening_progress ADD COLUMN IF NOT EXISTS raw_score INTEGER;"))
+        conn.execute(text("ALTER TABLE listening_progress ADD COLUMN IF NOT EXISTS max_score INTEGER;"))
+        conn.execute(text("ALTER TABLE listening_progress ADD COLUMN IF NOT EXISTS band_score DOUBLE PRECISION;"))
+        conn.execute(text(
+            "DO $$ "
+            "BEGIN "
+            "IF NOT EXISTS ("
+            "SELECT 1 FROM information_schema.table_constraints "
+            "WHERE constraint_name = 'listening_progress_test_id_fkey'"
+            ") THEN "
+            "ALTER TABLE listening_progress "
+            "ADD CONSTRAINT listening_progress_test_id_fkey "
+            "FOREIGN KEY (test_id) REFERENCES listening_tests(id) ON DELETE CASCADE; "
+            "END IF; "
+            "END "
+            "$$;"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_listening_progress_mode "
+            "ON listening_progress (telegram_id, test_id, session_mode, id);"
+        ))
+
+
+def ensure_premiere_schema():
+    with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+        conn.execute(text(
+            "ALTER TABLE mock_packs "
+            "ADD COLUMN IF NOT EXISTS premiere_is_active BOOLEAN NOT NULL DEFAULT FALSE;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE mock_packs "
+            "ADD COLUMN IF NOT EXISTS premiere_ends_at TIMESTAMPTZ;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE mock_packs "
+            "ADD COLUMN IF NOT EXISTS premiere_price_uzs INTEGER;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE mock_packs "
+            "ADD COLUMN IF NOT EXISTS premiere_label VARCHAR;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE mock_packs "
+            "ADD COLUMN IF NOT EXISTS premiere_description TEXT;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE mock_packs "
+            "ADD COLUMN IF NOT EXISTS premiere_updated_at TIMESTAMPTZ;"
+        ))
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS premiere_accesses ("
+            "id SERIAL PRIMARY KEY, "
+            "mock_pack_id INTEGER NOT NULL, "
+            "telegram_id BIGINT NOT NULL, "
+            "payment_request_id INTEGER NULL, "
+            "status VARCHAR NOT NULL DEFAULT 'active', "
+            "created_at TIMESTAMPTZ NULL, "
+            "expires_at TIMESTAMPTZ NULL"
+            ");"
+        ))
+        conn.execute(text("ALTER TABLE premiere_accesses ADD COLUMN IF NOT EXISTS mock_pack_id INTEGER;"))
+        conn.execute(text("ALTER TABLE premiere_accesses ADD COLUMN IF NOT EXISTS telegram_id BIGINT;"))
+        conn.execute(text("ALTER TABLE premiere_accesses ADD COLUMN IF NOT EXISTS payment_request_id INTEGER;"))
+        conn.execute(text("ALTER TABLE premiere_accesses ADD COLUMN IF NOT EXISTS status VARCHAR NOT NULL DEFAULT 'active';"))
+        conn.execute(text("ALTER TABLE premiere_accesses ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ;"))
+        conn.execute(text("ALTER TABLE premiere_accesses ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ;"))
+        conn.execute(text(
+            "DO $$ "
+            "BEGIN "
+            "IF NOT EXISTS ("
+            "SELECT 1 FROM information_schema.table_constraints "
+            "WHERE constraint_name = 'premiere_accesses_mock_pack_id_fkey'"
+            ") THEN "
+            "ALTER TABLE premiere_accesses "
+            "ADD CONSTRAINT premiere_accesses_mock_pack_id_fkey "
+            "FOREIGN KEY (mock_pack_id) REFERENCES mock_packs(id) ON DELETE CASCADE; "
+            "END IF; "
+            "END "
+            "$$;"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_premiere_access_user_pack "
+            "ON premiere_accesses (telegram_id, mock_pack_id, status);"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_premiere_active_packs "
+            "ON mock_packs (premiere_is_active, premiere_ends_at);"
+        ))
+
+
 def ensure_full_mock_results_schema():
     with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
         conn.execute(text(

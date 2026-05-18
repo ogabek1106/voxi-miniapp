@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.config import ADMIN_IDS
 from app.deps import get_db
 from app.models import SpeakingPart, SpeakingProgress, SpeakingResult, SpeakingTest
+from app.services.premiere_service import has_active_premiere_access, is_active_premiere_pack
 from app.services.vcoin_service import require_paid_access_or_spend
 from app.services.speaking_ai_checker import check_speaking_progress
 
@@ -81,6 +82,10 @@ def _require_speaking_paid_access(db: Session, telegram_id: int, mock_id: int, p
         return
     if progress and not progress.is_submitted:
         return
+    if has_active_premiere_access(db, telegram_id, mock_id):
+        return
+    if is_active_premiere_pack(db, mock_id):
+        raise HTTPException(status_code=402, detail="premiere_access_required")
     require_paid_access_or_spend(
         db=db,
         telegram_id=telegram_id,

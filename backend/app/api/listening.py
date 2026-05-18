@@ -7,7 +7,8 @@ from sqlalchemy.orm import Session
 
 from app.config import ADMIN_IDS
 from app.deps import get_db
-from app.models import ListeningBlock, ListeningQuestion, ListeningSection, ListeningTest
+from app.models import ListeningBlock, ListeningProgress, ListeningQuestion, ListeningSection, ListeningTest
+from app.services.premiere_service import has_active_premiere_access, is_active_premiere_pack
 from app.services.vcoin_service import require_paid_access_or_spend
 
 router = APIRouter(prefix="/mock-tests", tags=["listening"])
@@ -19,6 +20,7 @@ class ListeningStartIn(BaseModel):
 
 class ListeningSaveIn(BaseModel):
     telegram_id: int
+    session_mode: str = "single_block"
     answers: Dict[str, Any] = Field(default_factory=dict)
 
 
@@ -30,6 +32,10 @@ def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def _session_mode(value: str | None) -> str:
+    return "full_mock" if str(value or "").strip().lower() == "full_mock" else "single_block"
+
+
 def _resolve_test_for_mock(db: Session, mock_id: int) -> ListeningTest:
     test = db.query(ListeningTest).filter(ListeningTest.id == int(mock_id)).first()
     if not test:
@@ -37,9 +43,15 @@ def _resolve_test_for_mock(db: Session, mock_id: int) -> ListeningTest:
     return test
 
 
-def _require_listening_paid_access(db: Session, telegram_id: int, mock_id: int) -> None:
+def _require_listening_paid_access(db: Session, telegram_id: int, mock_id: int, progress: ListeningProgress | None = None) -> None:
     if int(telegram_id) in ADMIN_IDS:
         return
+    if progress and not progress.is_submitted:
+        return
+    if has_active_premiere_access(db, telegram_id, mock_id):
+        return
+    if is_active_premiere_pack(db, mock_id):
+        raise HTTPException(status_code=402, detail="premiere_access_required")
     require_paid_access_or_spend(
         db=db,
         telegram_id=telegram_id,
@@ -134,6 +146,51 @@ def _normalize_answer(value: Any) -> str:
     return str(value if value is not None else "").strip().lower()
 
 
+def _answer_value(value: Any) -> Any:
+    if isinstance(value, dict):
+        return value.get("value")
+    return value
+
+
+def _calculate_listening_band(score: int) -> float:
+    if score >= 39:
+        return 9.0
+    if score >= 37:
+        return 8.5
+    if score >= 35:
+        return 8.0
+    if score >= 32:
+        return 7.5
+    if score >= 30:
+        return 7.0
+    if score >= 26:
+        return 6.5
+    if score >= 23:
+        return 6.0
+    if score >= 18:
+        return 5.5
+    if score >= 16:
+        return 5.0
+    if score >= 13:
+        return 4.5
+    if score >= 11:
+        return 4.0
+    return 0.0
+
+
+def _get_progress(db: Session, test_id: int, telegram_id: int, session_mode: str) -> ListeningProgress | None:
+    return (
+        db.query(ListeningProgress)
+        .filter(
+            ListeningProgress.telegram_id == int(telegram_id),
+            ListeningProgress.test_id == int(test_id),
+            ListeningProgress.session_mode == _session_mode(session_mode),
+        )
+        .order_by(ListeningProgress.id.desc())
+        .first()
+    )
+
+
 def _evaluate(db: Session, test_id: int, answers: Dict[str, Any]) -> dict:
     questions = (
         db.query(ListeningQuestion)
@@ -146,7 +203,7 @@ def _evaluate(db: Session, test_id: int, answers: Dict[str, Any]) -> dict:
     score = 0
     for question in questions:
         correct = question.correct_answer
-        user_answer = answers.get(str(question.id))
+        user_answer = _answer_value(answers.get(str(question.id)))
         if isinstance(correct, list):
             correct_set = {_normalize_answer(item) for item in correct if _normalize_answer(item)}
             user_set = {_normalize_answer(item) for item in user_answer} if isinstance(user_answer, list) else {_normalize_answer(user_answer)}
@@ -154,32 +211,112 @@ def _evaluate(db: Session, test_id: int, answers: Dict[str, Any]) -> dict:
                 score += 1
         elif _normalize_answer(correct) and _normalize_answer(correct) == _normalize_answer(user_answer):
             score += 1
-    return {"score": score, "total": len(questions), "band": "0.0"}
+    return {"score": score, "total": len(questions), "band": _calculate_listening_band(score)}
 
 
 @router.get("/{mock_id}/listening/start")
-def start_listening(mock_id: int, telegram_id: int, db: Session = Depends(get_db)):
+def start_listening(mock_id: int, telegram_id: int, session_mode: str = "single_block", db: Session = Depends(get_db)):
     test = _resolve_test_for_mock(db, mock_id)
-    _require_listening_paid_access(db, telegram_id, mock_id)
+    progress = _get_progress(db, test.id, telegram_id, session_mode)
+    _require_listening_paid_access(db, telegram_id, mock_id, progress)
     return _serialize_test(db, test)
 
 
 @router.post("/{mock_id}/listening/save")
 def save_listening(mock_id: int, payload: ListeningSaveIn, db: Session = Depends(get_db)):
-    _resolve_test_for_mock(db, mock_id)
-    _require_listening_paid_access(db, payload.telegram_id, mock_id)
+    test = _resolve_test_for_mock(db, mock_id)
+    now = _utcnow()
+    mode = _session_mode(payload.session_mode)
+    progress = _get_progress(db, test.id, payload.telegram_id, mode)
+    _require_listening_paid_access(db, payload.telegram_id, mock_id, progress)
+
+    if not progress:
+        progress = ListeningProgress(
+            test_id=test.id,
+            telegram_id=int(payload.telegram_id),
+            session_mode=mode,
+            answers=payload.answers or {},
+            started_at=now,
+            updated_at=now,
+            is_submitted=False,
+        )
+        db.add(progress)
+        db.commit()
+        return {"status": "saved"}
+
+    if progress.is_submitted and int(payload.telegram_id) not in ADMIN_IDS:
+        return {"status": "already_submitted"}
+
+    if progress.is_submitted and int(payload.telegram_id) in ADMIN_IDS:
+        progress.is_submitted = False
+        progress.submitted_at = None
+        progress.raw_score = None
+        progress.max_score = None
+        progress.band_score = None
+        progress.started_at = now
+
+    progress.answers = payload.answers or {}
+    progress.updated_at = now
+    db.add(progress)
+    db.commit()
     return {"status": "saved"}
 
 
 @router.get("/{mock_id}/listening/resume")
-def resume_listening(mock_id: int, telegram_id: int, db: Session = Depends(get_db)):
-    _resolve_test_for_mock(db, mock_id)
-    _require_listening_paid_access(db, telegram_id, mock_id)
-    return {"answers": {}, "is_submitted": False}
+def resume_listening(mock_id: int, telegram_id: int, session_mode: str = "single_block", db: Session = Depends(get_db)):
+    test = _resolve_test_for_mock(db, mock_id)
+    progress = _get_progress(db, test.id, telegram_id, session_mode)
+    _require_listening_paid_access(db, telegram_id, mock_id, progress)
+    if not progress:
+        return {"answers": {}, "is_submitted": False}
+    return {
+        "answers": progress.answers or {},
+        "started_at": progress.started_at,
+        "updated_at": progress.updated_at,
+        "submitted_at": progress.submitted_at,
+        "is_submitted": bool(progress.is_submitted),
+        "raw_score": progress.raw_score,
+        "max_score": progress.max_score,
+        "band_score": float(progress.band_score) if progress.band_score is not None else None,
+    }
 
 
 @router.post("/{mock_id}/listening/submit")
 def submit_listening(mock_id: int, payload: ListeningSubmitIn, db: Session = Depends(get_db)):
     test = _resolve_test_for_mock(db, mock_id)
-    _require_listening_paid_access(db, payload.telegram_id, mock_id)
-    return _evaluate(db, test.id, payload.answers or {})
+    now = _utcnow()
+    mode = _session_mode(payload.session_mode)
+    progress = _get_progress(db, test.id, payload.telegram_id, mode)
+    _require_listening_paid_access(db, payload.telegram_id, mock_id, progress)
+
+    if not progress:
+        progress = ListeningProgress(
+            test_id=test.id,
+            telegram_id=int(payload.telegram_id),
+            session_mode=mode,
+            answers={},
+            started_at=now,
+            is_submitted=False,
+        )
+
+    if progress.is_submitted and int(payload.telegram_id) not in ADMIN_IDS:
+        return {
+            "score": int(progress.raw_score or 0),
+            "total": int(progress.max_score or 0),
+            "band": float(progress.band_score or 0),
+        }
+
+    if payload.answers:
+        progress.answers = payload.answers
+
+    result = _evaluate(db, test.id, progress.answers or {})
+    progress.raw_score = int(result["score"])
+    progress.max_score = int(result["total"])
+    progress.band_score = float(result["band"])
+    progress.is_submitted = True
+    progress.submitted_at = now
+    progress.updated_at = now
+    db.add(progress)
+    db.commit()
+
+    return result

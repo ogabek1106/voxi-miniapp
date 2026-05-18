@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.deps import get_db
 from app.models import MockPack, MockPackStatus, SpeakingTest, SpeakingTestStatus, WritingTest
+from app.services.premiere_service import is_premiere_active
 
 router = APIRouter(prefix="/mock", tags=["mock"])
 
@@ -25,6 +26,7 @@ def get_mock_list(db: Session = Depends(get_db)):
             "created_at": p.created_at.isoformat() if p.created_at else None,
         }
         for p in packs
+        if not is_premiere_active(p)
     ]
 
 
@@ -42,6 +44,8 @@ def get_writing_mock_list(db: Session = Depends(get_db)):
 
     unique = {}
     for p in packs:
+        if is_premiere_active(p):
+            continue
         if p.id not in unique:
             unique[p.id] = {"id": p.id, "title": p.title}
     return list(unique.values())
@@ -60,6 +64,8 @@ def get_speaking_mock_list(db: Session = Depends(get_db)):
 
     unique = {}
     for p in packs:
+        if is_premiere_active(p):
+            continue
         if p.id not in unique:
             unique[p.id] = {"id": p.id, "title": p.title}
     return list(unique.values())

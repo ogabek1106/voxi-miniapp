@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.models_vcoins import PaymentRequest
 from app.models_vcoins import VCoinPromoCode
+from app.services.premiere_service import grant_premiere_access_from_payment, is_premiere_payment
 from app.services.vcoin_service import add_coins, get_balance
 
 
@@ -131,14 +132,19 @@ def confirm_payment(db: Session, payment_id: int, admin_id: Optional[int] = None
             "balance": get_balance(db, payment.telegram_id),
         }
 
-    balance = add_coins(
-        db=db,
-        telegram_id=payment.telegram_id,
-        amount=payment.coins_to_add,
-        reason="payment_confirmed",
-        reference_type="payment_request",
-        reference_id=payment.id,
-    )
+    premiere_access = None
+    if is_premiere_payment(payment):
+        premiere_access = grant_premiere_access_from_payment(db, payment)
+        balance = get_balance(db, payment.telegram_id)
+    else:
+        balance = add_coins(
+            db=db,
+            telegram_id=payment.telegram_id,
+            amount=payment.coins_to_add,
+            reason="payment_confirmed",
+            reference_type="payment_request",
+            reference_id=payment.id,
+        )
 
     payment.status = "admin_confirmed"
     payment.confirmed_at = utcnow()
@@ -162,8 +168,10 @@ def confirm_payment(db: Session, payment_id: int, admin_id: Optional[int] = None
         "ok": True,
         "status": payment.status,
         "telegram_id": payment.telegram_id,
-        "coins_added": payment.coins_to_add,
+        "coins_added": 0 if premiere_access else payment.coins_to_add,
         "balance": balance,
+        "premiere_access": bool(premiere_access),
+        "mock_pack_id": premiere_access.mock_pack_id if premiere_access else None,
     }
 
 

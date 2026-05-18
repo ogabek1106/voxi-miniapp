@@ -247,6 +247,9 @@ async function showCompletedFullMock(mockId, existingResult) {
 
 window.startFullMock = async function (mockId) {
   MockDebug.log("startFullMock.enter", { mockId });
+  if (await window.PremiereUi?.interceptIfPremiere?.(mockId)) {
+    return;
+  }
   const telegramId = window.getTelegramId?.();
   if (telegramId) {
     try {
@@ -273,6 +276,9 @@ window.startFullMock = async function (mockId) {
 window.startMock = async function (mockId, options = {}) {
   MockDebug.log("startMock.enter", { mockId, options });
   if (!options.fromFlow) {
+    if (await window.PremiereUi?.interceptIfPremiere?.(mockId)) {
+      return;
+    }
     const allowed = await requirePaidAccess({
       contentType: "separate_block",
       referenceId: `reading:${mockId}`,
@@ -351,6 +357,9 @@ window.startMock = async function (mockId, options = {}) {
 window.startWritingMock = async function (mockId, options = {}) {
   MockDebug.log("startWritingMock.enter", { mockId, options });
   if (!options.fromFlow) {
+    if (await window.PremiereUi?.interceptIfPremiere?.(mockId)) {
+      return;
+    }
     const allowed = await requirePaidAccess({
       contentType: "separate_block",
       referenceId: `writing:${mockId}`,
@@ -399,6 +408,9 @@ window.startWritingMock = async function (mockId, options = {}) {
 window.startListeningMock = async function (mockId, options = {}) {
   MockDebug.log("startListeningMock.enter", { mockId, options });
   if (!options.fromFlow) {
+    if (await window.PremiereUi?.interceptIfPremiere?.(mockId)) {
+      return;
+    }
     const allowed = await requirePaidAccess({
       contentType: "separate_block",
       referenceId: `listening:${mockId}`,
@@ -421,6 +433,7 @@ window.startListeningMock = async function (mockId, options = {}) {
   if (!screenReading) return;
 
   screenReading.style.display = "block";
+  UserListening.__sessionMode = options.fromFlow ? "full_mock" : "single_block";
   UserListening.renderLoading(screenReading);
 
   function mapBlockTypeToQuestionType(blockType) {
@@ -541,7 +554,8 @@ window.startListeningMock = async function (mockId, options = {}) {
   try {
     const telegramId = window.getTelegramId();
     MockDebug.log("startListeningMock.api.startListening", { mockId, telegramId });
-    const dataRaw = await apiGet(`/mock-tests/${mockId}/listening/start?telegram_id=${telegramId}`);
+    const sessionMode = encodeURIComponent(UserListening.__sessionMode || "single_block");
+    const dataRaw = await apiGet(`/mock-tests/${mockId}/listening/start?telegram_id=${telegramId}&session_mode=${sessionMode}`);
     const data = normalizeListeningStartPayload(dataRaw, mockId);
 
     if (!data || !Array.isArray(data.sections)) {
@@ -561,6 +575,9 @@ window.startListeningMock = async function (mockId, options = {}) {
 window.startSpeakingMock = async function (mockId, options = {}) {
   MockDebug.log("startSpeakingMock.enter", { mockId, options });
   if (!options.fromFlow) {
+    if (await window.PremiereUi?.interceptIfPremiere?.(mockId)) {
+      return;
+    }
     const allowed = await requirePaidAccess({
       contentType: "separate_block",
       referenceId: `speaking:${mockId}`,
