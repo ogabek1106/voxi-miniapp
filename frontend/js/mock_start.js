@@ -583,6 +583,10 @@ window.startListeningMock = async function (mockId, options = {}) {
     const sessionMode = encodeURIComponent(UserListening.__sessionMode || "single_block");
     const dataRaw = await apiGet(`/mock-tests/${mockId}/listening/start?telegram_id=${telegramId}&session_mode=${sessionMode}`);
     const data = normalizeListeningStartPayload(dataRaw, mockId);
+    if (options.fromFlow) {
+      data.mock_id = mockId;
+      data.mock_pack_id = mockId;
+    }
 
     if (!data || !Array.isArray(data.sections)) {
       UserListening.renderError(screenReading, `Invalid API response\n${JSON.stringify(dataRaw, null, 2)}`);

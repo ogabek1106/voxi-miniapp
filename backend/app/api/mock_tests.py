@@ -88,6 +88,32 @@ def _require_reading_paid_access(db: Session, telegram_id: int, mock_id: int, pr
     )
 
 
+def _require_reading_entry_access(db: Session, telegram_id: int, mock_id: int, progress: ReadingProgress | None, is_admin: bool, mode: str) -> None:
+    if is_admin:
+        return
+    if progress and not progress.is_submitted:
+        return
+    if has_active_premiere_access(db, telegram_id, mock_id):
+        return
+    if is_active_premiere_pack(db, mock_id):
+        raise HTTPException(status_code=402, detail="premiere_access_required")
+    if mode == "full_mock":
+        require_paid_access_or_spend(
+            db=db,
+            telegram_id=telegram_id,
+            content_type="full_mock",
+            reference_id=mock_id,
+        )
+        return
+    require_paid_access_or_spend(
+        db=db,
+        telegram_id=telegram_id,
+        content_type="separate_block",
+        reference_id=f"reading:{mock_id}",
+        full_mock_reference_id=mock_id,
+    )
+
+
 def _extract_payload_value(raw: Any) -> Any:
     if isinstance(raw, dict):
         return raw.get("value")
@@ -289,7 +315,7 @@ def start_reading_test(
         result = _evaluate_reading(questions, progress.answers or {})
         return _build_submitted_start_response(progress, result, mock_id, test)
 
-    _require_reading_paid_access(db, telegram_id, mock_id, progress, is_admin)
+    _require_reading_entry_access(db, telegram_id, mock_id, progress, is_admin, mode)
 
     if not progress:
         progress = ReadingProgress(
