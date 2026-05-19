@@ -1063,7 +1063,7 @@ UserListening.submitReading = async function (options = {}) {
 
       const flowMoved = window.MockFlow?.goToNextPart?.(
         "listening",
-        UserListening.__mockId,
+        UserListening.__mockPackId || UserListening.__mockId,
         document.getElementById("screen-reading")
       );
       if (flowMoved) {

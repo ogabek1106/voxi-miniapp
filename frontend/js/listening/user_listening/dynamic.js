@@ -349,6 +349,7 @@ UserListening.renderTest = function (container, data, options = {}) {
   if (!content) return;
 
   UserListening.__mockId = data?.mock_id || null;
+  UserListening.__mockPackId = data?.mock_pack_id || data?.mock_id || null;
   UserListening.__isSubmitted = false;
   UserListening.__activeSectionIndex = Number(options.activeSectionIndex || 0);
 
@@ -636,8 +637,8 @@ UserListening.restoreProgress = async function (data) {
       UserListening.__updateQuestionProgress();
     }
 
-    if (progress?.is_submitted) {
-      UserListening.markSubmittedState("You have already completed this reading test.");
+    if (progress?.is_submitted && !window.__isAdmin && UserListening.__sessionMode !== "full_mock") {
+      UserListening.markSubmittedState("You have already completed this listening test.");
     }
   } catch (error) {
     console.error("Failed to restore progress:", error);

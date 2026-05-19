@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
@@ -215,9 +215,38 @@ def _evaluate(db: Session, test_id: int, answers: Dict[str, Any]) -> dict:
 
 
 @router.get("/{mock_id}/listening/start")
-def start_listening(mock_id: int, telegram_id: int, session_mode: str = "single_block", db: Session = Depends(get_db)):
+def start_listening(
+    mock_id: int,
+    telegram_id: int,
+    session_mode: str = "single_block",
+    retake: bool = False,
+    retake_payment_reference_id: Optional[str] = None,
+    db: Session = Depends(get_db),
+):
     test = _resolve_test_for_mock(db, mock_id)
-    progress = _get_progress(db, test.id, telegram_id, session_mode)
+    mode = _session_mode(session_mode)
+    progress = _get_progress(db, test.id, telegram_id, mode)
+    is_admin = int(telegram_id) in ADMIN_IDS
+
+    if progress and progress.is_submitted and (is_admin or retake):
+        if retake and not is_admin:
+            require_paid_access_or_spend(
+                db=db,
+                telegram_id=telegram_id,
+                content_type="full_mock" if mode == "full_mock" else "separate_block",
+                reference_id=retake_payment_reference_id or f"{mode}:listening:{mock_id}:retake",
+            )
+        progress.answers = {}
+        progress.started_at = _utcnow()
+        progress.updated_at = progress.started_at
+        progress.submitted_at = None
+        progress.is_submitted = False
+        progress.raw_score = None
+        progress.max_score = None
+        progress.band_score = None
+        db.add(progress)
+        db.commit()
+
     _require_listening_paid_access(db, telegram_id, mock_id, progress)
     return _serialize_test(db, test)
 

@@ -277,7 +277,7 @@ window.startFullMock = async function (mockId) {
     return;
   }
   const telegramId = window.getTelegramId?.();
-  if (telegramId) {
+  if (telegramId && !window.__isAdmin) {
     try {
       const existing = await apiPost(`/mock-tests/${mockId}/full-result`, { telegram_id: telegramId });
       if (existing?.status === "completed") {
@@ -581,10 +581,12 @@ window.startListeningMock = async function (mockId, options = {}) {
     const telegramId = window.getTelegramId();
     MockDebug.log("startListeningMock.api.startListening", { mockId, telegramId });
     const sessionMode = encodeURIComponent(UserListening.__sessionMode || "single_block");
-    const dataRaw = await apiGet(`/mock-tests/${mockId}/listening/start?telegram_id=${telegramId}&session_mode=${sessionMode}`);
+    const retakeParam = options.retakePaymentReferenceId
+      ? `&retake=1&retake_payment_reference_id=${encodeURIComponent(options.retakePaymentReferenceId)}`
+      : "";
+    const dataRaw = await apiGet(`/mock-tests/${mockId}/listening/start?telegram_id=${telegramId}&session_mode=${sessionMode}${retakeParam}`);
     const data = normalizeListeningStartPayload(dataRaw, mockId);
     if (options.fromFlow) {
-      data.mock_id = mockId;
       data.mock_pack_id = mockId;
     }
 
