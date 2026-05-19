@@ -33,7 +33,7 @@ window.VoxiFeedbackUI = window.VoxiFeedbackUI || {};
     `).join("");
   }
 
-  function bindMain() {
+  function bindStars() {
     const overlay = document.getElementById("voxi-feedback-overlay");
     if (!overlay) return;
     overlay.querySelectorAll(".voxi-feedback-star").forEach((star) => {
@@ -41,11 +41,18 @@ window.VoxiFeedbackUI = window.VoxiFeedbackUI || {};
         selectedRating = Number(star.dataset.rating || 0);
         const row = overlay.querySelector(".voxi-feedback-stars");
         if (row) row.innerHTML = renderStars();
-        bindMain();
+        bindStars();
       };
     });
+  }
 
-    overlay.querySelector("[data-feedback-submit]")?.addEventListener("click", () => {
+  function bindMain() {
+    const overlay = document.getElementById("voxi-feedback-overlay");
+    if (!overlay) return;
+    bindStars();
+
+    const submitBtn = overlay.querySelector("[data-feedback-submit]");
+    if (submitBtn) submitBtn.onclick = () => {
       if (!selectedRating) {
         overlay.querySelector(".voxi-feedback-hint")?.classList.add("is-visible");
         return;
@@ -58,18 +65,19 @@ window.VoxiFeedbackUI = window.VoxiFeedbackUI || {};
       }
       active?.onSubmit?.({ rating: selectedRating, comment: "", public_permission: false, status: "submitted" });
       remove();
-    });
+    };
 
-    overlay.querySelector("[data-feedback-skip]")?.addEventListener("click", () => {
+    const skipBtn = overlay.querySelector("[data-feedback-skip]");
+    if (skipBtn) skipBtn.onclick = () => {
       active?.onSkip?.();
       remove();
-    });
+    };
 
-    overlay.addEventListener("click", (event) => {
+    overlay.onclick = (event) => {
       if (event.target !== overlay) return;
       active?.onSkip?.();
       remove();
-    });
+    };
   }
 
   function renderPermission() {
