@@ -235,6 +235,15 @@ def _query_questions_for_test(db: Session, test_id: int) -> List[ReadingQuestion
     )
 
 
+def _public_question_meta(raw_meta: Any) -> Dict[str, Any]:
+    if isinstance(raw_meta, dict):
+        meta = dict(raw_meta)
+    else:
+        meta = {}
+    meta.pop("variants", None)
+    return meta
+
+
 def _build_submitted_start_response(progress: ReadingProgress, result: SubmitResultOut, mock_id: int, test: ReadingTest) -> Dict[str, Any]:
     return {
         "already_submitted": True,
@@ -381,11 +390,6 @@ def start_reading_test(
             .all()
         )
 
-        def public_meta(question: ReadingQuestion):
-            meta = dict(question.meta or {})
-            meta.pop("variants", None)
-            return meta
-
         result.append({
             "id": passage.id,
             "title": passage.title,
@@ -399,7 +403,7 @@ def start_reading_test(
                     "type": question.type.value if hasattr(question.type, "value") else str(question.type),
                     "instruction": question.instruction,
                     "content": question.content,
-                    "meta": public_meta(question),
+                    "meta": _public_question_meta(question.meta),
                     "points": question.points,
                     "image_url": question.image_url
                 }
