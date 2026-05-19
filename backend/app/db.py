@@ -985,6 +985,41 @@ def ensure_vcoin_schema():
             "CREATE INDEX IF NOT EXISTS ix_coin_ledger_reference_id "
             "ON coin_ledger (reference_id);"
         ))
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS manual_balance_adjustments ("
+            "id SERIAL PRIMARY KEY, "
+            "target_user_id INTEGER NOT NULL, "
+            "target_telegram_id BIGINT NULL, "
+            "admin_telegram_id BIGINT NOT NULL, "
+            "action_type VARCHAR NOT NULL, "
+            "amount INTEGER NOT NULL, "
+            "balance_before INTEGER NOT NULL, "
+            "balance_after INTEGER NOT NULL, "
+            "reason VARCHAR NOT NULL, "
+            "note TEXT NULL, "
+            "ledger_id INTEGER NULL, "
+            "created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()"
+            ");"
+        ))
+        conn.execute(text("ALTER TABLE manual_balance_adjustments ADD COLUMN IF NOT EXISTS target_user_id INTEGER;"))
+        conn.execute(text("ALTER TABLE manual_balance_adjustments ADD COLUMN IF NOT EXISTS target_telegram_id BIGINT;"))
+        conn.execute(text("ALTER TABLE manual_balance_adjustments ADD COLUMN IF NOT EXISTS admin_telegram_id BIGINT;"))
+        conn.execute(text("ALTER TABLE manual_balance_adjustments ADD COLUMN IF NOT EXISTS action_type VARCHAR;"))
+        conn.execute(text("ALTER TABLE manual_balance_adjustments ADD COLUMN IF NOT EXISTS amount INTEGER;"))
+        conn.execute(text("ALTER TABLE manual_balance_adjustments ADD COLUMN IF NOT EXISTS balance_before INTEGER;"))
+        conn.execute(text("ALTER TABLE manual_balance_adjustments ADD COLUMN IF NOT EXISTS balance_after INTEGER;"))
+        conn.execute(text("ALTER TABLE manual_balance_adjustments ADD COLUMN IF NOT EXISTS reason VARCHAR;"))
+        conn.execute(text("ALTER TABLE manual_balance_adjustments ADD COLUMN IF NOT EXISTS note TEXT;"))
+        conn.execute(text("ALTER TABLE manual_balance_adjustments ADD COLUMN IF NOT EXISTS ledger_id INTEGER;"))
+        conn.execute(text("ALTER TABLE manual_balance_adjustments ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_manual_balance_adjustments_target_user "
+            "ON manual_balance_adjustments (target_user_id, created_at DESC);"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_manual_balance_adjustments_admin "
+            "ON manual_balance_adjustments (admin_telegram_id, created_at DESC);"
+        ))
 
 
 def ensure_user_auth_schema():
@@ -996,6 +1031,14 @@ def ensure_user_auth_schema():
         conn.execute(text(
             "ALTER TABLE users "
             "ADD COLUMN IF NOT EXISTS email VARCHAR;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE users "
+            "ADD COLUMN IF NOT EXISTS username VARCHAR;"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_users_username "
+            "ON users (username);"
         ))
         conn.execute(text(
             "ALTER TABLE users "

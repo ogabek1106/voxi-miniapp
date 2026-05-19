@@ -69,3 +69,20 @@ class CoinLedger(Base):
     reference_id = Column(String, nullable=True, index=True)
     balance_after = Column(Integer, nullable=False)
     created_at = Column(DateTime(timezone=True), nullable=False, default=utcnow)
+
+
+class ManualBalanceAdjustment(Base):
+    __tablename__ = "manual_balance_adjustments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    target_user_id = Column(Integer, nullable=False, index=True)
+    target_telegram_id = Column(BigInteger, nullable=True, index=True)
+    admin_telegram_id = Column(BigInteger, nullable=False, index=True)
+    action_type = Column(String, nullable=False, index=True)
+    amount = Column(Integer, nullable=False)
+    balance_before = Column(Integer, nullable=False)
+    balance_after = Column(Integer, nullable=False)
+    reason = Column(String, nullable=False)
+    note = Column(Text, nullable=True)
+    ledger_id = Column(Integer, nullable=True, index=True)
+    created_at = Column(DateTime(timezone=True), nullable=False, default=utcnow)

@@ -150,6 +150,7 @@ def login_telegram(db: Session, payload: dict) -> User:
             password_hash=None,
             name=(payload.get("first_name") or "").strip() or None,
             surname=(payload.get("last_name") or "").strip() or None,
+            username=(payload.get("username") or "").strip() or None,
             photo_url=(payload.get("photo_url") or "").strip() or None,
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
@@ -158,6 +159,7 @@ def login_telegram(db: Session, payload: dict) -> User:
     else:
         user.name = user.name or (payload.get("first_name") or "").strip() or None
         user.surname = user.surname or (payload.get("last_name") or "").strip() or None
+        user.username = (payload.get("username") or "").strip() or user.username
         user.photo_url = (payload.get("photo_url") or "").strip() or user.photo_url
         user.updated_at = datetime.utcnow()
     db.commit()
@@ -195,6 +197,7 @@ def safe_user(db: Session, user: User) -> dict:
         "email": user.email,
         "name": user.name,
         "surname": user.surname,
+        "username": user.username,
         "photo_url": user.photo_url,
         "v_coins": int(user.v_coins or 0),
         "is_admin": bool(user.telegram_id in ADMIN_IDS) if user.telegram_id else False,

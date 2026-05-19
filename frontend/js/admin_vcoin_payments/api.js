@@ -30,4 +30,15 @@ window.AdminVCoinPaymentsApi = window.AdminVCoinPaymentsApi || {};
   AdminVCoinPaymentsApi.disablePromo = function (id) {
     return apiDelete(`/vcoins/admin/promo-codes/${Number(id)}?admin_id=${encodeURIComponent(adminId() || "")}`);
   };
+
+  AdminVCoinPaymentsApi.searchUsers = function (query) {
+    return apiGet(`/vcoins/admin/users/search?admin_id=${encodeURIComponent(adminId() || "")}&q=${encodeURIComponent(query || "")}`);
+  };
+
+  AdminVCoinPaymentsApi.applyManualAdjustment = function (payload) {
+    return apiPost("/vcoins/admin/manual-adjustments", {
+      ...payload,
+      admin_id: adminId()
+    });
+  };
 })();

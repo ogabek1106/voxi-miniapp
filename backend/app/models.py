@@ -16,6 +16,7 @@ class User(Base):
     password_hash = Column(Text, nullable=True)
     name = Column(String, nullable=True)
     surname = Column(String, nullable=True)
+    username = Column(String, nullable=True, index=True)
     photo_url = Column(Text, nullable=True)
     v_coins = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=True)

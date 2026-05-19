@@ -34,6 +34,7 @@ class SafeUserOut(BaseModel):
     email: str | None = None
     name: str | None = None
     surname: str | None = None
+    username: str | None = None
     photo_url: str | None = None
     v_coins: int = 0
     is_admin: bool = False

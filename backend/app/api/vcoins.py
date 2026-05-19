@@ -23,6 +23,10 @@ from app.services.payment_service import (
 )
 from app.services.vcoin_service import get_balance
 from app.services.vcoin_service import get_recent_ledger, spend_once_for_content
+from app.services.vcoin_admin_service import (
+    apply_manual_balance_adjustment,
+    search_users_for_manual_balance,
+)
 
 
 router = APIRouter(prefix="/vcoins", tags=["vcoins"])
@@ -78,6 +82,15 @@ class PromoCodeIn(BaseModel):
     is_active: bool = True
     expires_at: Optional[str] = None
     usage_limit: Optional[int] = None
+
+
+class ManualBalanceAdjustmentIn(BaseModel):
+    admin_id: int
+    target_user_id: int
+    action_type: str
+    amount: int
+    reason: str
+    note: Optional[str] = None
 
 
 def _bot_buy_link() -> Optional[str]:
@@ -349,6 +362,35 @@ def disable_promo_code(promo_id: int, admin_id: int, db: Session = Depends(get_d
     db.add(row)
     db.commit()
     return {"ok": True}
+
+
+@router.get("/admin/users/search")
+def search_admin_vcoin_users(
+    admin_id: int,
+    q: str = Query(..., min_length=2),
+    db: Session = Depends(get_db),
+):
+    require_admin_id(admin_id)
+    return {
+        "ok": True,
+        "items": search_users_for_manual_balance(db, q),
+    }
+
+
+@router.post("/admin/manual-adjustments")
+def create_manual_vcoin_adjustment(payload: ManualBalanceAdjustmentIn, db: Session = Depends(get_db)):
+    require_admin_id(payload.admin_id)
+    result = apply_manual_balance_adjustment(
+        db,
+        admin_telegram_id=payload.admin_id,
+        target_user_id=payload.target_user_id,
+        action_type=payload.action_type,
+        amount=payload.amount,
+        reason=payload.reason,
+        note=payload.note,
+    )
+    db.commit()
+    return result
 
 
 @router.get("/ledger")

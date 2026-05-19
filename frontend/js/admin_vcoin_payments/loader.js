@@ -1,6 +1,10 @@
 window.AdminVCoinPaymentsLoader = window.AdminVCoinPaymentsLoader || {};
 
 (function () {
+  let selectedUser = null;
+  let pendingAdjustment = null;
+  let searchTimer = null;
+
   async function load() {
     const [settings, promos] = await Promise.all([
       AdminVCoinPaymentsApi.getSettings(),
@@ -48,9 +52,115 @@ window.AdminVCoinPaymentsLoader = window.AdminVCoinPaymentsLoader || {};
         await AdminVCoinPaymentsLoader.show();
       });
     });
+
+    bindManualBalanceManagement();
+  }
+
+  function bindManualBalanceManagement() {
+    const searchInput = document.getElementById("admin-vcoin-user-search");
+    searchInput?.addEventListener("input", () => {
+      const query = String(searchInput.value || "").trim();
+      window.clearTimeout(searchTimer);
+      if (query.length < 2) {
+        AdminVCoinPaymentsUI.renderSearchResults([], "Type at least 2 characters to search.");
+        return;
+      }
+      AdminVCoinPaymentsUI.renderSearchResults([], "Searching...");
+      searchTimer = window.setTimeout(async () => {
+        try {
+          const data = await AdminVCoinPaymentsApi.searchUsers(query);
+          AdminVCoinPaymentsUI.renderSearchResults(data?.items || []);
+          bindSearchResultClicks(data?.items || []);
+        } catch (error) {
+          console.error("Manual balance user search failed:", error);
+          AdminVCoinPaymentsUI.renderSearchResults([], "Search failed. Try again.");
+        }
+      }, 250);
+    });
+  }
+
+  function bindSearchResultClicks(users) {
+    document.querySelectorAll("[data-user-id]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const id = Number(button.dataset.userId);
+        selectedUser = (users || []).find((user) => Number(user.id) === id) || null;
+        pendingAdjustment = null;
+        AdminVCoinPaymentsUI.renderSelectedUser(selectedUser);
+        bindAdjustmentForm();
+      });
+    });
+  }
+
+  function bindAdjustmentForm() {
+    const form = document.getElementById("admin-vcoin-adjustment-form");
+    form?.addEventListener("submit", (event) => {
+      event.preventDefault();
+      if (!selectedUser) return;
+      const data = new FormData(form);
+      const actionType = String(data.get("action_type") || "add");
+      const amount = Number(data.get("amount") || 0);
+      const reason = String(data.get("reason") || "").trim();
+      const note = String(data.get("note") || "").trim();
+      const current = Number(selectedUser.v_coins || 0);
+
+      if (!amount || amount <= 0) {
+        renderConfirmError("Amount must be greater than 0.");
+        return;
+      }
+      if (!reason) {
+        renderConfirmError("Reason is required.");
+        return;
+      }
+      if (actionType === "remove" && current - amount < 0) {
+        renderConfirmError("Removing funds cannot create a negative balance.");
+        return;
+      }
+
+      pendingAdjustment = {
+        target_user_id: Number(selectedUser.id),
+        action_type: actionType,
+        amount,
+        reason,
+        note
+      };
+      AdminVCoinPaymentsUI.renderAdjustmentConfirm({ user: selectedUser, actionType, amount, reason, note });
+      bindConfirmActions();
+    });
+  }
+
+  function renderConfirmError(message) {
+    const host = document.getElementById("admin-vcoin-adjustment-confirm");
+    if (host) host.innerHTML = `<div class="admin-vcoin-empty admin-vcoin-error">${message}</div>`;
+  }
+
+  function bindConfirmActions() {
+    document.querySelector("[data-cancel-manual-adjustment]")?.addEventListener("click", () => {
+      pendingAdjustment = null;
+      const host = document.getElementById("admin-vcoin-adjustment-confirm");
+      if (host) host.innerHTML = "";
+    });
+
+    document.querySelector("[data-confirm-manual-adjustment]")?.addEventListener("click", async (event) => {
+      if (!pendingAdjustment) return;
+      const button = event.currentTarget;
+      button.disabled = true;
+      try {
+        const result = await AdminVCoinPaymentsApi.applyManualAdjustment(pendingAdjustment);
+        selectedUser = result?.user || selectedUser;
+        pendingAdjustment = null;
+        AdminVCoinPaymentsUI.renderSelectedUser(selectedUser);
+        bindAdjustmentForm();
+      } catch (error) {
+        console.error("Manual balance adjustment failed:", error);
+        button.disabled = false;
+        renderConfirmError("Could not apply adjustment. Check amount and reason.");
+      }
+    });
   }
 
   AdminVCoinPaymentsLoader.show = async function () {
+    selectedUser = null;
+    pendingAdjustment = null;
     hideAllScreens();
     if (typeof hideAnnouncement === "function") hideAnnouncement();
     if (typeof setBottomNavVisible === "function") setBottomNavVisible(false);
