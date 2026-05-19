@@ -172,7 +172,7 @@
     try {
       const payment = await window.PremiereApi.createPaymentIntent(p.id, telegramId);
       if (payment?.bot_link) {
-        window.location.assign(payment.bot_link);
+        window.open(payment.bot_link, "_blank", "noopener");
       }
     } catch (error) {
       alert(error?.message || "Could not create Premiere payment.");
