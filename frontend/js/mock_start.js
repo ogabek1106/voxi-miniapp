@@ -74,6 +74,32 @@ async function confirmPaidRetake({ mode, section, mockId, serviceName }) {
   return allowed ? referenceId : null;
 }
 
+function mockFlowDelay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function fetchReadingStartWithRetry(url, attempts = 3) {
+  let lastError = null;
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await apiGet(url);
+    } catch (error) {
+      lastError = error;
+      const retryable = !error?.status || Number(error.status) >= 500;
+      MockDebug.log("startMock.api.startReading.retryableError", {
+        attempt,
+        attempts,
+        retryable,
+        status: error?.status || null,
+        message: error?.message || String(error)
+      });
+      if (!retryable || attempt >= attempts) break;
+      await mockFlowDelay(900 * attempt);
+    }
+  }
+  throw lastError;
+}
+
 MockFlow.goToNextPart = function (currentPart, mockId, container) {
   MockDebug.log("MockFlow.goToNextPart.enter", { currentPart, mockId, active: MockFlow.active, flowMockId: MockFlow.mockId });
   if (!MockFlow.isActive(mockId) || !window.MockTransitionPage?.show) {
@@ -312,7 +338,7 @@ window.startMock = async function (mockId, options = {}) {
     const retakeParam = options.retakePaymentReferenceId
       ? `&retake=1&retake_payment_reference_id=${encodeURIComponent(options.retakePaymentReferenceId)}`
       : "";
-    const data = await apiGet(`/mock-tests/${mockId}/reading/start?telegram_id=${telegramId}&session_mode=${sessionMode}${retakeParam}`);
+    const data = await fetchReadingStartWithRetry(`/mock-tests/${mockId}/reading/start?telegram_id=${telegramId}&session_mode=${sessionMode}${retakeParam}`);
 
     if (data?.already_submitted) {
       const resultPayload = {
