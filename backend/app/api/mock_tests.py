@@ -1,14 +1,15 @@
 # backend/app/api/mock_tests.py
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
+import traceback
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.config import ADMIN_IDS
 from app.deps import get_db
-from app.models import ReadingPassage, ReadingProgress, ReadingQuestion, ReadingTest, User
+from app.models import MockPack, ReadingPassage, ReadingProgress, ReadingQuestion, ReadingTest, User
 from app.services.telegram_sub_gate import check_reading_access, check_channel_membership
 from app.services.premiere_service import has_active_premiere_access, is_active_premiere_pack
 from app.services.vcoin_service import require_paid_access_or_spend
@@ -244,6 +245,19 @@ def _public_question_meta(raw_meta: Any) -> Dict[str, Any]:
     return meta
 
 
+def _reading_start_debug(message: str, payload: Optional[Dict[str, Any]] = None) -> None:
+    if payload is None:
+        print(f"[READING_START_DEBUG] {message}", flush=True)
+        return
+    print(f"[READING_START_DEBUG] {message}: {payload}", flush=True)
+
+
+def _debug_datetime(value: Any) -> Any:
+    if hasattr(value, "isoformat"):
+        return value.isoformat()
+    return value
+
+
 def _build_submitted_start_response(progress: ReadingProgress, result: SubmitResultOut, mock_id: int, test: ReadingTest) -> Dict[str, Any]:
     return {
         "already_submitted": True,
@@ -290,6 +304,7 @@ def reading_entry_check(mock_id: int, payload: ReadingEntryCheckIn, db: Session 
 
 @router.get("/{mock_id}/reading/start")
 def start_reading_test(
+    request: Request,
     mock_id: int,
     telegram_id: int,
     session_mode: str = "single_block",
@@ -297,135 +312,274 @@ def start_reading_test(
     retake_payment_reference_id: Optional[str] = None,
     db: Session = Depends(get_db),
 ):
-    test = _get_test_for_mock(db, mock_id)
-    user = _get_user_by_telegram(db, telegram_id)
-    is_admin = _is_admin_user(user)
-    now = _utcnow()
+    last_step = "entered"
+    try:
+        now = _utcnow()
+        _reading_start_debug("ENTER", {
+            "mock_id": mock_id,
+            "telegram_id": telegram_id,
+            "session_mode": session_mode,
+            "retake": retake,
+            "path": request.url.path,
+            "query": request.url.query,
+            "server_time": now.isoformat(),
+        })
 
-    mode = _session_mode(session_mode)
-    progress = (
-        db.query(ReadingProgress)
-        .filter(ReadingProgress.user_id == user.id, ReadingProgress.test_id == test.id, ReadingProgress.session_mode == mode)
-        .order_by(ReadingProgress.id.desc())
-        .first()
-    )
+        last_step = "mock_pack_lookup"
+        mock_pack = db.query(MockPack).filter(MockPack.id == mock_id).first()
+        _reading_start_debug("MOCK_PACK", {
+            "exists": bool(mock_pack),
+            "id": mock_pack.id if mock_pack else None,
+            "title": mock_pack.title if mock_pack else None,
+            "status": mock_pack.status.value if mock_pack and hasattr(mock_pack.status, "value") else str(mock_pack.status) if mock_pack else None,
+            "premiere_is_active": mock_pack.premiere_is_active if mock_pack else None,
+            "premiere_ends_at": _debug_datetime(mock_pack.premiere_ends_at) if mock_pack else None,
+            "premiere_price_uzs": mock_pack.premiere_price_uzs if mock_pack else None,
+        })
 
-    if retake and progress and progress.is_submitted and not is_admin:
-        require_paid_access_or_spend(
-            db=db,
-            telegram_id=telegram_id,
-            content_type="full_mock" if mode == "full_mock" else "separate_block",
-            reference_id=retake_payment_reference_id or f"{mode}:reading:{mock_id}:retake",
+        last_step = "reading_test_lookup"
+        debug_test = (
+            db.query(ReadingTest)
+            .filter(ReadingTest.mock_pack_id == mock_id)
+            .first()
         )
-        progress = None
+        _reading_start_debug("READING_TEST_LOOKUP", {
+            "mock_id": mock_id,
+            "found": bool(debug_test),
+            "selected_reading_test_id": debug_test.id if debug_test else None,
+            "title": debug_test.title if debug_test else None,
+            "status": debug_test.status.value if debug_test and hasattr(debug_test.status, "value") else str(debug_test.status) if debug_test else None,
+            "mock_pack_id": debug_test.mock_pack_id if debug_test else None,
+            "time_limit_minutes": debug_test.time_limit_minutes if debug_test else None,
+        })
+        test = _get_test_for_mock(db, mock_id)
 
-    if progress and progress.is_submitted and not is_admin:
-        questions = _query_questions_for_test(db, test.id)
-        result = _evaluate_reading(questions, progress.answers or {})
-        return _build_submitted_start_response(progress, result, mock_id, test)
+        last_step = "user_lookup"
+        user = _get_user_by_telegram(db, telegram_id)
+        is_admin = _is_admin_user(user)
+        _reading_start_debug("USER", {
+            "exists": bool(user),
+            "user_id": user.id if user else None,
+            "telegram_id": user.telegram_id if user else None,
+            "is_admin": is_admin,
+        })
 
-    _require_reading_entry_access(db, telegram_id, mock_id, progress, is_admin, mode)
-
-    if not progress:
-        progress = ReadingProgress(
-            user_id=user.id,
-            test_id=test.id,
-            session_mode=mode,
-            answers={},
-            started_at=now,
-            ends_at=now + timedelta(minutes=max(int(test.time_limit_minutes or 60), 1)),    
-            
-            is_submitted=False
+        mode = _session_mode(session_mode)
+        last_step = "progress_lookup"
+        progress = (
+            db.query(ReadingProgress)
+            .filter(ReadingProgress.user_id == user.id, ReadingProgress.test_id == test.id, ReadingProgress.session_mode == mode)
+            .order_by(ReadingProgress.id.desc())
+            .first()
         )
-        db.add(progress)
-        db.commit()
-        db.refresh(progress)
-    else:
-        if is_admin:
-            if progress.is_submitted:
-                progress.answers = {}
-                progress.started_at = now
-                progress.ends_at = now + timedelta(minutes=max(int(test.time_limit_minutes or 60), 1))    
-                
-                progress.is_submitted = False
-                progress.submitted_at = None
-                progress.raw_score = None
-                progress.max_score = None
-                progress.band_score = None
-                progress.updated_at = now
-                db.add(progress)
-                db.commit()
-                db.refresh(progress)
-        else:
-            if not progress.started_at:
-                progress.started_at = now
-            if not progress.ends_at:
-                progress.ends_at = progress.started_at + timedelta(minutes=max(int(test.time_limit_minutes or 60), 1))
+        _reading_start_debug("PROGRESS", {
+            "mode": mode,
+            "exists": bool(progress),
+            "progress_id": progress.id if progress else None,
+            "is_submitted": progress.is_submitted if progress else None,
+            "started_at": _debug_datetime(progress.started_at) if progress else None,
+            "ends_at": _debug_datetime(progress.ends_at) if progress else None,
+            "submitted_at": _debug_datetime(progress.submitted_at) if progress else None,
+            "session_mode": progress.session_mode if progress else None,
+        })
 
-            if _is_time_up(progress.ends_at, now):
-                questions = _query_questions_for_test(db, test.id)
-                result = _finalize_progress(progress, questions, _auto_submitted_at(progress.ends_at, now))
-                db.add(progress)
-                db.commit()
-                db.refresh(progress)
-                return _build_submitted_start_response(progress, result, mock_id, test)
+        if retake and progress and progress.is_submitted and not is_admin:
+            last_step = "retake_payment"
+            _reading_start_debug("DECISION", {
+                "action": "retake_payment_then_new_progress",
+                "content_type": "full_mock" if mode == "full_mock" else "separate_block",
+                "reference_id": retake_payment_reference_id or f"{mode}:reading:{mock_id}:retake",
+            })
+            require_paid_access_or_spend(
+                db=db,
+                telegram_id=telegram_id,
+                content_type="full_mock" if mode == "full_mock" else "separate_block",
+                reference_id=retake_payment_reference_id or f"{mode}:reading:{mock_id}:retake",
+            )
+            progress = None
 
+        if progress and progress.is_submitted and not is_admin:
+            last_step = "already_submitted_response"
+            _reading_start_debug("DECISION", {
+                "action": "return_already_submitted",
+                "progress_id": progress.id,
+            })
+            questions = _query_questions_for_test(db, test.id)
+            result = _evaluate_reading(questions, progress.answers or {})
+            response = _build_submitted_start_response(progress, result, mock_id, test)
+            _reading_start_debug("RESPONSE_KEYS", {"keys": list(response.keys())})
+            return response
+
+        last_step = "access_check"
+        _reading_start_debug("ACCESS_CHECK", {
+            "mode": mode,
+            "is_admin": is_admin,
+            "has_active_progress": bool(progress and not progress.is_submitted),
+        })
+        _require_reading_entry_access(db, telegram_id, mock_id, progress, is_admin, mode)
+
+        duration_minutes = max(int(test.time_limit_minutes or 60), 1)
+        if not progress:
+            last_step = "create_progress"
+            calculated_ends_at = now + timedelta(minutes=duration_minutes)
+            _reading_start_debug("DECISION", {
+                "action": "create_new_progress",
+                "duration_minutes": duration_minutes,
+                "started_at": now.isoformat(),
+                "ends_at": calculated_ends_at.isoformat(),
+                "reason": "no_existing_progress",
+            })
+            progress = ReadingProgress(
+                user_id=user.id,
+                test_id=test.id,
+                session_mode=mode,
+                answers={},
+                started_at=now,
+                ends_at=calculated_ends_at,
+                is_submitted=False
+            )
             db.add(progress)
             db.commit()
             db.refresh(progress)
+        else:
+            last_step = "resume_progress"
+            _reading_start_debug("DECISION", {
+                "action": "resume_existing_progress",
+                "progress_id": progress.id,
+                "duration_minutes": duration_minutes,
+                "reason": "existing_progress",
+            })
+            if is_admin:
+                if progress.is_submitted:
+                    last_step = "admin_reset_submitted_progress"
+                    calculated_ends_at = now + timedelta(minutes=duration_minutes)
+                    _reading_start_debug("DECISION", {
+                        "action": "admin_reset_submitted_progress",
+                        "progress_id": progress.id,
+                        "started_at": now.isoformat(),
+                        "ends_at": calculated_ends_at.isoformat(),
+                    })
+                    progress.answers = {}
+                    progress.started_at = now
+                    progress.ends_at = calculated_ends_at
+                    progress.is_submitted = False
+                    progress.submitted_at = None
+                    progress.raw_score = None
+                    progress.max_score = None
+                    progress.band_score = None
+                    progress.updated_at = now
+                    db.add(progress)
+                    db.commit()
+                    db.refresh(progress)
+            else:
+                if not progress.started_at:
+                    progress.started_at = now
+                    _reading_start_debug("PROGRESS_UPDATE", {"field": "started_at", "value": now.isoformat()})
+                if not progress.ends_at:
+                    progress.ends_at = progress.started_at + timedelta(minutes=duration_minutes)
+                    _reading_start_debug("PROGRESS_UPDATE", {"field": "ends_at", "value": progress.ends_at.isoformat()})
 
-    passages = (
-        db.query(ReadingPassage)
-        .filter(ReadingPassage.test_id == test.id)
-        .order_by(ReadingPassage.order_index.asc())
-        .all()
-    )
+                if _is_time_up(progress.ends_at, now):
+                    last_step = "auto_finalize_time_up"
+                    _reading_start_debug("DECISION", {
+                        "action": "auto_finalize_time_up",
+                        "progress_id": progress.id,
+                        "ends_at": _debug_datetime(progress.ends_at),
+                        "now": now.isoformat(),
+                    })
+                    questions = _query_questions_for_test(db, test.id)
+                    result = _finalize_progress(progress, questions, _auto_submitted_at(progress.ends_at, now))
+                    db.add(progress)
+                    db.commit()
+                    db.refresh(progress)
+                    response = _build_submitted_start_response(progress, result, mock_id, test)
+                    _reading_start_debug("RESPONSE_KEYS", {"keys": list(response.keys())})
+                    return response
 
-    result = []
-    for passage in passages:
-        questions = (
-            db.query(ReadingQuestion)
-            .filter(ReadingQuestion.passage_id == passage.id)
-            .order_by(ReadingQuestion.order_index.asc())
+                db.add(progress)
+                db.commit()
+                db.refresh(progress)
+
+        last_step = "passage_query"
+        passages = (
+            db.query(ReadingPassage)
+            .filter(ReadingPassage.test_id == test.id)
+            .order_by(ReadingPassage.order_index.asc())
             .all()
         )
-
-        result.append({
-            "id": passage.id,
-            "title": passage.title,
-            "text": passage.text,
-            "image_url": passage.image_url,
-            "questions": [
-                {
-                    "id": question.id,
-                    "order_index": question.order_index,
-                    "question_group_id": question.question_group_id,
-                    "type": question.type.value if hasattr(question.type, "value") else str(question.type),
-                    "instruction": question.instruction,
-                    "content": question.content,
-                    "meta": _public_question_meta(question.meta),
-                    "points": question.points,
-                    "image_url": question.image_url
-                }
-                for question in questions
-            ]
+        _reading_start_debug("PASSAGES", {
+            "count": len(passages),
+            "ids": [passage.id for passage in passages],
+            "empty": len(passages) == 0,
         })
 
-    duration_seconds = max(int(test.time_limit_minutes or 60), 1) * 60     
-   
+        result = []
+        total_questions = 0
+        for passage in passages:
+            last_step = f"questions_query_passage_{passage.id}"
+            questions = (
+                db.query(ReadingQuestion)
+                .filter(ReadingQuestion.passage_id == passage.id)
+                .order_by(ReadingQuestion.order_index.asc())
+                .all()
+            )
+            total_questions += len(questions)
+            _reading_start_debug("QUESTIONS", {
+                "passage_id": passage.id,
+                "passage_title": passage.title,
+                "question_count": len(questions),
+                "empty": len(questions) == 0,
+            })
 
-    return {
-        "mock_id": mock_id,
-        "test_id": test.id,
-        "title": test.title,
-        "time_limit_minutes": test.time_limit_minutes,
-        "timer": {
-            "started_at": progress.started_at.isoformat() if progress.started_at else None,
-            "ends_at": progress.ends_at.isoformat() if progress.ends_at else None,
-            "duration_seconds": duration_seconds
-        },
-        "passages": result
-    }
+            result.append({
+                "id": passage.id,
+                "title": passage.title,
+                "text": passage.text,
+                "image_url": passage.image_url,
+                "questions": [
+                    {
+                        "id": question.id,
+                        "order_index": question.order_index,
+                        "question_group_id": question.question_group_id,
+                        "type": question.type.value if hasattr(question.type, "value") else str(question.type),
+                        "instruction": question.instruction,
+                        "content": question.content,
+                        "meta": _public_question_meta(question.meta),
+                        "points": question.points,
+                        "image_url": question.image_url
+                    }
+                    for question in questions
+                ]
+            })
+
+        duration_seconds = duration_minutes * 60
+        response = {
+            "mock_id": mock_id,
+            "test_id": test.id,
+            "title": test.title,
+            "time_limit_minutes": test.time_limit_minutes,
+            "timer": {
+                "started_at": progress.started_at.isoformat() if progress.started_at else None,
+                "ends_at": progress.ends_at.isoformat() if progress.ends_at else None,
+                "duration_seconds": duration_seconds
+            },
+            "passages": result
+        }
+        _reading_start_debug("PAYLOAD_READY", {
+            "passage_count": len(result),
+            "question_count": total_questions,
+            "response_keys": list(response.keys()),
+            "timer_keys": list(response["timer"].keys()),
+        })
+        return response
+    except Exception as exc:
+        _reading_start_debug("FAILED", {
+            "last_step": last_step,
+            "error_type": type(exc).__name__,
+            "error": str(exc),
+        })
+        traceback.print_exc()
+        raise
 
 
 @router.post("/{mock_id}/reading/submit", response_model=SubmitResultOut)
