@@ -1,4 +1,7 @@
 #backend/app/main.py
+from datetime import datetime, timezone
+import traceback
+
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from app.db import engine
@@ -131,6 +134,34 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def reading_start_request_debug(request, call_next):
+    if request.url.path.endswith("/reading/start") and "/mock-tests/" in request.url.path:
+        print("[READING_START_DEBUG] REQUEST_ENTER: " + str({
+            "path": request.url.path,
+            "query": request.url.query,
+            "method": request.method,
+            "server_time": datetime.now(timezone.utc).isoformat(),
+        }), flush=True)
+        try:
+            response = await call_next(request)
+            print("[READING_START_DEBUG] REQUEST_EXIT: " + str({
+                "path": request.url.path,
+                "status_code": response.status_code,
+            }), flush=True)
+            return response
+        except Exception as exc:
+            print("[READING_START_DEBUG] REQUEST_FAILED: " + str({
+                "path": request.url.path,
+                "error_type": type(exc).__name__,
+                "error": str(exc),
+            }), flush=True)
+            traceback.print_exc()
+            raise
+    return await call_next(request)
+
 
 Base.metadata.create_all(bind=engine)
 ensure_premiere_schema()
