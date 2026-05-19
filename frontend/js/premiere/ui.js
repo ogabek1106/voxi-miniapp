@@ -39,6 +39,27 @@
     };
   }
 
+  function isAdminUser() {
+    return Boolean(window.__isAdmin || window.WebsiteAuthState?.getUser?.()?.is_admin);
+  }
+
+  function actionLabel(premiere) {
+    if (isAdminUser()) return "Unlock Premiere";
+    return premiere?.has_access ? "Continue Premiere" : "Unlock Premiere";
+  }
+
+  async function resolveTelegramId() {
+    const rawId = typeof window.getTelegramId === "function" ? window.getTelegramId() : null;
+    if (rawId) return Number(rawId);
+
+    let user = window.WebsiteAuthState?.getUser?.() || null;
+    if (!user && window.WebsiteAuthState?.load) {
+      user = await window.WebsiteAuthState.load();
+    }
+    const websiteTelegramId = Number(user?.telegram_id || 0);
+    return Number.isFinite(websiteTelegramId) && websiteTelegramId > 0 ? websiteTelegramId : null;
+  }
+
   function slot() {
     const homeCards = document.querySelector("#screen-home .home-cards");
     if (!homeCards) return null;
@@ -91,7 +112,7 @@
       node.remove();
       return;
     }
-    const action = premiere.has_access ? "Continue Premiere" : "Unlock Premiere";
+    const action = actionLabel(premiere);
     const time = countdownParts(premiere.premiere_ends_at);
     node.innerHTML = `
       <button class="premiere-home-card ${themeClass(premiere)} ${time.urgent ? "is-urgent" : ""}" type="button" id="premiere-home-card">
@@ -141,14 +162,15 @@
           <span><strong>Countdown</strong><b data-premiere-countdown>${esc(time.text)}</b></span>
           <span><strong>Access price</strong><b data-premiere-price>${esc(formatMoney(p.premiere_price_uzs))}</b></span>
         </div>
-        <button class="premiere-primary" type="button" data-action>${p.has_access ? "Continue Premiere" : "Unlock Premiere"}</button>
+        <div class="premiere-inline-message" data-premiere-message></div>
+        <button class="premiere-primary" type="button" data-action>${actionLabel(p)}</button>
         <button class="premiere-secondary" type="button" data-close>Back</button>
       </div>
     `;
     modal.classList.add("is-open");
     modal.querySelectorAll("[data-close]").forEach((el) => el.addEventListener("click", closeDetails));
     modal.querySelector("[data-action]")?.addEventListener("click", () => {
-      if (p.has_access) {
+      if (p.has_access && !isAdminUser()) {
         closeDetails();
         continuePremiere();
       } else {
@@ -162,11 +184,18 @@
     document.getElementById("premiere-modal")?.classList.remove("is-open");
   }
 
+  function showMessage(text, type = "error") {
+    const node = document.querySelector("#premiere-modal [data-premiere-message]");
+    if (!node) return;
+    node.textContent = text || "";
+    node.className = `premiere-inline-message is-${type}`;
+  }
+
   async function unlockPremiere() {
     const p = state.premiere;
-    const telegramId = typeof window.getTelegramId === "function" ? window.getTelegramId() : null;
+    const telegramId = await resolveTelegramId();
     if (!telegramId) {
-      alert("Please log in before unlocking Premiere.");
+      showMessage("You are logged in, but Premiere payment opens in Telegram. Please use a Telegram-linked account to unlock it.");
       return;
     }
     try {
@@ -175,7 +204,12 @@
         window.open(payment.bot_link, "_blank", "noopener");
       }
     } catch (error) {
-      alert(error?.message || "Could not create Premiere payment.");
+      const detail = error?.data?.detail || error?.message || "";
+      if (detail === "premiere_already_unlocked" || String(detail).includes("premiere_already_unlocked")) {
+        showMessage("You already unlocked this Premiere. You can continue it from this card.", "success");
+        return;
+      }
+      showMessage("Could not create Premiere payment. Please try again.");
     }
   }
 
@@ -190,7 +224,7 @@
 
   async function interceptIfPremiere(packId) {
     if (!window.PremiereApi) return false;
-    const telegramId = typeof window.getTelegramId === "function" ? window.getTelegramId() : null;
+    const telegramId = await resolveTelegramId();
     const data = await window.PremiereApi.active(telegramId);
     const active = data?.premiere;
     if (!active || Number(active.id) !== Number(packId)) return false;

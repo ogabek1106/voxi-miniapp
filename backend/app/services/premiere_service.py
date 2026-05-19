@@ -6,6 +6,7 @@ from typing import Any
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
+from app.config import ADMIN_IDS
 from app.models import MockPack, MockPackStatus, PremiereAccess
 from app.models_vcoins import PaymentRequest
 from app.services.payment_pricing_service import generate_payment_token
@@ -198,7 +199,8 @@ def create_premiere_payment_intent(db: Session, *, telegram_id: int, pack_id: in
     pack = get_pack(db, pack_id)
     if not is_premiere_active(pack):
         raise HTTPException(status_code=404, detail="premiere_not_active")
-    if has_active_premiere_access(db, telegram_id, pack_id):
+    is_admin = int(telegram_id) in ADMIN_IDS
+    if not is_admin and has_active_premiere_access(db, telegram_id, pack_id):
         raise HTTPException(status_code=409, detail="premiere_already_unlocked")
 
     price = int(pack.premiere_price_uzs or 0)

@@ -232,6 +232,27 @@
   background: #f8fafc;
 }
 
+.premiere-inline-message {
+  display: none;
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  font-weight: 850;
+  line-height: 1.3;
+  color: #dc2626;
+  background: rgba(239, 68, 68, 0.09);
+}
+
+.premiere-inline-message.is-error,
+.premiere-inline-message.is-success {
+  display: block;
+}
+
+.premiere-inline-message.is-success {
+  color: #15803d;
+  background: rgba(34, 197, 94, 0.11);
+}
+
 .premiere-primary,
 .premiere-secondary,
 .admin-premiere-apply,
