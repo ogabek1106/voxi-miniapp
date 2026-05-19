@@ -64,48 +64,14 @@ def ensure_reading_progress_columns():
             "CREATE INDEX IF NOT EXISTS ix_reading_progress_mode "
             "ON reading_progress (user_id, test_id, session_mode, id);"
         ))
-        conn.execute(text(
-            "DO $$ "
-            "DECLARE constraint_record RECORD; "
-            "BEGIN "
-            "FOR constraint_record IN "
-            "SELECT c.conname "
-            "FROM pg_constraint c "
-            "JOIN pg_class t ON t.oid = c.conrelid "
-            "JOIN pg_namespace n ON n.oid = t.relnamespace "
-            "WHERE t.relname = 'reading_progress' "
-            "AND c.contype = 'u' "
-            "AND ("
-            "SELECT array_agg(a.attname ORDER BY a.attname) "
-            "FROM unnest(c.conkey) AS k(attnum) "
-            "JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum = k.attnum "
-            ") = ARRAY['test_id', 'user_id'] "
-            "LOOP "
-            "EXECUTE format('ALTER TABLE reading_progress DROP CONSTRAINT IF EXISTS %I', constraint_record.conname); "
-            "END LOOP; "
-            "END $$;"
-        ))
-        conn.execute(text(
-            "DO $$ "
-            "DECLARE index_record RECORD; "
-            "BEGIN "
-            "FOR index_record IN "
-            "SELECT i.relname "
-            "FROM pg_index x "
-            "JOIN pg_class i ON i.oid = x.indexrelid "
-            "JOIN pg_class t ON t.oid = x.indrelid "
-            "WHERE t.relname = 'reading_progress' "
-            "AND x.indisunique = TRUE "
-            "AND ("
-            "SELECT array_agg(a.attname ORDER BY a.attname) "
-            "FROM regexp_split_to_table(x.indkey::text, ' ') AS k(attnum) "
-            "JOIN pg_attribute a ON a.attrelid = t.oid AND a.attnum = k.attnum::SMALLINT "
-            ") = ARRAY['test_id', 'user_id'] "
-            "LOOP "
-            "EXECUTE format('DROP INDEX IF EXISTS %I', index_record.relname); "
-            "END LOOP; "
-            "END $$;"
-        ))
+        conn.execute(text("ALTER TABLE reading_progress DROP CONSTRAINT IF EXISTS reading_progress_user_id_test_id_key;"))
+        conn.execute(text("ALTER TABLE reading_progress DROP CONSTRAINT IF EXISTS uq_reading_progress_user_test;"))
+        conn.execute(text("ALTER TABLE reading_progress DROP CONSTRAINT IF EXISTS uq_reading_progress_user_id_test_id;"))
+        conn.execute(text("ALTER TABLE reading_progress DROP CONSTRAINT IF EXISTS unique_reading_progress_user_test;"))
+        conn.execute(text("DROP INDEX IF EXISTS reading_progress_user_id_test_id_key;"))
+        conn.execute(text("DROP INDEX IF EXISTS uq_reading_progress_user_test;"))
+        conn.execute(text("DROP INDEX IF EXISTS uq_reading_progress_user_id_test_id;"))
+        conn.execute(text("DROP INDEX IF EXISTS unique_reading_progress_user_test;"))
         conn.execute(text(
             "CREATE INDEX IF NOT EXISTS ix_reading_progress_mode "
             "ON reading_progress (user_id, test_id, session_mode, id);"
