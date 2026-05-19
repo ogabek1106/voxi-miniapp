@@ -218,5 +218,10 @@ window.WordShuffleUI = window.WordShuffleUI || {};
         </div>
       </div>
     `;
+    window.VoxiFeedback?.requestFeedback?.({
+      featureType: "word_shuffle",
+      contextKey: `word_shuffle:${state.sessionId || state.score || 0}:${state.solvedCount || 0}`,
+      contextLabel: "Voxi Word Shuffle",
+    });
   };
 })();

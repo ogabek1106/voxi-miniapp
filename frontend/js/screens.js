@@ -26,6 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function hideAllScreens() {
+  window.VoxiFeedback?.cancelPending?.();
   window.AdminLiveDashboardLoader?.stop?.();
   if (window.MockTransitionPage?.cleanup) {
     window.MockTransitionPage.cleanup();
@@ -59,6 +60,12 @@ window.goHome = function () {
     window.refreshVcoinBalance({ animate: true });
   }
   window.PremiereLoader?.load?.();
+  window.VoxiFeedback?.requestFeedback?.({
+    featureType: "homepage_idle",
+    contextKey: "homepage_idle",
+    contextLabel: "Voxi Home",
+    delayMs: 10 * 60 * 1000,
+  });
 };
 
 window.goProfile = function () {
@@ -70,6 +77,12 @@ window.goProfile = function () {
   }
   setBottomNavVisible(true);
   setActiveNav(1);
+  window.VoxiFeedback?.requestFeedback?.({
+    featureType: "profile_idle",
+    contextKey: "profile_idle",
+    contextLabel: "Profile",
+    delayMs: 10 * 60 * 1000,
+  });
 };
 function setActiveNav(index) {
   const buttons = document.querySelectorAll(".nav-btn");
@@ -321,6 +334,7 @@ window.showAdminPanel = function () {
     <button onclick="showAdminWordMerge()">Voxi Word Merge</button>
     <button onclick="showAdminWordShuffle()">Voxi Word Shuffle</button>
     <button onclick="showAdminWordShuffleStats()">Word Shuffle Stats</button>
+    <button onclick="showAdminFeedbackRatings()">Feedback Ratings</button>
     <button onclick="showAdminVCoinPayments()">V-Coin Payments</button>
     <button onclick="showAdminNotifications()">Notifications</button>
     <button onclick="showAnnouncementAdmin()">📢 Announcement</button>

@@ -455,6 +455,7 @@ UserSpeakingLoader.runCheckAndShowResult = async function (options = {}) {
       overallLabel: "Full IELTS Mock Result",
       band: overallBand,
       backTarget: "home",
+      feedbackContextId: state.mockId || fullResult?.mock_pack_id || "latest",
       breakdown: {
         listening: Number(fullResult?.listening_band ?? 0),
         reading: Number(fullResult?.reading_band ?? 0),
@@ -567,6 +568,7 @@ UserSpeakingLoader.start = async function (mockId, container, options = {}) {
             overallLabel: "IELTS Speaking",
             band: Number(data.result.overall_band || 0),
             hideScore: true,
+            feedbackContextId: UserSpeakingState.get?.()?.mockId || "latest",
             backTarget: "home"
           });
           return;

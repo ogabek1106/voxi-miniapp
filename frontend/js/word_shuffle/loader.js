@@ -60,6 +60,7 @@ window.WordShuffleLoader = window.WordShuffleLoader || {};
   };
 
   WordShuffleLoader.exit = async function () {
+    const state = { ...WordShuffleState.get() };
     WordShuffleTimer.stop();
     await WordShuffleLoader.finishIfNeeded("finished");
     document.body.classList.remove("word-shuffle-active");
@@ -68,6 +69,12 @@ window.WordShuffleLoader = window.WordShuffleLoader || {};
     } else if (typeof goHome === "function") {
       goHome();
     }
+    window.VoxiFeedback?.requestFeedback?.({
+      featureType: "word_shuffle",
+      contextKey: `word_shuffle:${state.sessionId || state.score || 0}:${state.solvedCount || 0}`,
+      contextLabel: "Voxi Word Shuffle",
+      delayMs: 300,
+    });
   };
 })();
 

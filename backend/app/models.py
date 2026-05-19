@@ -105,6 +105,24 @@ class AppNotificationRead(Base):
     read_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
 
 
+class AppFeedback(Base):
+    __tablename__ = "app_feedback"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    telegram_id = Column(BigInteger, nullable=True, index=True)
+    feature_type = Column(String, nullable=False, index=True)
+    context_key = Column(String, nullable=False, index=True)
+    rating = Column(Integer, nullable=True)
+    comment = Column(Text, nullable=True)
+    public_permission = Column(Boolean, nullable=False, default=False)
+    public_approved = Column(Boolean, nullable=False, default=False)
+    is_hidden = Column(Boolean, nullable=False, default=False)
+    status = Column(String, nullable=False, default="submitted")
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+
 class ShadowWritingEssay(Base):
     __tablename__ = "shadow_writing_essays"
 

@@ -169,5 +169,10 @@ window.VocabularyOddOneOutUI = window.VocabularyOddOneOutUI || {};
         </div>
       </div>
     `;
+    window.VoxiFeedback?.requestFeedback?.({
+      featureType: "odd_one_out",
+      contextKey: `odd_one_out:${state.analyticsAttemptId || (state.sets || []).map((set) => set.id).join("-") || "session"}`,
+      contextLabel: "Odd One Out",
+    });
   };
 })();

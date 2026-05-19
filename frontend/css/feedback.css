@@ -1,0 +1,177 @@
+.voxi-feedback-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10020;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(15, 23, 42, 0.28);
+  backdrop-filter: blur(8px);
+  opacity: 0;
+  transition: opacity 180ms ease;
+  box-sizing: border-box;
+}
+
+.voxi-feedback-overlay.is-open {
+  opacity: 1;
+}
+
+.voxi-feedback-card {
+  width: min(100%, 430px);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 26px 70px rgba(15, 23, 42, 0.18);
+  padding: 26px;
+  text-align: center;
+  color: #17212b;
+  font-family: Nunito, Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+  transform: translateY(12px) scale(0.98);
+  transition: transform 200ms ease;
+  box-sizing: border-box;
+}
+
+.voxi-feedback-overlay.is-open .voxi-feedback-card {
+  transform: translateY(0) scale(1);
+}
+
+.voxi-feedback-icon {
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 14px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 186, 255, 0.12);
+  color: #00baff;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.voxi-feedback-card h3 {
+  margin: 0;
+  color: #17212b;
+  font-size: 25px;
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.voxi-feedback-card p,
+.voxi-feedback-context {
+  margin: 9px auto 0;
+  color: #607080;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.voxi-feedback-stars {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 20px 0 8px;
+}
+
+.voxi-feedback-star {
+  width: 45px;
+  height: 45px;
+  margin: 0;
+  padding: 0;
+  border-radius: 16px;
+  border: 0;
+  background: #f1f6fb;
+  color: #b7c2ce;
+  box-shadow: 0 8px 22px rgba(20, 40, 60, 0.07);
+  font-size: 25px;
+  cursor: pointer;
+  transition: transform 160ms ease, color 160ms ease, background 160ms ease;
+}
+
+.voxi-feedback-star:hover,
+.voxi-feedback-star.is-selected {
+  color: #ffffff;
+  background: #00baff;
+  transform: translateY(-2px);
+}
+
+.voxi-feedback-hint {
+  min-height: 18px;
+  color: #ef4444;
+  font-size: 12px;
+  font-weight: 800;
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+
+.voxi-feedback-hint.is-visible {
+  opacity: 1;
+}
+
+.voxi-feedback-comment {
+  width: 100%;
+  min-height: 92px;
+  margin: 12px 0 0;
+  padding: 15px 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(138, 152, 166, 0.18);
+  background: #f8fbfe;
+  color: #17212b;
+  resize: vertical;
+  outline: none;
+  font: 800 14px/1.4 Nunito, Manrope, system-ui, -apple-system, "Segoe UI", sans-serif;
+  box-sizing: border-box;
+}
+
+.voxi-feedback-comment:focus {
+  border-color: rgba(0, 186, 255, 0.45);
+  box-shadow: 0 0 0 4px rgba(0, 186, 255, 0.10);
+}
+
+.voxi-feedback-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.voxi-feedback-primary,
+.voxi-feedback-secondary {
+  width: 100%;
+  height: 52px;
+  margin: 0;
+  padding: 0 16px;
+  border-radius: 18px;
+  border: 0;
+  font-size: 15px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.voxi-feedback-primary {
+  background: #00baff;
+  color: #ffffff;
+  box-shadow: 0 12px 28px rgba(0, 186, 255, 0.28);
+}
+
+.voxi-feedback-secondary {
+  background: #f1f6fb;
+  color: #607080;
+  box-shadow: none;
+}
+
+@media (max-width: 520px) {
+  .voxi-feedback-card {
+    padding: 22px 18px;
+    border-radius: 26px;
+  }
+
+  .voxi-feedback-card h3 {
+    font-size: 22px;
+  }
+
+  .voxi-feedback-star {
+    width: 42px;
+    height: 42px;
+  }
+}

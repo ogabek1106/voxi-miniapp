@@ -51,6 +51,18 @@ window.ShadowWritingLoader = window.ShadowWritingLoader || {};
       `;
     }
   };
+
+  ShadowWritingLoader.exit = function () {
+    const state = ShadowWritingState.get();
+    ShadowWritingTyping.cleanup();
+    if (typeof goHome === "function") goHome();
+    window.VoxiFeedback?.requestFeedback?.({
+      featureType: "shadow_writing",
+      contextKey: `shadow_writing:${state.attemptId || state.essay?.id || "latest"}`,
+      contextLabel: "Shadow Writing",
+      delayMs: 300,
+    });
+  };
 })();
 
 window.showShadowWritingEntry = function () {

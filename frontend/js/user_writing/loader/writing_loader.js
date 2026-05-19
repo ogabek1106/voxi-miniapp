@@ -283,6 +283,7 @@ UserWritingLoader.runAiCheckAndShowResult = async function (mockId) {
       overallLabel: "IELTS Writing",
       band,
       hideScore: true,
+      feedbackContextId: mockId,
       backTarget: "home"
     });
     return;

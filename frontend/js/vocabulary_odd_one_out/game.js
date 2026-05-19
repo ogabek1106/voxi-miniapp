@@ -27,6 +27,22 @@ window.VocabularyOddOneOutGame = window.VocabularyOddOneOutGame || {};
     }
   }
 
+  function requestSessionFeedback(delayMs = 3000) {
+    const state = VocabularyOddOneOutState.get();
+    window.VoxiFeedback?.requestFeedback?.({
+      featureType: "odd_one_out",
+      contextKey: `odd_one_out:${state.analyticsAttemptId || (state.sets || []).map((set) => set.id).join("-") || "session"}`,
+      contextLabel: "Odd One Out",
+      delayMs,
+    });
+  }
+
+  function maybeRequestTenSetFeedback() {
+    const state = VocabularyOddOneOutState.get();
+    if (Number(state.answeredCount || 0) !== 10) return;
+    requestSessionFeedback(3000);
+  }
+
   VocabularyOddOneOutGame.stopTimers = function () {
     clearTimer(questionTimerId);
     clearTimer(explanationTimerId);
@@ -39,6 +55,7 @@ window.VocabularyOddOneOutGame = window.VocabularyOddOneOutGame || {};
   VocabularyOddOneOutGame.exit = function () {
     VocabularyOddOneOutGame.stopTimers();
     if (typeof goHome === "function") goHome();
+    requestSessionFeedback(3000);
   };
 
   VocabularyOddOneOutGame.startQuestionTimer = function () {
@@ -134,6 +151,7 @@ window.VocabularyOddOneOutGame = window.VocabularyOddOneOutGame || {};
         timedOut: false,
       });
       VocabularyOddOneOutGame.recordSession();
+      maybeRequestTenSetFeedback();
       VocabularyOddOneOutGame.startExplanationTimer({ timedOut: false });
     } catch (error) {
       console.error("Odd One Out check error:", error);
@@ -171,6 +189,7 @@ window.VocabularyOddOneOutGame = window.VocabularyOddOneOutGame || {};
         timedOut: true,
       });
       VocabularyOddOneOutGame.recordSession();
+      maybeRequestTenSetFeedback();
       VocabularyOddOneOutGame.startExplanationTimer({ timedOut: true });
     } catch (error) {
       console.error("Odd One Out timeout error:", error);

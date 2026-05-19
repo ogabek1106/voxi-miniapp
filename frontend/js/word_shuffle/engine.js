@@ -2,10 +2,26 @@ window.WordShuffleEngine = window.WordShuffleEngine || {};
 
 (function () {
   let solveTimeoutId = null;
+  let feedbackTimeoutId = null;
 
   function clearSolveTimeout() {
     if (solveTimeoutId) window.clearTimeout(solveTimeoutId);
     solveTimeoutId = null;
+  }
+
+  function clearFeedbackTimeout() {
+    if (feedbackTimeoutId) window.clearTimeout(feedbackTimeoutId);
+    feedbackTimeoutId = null;
+  }
+
+  function requestFeedback(delayMs = 3000) {
+    const state = WordShuffleState.get();
+    window.VoxiFeedback?.requestFeedback?.({
+      featureType: "word_shuffle",
+      contextKey: `word_shuffle:${state.sessionId || state.score || 0}:${state.solvedCount || 0}`,
+      contextLabel: "Voxi Word Shuffle",
+      delayMs,
+    });
   }
 
   function nextEntry() {
@@ -22,6 +38,7 @@ window.WordShuffleEngine = window.WordShuffleEngine || {};
 
   WordShuffleEngine.loadNext = function () {
     clearSolveTimeout();
+    clearFeedbackTimeout();
     const state = WordShuffleState.get();
     const entry = nextEntry();
     if (!entry) {
@@ -37,6 +54,12 @@ window.WordShuffleEngine = window.WordShuffleEngine || {};
     state.wordStartedAt = Date.now();
     WordShuffleTimer.resetPuzzle();
     WordShuffleUI.render();
+    if (Number(state.solvedCount || 0) >= 4) {
+      feedbackTimeoutId = window.setTimeout(() => {
+        const currentState = WordShuffleState.get();
+        if (!currentState.gameOver && !currentState.solving) requestFeedback(0);
+      }, 120000);
+    }
   };
 
   function expectedWord() {
@@ -111,6 +134,7 @@ window.WordShuffleEngine = window.WordShuffleEngine || {};
   WordShuffleEngine.solveCurrent = function () {
     const state = WordShuffleState.get();
     clearSolveTimeout();
+    clearFeedbackTimeout();
     state.solving = true;
     const elapsed = Math.max(0.1, (Date.now() - state.wordStartedAt) / 1000);
     const streak = WordShuffleStreak.success();
@@ -150,6 +174,7 @@ window.WordShuffleEngine = window.WordShuffleEngine || {};
   WordShuffleEngine.stop = function () {
     const state = WordShuffleState.get();
     clearSolveTimeout();
+    clearFeedbackTimeout();
     state.gameOver = true;
     state.solving = false;
     WordShuffleTimer.stop();

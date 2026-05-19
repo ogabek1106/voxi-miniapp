@@ -35,6 +35,7 @@ from app.api.admin_word_shuffle import router as admin_word_shuffle_router
 from app.api.word_shuffle import router as word_shuffle_router
 from app.api.activity import router as activity_router
 from app.api.notifications import router as notifications_router
+from app.api.feedback import router as feedback_router
 from app.api.premiere import router as premiere_router
 from app.api.admin_premiere import router as admin_premiere_router
 from app.api.auth import router as auth_router
@@ -58,6 +59,7 @@ from .db import (
     ensure_word_shuffle_schema,
     ensure_activity_schema,
     ensure_notification_schema,
+    ensure_feedback_schema,
     ensure_premiere_schema,
 )
 from app.api.admin_upload import router as admin_upload_router
@@ -83,6 +85,7 @@ ensure_word_merge_schema()
 ensure_word_shuffle_schema()
 ensure_activity_schema()
 ensure_notification_schema()
+ensure_feedback_schema()
 app = FastAPI(title="Voxi Mini App API")
 app.include_router(mock_list.router)
 app.include_router(admin_upload_router)
@@ -112,6 +115,7 @@ app.include_router(admin_word_shuffle_router)
 app.include_router(word_shuffle_router)
 app.include_router(activity_router)
 app.include_router(notifications_router)
+app.include_router(feedback_router)
 app.include_router(premiere_router)
 app.include_router(admin_premiere_router)
 app.include_router(auth_router)

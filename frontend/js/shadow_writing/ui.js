@@ -25,7 +25,7 @@ window.ShadowWritingUI = window.ShadowWritingUI || {};
           <p>${meta}</p>
           <div class="shadow-writing-actions">
             <button class="shadow-secondary-btn" onclick="ShadowWritingTyping.cleanup(); ShadowWritingHistory.show()">History</button>
-            <button class="shadow-secondary-btn" onclick="ShadowWritingTyping.cleanup(); goHome()">Back</button>
+            <button class="shadow-secondary-btn" onclick="ShadowWritingLoader.exit()">Back</button>
           </div>
         </div>
 
@@ -76,5 +76,11 @@ window.ShadowWritingUI = window.ShadowWritingUI || {};
       resultActions.innerHTML = ShadowWritingResult.renderActions();
       resultActions.hidden = false;
     }
+    window.VoxiFeedback?.requestFeedback?.({
+      featureType: "shadow_writing",
+      contextKey: `shadow_writing:${state.attemptId || essay.id || "latest"}`,
+      contextLabel: "Shadow Writing",
+      delayMs: 3000,
+    });
   };
 })();

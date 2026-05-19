@@ -1208,6 +1208,67 @@ def ensure_notification_schema():
         ))
 
 
+def ensure_feedback_schema():
+    with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS app_feedback ("
+            "id SERIAL PRIMARY KEY, "
+            "user_id INTEGER NULL, "
+            "telegram_id BIGINT NULL, "
+            "feature_type VARCHAR NOT NULL, "
+            "context_key VARCHAR NOT NULL, "
+            "rating INTEGER NULL, "
+            "comment TEXT NULL, "
+            "public_permission BOOLEAN NOT NULL DEFAULT FALSE, "
+            "public_approved BOOLEAN NOT NULL DEFAULT FALSE, "
+            "is_hidden BOOLEAN NOT NULL DEFAULT FALSE, "
+            "status VARCHAR NOT NULL DEFAULT 'submitted', "
+            "created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), "
+            "updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()"
+            ");"
+        ))
+        conn.execute(text("ALTER TABLE app_feedback ADD COLUMN IF NOT EXISTS user_id INTEGER;"))
+        conn.execute(text("ALTER TABLE app_feedback ADD COLUMN IF NOT EXISTS telegram_id BIGINT;"))
+        conn.execute(text("ALTER TABLE app_feedback ADD COLUMN IF NOT EXISTS feature_type VARCHAR;"))
+        conn.execute(text("ALTER TABLE app_feedback ADD COLUMN IF NOT EXISTS context_key VARCHAR;"))
+        conn.execute(text("ALTER TABLE app_feedback ADD COLUMN IF NOT EXISTS rating INTEGER;"))
+        conn.execute(text("ALTER TABLE app_feedback ADD COLUMN IF NOT EXISTS comment TEXT;"))
+        conn.execute(text("ALTER TABLE app_feedback ADD COLUMN IF NOT EXISTS public_permission BOOLEAN NOT NULL DEFAULT FALSE;"))
+        conn.execute(text("ALTER TABLE app_feedback ADD COLUMN IF NOT EXISTS public_approved BOOLEAN NOT NULL DEFAULT FALSE;"))
+        conn.execute(text("ALTER TABLE app_feedback ADD COLUMN IF NOT EXISTS is_hidden BOOLEAN NOT NULL DEFAULT FALSE;"))
+        conn.execute(text("ALTER TABLE app_feedback ADD COLUMN IF NOT EXISTS status VARCHAR NOT NULL DEFAULT 'submitted';"))
+        conn.execute(text("ALTER TABLE app_feedback ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text("ALTER TABLE app_feedback ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_app_feedback_feature_created "
+            "ON app_feedback (feature_type, created_at DESC);"
+        ))
+        conn.execute(text(
+            "CREATE UNIQUE INDEX IF NOT EXISTS uq_app_feedback_telegram_context "
+            "ON app_feedback (telegram_id, feature_type, context_key) "
+            "WHERE telegram_id IS NOT NULL;"
+        ))
+        conn.execute(text(
+            "CREATE UNIQUE INDEX IF NOT EXISTS uq_app_feedback_user_context "
+            "ON app_feedback (user_id, feature_type, context_key) "
+            "WHERE user_id IS NOT NULL;"
+        ))
+        conn.execute(text(
+            "DO $$ "
+            "BEGIN "
+            "IF NOT EXISTS ("
+            "SELECT 1 FROM information_schema.table_constraints "
+            "WHERE constraint_name = 'app_feedback_user_id_fkey'"
+            ") THEN "
+            "ALTER TABLE app_feedback "
+            "ADD CONSTRAINT app_feedback_user_id_fkey "
+            "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL; "
+            "END IF; "
+            "END "
+            "$$;"
+        ))
+
+
 def ensure_shadow_writing_schema():
     with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
         conn.execute(text(

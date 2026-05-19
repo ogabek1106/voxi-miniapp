@@ -241,6 +241,7 @@ UserReading.showResultScreen = function (data = {}) {
     band: data.band ?? "0.0",
     correct: data.correct ?? 0,
     total: data.total ?? 40,
+    feedbackContextId: data.feedbackContextId || UserReading.__mockId || "latest",
     backTarget: data.backTarget === "profile" ? "profile" : "home"
   });
 };

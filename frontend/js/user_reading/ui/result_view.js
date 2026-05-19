@@ -23,6 +23,27 @@ UserReading.canShowTelegramResultActions = function () {
   return !!window.Telegram?.WebApp;
 };
 
+UserReading.feedbackFeatureType = function (data = {}) {
+  const sectionType = String(data.sectionType || data.section || "reading").toLowerCase();
+  if (sectionType === "listening") return "listening_single";
+  if (sectionType === "writing") return "writing_single";
+  if (sectionType === "speaking") return "speaking_single";
+  if (sectionType === "full_mock" || sectionType === "fullmock" || sectionType === "mock") return "full_mock";
+  return "reading_single";
+};
+
+UserReading.requestResultFeedback = function (data = {}, overallLabel = "IELTS Result") {
+  if (!window.VoxiFeedback?.requestFeedback) return;
+  const featureType = data.feedbackFeatureType || UserReading.feedbackFeatureType(data);
+  const sectionType = String(data.sectionType || data.section || "reading").toLowerCase();
+  const contextId = data.feedbackContextId || data.progress_id || data.progressId || data.result_id || data.resultId || data.mockId || data.testId || data.test_id || "latest";
+  window.VoxiFeedback.requestFeedback({
+    featureType,
+    contextKey: data.feedbackContextKey || `${featureType}:${sectionType}:${contextId}`,
+    contextLabel: overallLabel,
+  });
+};
+
 UserReading.renderResultPage = function (container, data = {}) {
   if (!container) return;
 
@@ -97,6 +118,7 @@ UserReading.renderResultPage = function (container, data = {}) {
 
   UserReading.animateBandValue(Number(band));
   UserReading.initResultActions({ ...data, band, correct, total: showScore ? total : 0, title: overallLabel });
+  UserReading.requestResultFeedback(data, overallLabel);
 };
 
 UserReading.animateBandValue = function (targetBand) {
