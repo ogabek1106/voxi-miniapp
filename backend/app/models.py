@@ -399,6 +399,7 @@ class MockPack(Base):
     premiere_price_uzs = Column(Integer, nullable=True)
     premiere_label = Column(String, nullable=True)
     premiere_description = Column(Text, nullable=True)
+    premiere_theme = Column(String, nullable=True)
     premiere_updated_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 

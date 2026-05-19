@@ -13,6 +13,8 @@ from app.services.payment_pricing_service import generate_payment_token
 
 PREMIERE_PAYMENT_KIND = "premiere_access"
 PREMIERE_PAYMENT_EXPIRY_HOURS = 24
+PREMIERE_THEMES = {"violet_aurora", "sky_blue", "arctic_glow", "sunset_peach"}
+DEFAULT_PREMIERE_THEME = "violet_aurora"
 
 
 def utcnow() -> datetime:
@@ -39,6 +41,29 @@ def is_premiere_active(pack: MockPack | None, now: datetime | None = None) -> bo
     return ends_at is None or ends_at > to_utc(now or utcnow())
 
 
+def normalize_theme(value: str | None) -> str:
+    theme = (value or DEFAULT_PREMIERE_THEME).strip().lower().replace("-", "_")
+    return theme if theme in PREMIERE_THEMES else DEFAULT_PREMIERE_THEME
+
+
+def expire_stale_premieres(db: Session) -> int:
+    now = utcnow()
+    stale = (
+        db.query(MockPack)
+        .filter(MockPack.premiere_is_active == True)  # noqa: E712
+        .filter(MockPack.premiere_ends_at.isnot(None))
+        .filter(MockPack.premiere_ends_at <= now)
+        .all()
+    )
+    for pack in stale:
+        pack.premiere_is_active = False
+        pack.premiere_updated_at = now
+        db.add(pack)
+    if stale:
+        db.commit()
+    return len(stale)
+
+
 def serialize_premiere_pack(pack: MockPack | None, telegram_id: int | None = None, db: Session | None = None) -> dict | None:
     if not pack:
         return None
@@ -55,11 +80,14 @@ def serialize_premiere_pack(pack: MockPack | None, telegram_id: int | None = Non
         "premiere_price_uzs": int(pack.premiere_price_uzs or 0),
         "premiere_label": pack.premiere_label or "PREMIERE",
         "premiere_description": pack.premiere_description or "",
+        "premiere_theme": normalize_theme(pack.premiere_theme),
         "has_access": has_access,
+        "server_now": utcnow().isoformat(),
     }
 
 
 def get_active_premiere(db: Session) -> MockPack | None:
+    expire_stale_premieres(db)
     now = utcnow()
     packs = (
         db.query(MockPack)
@@ -75,6 +103,7 @@ def get_active_premiere(db: Session) -> MockPack | None:
 
 
 def get_pack(db: Session, pack_id: int) -> MockPack:
+    expire_stale_premieres(db)
     pack = db.query(MockPack).filter(MockPack.id == int(pack_id)).first()
     if not pack:
         raise HTTPException(status_code=404, detail="Mock Pack not found")
@@ -89,6 +118,7 @@ def enable_premiere(
     price_uzs: int,
     label: str | None = None,
     description: str | None = None,
+    theme: str | None = None,
 ) -> MockPack:
     pack = get_pack(db, pack_id)
     if pack.status != MockPackStatus.published:
@@ -106,7 +136,9 @@ def enable_premiere(
         raise HTTPException(status_code=422, detail="Premiere price must be positive.")
 
     end_value = to_utc(ends_at)
-    if end_value and end_value <= utcnow():
+    if not end_value:
+        raise HTTPException(status_code=422, detail="Premiere end time is required.")
+    if end_value <= utcnow():
         raise HTTPException(status_code=422, detail="Premiere end time must be in the future.")
 
     pack.premiere_is_active = True
@@ -114,6 +146,7 @@ def enable_premiere(
     pack.premiere_price_uzs = price
     pack.premiere_label = (label or "PREMIERE").strip()[:120]
     pack.premiere_description = (description or "").strip() or None
+    pack.premiere_theme = normalize_theme(theme)
     pack.premiere_updated_at = utcnow()
     db.add(pack)
     db.commit()

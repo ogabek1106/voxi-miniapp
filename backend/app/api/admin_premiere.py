@@ -22,6 +22,7 @@ class PremiereEnableIn(BaseModel):
     price_uzs: int
     label: Optional[str] = None
     description: Optional[str] = None
+    theme: Optional[str] = None
 
 
 @router.get("/status")
@@ -52,6 +53,7 @@ def enable_pack_premiere(pack_id: int, payload: PremiereEnableIn, db: Session = 
         price_uzs=payload.price_uzs,
         label=payload.label,
         description=payload.description,
+        theme=payload.theme,
     )
     return serialize_premiere_pack(pack)
 

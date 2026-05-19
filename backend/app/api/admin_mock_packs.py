@@ -9,7 +9,7 @@ from app.models import WritingTest, WritingTask
 from app.models import SpeakingTest, SpeakingPart
 from fastapi import HTTPException
 from app.models import MockPackStatus
-from app.services.premiere_service import is_premiere_active, serialize_premiere_pack
+from app.services.premiere_service import expire_stale_premieres, is_premiere_active, serialize_premiere_pack
 
 router = APIRouter(prefix="/admin/mock-packs", tags=["admin-mock-packs"])
 
@@ -20,6 +20,7 @@ class MockPackCreate(BaseModel):
 
 @router.get("")
 def list_mock_packs(db: Session = Depends(get_db)):
+    expire_stale_premieres(db)
     packs = db.query(MockPack).order_by(MockPack.id.desc()).all()
     return [
         {

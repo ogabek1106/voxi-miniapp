@@ -38,6 +38,19 @@
     return live ? "Premiere live" : "Published";
   }
 
+  function themeOptions(current) {
+    const themes = [
+      ["violet_aurora", "Violet Aurora"],
+      ["sky_blue", "Sky Blue"],
+      ["arctic_glow", "Arctic Glow"],
+      ["sunset_peach", "Sunset Peach"],
+    ];
+    const value = current || "violet_aurora";
+    return themes.map(([key, label]) => `
+      <option value="${esc(key)}" ${key === value ? "selected" : ""}>${esc(label)}</option>
+    `).join("");
+  }
+
   function render(pack) {
     const modal = ensureModal();
     state.pack = pack;
@@ -61,6 +74,12 @@
         <label>
           Label
           <input id="admin-premiere-label" type="text" value="${esc(pack?.premiere_label || "PREMIERE")}">
+        </label>
+        <label>
+          Visual theme
+          <select id="admin-premiere-theme">
+            ${themeOptions(pack?.premiere_theme)}
+          </select>
         </label>
         <label>
           Short description
@@ -106,6 +125,7 @@
       ends_at: endsRaw ? new Date(endsRaw).toISOString() : null,
       price_uzs: Number(document.getElementById("admin-premiere-price")?.value || 0),
       label: document.getElementById("admin-premiere-label")?.value || "PREMIERE",
+      theme: document.getElementById("admin-premiere-theme")?.value || "violet_aurora",
       description: document.getElementById("admin-premiere-description")?.value || "",
     };
     try {

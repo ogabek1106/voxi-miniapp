@@ -14,17 +14,29 @@
     return `${Number(value || 0).toLocaleString("ru-RU")} UZS`;
   }
 
-  function countdown(endValue) {
-    if (!endValue) return "Limited release";
+  function themeClass(premiere) {
+    const raw = String(premiere?.premiere_theme || "violet_aurora")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9_]+/g, "_");
+    return `premiere-theme-${raw || "violet_aurora"}`;
+  }
+
+  function countdownParts(endValue) {
+    if (!endValue) return { text: "Limited release", urgent: false, expired: false };
     const diff = new Date(endValue).getTime() - Date.now();
-    if (diff <= 0) return "Premiere ended";
-    const totalMinutes = Math.floor(diff / 60000);
-    const days = Math.floor(totalMinutes / 1440);
-    const hours = Math.floor((totalMinutes % 1440) / 60);
-    const minutes = totalMinutes % 60;
-    if (days > 0) return `${days}d ${hours}h left`;
-    if (hours > 0) return `${hours}h ${minutes}m left`;
-    return `${Math.max(minutes, 1)}m left`;
+    if (diff <= 0) return { text: "Premiere ended", urgent: true, expired: true };
+    const totalSeconds = Math.floor(diff / 1000);
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    const pad = (value) => String(value).padStart(2, "0");
+    return {
+      text: `${pad(days)}d : ${pad(hours)}h : ${pad(minutes)}m : ${pad(seconds)}s`,
+      urgent: totalSeconds <= 86400,
+      expired: false,
+    };
   }
 
   function slot() {
@@ -40,37 +52,64 @@
     return node;
   }
 
+  function clearTick() {
+    if (state.tick) clearInterval(state.tick);
+    state.tick = null;
+  }
+
+  function refreshCountdown() {
+    if (!state.premiere) return;
+    const time = countdownParts(state.premiere.premiere_ends_at);
+    if (time.expired) {
+      render(null);
+      closeDetails();
+      return;
+    }
+    document.querySelectorAll("[data-premiere-countdown]").forEach((node) => {
+      node.textContent = time.text;
+    });
+    document.querySelectorAll("[data-premiere-price]").forEach((node) => {
+      node.textContent = formatMoney(state.premiere.premiere_price_uzs);
+    });
+    document.querySelectorAll(".premiere-home-card").forEach((node) => {
+      node.classList.toggle("is-urgent", Boolean(time.urgent));
+    });
+  }
+
+  function startCountdown() {
+    clearTick();
+    refreshCountdown();
+    state.tick = setInterval(refreshCountdown, 1000);
+  }
+
   function render(premiere) {
     state.premiere = premiere;
     const node = slot();
+    clearTick();
     if (!node) return;
     if (!premiere?.premiere_is_live) {
       node.remove();
       return;
     }
     const action = premiere.has_access ? "Continue Premiere" : "Unlock Premiere";
+    const time = countdownParts(premiere.premiere_ends_at);
     node.innerHTML = `
-      <button class="premiere-home-card" type="button" id="premiere-home-card">
+      <button class="premiere-home-card ${themeClass(premiere)} ${time.urgent ? "is-urgent" : ""}" type="button" id="premiere-home-card">
         <span>
           <span class="premiere-pill">${esc(premiere.premiere_label || "PREMIERE")}</span>
           <span class="premiere-title">${esc(premiere.title)}</span>
           <span class="premiere-subtitle">${esc(premiere.premiere_description || "New full IELTS simulation is now live")}</span>
-          <span class="premiere-meta" data-premiere-countdown>${esc(countdown(premiere.premiere_ends_at))} • ${esc(formatMoney(premiere.premiere_price_uzs))}</span>
+          <span class="premiere-meta">
+            <span class="premiere-countdown" data-premiere-countdown>${esc(time.text)}</span>
+            <span> - </span>
+            <span data-premiere-price>${esc(formatMoney(premiere.premiere_price_uzs))}</span>
+          </span>
         </span>
         <span class="premiere-action">${action}</span>
       </button>
     `;
     document.getElementById("premiere-home-card")?.addEventListener("click", openDetails);
-    refreshCountdown();
-  }
-
-  function refreshCountdown() {
-    clearInterval(state.tick);
-    state.tick = setInterval(() => {
-      const node = document.querySelector("[data-premiere-countdown]");
-      if (!node || !state.premiere) return;
-      node.textContent = `${countdown(state.premiere.premiere_ends_at)} • ${formatMoney(state.premiere.premiere_price_uzs)}`;
-    }, 30000);
+    startCountdown();
   }
 
   function ensureModal() {
@@ -89,17 +128,18 @@
   function openDetails() {
     const p = state.premiere;
     if (!p) return;
+    const time = countdownParts(p.premiere_ends_at);
     const modal = ensureModal();
     modal.innerHTML = `
-      <div class="premiere-sheet">
+      <div class="premiere-sheet ${themeClass(p)}">
         <button class="premiere-close" type="button" data-close>&times;</button>
         <span class="premiere-pill">${esc(p.premiere_label || "PREMIERE")}</span>
         <h3>${esc(p.title)}</h3>
         <p class="premiere-subtitle">${esc(p.premiere_description || "New full IELTS simulation is now live")}</p>
         <div class="premiere-detail-list">
           <span><strong>Includes</strong><b>Listening, Reading, Writing, Speaking</b></span>
-          <span><strong>Ends</strong><b>${esc(countdown(p.premiere_ends_at))}</b></span>
-          <span><strong>Access price</strong><b>${esc(formatMoney(p.premiere_price_uzs))}</b></span>
+          <span><strong>Countdown</strong><b data-premiere-countdown>${esc(time.text)}</b></span>
+          <span><strong>Access price</strong><b data-premiere-price>${esc(formatMoney(p.premiere_price_uzs))}</b></span>
         </div>
         <button class="premiere-primary" type="button" data-action>${p.has_access ? "Continue Premiere" : "Unlock Premiere"}</button>
         <button class="premiere-secondary" type="button" data-close>Back</button>
@@ -115,6 +155,7 @@
         unlockPremiere();
       }
     });
+    refreshCountdown();
   }
 
   function closeDetails() {

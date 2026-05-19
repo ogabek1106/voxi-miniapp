@@ -497,6 +497,10 @@ def ensure_premiere_schema():
         ))
         conn.execute(text(
             "ALTER TABLE mock_packs "
+            "ADD COLUMN IF NOT EXISTS premiere_theme VARCHAR;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE mock_packs "
             "ADD COLUMN IF NOT EXISTS premiere_updated_at TIMESTAMPTZ;"
         ))
         conn.execute(text(
