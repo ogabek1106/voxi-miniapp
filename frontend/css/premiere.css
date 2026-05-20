@@ -189,14 +189,97 @@
   top: var(--y);
   width: var(--size);
   height: var(--size);
-  border-radius: 999px;
-  background: var(--star-color, var(--premiere-star-color));
   opacity: var(--opacity);
-  filter: blur(var(--blur));
-  box-shadow: 0 0 var(--glow) var(--star-glow, var(--premiere-star-glow));
   transform: translate3d(0, 0, 0) scale(0.85);
   animation: premiereStarTwinkle var(--duration) ease-in-out infinite;
   animation-delay: var(--delay);
+}
+
+.premiere-star,
+.premiere-star::before,
+.premiere-star::after,
+.premiere-star-core {
+  pointer-events: none;
+}
+
+.premiere-star-core {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--size);
+  height: var(--size);
+  border-radius: 999px;
+  background: var(--star-color, var(--premiere-star-color));
+  box-shadow: 0 0 var(--glow) var(--star-glow, var(--premiere-star-glow));
+  filter: blur(var(--blur));
+  transform: translate(-50%, -50%);
+}
+
+.premiere-star--diamond .premiere-star-core,
+.premiere-star--starburst .premiere-star-core {
+  border-radius: 1px;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.premiere-star--cross::before,
+.premiere-star--cross::after,
+.premiere-star--glint::before,
+.premiere-star--glint::after,
+.premiere-star--starburst::before,
+.premiere-star--starburst::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  opacity: var(--ray-opacity);
+  background: linear-gradient(90deg, transparent 0%, var(--star-color, var(--premiere-star-color)) 48%, transparent 100%);
+  filter: blur(0.2px) drop-shadow(0 0 calc(var(--glow) * 0.8) var(--star-glow, var(--premiere-star-glow)));
+  transform: translate(-50%, -50%);
+}
+
+.premiere-star--cross::before,
+.premiere-star--glint::before,
+.premiere-star--starburst::before {
+  width: var(--ray);
+  height: 1px;
+}
+
+.premiere-star--cross::after,
+.premiere-star--glint::after,
+.premiere-star--starburst::after {
+  width: 1px;
+  height: var(--ray);
+  background: linear-gradient(180deg, transparent 0%, var(--star-color, var(--premiere-star-color)) 48%, transparent 100%);
+}
+
+.premiere-star--glint::before {
+  width: calc(var(--ray) * 1.35);
+}
+
+.premiere-star--glint::after {
+  height: calc(var(--ray) * 0.72);
+}
+
+.premiere-star--starburst {
+  animation-name: premiereStarGlint;
+}
+
+.premiere-star--starburst .premiere-star-core {
+  width: calc(var(--size) * 1.16);
+  height: calc(var(--size) * 1.16);
+}
+
+.premiere-star--starburst::before {
+  width: calc(var(--ray) * 1.55);
+}
+
+.premiere-star--starburst::after {
+  height: calc(var(--ray) * 1.35);
+}
+
+.premiere-star--glow .premiere-star-core {
+  border-radius: 999px;
+  opacity: 0.72;
 }
 
 .premiere-star-layer--micro .premiere-star {
@@ -553,11 +636,30 @@
 @keyframes premiereStarTwinkle {
   0%, 100% {
     opacity: calc(var(--opacity) * 0.45);
-    transform: translate3d(0, 0, 0) scale(0.85);
+    transform: translate3d(-0.2px, 0.1px, 0) scale(0.82);
   }
   50% {
     opacity: var(--opacity);
-    transform: translate3d(0, 0, 0) scale(1.15);
+    transform: translate3d(0.2px, -0.1px, 0) scale(1.18);
+  }
+}
+
+@keyframes premiereStarGlint {
+  0%, 100% {
+    opacity: calc(var(--opacity) * 0.35);
+    transform: translate3d(0, 0, 0) scale(0.72) rotate(0deg);
+  }
+  42% {
+    opacity: calc(var(--opacity) * 0.62);
+    transform: translate3d(0, 0, 0) scale(0.92) rotate(0deg);
+  }
+  55% {
+    opacity: var(--opacity);
+    transform: translate3d(0, 0, 0) scale(1.32) rotate(3deg);
+  }
+  72% {
+    opacity: calc(var(--opacity) * 0.58);
+    transform: translate3d(0, 0, 0) scale(0.92) rotate(0deg);
   }
 }
 
@@ -578,6 +680,10 @@
   .premiere-star {
     opacity: var(--opacity);
     transform: none;
+  }
+
+  .premiere-star--starburst {
+    opacity: var(--opacity);
   }
 }
 

@@ -95,6 +95,7 @@
 
   function renderStars(layer, count, options = {}) {
     const stars = [];
+    const shapes = options.shapes || ["point"];
     for (let i = 0; i < count; i += 1) {
       const seed = (i + 1) * (options.seed || 1);
       const x = starValue(seed, options.minX ?? 6, options.maxX ?? 98);
@@ -105,8 +106,11 @@
       const duration = starValue(seed + 18.2, options.minDuration ?? 5, options.maxDuration ?? 10);
       const blur = starValue(seed + 21.6, options.minBlur ?? 0, options.maxBlur ?? 0.2);
       const glow = starValue(seed + 24.9, options.minGlow ?? 3, options.maxGlow ?? 9);
+      const ray = starValue(seed + 28.3, options.minRay ?? 5, options.maxRay ?? 13);
+      const rayOpacity = starValue(seed + 31.7, options.minRayOpacity ?? 0.28, options.maxRayOpacity ?? 0.72);
+      const shape = shapes[Math.floor(starValue(seed + 35.1, 0, shapes.length))] || shapes[0];
       stars.push(
-        `<span class="premiere-star" style="--x:${x.toFixed(2)}%;--y:${y.toFixed(2)}%;--size:${size.toFixed(2)}px;--opacity:${opacity.toFixed(2)};--delay:${delay.toFixed(2)}s;--duration:${duration.toFixed(2)}s;--blur:${blur.toFixed(2)}px;--glow:${glow.toFixed(2)}px;"></span>`
+        `<span class="premiere-star premiere-star--${shape}" style="--x:${x.toFixed(2)}%;--y:${y.toFixed(2)}%;--size:${size.toFixed(2)}px;--opacity:${opacity.toFixed(2)};--delay:${delay.toFixed(2)}s;--duration:${duration.toFixed(2)}s;--blur:${blur.toFixed(2)}px;--glow:${glow.toFixed(2)}px;--ray:${ray.toFixed(2)}px;--ray-opacity:${rayOpacity.toFixed(2)};"><span class="premiere-star-core"></span></span>`
       );
     }
     return `<span class="premiere-star-layer premiere-star-layer--${layer}" aria-hidden="true">${stars.join("")}</span>`;
@@ -115,10 +119,10 @@
   function renderStarfield() {
     return `
       <span class="premiere-starfield" aria-hidden="true">
-        ${renderStars("micro", 48, { seed: 1.7, minX: 2, maxX: 98, minSize: 0.8, maxSize: 1.2, minOpacity: 0.22, maxOpacity: 0.48, minDuration: 6.8, maxDuration: 12.5, maxDelay: 9, minBlur: 0, maxBlur: 0.15, minGlow: 2, maxGlow: 5 })}
-        ${renderStars("medium", 28, { seed: 3.3, minX: 8, maxX: 96, minSize: 1.5, maxSize: 2.4, minOpacity: 0.44, maxOpacity: 0.76, minDuration: 7.5, maxDuration: 13.5, maxDelay: 10, minBlur: 0, maxBlur: 0.12, minGlow: 5, maxGlow: 10 })}
-        ${renderStars("bright", 10, { seed: 5.9, minX: 18, maxX: 94, minSize: 3, maxSize: 4, minOpacity: 0.72, maxOpacity: 1, minDuration: 9, maxDuration: 16, maxDelay: 12, minBlur: 0, maxBlur: 0.08, minGlow: 10, maxGlow: 18 })}
-        ${renderStars("glow", 8, { seed: 8.4, minX: 10, maxX: 98, minY: 10, maxY: 90, minSize: 9, maxSize: 18, minOpacity: 0.08, maxOpacity: 0.18, minDuration: 12, maxDuration: 20, maxDelay: 14, minBlur: 4, maxBlur: 8, minGlow: 16, maxGlow: 28 })}
+        ${renderStars("micro", 96, { seed: 1.7, shapes: ["point", "point", "diamond"], minX: 0, maxX: 98, minSize: 0.8, maxSize: 1.25, minOpacity: 0.22, maxOpacity: 0.52, minDuration: 2.4, maxDuration: 5.2, maxDelay: 5.5, minBlur: 0, maxBlur: 0.08, minGlow: 2, maxGlow: 6, minRay: 3, maxRay: 6, minRayOpacity: 0.12, maxRayOpacity: 0.28 })}
+        ${renderStars("medium", 58, { seed: 3.3, shapes: ["point", "cross", "glint", "diamond"], minX: 4, maxX: 97, minSize: 1.4, maxSize: 2.35, minOpacity: 0.46, maxOpacity: 0.82, minDuration: 2.1, maxDuration: 5.5, maxDelay: 6, minBlur: 0, maxBlur: 0.06, minGlow: 5, maxGlow: 12, minRay: 7, maxRay: 16, minRayOpacity: 0.34, maxRayOpacity: 0.74 })}
+        ${renderStars("bright", 24, { seed: 5.9, shapes: ["cross", "glint", "diamond", "starburst"], minX: 12, maxX: 95, minSize: 2.5, maxSize: 3.8, minOpacity: 0.72, maxOpacity: 1, minDuration: 1.8, maxDuration: 4.8, maxDelay: 7, minBlur: 0, maxBlur: 0.03, minGlow: 12, maxGlow: 24, minRay: 13, maxRay: 26, minRayOpacity: 0.62, maxRayOpacity: 1 })}
+        ${renderStars("glow", 14, { seed: 8.4, shapes: ["glow"], minX: 8, maxX: 98, minY: 8, maxY: 92, minSize: 10, maxSize: 20, minOpacity: 0.07, maxOpacity: 0.18, minDuration: 3.8, maxDuration: 8, maxDelay: 8, minBlur: 5, maxBlur: 10, minGlow: 18, maxGlow: 34, minRay: 18, maxRay: 34, minRayOpacity: 0.08, maxRayOpacity: 0.18 })}
       </span>
     `;
   }
