@@ -18,19 +18,24 @@ class MockPackCreate(BaseModel):
     title: str
 
 
+class MockPackRename(BaseModel):
+    title: str
+
+
+def serialize_mock_pack(pack: MockPack):
+    return {
+        "id": pack.id,
+        "title": pack.title,
+        "status": pack.status.value if hasattr(pack.status, "value") else str(pack.status),
+        "premiere": serialize_premiere_pack(pack),
+    }
+
+
 @router.get("")
 def list_mock_packs(db: Session = Depends(get_db)):
     expire_stale_premieres(db)
     packs = db.query(MockPack).order_by(MockPack.id.desc()).all()
-    return [
-        {
-            "id": p.id,
-            "title": p.title,
-            "status": p.status.value if hasattr(p.status, "value") else str(p.status),
-            "premiere": serialize_premiere_pack(p),
-        }
-        for p in packs
-    ]
+    return [serialize_mock_pack(p) for p in packs]
 
 
 @router.post("")
@@ -40,6 +45,24 @@ def create_mock_pack(payload: MockPackCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(pack)
     return pack
+
+
+@router.put("/{pack_id}")
+def rename_mock_pack(pack_id: int, payload: MockPackRename, db: Session = Depends(get_db)):
+    title = (payload.title or "").strip()
+    if not title:
+        raise HTTPException(status_code=400, detail="Mock pack title is required")
+    if len(title) > 255:
+        raise HTTPException(status_code=400, detail="Mock pack title is too long")
+
+    pack = db.query(MockPack).filter(MockPack.id == pack_id).first()
+    if not pack:
+        raise HTTPException(status_code=404, detail="Mock pack not found")
+
+    pack.title = title
+    db.commit()
+    db.refresh(pack)
+    return serialize_mock_pack(pack)
 
 
 @router.get("/{pack_id}/reading")
