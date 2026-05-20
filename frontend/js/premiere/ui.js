@@ -88,6 +88,41 @@
     return premiere?.has_access ? "Continue Premiere" : "Unlock Premiere";
   }
 
+  function starValue(seed, min, max) {
+    const x = Math.sin(seed * 91.713) * 10000;
+    return min + (x - Math.floor(x)) * (max - min);
+  }
+
+  function renderStars(layer, count, options = {}) {
+    const stars = [];
+    for (let i = 0; i < count; i += 1) {
+      const seed = (i + 1) * (options.seed || 1);
+      const x = starValue(seed, options.minX ?? 6, options.maxX ?? 98);
+      const y = starValue(seed + 3.7, options.minY ?? 6, options.maxY ?? 94);
+      const size = starValue(seed + 8.1, options.minSize ?? 1, options.maxSize ?? 2);
+      const opacity = starValue(seed + 12.4, options.minOpacity ?? 0.2, options.maxOpacity ?? 0.7);
+      const delay = starValue(seed + 15.8, -1 * (options.maxDelay ?? 7), 0);
+      const duration = starValue(seed + 18.2, options.minDuration ?? 5, options.maxDuration ?? 10);
+      const blur = starValue(seed + 21.6, options.minBlur ?? 0, options.maxBlur ?? 0.2);
+      const glow = starValue(seed + 24.9, options.minGlow ?? 3, options.maxGlow ?? 9);
+      stars.push(
+        `<span class="premiere-star" style="--x:${x.toFixed(2)}%;--y:${y.toFixed(2)}%;--size:${size.toFixed(2)}px;--opacity:${opacity.toFixed(2)};--delay:${delay.toFixed(2)}s;--duration:${duration.toFixed(2)}s;--blur:${blur.toFixed(2)}px;--glow:${glow.toFixed(2)}px;"></span>`
+      );
+    }
+    return `<span class="premiere-star-layer premiere-star-layer--${layer}" aria-hidden="true">${stars.join("")}</span>`;
+  }
+
+  function renderStarfield() {
+    return `
+      <span class="premiere-starfield" aria-hidden="true">
+        ${renderStars("micro", 48, { seed: 1.7, minX: 2, maxX: 98, minSize: 0.8, maxSize: 1.2, minOpacity: 0.22, maxOpacity: 0.48, minDuration: 6.8, maxDuration: 12.5, maxDelay: 9, minBlur: 0, maxBlur: 0.15, minGlow: 2, maxGlow: 5 })}
+        ${renderStars("medium", 28, { seed: 3.3, minX: 8, maxX: 96, minSize: 1.5, maxSize: 2.4, minOpacity: 0.44, maxOpacity: 0.76, minDuration: 7.5, maxDuration: 13.5, maxDelay: 10, minBlur: 0, maxBlur: 0.12, minGlow: 5, maxGlow: 10 })}
+        ${renderStars("bright", 10, { seed: 5.9, minX: 18, maxX: 94, minSize: 3, maxSize: 4, minOpacity: 0.72, maxOpacity: 1, minDuration: 9, maxDuration: 16, maxDelay: 12, minBlur: 0, maxBlur: 0.08, minGlow: 10, maxGlow: 18 })}
+        ${renderStars("glow", 8, { seed: 8.4, minX: 10, maxX: 98, minY: 10, maxY: 90, minSize: 9, maxSize: 18, minOpacity: 0.08, maxOpacity: 0.18, minDuration: 12, maxDuration: 20, maxDelay: 14, minBlur: 4, maxBlur: 8, minGlow: 16, maxGlow: 28 })}
+      </span>
+    `;
+  }
+
   async function resolveIdentity() {
     const rawValue = typeof window.getTelegramId === "function" ? window.getTelegramId() : null;
     const rawText = String(rawValue ?? "").trim().toLowerCase();
@@ -247,7 +282,7 @@
     const time = countdownParts(premiere.premiere_ends_at);
     node.innerHTML = `
       <button class="premiere-home-card ${themeClass(premiere)} ${time.urgent ? "is-urgent" : ""}" type="button" id="premiere-home-card">
-        <span>
+        <span class="premiere-content">
           <span class="premiere-pill">${esc(premiere.premiere_label || "PREMIERE")}</span>
           <span class="premiere-title">${esc(premiere.title)}</span>
           <span class="premiere-subtitle">${esc(premiere.premiere_description || "New full IELTS simulation is now live")}</span>
@@ -257,6 +292,7 @@
             <span data-premiere-price>${esc(formatMoney(premiere.premiere_price_uzs))}</span>
           </span>
         </span>
+        ${renderStarfield()}
         <span class="premiere-action">${action}</span>
       </button>
     `;
