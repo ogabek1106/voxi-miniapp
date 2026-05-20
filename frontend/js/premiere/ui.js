@@ -1,6 +1,6 @@
 (function () {
   const STORAGE_KEY = "voxi:premiere:last-payment";
-  const state = { premiere: null, tick: null, paymentPoll: null };
+  const state = { premiere: null, tick: null, paymentPoll: null, currentPayment: null };
 
   function esc(value) {
     return String(value ?? "")
@@ -44,8 +44,20 @@
     return Boolean(window.__isAdmin || window.WebsiteAuthState?.getUser?.()?.is_admin);
   }
 
+  function currentPaymentForPremiere(premiere) {
+    const payment = state.currentPayment;
+    if (!payment || !premiere) return null;
+    return Number(payment.mock_pack_id || 0) === Number(premiere.id || 0) ? payment : null;
+  }
+
   function actionLabel(premiere) {
     if (isAdminUser()) return "Unlock Premiere";
+    const payment = currentPaymentForPremiere(premiere);
+    const status = paymentStatusKey(payment?.status);
+    if (status === "pending") return "Payment under review";
+    if (status === "approved") return "Start Premiere Mock";
+    if (status === "rejected") return "Try Again";
+    if (status === "expired") return "Create New Payment";
     return premiere?.has_access ? "Continue Premiere" : "Unlock Premiere";
   }
 
@@ -122,6 +134,24 @@
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch {}
+    state.currentPayment = null;
+    updateActionControls();
+  }
+
+  function updateActionControls() {
+    const p = state.premiere;
+    const label = actionLabel(p);
+    document.querySelectorAll(".premiere-action").forEach((node) => {
+      node.textContent = label;
+      node.classList.toggle("is-waiting", paymentStatusKey(currentPaymentForPremiere(p)?.status) === "pending");
+    });
+    const action = document.querySelector("#premiere-modal [data-action]");
+    if (action) {
+      const status = paymentStatusKey(currentPaymentForPremiere(p)?.status);
+      action.textContent = label;
+      action.disabled = status === "pending";
+      action.classList.toggle("is-disabled", status === "pending");
+    }
   }
 
   function refreshCountdown() {
@@ -177,6 +207,7 @@
     `;
     document.getElementById("premiere-home-card")?.addEventListener("click", openDetails);
     startCountdown();
+    updateActionControls();
   }
 
   function ensureModal() {
@@ -217,7 +248,13 @@
     modal.classList.add("is-open");
     modal.querySelectorAll("[data-close]").forEach((el) => el.addEventListener("click", closeDetails));
     modal.querySelector("[data-action]")?.addEventListener("click", () => {
-      if (p.has_access && !isAdminUser()) {
+      const payment = currentPaymentForPremiere(p);
+      const status = paymentStatusKey(payment?.status);
+      if (status === "pending") {
+        renderPaymentState("pending", payment);
+        return;
+      }
+      if ((status === "approved" || p.has_access) && !isAdminUser()) {
         closeDetails();
         continuePremiere();
       } else {
@@ -226,6 +263,7 @@
     });
     refreshCountdown();
     checkStoredPaymentStatus();
+    updateActionControls();
   }
 
   function closeDetails() {
@@ -240,6 +278,7 @@
   }
 
   function paymentStatusKey(status) {
+    if (status == null || status === "") return "none";
     const raw = String(status || "pending").toLowerCase();
     if (raw === "admin_confirmed" || raw === "confirmed" || raw === "approved") return "approved";
     if (raw === "admin_rejected" || raw === "rejected") return "rejected";
@@ -250,6 +289,10 @@
   function renderPaymentState(status, payment) {
     const node = document.querySelector("#premiere-modal [data-premiere-return-state]");
     if (!node) return;
+    if (payment) {
+      state.currentPayment = payment;
+      updateActionControls();
+    }
     const key = paymentStatusKey(status);
     const token = payment?.payment_token ? `<span class="premiere-payment-token">${esc(payment.payment_token)}</span>` : "";
     const copy = {
@@ -310,6 +353,14 @@
   async function checkStoredPaymentStatus() {
     const remembered = readRememberedPayment();
     if (!remembered?.token || !window.PremiereApi?.paymentIntent) return null;
+    if (state.premiere && Number(remembered.pack_id || 0) === Number(state.premiere.id || 0)) {
+      state.currentPayment = {
+        mock_pack_id: remembered.pack_id,
+        payment_token: remembered.token,
+        status: "pending",
+      };
+      updateActionControls();
+    }
     const identity = await resolveIdentity();
     const lookupIdentity = {
       telegram_id: identity.telegram_id || remembered.telegram_id || null,
@@ -328,14 +379,21 @@
         renderPaymentState(status, payment);
       }
       if (status === "approved") {
+        state.currentPayment = payment;
         await refreshActivePremiere();
         if (document.getElementById("premiere-modal")?.classList.contains("is-open")) {
           renderPaymentState(status, payment);
         }
-        forgetPayment();
+        try {
+          localStorage.removeItem(STORAGE_KEY);
+        } catch {}
       } else if (status === "rejected" || status === "expired") {
+        state.currentPayment = payment;
+        updateActionControls();
         clearPaymentPoll();
       } else {
+        state.currentPayment = payment;
+        updateActionControls();
         startPaymentPolling();
       }
       return payment;
@@ -365,6 +423,7 @@
     }
     try {
       const payment = await window.PremiereApi.createPaymentIntent(p.id, identity);
+      state.currentPayment = payment;
       rememberPayment(payment, identity, p.id);
       if (identity.is_google_only) {
         showMessage("You logged in with Google. The Telegram bot may ask you to confirm your email to continue payment.", "info");
@@ -372,6 +431,7 @@
         showMessage("Telegram payment opened. After sending your receipt, return here for the Premiere status.", "info");
       }
       renderPaymentState("pending", payment);
+      updateActionControls();
       if (payment?.bot_link) {
         window.open(payment.bot_link, "_blank", "noopener");
       }

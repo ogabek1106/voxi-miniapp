@@ -16,6 +16,7 @@ PREMIERE_PAYMENT_KIND = "premiere_access"
 PREMIERE_PAYMENT_EXPIRY_HOURS = 24
 PREMIERE_THEMES = {"violet_aurora", "sky_blue", "arctic_glow", "sunset_peach"}
 DEFAULT_PREMIERE_THEME = "violet_aurora"
+ACTIVE_PREMIERE_PAYMENT_STATUSES = {"pending", "under_review", "waiting_payment", "duplicate_suspected"}
 
 
 def utcnow() -> datetime:
@@ -262,6 +263,16 @@ def create_premiere_payment_intent(
     ):
         raise HTTPException(status_code=409, detail="premiere_already_unlocked")
 
+    existing_payment = find_active_premiere_payment_for_identity(
+        db,
+        mock_pack_id=pack_id,
+        telegram_id=clean_telegram_id,
+        user_id=clean_user_id,
+        email=normalized_email,
+    )
+    if existing_payment:
+        return existing_payment
+
     price = int(pack.premiere_price_uzs or 0)
     if price <= 0:
         raise HTTPException(status_code=422, detail="premiere_price_not_configured")
@@ -299,6 +310,51 @@ def create_premiere_payment_intent(
     db.commit()
     db.refresh(payment)
     return payment
+
+
+def _payment_matches_pack(payment: PaymentRequest, mock_pack_id: int) -> bool:
+    payload = dict(payment.raw_payload or {})
+    try:
+        return int(payload.get("mock_pack_id") or 0) == int(mock_pack_id)
+    except (TypeError, ValueError):
+        return False
+
+
+def find_active_premiere_payment_for_identity(
+    db: Session,
+    *,
+    mock_pack_id: int,
+    telegram_id: int | None = None,
+    user_id: int | None = None,
+    email: str | None = None,
+) -> PaymentRequest | None:
+    normalized_email = normalize_email(email)
+    if not telegram_id and not user_id and not normalized_email:
+        return None
+    query = (
+        db.query(PaymentRequest)
+        .filter(PaymentRequest.package_code == "premiere_access")
+        .filter(PaymentRequest.status.in_(ACTIVE_PREMIERE_PAYMENT_STATUSES))
+        .order_by(PaymentRequest.id.desc())
+    )
+    from sqlalchemy import or_
+    filters = []
+    if telegram_id:
+        filters.append(PaymentRequest.telegram_id == int(telegram_id))
+    if user_id:
+        filters.append(PaymentRequest.user_id == int(user_id))
+    if normalized_email:
+        filters.append(PaymentRequest.email == normalized_email)
+    for payment in query.filter(or_(*filters)).limit(20).all():
+        if not is_premiere_payment(payment) or not _payment_matches_pack(payment, mock_pack_id):
+            continue
+        if _payment_expired(payment):
+            payment.status = "expired"
+            db.add(payment)
+            db.commit()
+            continue
+        return payment
+    return None
 
 
 def _payment_expired(payment: PaymentRequest) -> bool:
