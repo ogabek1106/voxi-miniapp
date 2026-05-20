@@ -152,12 +152,6 @@
   transition: transform 180ms ease, box-shadow 180ms ease;
 }
 
-.premiere-action.is-waiting {
-  background: #e8f4fb;
-  color: #0369a1;
-  box-shadow: 0 10px 24px rgba(0, 186, 255, 0.14);
-}
-
 .premiere-home-card:hover .premiere-action,
 .premiere-primary:hover {
   transform: translateY(-1px);
@@ -323,19 +317,16 @@
   cursor: pointer;
 }
 
-.premiere-primary.is-disabled,
-.premiere-primary:disabled {
-  cursor: wait;
-  opacity: 0.76;
-  background: #dbeafe;
-  color: #0369a1;
-  box-shadow: none;
-}
-
 .premiere-primary,
 .admin-premiere-apply {
   background: linear-gradient(135deg, var(--premiere-accent-2, #00baff), var(--premiere-accent, #00baff));
   color: #fff;
+}
+
+.premiere-primary.is-disabled,
+.premiere-primary:disabled {
+  cursor: wait;
+  opacity: 1;
 }
 
 .premiere-secondary {
