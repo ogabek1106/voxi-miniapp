@@ -150,15 +150,18 @@
   function updateActionControls() {
     const p = state.premiere;
     const label = actionLabel(p);
+    const payment = currentPaymentForPremiere(p);
+    const flow = paymentFlowKey(payment);
+    const hasPaymentState = ["continue_payment", "under_review", "approved", "rejected", "expired"].includes(flow);
     document.querySelectorAll(".premiere-action").forEach((node) => {
       node.textContent = label;
-      node.classList.toggle("is-waiting", paymentFlowKey(currentPaymentForPremiere(p)) === "under_review");
+      node.classList.toggle("is-waiting", flow === "under_review");
     });
     const action = document.querySelector("#premiere-modal [data-action]");
     if (action) {
-      const flow = paymentFlowKey(currentPaymentForPremiere(p));
       action.textContent = label;
-      action.disabled = flow === "under_review";
+      action.hidden = hasPaymentState;
+      action.disabled = hasPaymentState || flow === "under_review";
       action.classList.toggle("is-disabled", flow === "under_review");
     }
   }
