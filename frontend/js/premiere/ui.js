@@ -50,14 +50,23 @@
     return Number(payment.mock_pack_id || 0) === Number(premiere.id || 0) ? payment : null;
   }
 
+  function paymentFlowKey(payment) {
+    const status = paymentStatusKey(payment?.status);
+    if (status === "pending") {
+      return payment?.receipt_submitted ? "under_review" : "continue_payment";
+    }
+    return status;
+  }
+
   function actionLabel(premiere) {
     if (isAdminUser()) return "Unlock Premiere";
     const payment = currentPaymentForPremiere(premiere);
-    const status = paymentStatusKey(payment?.status);
-    if (status === "pending") return "Payment under review";
-    if (status === "approved") return "Start Premiere Mock";
-    if (status === "rejected") return "Try Again";
-    if (status === "expired") return "Create New Payment";
+    const flow = paymentFlowKey(payment);
+    if (flow === "continue_payment") return "Continue Payment";
+    if (flow === "under_review") return "Waiting for confirmation";
+    if (flow === "approved") return "Start Premiere Mock";
+    if (flow === "rejected") return "Try Again";
+    if (flow === "expired") return "Create New Payment";
     return premiere?.has_access ? "Continue Premiere" : "Unlock Premiere";
   }
 
@@ -143,14 +152,14 @@
     const label = actionLabel(p);
     document.querySelectorAll(".premiere-action").forEach((node) => {
       node.textContent = label;
-      node.classList.toggle("is-waiting", paymentStatusKey(currentPaymentForPremiere(p)?.status) === "pending");
+      node.classList.toggle("is-waiting", paymentFlowKey(currentPaymentForPremiere(p)) === "under_review");
     });
     const action = document.querySelector("#premiere-modal [data-action]");
     if (action) {
-      const status = paymentStatusKey(currentPaymentForPremiere(p)?.status);
+      const flow = paymentFlowKey(currentPaymentForPremiere(p));
       action.textContent = label;
-      action.disabled = status === "pending";
-      action.classList.toggle("is-disabled", status === "pending");
+      action.disabled = flow === "under_review";
+      action.classList.toggle("is-disabled", flow === "under_review");
     }
   }
 
@@ -179,8 +188,9 @@
     state.tick = setInterval(refreshCountdown, 1000);
   }
 
-  function render(premiere) {
+  function render(premiere, payment = null) {
     state.premiere = premiere;
+    if (payment) state.currentPayment = payment;
     const node = slot();
     clearTick();
     if (!node) return;
@@ -249,14 +259,21 @@
     modal.querySelectorAll("[data-close]").forEach((el) => el.addEventListener("click", closeDetails));
     modal.querySelector("[data-action]")?.addEventListener("click", () => {
       const payment = currentPaymentForPremiere(p);
-      const status = paymentStatusKey(payment?.status);
-      if (status === "pending") {
+      const flow = paymentFlowKey(payment);
+      if (flow === "under_review") {
         renderPaymentState("pending", payment);
         return;
       }
-      if ((status === "approved" || p.has_access) && !isAdminUser()) {
+      if (flow === "continue_payment") {
+        continuePayment(payment);
+        return;
+      }
+      if ((flow === "approved" || p.has_access) && !isAdminUser()) {
         closeDetails();
         continuePremiere();
+      } else if (flow === "rejected" || flow === "expired") {
+        forgetPayment();
+        unlockPremiere();
       } else {
         unlockPremiere();
       }
@@ -286,6 +303,21 @@
     return "pending";
   }
 
+  function continuePayment(payment) {
+    const p = state.premiere;
+    const rememberedIdentity = {
+      telegram_id: payment?.telegram_id || null,
+      user_id: payment?.user_id || null,
+      email: payment?.email || null,
+    };
+    rememberPayment(payment, rememberedIdentity, p?.id || payment?.mock_pack_id);
+    renderPaymentState("continue_payment", payment);
+    updateActionControls();
+    if (payment?.bot_link) {
+      window.open(payment.bot_link, "_blank", "noopener");
+    }
+  }
+
   function renderPaymentState(status, payment) {
     const node = document.querySelector("#premiere-modal [data-premiere-return-state]");
     if (!node) return;
@@ -293,9 +325,15 @@
       state.currentPayment = payment;
       updateActionControls();
     }
-    const key = paymentStatusKey(status);
+    const flowKey = status === "continue_payment" ? "continue_payment" : paymentFlowKey({ ...payment, status });
+    const key = flowKey === "under_review" ? "pending" : flowKey;
     const token = payment?.payment_token ? `<span class="premiere-payment-token">${esc(payment.payment_token)}</span>` : "";
     const copy = {
+      continue_payment: {
+        title: "Continue your Premiere payment",
+        text: "Your payment request is ready. Open Telegram and send the receipt for this payment ID.",
+        action: `<button class="premiere-primary" type="button" data-premiere-continue-payment>Continue Payment</button>`,
+      },
       pending: {
         title: "Payment is being reviewed",
         text: "We'll unlock your Premiere access after confirmation.",
@@ -330,6 +368,7 @@
       closeDetails();
       continuePremiere();
     });
+    node.querySelector("[data-premiere-continue-payment]")?.addEventListener("click", () => continuePayment(payment));
     node.querySelector("[data-premiere-retry]")?.addEventListener("click", () => {
       forgetPayment();
       unlockPremiere();
@@ -341,7 +380,7 @@
       const identity = await resolveIdentity();
       const data = await window.PremiereApi.active(identity);
       if (data?.premiere) {
-        render(data.premiere);
+        render(data.premiere, data?.active_payment || state.currentPayment);
       }
       return data?.premiere || null;
     } catch (error) {
@@ -374,9 +413,9 @@
       if (result?.premiere) {
         state.premiere = result.premiere;
       }
-      const status = paymentStatusKey(payment?.status);
+      const status = paymentFlowKey(payment);
       if (document.getElementById("premiere-modal")?.classList.contains("is-open")) {
-        renderPaymentState(status, payment);
+        renderPaymentState(status === "continue_payment" ? "continue_payment" : payment?.status, payment);
       }
       if (status === "approved") {
         state.currentPayment = payment;
@@ -388,6 +427,10 @@
           localStorage.removeItem(STORAGE_KEY);
         } catch {}
       } else if (status === "rejected" || status === "expired") {
+        state.currentPayment = payment;
+        updateActionControls();
+        clearPaymentPoll();
+      } else if (status === "continue_payment") {
         state.currentPayment = payment;
         updateActionControls();
         clearPaymentPoll();
@@ -425,17 +468,25 @@
       const payment = await window.PremiereApi.createPaymentIntent(p.id, identity);
       state.currentPayment = payment;
       rememberPayment(payment, identity, p.id);
-      if (identity.is_google_only) {
-        showMessage("You logged in with Google. The Telegram bot may ask you to confirm your email to continue payment.", "info");
-      } else {
-        showMessage("Telegram payment opened. After sending your receipt, return here for the Premiere status.", "info");
+      const flow = paymentFlowKey(payment);
+      if (flow === "under_review") {
+        showMessage("Your receipt is already waiting for confirmation.", "info");
+        renderPaymentState("pending", payment);
+        updateActionControls();
+        startPaymentPolling();
+        return;
       }
-      renderPaymentState("pending", payment);
+      showMessage(
+        identity.is_google_only
+          ? "You logged in with Google. The Telegram bot may ask you to confirm your email to continue payment."
+          : "Telegram payment opened. After sending your receipt, return here for the Premiere status.",
+        "info",
+      );
+      renderPaymentState("continue_payment", payment);
       updateActionControls();
       if (payment?.bot_link) {
         window.open(payment.bot_link, "_blank", "noopener");
       }
-      startPaymentPolling();
     } catch (error) {
       const detail = error?.data?.detail || error?.message || "";
       if (detail === "premiere_already_unlocked" || String(detail).includes("premiere_already_unlocked")) {
@@ -466,7 +517,7 @@
     const data = await window.PremiereApi.active(identity);
     const active = data?.premiere;
     if (!active || Number(active.id) !== Number(packId)) return false;
-    render(active);
+    render(active, data?.active_payment || null);
     if (active.has_access) {
       state.premiere = active;
       continuePremiere();

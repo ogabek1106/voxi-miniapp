@@ -150,6 +150,7 @@ def create_payment_intent(
 
 def serialize_payment_request(payment: PaymentRequest) -> dict:
     raw_payload = dict(payment.raw_payload or {})
+    receipt_submitted = bool(payment.receipt_file_id or payment.receipt_image_hash or raw_payload.get("receipt_payload"))
     return {
         "id": payment.id,
         "telegram_id": payment.telegram_id,
@@ -165,6 +166,7 @@ def serialize_payment_request(payment: PaymentRequest) -> dict:
         "final_amount": payment.final_amount,
         "expected_price": payment.expected_price,
         "status": payment.status,
+        "receipt_submitted": receipt_submitted,
         "reject_reason": payment.reject_reason,
         "payment_kind": raw_payload.get("payment_kind"),
         "mock_pack_id": raw_payload.get("mock_pack_id"),

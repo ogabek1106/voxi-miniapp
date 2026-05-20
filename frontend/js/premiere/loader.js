@@ -14,7 +14,7 @@
         user_id: user?.id || null,
         email: user?.email || null,
       });
-      window.PremiereUi.render(data?.premiere || null);
+      window.PremiereUi.render(data?.premiere || null, data?.active_payment || null);
       window.PremiereUi.checkStoredPaymentStatus?.();
     } catch (error) {
       console.warn("Premiere card failed to load:", error);
