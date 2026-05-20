@@ -65,6 +65,7 @@ body #screen-home .home-card:hover::before {
   z-index: 1;
   pointer-events: none;
   overflow: visible;
+  display: none;
 }
 
 .odd-one-out-bubbles .sw-bubble {

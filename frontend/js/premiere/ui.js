@@ -257,6 +257,7 @@
             <span data-premiere-price>${esc(formatMoney(premiere.premiere_price_uzs))}</span>
           </span>
         </span>
+        <span class="premiere-star-sky" aria-hidden="true"></span>
         <span class="premiere-action">${action}</span>
       </button>
     `;

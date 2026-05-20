@@ -28,6 +28,9 @@
   --premiere-glow: rgba(139, 92, 246, 0.2);
   --premiere-soft: #f8fbff;
   --premiere-end: #f2f0ff;
+  --premiere-night: #221247;
+  --premiere-night-2: #075985;
+  --premiere-star: #ffffff;
 }
 
 .premiere-home-card::before,
@@ -58,6 +61,9 @@
   --premiere-glow: rgba(139, 92, 246, 0.22);
   --premiere-soft: #f8fbff;
   --premiere-end: #f1edff;
+  --premiere-night: #221247;
+  --premiere-night-2: #075985;
+  --premiere-star: #f5f3ff;
 }
 
 .premiere-theme-sky_blue {
@@ -66,6 +72,9 @@
   --premiere-glow: rgba(56, 189, 248, 0.24);
   --premiere-soft: #f4fbff;
   --premiere-end: #e8f6ff;
+  --premiere-night: #0c4a6e;
+  --premiere-night-2: #0369a1;
+  --premiere-star: #f0f9ff;
 }
 
 .premiere-theme-arctic_glow {
@@ -74,6 +83,9 @@
   --premiere-glow: rgba(103, 232, 249, 0.24);
   --premiere-soft: #f7feff;
   --premiere-end: #eefcff;
+  --premiere-night: #164e63;
+  --premiere-night-2: #0e7490;
+  --premiere-star: #ecfeff;
 }
 
 .premiere-theme-sunset_peach {
@@ -82,6 +94,9 @@
   --premiere-glow: rgba(251, 113, 133, 0.22);
   --premiere-soft: #fff9f5;
   --premiere-end: #fff0e8;
+  --premiere-night: #7c2d12;
+  --premiere-night-2: #be123c;
+  --premiere-star: #fff7ed;
 }
 
 .premiere-home-card:hover {
@@ -113,6 +128,69 @@
 .premiere-home-card .premiere-action {
   position: relative;
   z-index: 2;
+}
+
+.premiere-home-card .premiere-star-sky {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  bottom: 18px;
+  left: min(42%, 560px);
+  z-index: 1;
+  overflow: hidden;
+  border-radius: 24px;
+  opacity: 0.92;
+  background:
+    radial-gradient(circle at 72% 34%, color-mix(in srgb, var(--premiere-star) 55%, transparent) 0 1px, transparent 2px),
+    radial-gradient(circle at 18% 76%, color-mix(in srgb, var(--premiere-star) 50%, transparent) 0 1px, transparent 2px),
+    radial-gradient(circle at 45% 24%, color-mix(in srgb, var(--premiere-accent-2) 46%, transparent), transparent 26%),
+    radial-gradient(circle at 82% 72%, color-mix(in srgb, var(--premiere-accent) 38%, transparent), transparent 28%),
+    linear-gradient(135deg, color-mix(in srgb, var(--premiere-night) 82%, transparent), color-mix(in srgb, var(--premiere-night-2) 68%, transparent));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--premiere-star) 14%, transparent),
+    0 18px 34px color-mix(in srgb, var(--premiere-accent) 20%, transparent);
+  animation: premiereSkyDrift 10s ease-in-out infinite alternate;
+}
+
+.premiere-star-sky::before,
+.premiere-star-sky::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.premiere-star-sky::before {
+  width: 2px;
+  height: 2px;
+  left: 12%;
+  top: 18%;
+  border-radius: 50%;
+  background: var(--premiere-star);
+  box-shadow:
+    28px 34px 0 0 color-mix(in srgb, var(--premiere-star) 84%, transparent),
+    62px 8px 0 0 color-mix(in srgb, var(--premiere-star) 74%, transparent),
+    94px 52px 0 1px color-mix(in srgb, var(--premiere-star) 88%, transparent),
+    128px 22px 0 0 color-mix(in srgb, var(--premiere-star) 80%, transparent),
+    168px 70px 0 0 color-mix(in srgb, var(--premiere-star) 74%, transparent),
+    210px 18px 0 1px color-mix(in srgb, var(--premiere-star) 86%, transparent),
+    248px 62px 0 0 color-mix(in srgb, var(--premiere-star) 78%, transparent),
+    292px 30px 0 0 color-mix(in srgb, var(--premiere-star) 84%, transparent),
+    334px 76px 0 1px color-mix(in srgb, var(--premiere-star) 88%, transparent),
+    378px 16px 0 0 color-mix(in srgb, var(--premiere-star) 74%, transparent),
+    418px 56px 0 0 color-mix(in srgb, var(--premiere-star) 82%, transparent);
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--premiere-star) 70%, transparent));
+  animation: premiereStarTwinkle 2.8s ease-in-out infinite alternate;
+}
+
+.premiere-star-sky::after {
+  background:
+    linear-gradient(112deg, transparent 8%, color-mix(in srgb, var(--premiere-star) 48%, transparent) 10%, transparent 13%),
+    radial-gradient(ellipse at 64% 42%, color-mix(in srgb, var(--premiere-accent-2) 26%, transparent), transparent 36%),
+    radial-gradient(ellipse at 38% 72%, color-mix(in srgb, var(--premiere-accent) 22%, transparent), transparent 34%);
+  opacity: 0.64;
+  transform: translateX(-18%);
+  animation: premiereShootingStar 5.8s ease-in-out infinite;
 }
 
 .premiere-subtitle,
@@ -422,6 +500,11 @@
     grid-template-columns: 1fr;
   }
 
+  .premiere-home-card .premiere-star-sky {
+    inset: auto 14px 72px 14px;
+    height: 84px;
+  }
+
   .premiere-action {
     justify-self: stretch;
   }
@@ -441,6 +524,23 @@
 @keyframes premiereAurora {
   from { transform: translate3d(-1%, -1%, 0) scale(1); }
   to { transform: translate3d(2%, 1%, 0) scale(1.04); }
+}
+
+@keyframes premiereSkyDrift {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(1.5%, -1%, 0) scale(1.018); }
+}
+
+@keyframes premiereStarTwinkle {
+  0% { opacity: 0.42; transform: translate3d(0, 0, 0) scale(0.96); }
+  45% { opacity: 0.92; }
+  100% { opacity: 0.64; transform: translate3d(8px, -4px, 0) scale(1.08); }
+}
+
+@keyframes premiereShootingStar {
+  0%, 55% { opacity: 0; transform: translateX(-28%) translateY(8%); }
+  66% { opacity: 0.82; }
+  84%, 100% { opacity: 0; transform: translateX(36%) translateY(-12%); }
 }
 
 @keyframes premiereSpin {
