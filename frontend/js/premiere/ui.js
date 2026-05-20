@@ -218,9 +218,21 @@
         <span class="premiere-action">${action}</span>
       </button>
     `;
-    document.getElementById("premiere-home-card")?.addEventListener("click", openDetails);
+    document.getElementById("premiere-home-card")?.addEventListener("click", handleHomeCardClick);
     startCountdown();
     updateActionControls();
+  }
+
+  function handleHomeCardClick() {
+    const p = state.premiere;
+    if (!p) return;
+    const payment = currentPaymentForPremiere(p);
+    const flow = paymentFlowKey(payment);
+    if (!isAdminUser() && (p.has_access || flow === "approved")) {
+      continuePremiere();
+      return;
+    }
+    openDetails();
   }
 
   function ensureModal() {

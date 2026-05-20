@@ -263,15 +263,16 @@ def create_premiere_payment_intent(
     ):
         raise HTTPException(status_code=409, detail="premiere_already_unlocked")
 
-    existing_payment = find_active_premiere_payment_for_identity(
-        db,
-        mock_pack_id=pack_id,
-        telegram_id=clean_telegram_id,
-        user_id=clean_user_id,
-        email=normalized_email,
-    )
-    if existing_payment:
-        return existing_payment
+    if not is_admin:
+        existing_payment = find_active_premiere_payment_for_identity(
+            db,
+            mock_pack_id=pack_id,
+            telegram_id=clean_telegram_id,
+            user_id=clean_user_id,
+            email=normalized_email,
+        )
+        if existing_payment:
+            return existing_payment
 
     price = int(pack.premiere_price_uzs or 0)
     if price <= 0:
