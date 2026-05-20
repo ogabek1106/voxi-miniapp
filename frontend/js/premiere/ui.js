@@ -45,6 +45,7 @@
   }
 
   function currentPaymentForPremiere(premiere) {
+    if (isAdminUser()) return null;
     const payment = state.currentPayment;
     if (!payment || !premiere) return null;
     return Number(payment.mock_pack_id || 0) === Number(premiere.id || 0) ? payment : null;
@@ -293,6 +294,10 @@
         unlockPremiere();
       }
     });
+    const existingPayment = currentPaymentForPremiere(p);
+    if (existingPayment) {
+      renderPaymentState(paymentFlowKey(existingPayment), existingPayment);
+    }
     refreshCountdown();
     checkStoredPaymentStatus();
     updateActionControls();
