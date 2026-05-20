@@ -244,13 +244,65 @@
 }
 
 .premiere-inline-message.is-error,
-.premiere-inline-message.is-success {
+.premiere-inline-message.is-success,
+.premiere-inline-message.is-info {
   display: block;
 }
 
 .premiere-inline-message.is-success {
   color: #15803d;
   background: rgba(34, 197, 94, 0.11);
+}
+
+.premiere-inline-message.is-info {
+  color: #0369a1;
+  background: rgba(0, 186, 255, 0.11);
+}
+
+.premiere-payment-state {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 14px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.18);
+}
+
+.premiere-payment-state strong {
+  color: #111827;
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.premiere-payment-state p {
+  margin: 0;
+  color: #64748b;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.premiere-payment-state.is-pending {
+  background: rgba(0, 186, 255, 0.09);
+}
+
+.premiere-payment-state.is-approved {
+  background: rgba(34, 197, 94, 0.11);
+}
+
+.premiere-payment-state.is-rejected,
+.premiere-payment-state.is-expired {
+  background: rgba(239, 68, 68, 0.09);
+}
+
+.premiere-payment-token {
+  width: max-content;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 900;
+  font-size: 12px;
 }
 
 .premiere-primary,

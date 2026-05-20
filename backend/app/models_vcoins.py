@@ -13,7 +13,9 @@ class PaymentRequest(Base):
     __tablename__ = "payment_requests"
 
     id = Column(Integer, primary_key=True, index=True)
-    telegram_id = Column(BigInteger, nullable=False, index=True)
+    telegram_id = Column(BigInteger, nullable=True, index=True)
+    user_id = Column(Integer, nullable=True, index=True)
+    email = Column(String, nullable=True, index=True)
     package_code = Column(String, nullable=True)
     expected_price = Column(String, nullable=True)
     coins_to_add = Column(Integer, nullable=False)

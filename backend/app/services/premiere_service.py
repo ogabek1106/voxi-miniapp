@@ -65,12 +65,24 @@ def expire_stale_premieres(db: Session) -> int:
     return len(stale)
 
 
-def serialize_premiere_pack(pack: MockPack | None, telegram_id: int | None = None, db: Session | None = None) -> dict | None:
+def serialize_premiere_pack(
+    pack: MockPack | None,
+    telegram_id: int | None = None,
+    db: Session | None = None,
+    user_id: int | None = None,
+    email: str | None = None,
+) -> dict | None:
     if not pack:
         return None
     has_access = False
-    if db is not None and telegram_id:
-        has_access = has_active_premiere_access(db, telegram_id, pack.id)
+    if db is not None:
+        has_access = has_active_premiere_access_for_identity(
+            db,
+            mock_pack_id=pack.id,
+            telegram_id=telegram_id,
+            user_id=user_id,
+            email=email,
+        )
     return {
         "id": pack.id,
         "title": pack.title,
@@ -166,19 +178,41 @@ def disable_premiere(db: Session, pack_id: int) -> MockPack:
 
 
 def has_active_premiere_access(db: Session, telegram_id: int | None, mock_pack_id: int) -> bool:
+    return has_active_premiere_access_for_identity(db, mock_pack_id=mock_pack_id, telegram_id=telegram_id)
+
+
+def has_active_premiere_access_for_identity(
+    db: Session,
+    *,
+    mock_pack_id: int,
+    telegram_id: int | None = None,
+    user_id: int | None = None,
+    email: str | None = None,
+) -> bool:
     if not telegram_id:
+        telegram_id = None
+    normalized_email = normalize_email(email)
+    if not telegram_id and not user_id and not normalized_email:
         return False
     pack = db.query(MockPack).filter(MockPack.id == int(mock_pack_id)).first()
     if not is_premiere_active(pack):
         return False
-    access = (
+    query = (
         db.query(PremiereAccess)
-        .filter(PremiereAccess.telegram_id == int(telegram_id))
         .filter(PremiereAccess.mock_pack_id == int(mock_pack_id))
         .filter(PremiereAccess.status == "active")
-        .order_by(PremiereAccess.id.desc())
-        .first()
     )
+    filters = []
+    if telegram_id:
+        filters.append(PremiereAccess.telegram_id == int(telegram_id))
+    if user_id:
+        filters.append(PremiereAccess.user_id == int(user_id))
+    if normalized_email:
+        filters.append(PremiereAccess.email == normalized_email)
+    if not filters:
+        return False
+    from sqlalchemy import or_
+    access = query.filter(or_(*filters)).order_by(PremiereAccess.id.desc()).first()
     if not access:
         return False
     expires_at = to_utc(access.expires_at)
@@ -195,12 +229,37 @@ def is_premiere_payment(payment: PaymentRequest | None) -> bool:
     return payload.get("payment_kind") == PREMIERE_PAYMENT_KIND or payload.get("source") == "premiere_access_intent"
 
 
-def create_premiere_payment_intent(db: Session, *, telegram_id: int, pack_id: int) -> PaymentRequest:
+def normalize_email(value: str | None) -> str | None:
+    cleaned = str(value or "").strip().lower()
+    return cleaned or None
+
+
+def create_premiere_payment_intent(
+    db: Session,
+    *,
+    telegram_id: int | None,
+    pack_id: int,
+    user_id: int | None = None,
+    email: str | None = None,
+) -> PaymentRequest:
     pack = get_pack(db, pack_id)
     if not is_premiere_active(pack):
         raise HTTPException(status_code=404, detail="premiere_not_active")
-    is_admin = int(telegram_id) in ADMIN_IDS
-    if not is_admin and has_active_premiere_access(db, telegram_id, pack_id):
+
+    normalized_email = normalize_email(email)
+    clean_telegram_id = int(telegram_id) if telegram_id else None
+    clean_user_id = int(user_id) if user_id else None
+    if not clean_telegram_id and not clean_user_id and not normalized_email:
+        raise HTTPException(status_code=401, detail="premiere_login_required")
+
+    is_admin = bool(clean_telegram_id and clean_telegram_id in ADMIN_IDS)
+    if not is_admin and has_active_premiere_access_for_identity(
+        db,
+        mock_pack_id=pack_id,
+        telegram_id=clean_telegram_id,
+        user_id=clean_user_id,
+        email=normalized_email,
+    ):
         raise HTTPException(status_code=409, detail="premiere_already_unlocked")
 
     price = int(pack.premiere_price_uzs or 0)
@@ -209,7 +268,9 @@ def create_premiere_payment_intent(db: Session, *, telegram_id: int, pack_id: in
 
     now = utcnow()
     payment = PaymentRequest(
-        telegram_id=int(telegram_id),
+        telegram_id=clean_telegram_id,
+        user_id=clean_user_id,
+        email=normalized_email,
         package_code="premiere_access",
         expected_price=str(price),
         coins_to_add=0,
@@ -226,6 +287,12 @@ def create_premiere_payment_intent(db: Session, *, telegram_id: int, pack_id: in
             "mock_title": pack.title,
             "premiere_ends_at": pack.premiere_ends_at.isoformat() if pack.premiere_ends_at else None,
             "created_at": now.isoformat(),
+            "identity": {
+                "telegram_id": clean_telegram_id,
+                "user_id": clean_user_id,
+                "email": normalized_email,
+            },
+            "email_verification_required": bool(normalized_email and not clean_telegram_id),
         },
     )
     db.add(payment)
@@ -234,26 +301,78 @@ def create_premiere_payment_intent(db: Session, *, telegram_id: int, pack_id: in
     return payment
 
 
+def _payment_expired(payment: PaymentRequest) -> bool:
+    expires_at = to_utc(payment.expires_at)
+    return bool(expires_at and expires_at <= utcnow())
+
+
+def get_premiere_payment_request(
+    db: Session,
+    *,
+    payment_token: str,
+    telegram_id: int | None = None,
+    user_id: int | None = None,
+    email: str | None = None,
+) -> PaymentRequest:
+    token = str(payment_token or "").strip().upper()
+    if not token:
+        raise HTTPException(status_code=422, detail="payment_token_required")
+    payment = db.query(PaymentRequest).filter(PaymentRequest.payment_token == token).first()
+    if not payment or not is_premiere_payment(payment):
+        raise HTTPException(status_code=404, detail="premiere_payment_not_found")
+
+    normalized_email = normalize_email(email)
+    identity_matches = False
+    if telegram_id and payment.telegram_id and int(payment.telegram_id) == int(telegram_id):
+        identity_matches = True
+    if user_id and payment.user_id and int(payment.user_id) == int(user_id):
+        identity_matches = True
+    if normalized_email and normalize_email(payment.email) == normalized_email:
+        identity_matches = True
+    if not identity_matches:
+        raise HTTPException(status_code=403, detail="premiere_payment_identity_mismatch")
+
+    if payment.status == "pending" and _payment_expired(payment):
+        payment.status = "expired"
+        db.add(payment)
+        db.commit()
+        db.refresh(payment)
+    return payment
+
+
 def grant_premiere_access_from_payment(db: Session, payment: PaymentRequest) -> PremiereAccess:
     payload = dict(payment.raw_payload or {})
     pack_id = int(payload.get("mock_pack_id") or 0)
     if not pack_id:
         raise HTTPException(status_code=422, detail="premiere_payment_missing_mock_pack")
+    if not payment.telegram_id and not payment.user_id and not payment.email:
+        raise HTTPException(status_code=422, detail="premiere_payment_missing_identity")
     pack = get_pack(db, pack_id)
-    access = (
+    query = (
         db.query(PremiereAccess)
-        .filter(PremiereAccess.telegram_id == int(payment.telegram_id))
         .filter(PremiereAccess.mock_pack_id == int(pack_id))
         .filter(PremiereAccess.status == "active")
-        .first()
     )
+    from sqlalchemy import or_
+    filters = []
+    if payment.telegram_id:
+        filters.append(PremiereAccess.telegram_id == int(payment.telegram_id))
+    if payment.user_id:
+        filters.append(PremiereAccess.user_id == int(payment.user_id))
+    if payment.email:
+        filters.append(PremiereAccess.email == normalize_email(payment.email))
+    access = query.filter(or_(*filters)).first()
     if not access:
         access = PremiereAccess(
-            telegram_id=int(payment.telegram_id),
+            telegram_id=int(payment.telegram_id) if payment.telegram_id else None,
+            user_id=int(payment.user_id) if payment.user_id else None,
+            email=normalize_email(payment.email),
             mock_pack_id=int(pack_id),
             created_at=utcnow(),
             status="active",
         )
+    elif payment.telegram_id and not access.telegram_id:
+        access.telegram_id = int(payment.telegram_id)
     access.payment_request_id = payment.id
     access.expires_at = to_utc(pack.premiere_ends_at)
     db.add(access)

@@ -507,15 +507,20 @@ def ensure_premiere_schema():
             "CREATE TABLE IF NOT EXISTS premiere_accesses ("
             "id SERIAL PRIMARY KEY, "
             "mock_pack_id INTEGER NOT NULL, "
-            "telegram_id BIGINT NOT NULL, "
+            "telegram_id BIGINT NULL, "
+            "user_id INTEGER NULL, "
+            "email VARCHAR NULL, "
             "payment_request_id INTEGER NULL, "
             "status VARCHAR NOT NULL DEFAULT 'active', "
             "created_at TIMESTAMPTZ NULL, "
             "expires_at TIMESTAMPTZ NULL"
             ");"
         ))
+        conn.execute(text("ALTER TABLE premiere_accesses ALTER COLUMN telegram_id DROP NOT NULL;"))
         conn.execute(text("ALTER TABLE premiere_accesses ADD COLUMN IF NOT EXISTS mock_pack_id INTEGER;"))
         conn.execute(text("ALTER TABLE premiere_accesses ADD COLUMN IF NOT EXISTS telegram_id BIGINT;"))
+        conn.execute(text("ALTER TABLE premiere_accesses ADD COLUMN IF NOT EXISTS user_id INTEGER;"))
+        conn.execute(text("ALTER TABLE premiere_accesses ADD COLUMN IF NOT EXISTS email VARCHAR;"))
         conn.execute(text("ALTER TABLE premiere_accesses ADD COLUMN IF NOT EXISTS payment_request_id INTEGER;"))
         conn.execute(text("ALTER TABLE premiere_accesses ADD COLUMN IF NOT EXISTS status VARCHAR NOT NULL DEFAULT 'active';"))
         conn.execute(text("ALTER TABLE premiere_accesses ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ;"))
@@ -537,6 +542,14 @@ def ensure_premiere_schema():
         conn.execute(text(
             "CREATE INDEX IF NOT EXISTS ix_premiere_access_user_pack "
             "ON premiere_accesses (telegram_id, mock_pack_id, status);"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_premiere_access_website_user_pack "
+            "ON premiere_accesses (user_id, mock_pack_id, status);"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_premiere_access_email_pack "
+            "ON premiere_accesses (email, mock_pack_id, status);"
         ))
         conn.execute(text(
             "CREATE INDEX IF NOT EXISTS ix_premiere_active_packs "
@@ -880,7 +893,7 @@ def ensure_vcoin_schema():
         conn.execute(text(
             "CREATE TABLE IF NOT EXISTS payment_requests ("
             "id SERIAL PRIMARY KEY, "
-            "telegram_id BIGINT NOT NULL, "
+            "telegram_id BIGINT NULL, "
             "package_code VARCHAR NULL, "
             "expected_price VARCHAR NULL, "
             "coins_to_add INTEGER NOT NULL, "
@@ -895,6 +908,9 @@ def ensure_vcoin_schema():
             "raw_payload JSON NULL"
             ");"
         ))
+        conn.execute(text("ALTER TABLE payment_requests ALTER COLUMN telegram_id DROP NOT NULL;"))
+        conn.execute(text("ALTER TABLE payment_requests ADD COLUMN IF NOT EXISTS user_id INTEGER;"))
+        conn.execute(text("ALTER TABLE payment_requests ADD COLUMN IF NOT EXISTS email VARCHAR;"))
         conn.execute(text("ALTER TABLE payment_requests ADD COLUMN IF NOT EXISTS payment_token VARCHAR;"))
         conn.execute(text("ALTER TABLE payment_requests ADD COLUMN IF NOT EXISTS exchange_rate_uzs INTEGER;"))
         conn.execute(text("ALTER TABLE payment_requests ADD COLUMN IF NOT EXISTS subtotal_amount INTEGER;"))
@@ -906,6 +922,14 @@ def ensure_vcoin_schema():
         conn.execute(text(
             "CREATE INDEX IF NOT EXISTS ix_payment_requests_telegram_id "
             "ON payment_requests (telegram_id);"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_payment_requests_user_id "
+            "ON payment_requests (user_id);"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_payment_requests_email "
+            "ON payment_requests (email);"
         ))
         conn.execute(text(
             "CREATE INDEX IF NOT EXISTS ix_payment_requests_receipt_image_hash "

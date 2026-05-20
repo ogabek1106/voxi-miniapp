@@ -17,6 +17,10 @@ def utcnow():
     return datetime.now(timezone.utc)
 
 
+def _normalize_email(value: Any) -> str:
+    return str(value or "").strip().lower()
+
+
 def _as_int(value: Any, field_name: str) -> int:
     try:
         parsed = int(value)
@@ -62,6 +66,15 @@ def create_payment_request(db: Session, payload: Dict[str, Any]) -> PaymentReque
             raise HTTPException(status_code=422, detail="payment_request_expired")
         receipt_hash = payload.get("receipt_image_hash")
         duplicate = detect_duplicate(db, receipt_hash)
+        incoming_email = _normalize_email(payload.get("email"))
+        existing_email = _normalize_email(existing.email)
+        if incoming_email and existing_email and incoming_email != existing_email:
+            raise HTTPException(status_code=403, detail="payment_email_mismatch")
+        if incoming_email and not existing.email:
+            existing.email = incoming_email
+        incoming_telegram_id = payload.get("telegram_id")
+        if incoming_telegram_id and not existing.telegram_id:
+            existing.telegram_id = _as_int(incoming_telegram_id, "telegram_id")
         existing.receipt_file_id = payload.get("receipt_file_id") or existing.receipt_file_id
         existing.receipt_image_hash = receipt_hash or existing.receipt_image_hash
         if duplicate:
@@ -119,7 +132,7 @@ def confirm_payment(db: Session, payment_id: int, admin_id: Optional[int] = None
             "already_finalized": True,
             "telegram_id": None,
             "coins_added": payment.coins_to_add,
-            "balance": get_balance(db, payment.telegram_id),
+            "balance": get_balance(db, payment.telegram_id) if payment.telegram_id else None,
         }
 
     if payment.status in FINAL_STATUSES:
@@ -129,13 +142,13 @@ def confirm_payment(db: Session, payment_id: int, admin_id: Optional[int] = None
             "already_finalized": True,
             "telegram_id": None,
             "coins_added": 0,
-            "balance": get_balance(db, payment.telegram_id),
+            "balance": get_balance(db, payment.telegram_id) if payment.telegram_id else None,
         }
 
     premiere_access = None
     if is_premiere_payment(payment):
         premiere_access = grant_premiere_access_from_payment(db, payment)
-        balance = get_balance(db, payment.telegram_id)
+        balance = get_balance(db, payment.telegram_id) if payment.telegram_id else None
     else:
         balance = add_coins(
             db=db,
@@ -189,7 +202,7 @@ def reject_payment(
             "status": payment.status,
             "already_finalized": True,
             "telegram_id": None,
-            "balance": get_balance(db, payment.telegram_id),
+            "balance": get_balance(db, payment.telegram_id) if payment.telegram_id else None,
         }
 
     if payment.status in FINAL_STATUSES:
@@ -198,7 +211,7 @@ def reject_payment(
             "status": payment.status,
             "already_finalized": True,
             "telegram_id": None,
-            "balance": get_balance(db, payment.telegram_id),
+            "balance": get_balance(db, payment.telegram_id) if payment.telegram_id else None,
         }
 
     payment.status = "admin_rejected"
@@ -213,5 +226,5 @@ def reject_payment(
         "ok": True,
         "status": payment.status,
         "telegram_id": payment.telegram_id,
-        "balance": get_balance(db, payment.telegram_id),
+        "balance": get_balance(db, payment.telegram_id) if payment.telegram_id else None,
     }

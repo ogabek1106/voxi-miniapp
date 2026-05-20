@@ -425,7 +425,9 @@ class PremiereAccess(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     mock_pack_id = Column(Integer, ForeignKey("mock_packs.id", ondelete="CASCADE"), nullable=False, index=True)
-    telegram_id = Column(BigInteger, index=True, nullable=False)
+    telegram_id = Column(BigInteger, index=True, nullable=True)
+    user_id = Column(Integer, index=True, nullable=True)
+    email = Column(String, index=True, nullable=True)
     payment_request_id = Column(Integer, nullable=True, index=True)
     status = Column(String, nullable=False, default="active")
     created_at = Column(DateTime(timezone=True), nullable=True)

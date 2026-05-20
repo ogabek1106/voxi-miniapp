@@ -153,6 +153,8 @@ def serialize_payment_request(payment: PaymentRequest) -> dict:
     return {
         "id": payment.id,
         "telegram_id": payment.telegram_id,
+        "user_id": payment.user_id,
+        "email": payment.email,
         "payment_token": payment.payment_token,
         "coins_to_add": payment.coins_to_add,
         "exchange_rate_uzs": payment.exchange_rate_uzs,
@@ -163,9 +165,12 @@ def serialize_payment_request(payment: PaymentRequest) -> dict:
         "final_amount": payment.final_amount,
         "expected_price": payment.expected_price,
         "status": payment.status,
+        "reject_reason": payment.reject_reason,
         "payment_kind": raw_payload.get("payment_kind"),
         "mock_pack_id": raw_payload.get("mock_pack_id"),
         "mock_title": raw_payload.get("mock_title"),
         "expires_at": payment.expires_at.isoformat() if payment.expires_at else None,
         "created_at": payment.created_at.isoformat() if payment.created_at else None,
+        "confirmed_at": payment.confirmed_at.isoformat() if payment.confirmed_at else None,
+        "rejected_at": payment.rejected_at.isoformat() if payment.rejected_at else None,
     }
