@@ -45,10 +45,20 @@
   }
 
   function currentPaymentForPremiere(premiere) {
-    if (isAdminUser()) return null;
     const payment = state.currentPayment;
+    if (isAdminUser() && !payment?.__current_session) return null;
     if (!payment || !premiere) return null;
     return Number(payment.mock_pack_id || 0) === Number(premiere.id || 0) ? payment : null;
+  }
+
+  function keepCurrentSessionPayment(payment) {
+    if (!payment) return payment;
+    const previous = state.currentPayment;
+    const sameToken = previous?.payment_token && previous.payment_token === payment.payment_token;
+    if (isAdminUser() && (previous?.__current_session || sameToken)) {
+      return { ...payment, __current_session: true };
+    }
+    return payment;
   }
 
   function paymentFlowKey(payment) {
@@ -342,6 +352,7 @@
     const node = document.querySelector("#premiere-modal [data-premiere-return-state]");
     if (!node) return;
     if (payment) {
+      payment = keepCurrentSessionPayment(payment);
       state.currentPayment = payment;
       updateActionControls();
     }
@@ -429,7 +440,7 @@
     if (!lookupIdentity.telegram_id && !lookupIdentity.user_id && !lookupIdentity.email) return null;
     try {
       const result = await window.PremiereApi.paymentIntent(remembered.token, lookupIdentity);
-      const payment = result?.payment || result;
+      const payment = keepCurrentSessionPayment(result?.payment || result);
       if (result?.premiere) {
         state.premiere = result.premiere;
       }
@@ -486,12 +497,12 @@
     }
     try {
       const payment = await window.PremiereApi.createPaymentIntent(p.id, identity);
-      state.currentPayment = payment;
+      state.currentPayment = { ...payment, __current_session: true };
       rememberPayment(payment, identity, p.id);
-      const flow = paymentFlowKey(payment);
+      const flow = paymentFlowKey(state.currentPayment);
       if (flow === "under_review") {
         showMessage("Your receipt is already waiting for confirmation.", "info");
-        renderPaymentState("pending", payment);
+        renderPaymentState("pending", state.currentPayment);
         updateActionControls();
         startPaymentPolling();
         return;
@@ -502,7 +513,7 @@
           : "Telegram payment opened. After sending your receipt, return here for the Premiere status.",
         "info",
       );
-      renderPaymentState("continue_payment", payment);
+      renderPaymentState("continue_payment", state.currentPayment);
       updateActionControls();
       if (payment?.bot_link) {
         window.open(payment.bot_link, "_blank", "noopener");
