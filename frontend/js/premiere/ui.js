@@ -1,6 +1,13 @@
 (function () {
   const STORAGE_KEY = "voxi:premiere:last-payment";
-  const state = { premiere: null, tick: null, paymentPoll: null, currentPayment: null };
+  const state = {
+    premiere: null,
+    tick: null,
+    paymentPoll: null,
+    currentPayment: null,
+    paymentResolving: false,
+    lastIdentityKey: null,
+  };
 
   function esc(value) {
     return String(value ?? "")
@@ -82,7 +89,9 @@
   }
 
   async function resolveIdentity() {
-    const rawId = typeof window.getTelegramId === "function" ? window.getTelegramId() : null;
+    const rawValue = typeof window.getTelegramId === "function" ? window.getTelegramId() : null;
+    const rawText = String(rawValue ?? "").trim().toLowerCase();
+    const rawId = rawText && rawText !== "null" && rawText !== "undefined" ? rawValue : null;
     let user = window.WebsiteAuthState?.getUser?.() || null;
     if (!user && window.WebsiteAuthState?.load) {
       user = await window.WebsiteAuthState.load();
@@ -96,6 +105,23 @@
       is_authenticated: Boolean(rawId || user),
       is_google_only: Boolean(user?.email && !rawId && !user?.telegram_id),
     };
+  }
+
+  function identityKey(identity) {
+    if (!identity) return "guest";
+    if (identity.telegram_id) return `tg:${identity.telegram_id}`;
+    if (identity.user_id) return `u:${identity.user_id}`;
+    if (identity.email) return `email:${String(identity.email).trim().toLowerCase()}`;
+    return "guest";
+  }
+
+  function rememberedMatchesIdentity(remembered, identity) {
+    if (!remembered || !identity || !identity.is_authenticated) return false;
+    if (identity.telegram_id && remembered.telegram_id && Number(identity.telegram_id) === Number(remembered.telegram_id)) return true;
+    if (identity.user_id && remembered.user_id && Number(identity.user_id) === Number(remembered.user_id)) return true;
+    const rememberedEmail = remembered.email ? String(remembered.email).trim().toLowerCase() : "";
+    const currentEmail = identity.email ? String(identity.email).trim().toLowerCase() : "";
+    return Boolean(currentEmail && rememberedEmail && currentEmail === rememberedEmail);
   }
 
   async function resolveTelegramId() {
@@ -160,7 +186,7 @@
 
   function updateActionControls() {
     const p = state.premiere;
-    const label = actionLabel(p);
+    const label = state.paymentResolving ? "Checking..." : actionLabel(p);
     const payment = currentPaymentForPremiere(p);
     const flow = paymentFlowKey(payment);
     const hasPaymentState = ["continue_payment", "under_review", "approved", "rejected", "expired"].includes(flow);
@@ -171,10 +197,15 @@
     const action = document.querySelector("#premiere-modal [data-action]");
     if (action) {
       action.textContent = label;
-      action.hidden = hasPaymentState;
-      action.disabled = hasPaymentState || flow === "under_review";
-      action.classList.toggle("is-disabled", flow === "under_review");
+      action.hidden = state.paymentResolving || hasPaymentState;
+      action.disabled = state.paymentResolving || hasPaymentState || flow === "under_review";
+      action.classList.toggle("is-disabled", state.paymentResolving || flow === "under_review");
     }
+  }
+
+  function setPaymentResolving(value) {
+    state.paymentResolving = Boolean(value);
+    updateActionControls();
   }
 
   function refreshCountdown() {
@@ -307,9 +338,11 @@
     const existingPayment = currentPaymentForPremiere(p);
     if (existingPayment) {
       renderPaymentState(paymentFlowKey(existingPayment), existingPayment);
+    } else if (readRememberedPayment()?.token) {
+      renderPaymentLoading();
     }
     refreshCountdown();
-    checkStoredPaymentStatus();
+    checkStoredPaymentStatus({ showLoading: true });
     updateActionControls();
   }
 
@@ -322,6 +355,23 @@
     if (!node) return;
     node.textContent = text || "";
     node.className = `premiere-inline-message is-${type}`;
+  }
+
+  function renderPaymentLoading() {
+    const node = document.querySelector("#premiere-modal [data-premiere-return-state]");
+    if (!node) return;
+    node.innerHTML = `
+      <div class="premiere-payment-state is-loading">
+        <strong>Checking Premiere status</strong>
+        <p>Please wait a moment while we restore the correct payment state.</p>
+      </div>
+    `;
+    setPaymentResolving(true);
+  }
+
+  function clearPaymentReturnState() {
+    const node = document.querySelector("#premiere-modal [data-premiere-return-state]");
+    if (node) node.innerHTML = "";
   }
 
   function paymentStatusKey(status) {
@@ -420,9 +470,26 @@
     }
   }
 
-  async function checkStoredPaymentStatus() {
+  async function checkStoredPaymentStatus(options = {}) {
     const remembered = readRememberedPayment();
-    if (!remembered?.token || !window.PremiereApi?.paymentIntent) return null;
+    if (!remembered?.token || !window.PremiereApi?.paymentIntent) {
+      setPaymentResolving(false);
+      if (!state.currentPayment) {
+        clearPaymentReturnState();
+      }
+      return null;
+    }
+    const identity = await resolveIdentity();
+    if (!rememberedMatchesIdentity(remembered, identity)) {
+      state.currentPayment = null;
+      setPaymentResolving(false);
+      clearPaymentReturnState();
+      updateActionControls();
+      return null;
+    }
+    if (options.showLoading && document.getElementById("premiere-modal")?.classList.contains("is-open")) {
+      renderPaymentLoading();
+    }
     if (state.premiere && Number(remembered.pack_id || 0) === Number(state.premiere.id || 0)) {
       state.currentPayment = {
         mock_pack_id: remembered.pack_id,
@@ -431,13 +498,16 @@
       };
       updateActionControls();
     }
-    const identity = await resolveIdentity();
     const lookupIdentity = {
-      telegram_id: identity.telegram_id || remembered.telegram_id || null,
-      user_id: identity.user_id || remembered.user_id || null,
-      email: identity.email || remembered.email || null,
+      telegram_id: identity.telegram_id || null,
+      user_id: identity.user_id || null,
+      email: identity.email || null,
     };
-    if (!lookupIdentity.telegram_id && !lookupIdentity.user_id && !lookupIdentity.email) return null;
+    if (!lookupIdentity.telegram_id && !lookupIdentity.user_id && !lookupIdentity.email) {
+      setPaymentResolving(false);
+      clearPaymentReturnState();
+      return null;
+    }
     try {
       const result = await window.PremiereApi.paymentIntent(remembered.token, lookupIdentity);
       const payment = keepCurrentSessionPayment(result?.payment || result);
@@ -470,12 +540,14 @@
         updateActionControls();
         startPaymentPolling();
       }
+      setPaymentResolving(false);
       return payment;
     } catch (error) {
       const detail = error?.data?.detail || error?.message || "";
       if (String(detail).includes("not_found") || String(detail).includes("identity_mismatch")) {
         forgetPayment();
       }
+      setPaymentResolving(false);
       return null;
     }
   }
@@ -562,6 +634,30 @@
     if (!document.hidden) checkStoredPaymentStatus();
   });
   window.addEventListener("focus", () => checkStoredPaymentStatus());
+
+  window.WebsiteAuthState?.subscribe?.((user) => {
+    const key = identityKey({
+      telegram_id: user?.telegram_id || null,
+      user_id: user?.id || null,
+      email: user?.email || null,
+      is_authenticated: Boolean(user),
+    });
+    if (state.lastIdentityKey === null) {
+      state.lastIdentityKey = key;
+      return;
+    }
+    if (state.lastIdentityKey === key) return;
+    state.lastIdentityKey = key;
+    state.currentPayment = null;
+    setPaymentResolving(false);
+    if (document.getElementById("premiere-modal")?.classList.contains("is-open")) {
+      closeDetails();
+    }
+    if (state.premiere) {
+      render(state.premiere, null);
+    }
+    window.PremiereLoader?.load?.();
+  });
 
   window.PremiereUi = { render, openDetails, closeDetails, interceptIfPremiere, checkStoredPaymentStatus };
 })();
