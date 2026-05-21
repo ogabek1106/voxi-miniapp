@@ -114,7 +114,7 @@
     if (flow === "approved") return "Start Premiere Mock";
     if (flow === "rejected") return "Try Again";
     if (flow === "expired") return "Create New Payment";
-    return premiere?.has_access ? "Continue Premiere" : "Unlock Premiere";
+    return premiere?.has_access ? "Start Premiere Mock" : "Unlock Premiere";
   }
 
   function starValue(seed, min, max) {
@@ -767,6 +767,23 @@
     return true;
   }
 
+  async function openGrantedPremiere() {
+    if (!window.PremiereApi) return false;
+    const identity = await resolveIdentity();
+    const data = await window.PremiereApi.active(identity);
+    const active = data?.premiere;
+    if (!active) return false;
+    render(active, data?.active_payment || null);
+    state.premiere = active;
+    if (active.has_access) {
+      continuePremiere();
+      return true;
+    }
+    openDetails();
+    showMessage("Premiere access is required before starting this mock.");
+    return true;
+  }
+
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) checkStoredPaymentStatus();
   });
@@ -796,5 +813,5 @@
     window.PremiereLoader?.load?.();
   });
 
-  window.PremiereUi = { render, openDetails, closeDetails, interceptIfPremiere, checkStoredPaymentStatus };
+  window.PremiereUi = { render, openDetails, closeDetails, interceptIfPremiere, openGrantedPremiere, checkStoredPaymentStatus };
 })();

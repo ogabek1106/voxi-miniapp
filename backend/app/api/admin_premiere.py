@@ -19,6 +19,7 @@ from app.services.premiere_service import (
     utcnow,
     serialize_premiere_pack,
 )
+from app.services.notification_service import create_user_notification, serialize_notification
 from app.services.vcoin_admin_service import serialize_admin_user
 
 router = APIRouter(prefix="/admin/premiere", tags=["admin-premiere"])
@@ -137,9 +138,23 @@ def grant_premiere_subscription(payload: PremiereSubscriptionGrantIn, db: Sessio
     db.commit()
     db.refresh(access)
 
+    notification = create_user_notification(
+        db,
+        user=user,
+        category="premium_offer",
+        title="🎉 Premiere unlocked",
+        message=(
+            f"You now have access to:\n{pack.title}\n\n"
+            "Test your skills in our most advanced IELTS simulation."
+        ),
+        link_url="?open=premiere",
+        link_type="internal",
+    )
+
     return {
         "ok": True,
         "user": serialize_admin_user(user),
         "premiere": serialize_premiere_pack(pack),
         "access": _serialize_premiere_access(access),
+        "notification": serialize_notification(notification),
     }

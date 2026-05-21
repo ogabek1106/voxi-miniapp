@@ -329,6 +329,48 @@ def create_notification(
     return notification
 
 
+def create_user_notification(
+    db: Session,
+    *,
+    user: User,
+    title: str,
+    message: str,
+    category: str | None = None,
+    link_url: str | None = None,
+    link_type: str | None = None,
+    image_url: str | None = None,
+) -> AppNotification:
+    now = datetime.utcnow()
+    notification = AppNotification(
+        category=normalize_category(category),
+        title=(title or "").strip(),
+        message=(message or "").strip(),
+        image_url=(image_url or "").strip() or None,
+        link_url=(link_url or "").strip() or None,
+        link_type=normalize_link_type(link_type),
+        schedule_mode="now",
+        last_sent_at=now,
+        sent_count=1,
+        is_enabled=True,
+        is_template=False,
+        audience_type="targeted",
+        recipient_count=1,
+        created_at=now,
+        updated_at=now,
+    )
+    db.add(notification)
+    db.flush()
+    db.add(AppNotificationRecipient(
+        notification_id=int(notification.id),
+        user_id=int(user.id) if user.id else None,
+        telegram_id=int(user.telegram_id) if user.telegram_id else None,
+        created_at=now,
+    ))
+    db.commit()
+    db.refresh(notification)
+    return notification
+
+
 def update_notification(
     db: Session,
     notification_id: int,
