@@ -31,18 +31,21 @@ window.AdminVCoinPaymentsLoader = window.AdminVCoinPaymentsLoader || {};
       await AdminVCoinPaymentsLoader.show();
     });
 
-    document.getElementById("admin-vcoin-promo-form")?.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      const form = event.currentTarget;
-      const data = new FormData(form);
-      await AdminVCoinPaymentsApi.savePromo({
-        code: data.get("code"),
-        discount_percent: Number(data.get("discount_percent") || 0),
-        expires_at: toIsoOrNull(data.get("expires_at")),
-        usage_limit: Number(data.get("usage_limit") || 0) || null,
-        is_active: data.get("is_active") === "on"
+    document.querySelectorAll("[data-promo-scope]").forEach((promoForm) => {
+      promoForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const data = new FormData(form);
+        await AdminVCoinPaymentsApi.savePromo({
+          scope: form.dataset.promoScope || "vcoin",
+          code: data.get("code"),
+          discount_percent: Number(data.get("discount_percent") || 0),
+          expires_at: toIsoOrNull(data.get("expires_at")),
+          usage_limit: Number(data.get("usage_limit") || 0) || null,
+          is_active: data.get("is_active") === "on"
+        });
+        await AdminVCoinPaymentsLoader.show();
       });
-      await AdminVCoinPaymentsLoader.show();
     });
 
     document.querySelectorAll("[data-disable-promo]").forEach((button) => {

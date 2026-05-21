@@ -12,11 +12,17 @@
       const qs = params.toString() ? `?${params.toString()}` : "";
       return apiGet(`/premiere/active${qs}`);
     },
-    createPaymentIntent(packId, identity) {
+    quote(packId, promoCode) {
+      return apiPost(`/premiere/${packId}/quote`, {
+        promo_code: promoCode || null,
+      });
+    },
+    createPaymentIntent(packId, identity, promoCode) {
       return apiPost(`/premiere/${packId}/payment-intents`, {
         telegram_id: identity?.telegram_id || null,
         user_id: identity?.user_id || null,
         email: identity?.email || null,
+        promo_code: promoCode || null,
       });
     },
     paymentIntent(paymentToken, identity) {

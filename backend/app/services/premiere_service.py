@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.config import ADMIN_IDS
 from app.models import MockPack, MockPackStatus, PremiereAccess
 from app.models_vcoins import PaymentRequest
-from app.services.payment_pricing_service import generate_payment_token
+from app.services.payment_pricing_service import generate_payment_token, get_valid_promo
 
 
 PREMIERE_PAYMENT_KIND = "premiere_access"
@@ -242,6 +242,7 @@ def create_premiere_payment_intent(
     pack_id: int,
     user_id: int | None = None,
     email: str | None = None,
+    promo_code: str | None = None,
 ) -> PaymentRequest:
     pack = get_pack(db, pack_id)
     if not is_premiere_active(pack):
@@ -274,8 +275,8 @@ def create_premiere_payment_intent(
         if existing_payment:
             return existing_payment
 
-    price = int(pack.premiere_price_uzs or 0)
-    if price <= 0:
+    quote = build_premiere_quote(db, pack, promo_code)
+    if quote["subtotal_amount"] <= 0:
         raise HTTPException(status_code=422, detail="premiere_price_not_configured")
 
     now = utcnow()
@@ -284,12 +285,14 @@ def create_premiere_payment_intent(
         user_id=clean_user_id,
         email=normalized_email,
         package_code="premiere_access",
-        expected_price=str(price),
+        expected_price=str(quote["final_amount"]),
         coins_to_add=0,
         payment_token=generate_payment_token(db),
-        subtotal_amount=price,
-        discount_amount=0,
-        final_amount=price,
+        subtotal_amount=quote["subtotal_amount"],
+        promo_code=quote["promo_code"],
+        discount_percent=quote["discount_percent"],
+        discount_amount=quote["discount_amount"],
+        final_amount=quote["final_amount"],
         expires_at=now + timedelta(hours=PREMIERE_PAYMENT_EXPIRY_HOURS),
         status="pending",
         raw_payload={
@@ -297,6 +300,8 @@ def create_premiere_payment_intent(
             "payment_kind": PREMIERE_PAYMENT_KIND,
             "mock_pack_id": int(pack.id),
             "mock_title": pack.title,
+            "promo_scope": "premiere",
+            "promo_code": quote["promo_code"],
             "premiere_ends_at": pack.premiere_ends_at.isoformat() if pack.premiere_ends_at else None,
             "created_at": now.isoformat(),
             "identity": {
@@ -311,6 +316,26 @@ def create_premiere_payment_intent(
     db.commit()
     db.refresh(payment)
     return payment
+
+
+def build_premiere_quote(db: Session, pack: MockPack | None, promo_code: str | None = None) -> dict[str, Any]:
+    if not pack or not is_premiere_active(pack):
+        raise HTTPException(status_code=404, detail="premiere_not_active")
+    subtotal = int(pack.premiere_price_uzs or 0)
+    if subtotal <= 0:
+        raise HTTPException(status_code=422, detail="premiere_price_not_configured")
+    promo = get_valid_promo(db, promo_code, scope="premiere")
+    percent = int(promo.discount_percent or 0) if promo else 0
+    discount = int(round(subtotal * percent / 100)) if percent else 0
+    final = max(subtotal - discount, 0)
+    return {
+        "mock_pack_id": int(pack.id),
+        "subtotal_amount": subtotal,
+        "promo_code": promo.code if promo else None,
+        "discount_percent": percent,
+        "discount_amount": discount,
+        "final_amount": final,
+    }
 
 
 def _payment_matches_pack(payment: PaymentRequest, mock_pack_id: int) -> bool:

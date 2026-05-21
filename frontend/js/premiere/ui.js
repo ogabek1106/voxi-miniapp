@@ -1,5 +1,6 @@
 (function () {
   const STORAGE_KEY = "voxi:premiere:last-payment";
+  const DEFAULT_DESCRIPTION = "Test your skills in our most advanced IELTS simulation";
   const state = {
     premiere: null,
     tick: null,
@@ -7,6 +8,8 @@
     currentPayment: null,
     paymentResolving: false,
     lastIdentityKey: null,
+    appliedPromo: "",
+    promoQuote: null,
   };
 
   function esc(value) {
@@ -22,29 +25,38 @@
     return `${Number(value || 0).toLocaleString("ru-RU")} UZS`;
   }
 
+  function premiereDescription(premiere) {
+    const saved = String(premiere?.premiere_description || "").trim();
+    return saved && saved !== "New full IELTS simulation is now live" ? saved : DEFAULT_DESCRIPTION;
+  }
+
+  function accessPrice() {
+    return Number(state.promoQuote?.final_amount ?? state.premiere?.premiere_price_uzs ?? 0);
+  }
+
+  function formatAvailableUntil(endValue) {
+    if (!endValue) return { text: "Available for a limited time", urgent: false, expired: false };
+    const date = new Date(endValue);
+    const diff = date.getTime() - Date.now();
+    if (Number.isNaN(date.getTime())) return { text: "Available for a limited time", urgent: false, expired: false };
+    if (diff <= 0) return { text: "Premiere ended", urgent: true, expired: true };
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = date.toLocaleString("en-GB", { month: "short" });
+    const hour = String(date.getHours()).padStart(2, "0");
+    const minute = String(date.getMinutes()).padStart(2, "0");
+    return {
+      text: `Available until ${day} ${month}, ${hour}:${minute}`,
+      urgent: diff <= 86400000,
+      expired: false,
+    };
+  }
+
   function themeClass(premiere) {
     const raw = String(premiere?.premiere_theme || "violet_aurora")
       .trim()
       .toLowerCase()
       .replace(/[^a-z0-9_]+/g, "_");
     return `premiere-theme-${raw || "violet_aurora"}`;
-  }
-
-  function countdownParts(endValue) {
-    if (!endValue) return { text: "Limited release", urgent: false, expired: false };
-    const diff = new Date(endValue).getTime() - Date.now();
-    if (diff <= 0) return { text: "Premiere ended", urgent: true, expired: true };
-    const totalSeconds = Math.floor(diff / 1000);
-    const days = Math.floor(totalSeconds / 86400);
-    const hours = Math.floor((totalSeconds % 86400) / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-    const pad = (value) => String(value).padStart(2, "0");
-    return {
-      text: `${pad(days)}d : ${pad(hours)}h : ${pad(minutes)}m : ${pad(seconds)}s`,
-      urgent: totalSeconds <= 86400,
-      expired: false,
-    };
   }
 
   function isAdminUser() {
@@ -249,7 +261,7 @@
 
   function refreshCountdown() {
     if (!state.premiere) return;
-    const time = countdownParts(state.premiere.premiere_ends_at);
+    const time = formatAvailableUntil(state.premiere.premiere_ends_at);
     if (time.expired) {
       render(null);
       closeDetails();
@@ -259,7 +271,7 @@
       node.textContent = time.text;
     });
     document.querySelectorAll("[data-premiere-price]").forEach((node) => {
-      node.textContent = formatMoney(state.premiere.premiere_price_uzs);
+      node.textContent = formatMoney(accessPrice());
     });
     document.querySelectorAll(".premiere-home-card").forEach((node) => {
       node.classList.toggle("is-urgent", Boolean(time.urgent));
@@ -269,12 +281,14 @@
   function startCountdown() {
     clearTick();
     refreshCountdown();
-    state.tick = setInterval(refreshCountdown, 1000);
+    state.tick = setInterval(refreshCountdown, 60000);
   }
 
   function render(premiere, payment = null) {
     state.premiere = premiere;
     if (payment) state.currentPayment = payment;
+    state.appliedPromo = "";
+    state.promoQuote = null;
     const node = slot();
     clearTick();
     if (!node) return;
@@ -283,17 +297,17 @@
       return;
     }
     const action = actionLabel(premiere);
-    const time = countdownParts(premiere.premiere_ends_at);
+    const time = formatAvailableUntil(premiere.premiere_ends_at);
     node.innerHTML = `
       <button class="premiere-home-card ${themeClass(premiere)} ${time.urgent ? "is-urgent" : ""}" type="button" id="premiere-home-card">
         <span class="premiere-content">
           <span class="premiere-pill">${esc(premiere.premiere_label || "PREMIERE")}</span>
           <span class="premiere-title">${esc(premiere.title)}</span>
-          <span class="premiere-subtitle">${esc(premiere.premiere_description || "New full IELTS simulation is now live")}</span>
+          <span class="premiere-subtitle">${esc(premiereDescription(premiere))}</span>
           <span class="premiere-meta">
             <span class="premiere-countdown" data-premiere-countdown>${esc(time.text)}</span>
             <span> - </span>
-            <span data-premiere-price>${esc(formatMoney(premiere.premiere_price_uzs))}</span>
+            <span data-premiere-price>${esc(formatMoney(accessPrice()))}</span>
           </span>
         </span>
         ${renderStarfield()}
@@ -333,18 +347,26 @@
   function openDetails() {
     const p = state.premiere;
     if (!p) return;
-    const time = countdownParts(p.premiere_ends_at);
+    const time = formatAvailableUntil(p.premiere_ends_at);
     const modal = ensureModal();
     modal.innerHTML = `
       <div class="premiere-sheet ${themeClass(p)}">
         <button class="premiere-close" type="button" data-close>&times;</button>
         <span class="premiere-pill">${esc(p.premiere_label || "PREMIERE")}</span>
         <h3>${esc(p.title)}</h3>
-        <p class="premiere-subtitle">${esc(p.premiere_description || "New full IELTS simulation is now live")}</p>
+        <p class="premiere-subtitle">${esc(premiereDescription(p))}</p>
         <div class="premiere-detail-list">
           <span><strong>Includes</strong><b>Listening, Reading, Writing, Speaking</b></span>
-          <span><strong>Countdown</strong><b data-premiere-countdown>${esc(time.text)}</b></span>
-          <span><strong>Access price</strong><b data-premiere-price>${esc(formatMoney(p.premiere_price_uzs))}</b></span>
+          <span><strong>Availability</strong><b data-premiere-countdown>${esc(time.text)}</b></span>
+          <span><strong>Access price</strong><b data-premiere-price>${esc(formatMoney(accessPrice()))}</b></span>
+        </div>
+        <div class="premiere-promo">
+          <button class="premiere-promo-toggle" type="button" data-premiere-promo-toggle>Have a promo code?</button>
+          <div class="premiere-promo-line" data-premiere-promo-line>
+            <input class="premiere-promo-input" type="text" placeholder="Promo code" data-premiere-promo-code>
+            <button class="premiere-promo-apply" type="button" data-premiere-promo-apply>Apply</button>
+          </div>
+          <div class="premiere-promo-message" data-premiere-promo-message></div>
         </div>
         <div data-premiere-return-state></div>
         <div class="premiere-inline-message" data-premiere-message></div>
@@ -354,6 +376,7 @@
     `;
     modal.classList.add("is-open");
     modal.querySelectorAll("[data-close]").forEach((el) => el.addEventListener("click", closeDetails));
+    bindPromoControls(modal);
     modal.querySelector("[data-action]")?.addEventListener("click", () => {
       const payment = currentPaymentForPremiere(p);
       const flow = paymentFlowKey(payment);
@@ -395,6 +418,60 @@
     if (!node) return;
     node.textContent = text || "";
     node.className = `premiere-inline-message is-${type}`;
+  }
+
+  function showPromoMessage(text, type = "error") {
+    const node = document.querySelector("#premiere-modal [data-premiere-promo-message]");
+    if (!node) return;
+    node.textContent = text || "";
+    node.className = `premiere-promo-message is-${type}`;
+  }
+
+  function renderPromoQuote() {
+    refreshCountdown();
+    if (!state.promoQuote?.promo_code) return;
+    const discount = Number(state.promoQuote.discount_amount || 0);
+    const percent = Number(state.promoQuote.discount_percent || 0);
+    showPromoMessage(`Promo applied: ${percent}% off (-${formatMoney(discount)})`, "success");
+  }
+
+  function bindPromoControls(root) {
+    const toggle = root.querySelector("[data-premiere-promo-toggle]");
+    const line = root.querySelector("[data-premiere-promo-line]");
+    const input = root.querySelector("[data-premiere-promo-code]");
+    const apply = root.querySelector("[data-premiere-promo-apply]");
+    toggle?.addEventListener("click", (event) => {
+      event.stopPropagation();
+      line?.classList.add("is-visible");
+      toggle.hidden = true;
+      input?.focus();
+    });
+    apply?.addEventListener("click", async (event) => {
+      event.stopPropagation();
+      const code = String(input?.value || "").trim().toUpperCase();
+      if (!code) {
+        state.appliedPromo = "";
+        state.promoQuote = null;
+        refreshCountdown();
+        showPromoMessage("Enter a Premiere promo code.");
+        return;
+      }
+      apply.disabled = true;
+      showPromoMessage("Checking promo...", "info");
+      try {
+        const data = await window.PremiereApi.quote(state.premiere.id, code);
+        state.appliedPromo = data?.quote?.promo_code || code;
+        state.promoQuote = data?.quote || null;
+        renderPromoQuote();
+      } catch (error) {
+        state.appliedPromo = "";
+        state.promoQuote = null;
+        refreshCountdown();
+        showPromoMessage("Premiere promo code could not be applied.");
+      } finally {
+        apply.disabled = false;
+      }
+    });
   }
 
   function renderPaymentLoading() {
@@ -608,7 +685,7 @@
       return;
     }
     try {
-      const payment = await window.PremiereApi.createPaymentIntent(p.id, identity);
+      const payment = await window.PremiereApi.createPaymentIntent(p.id, identity, state.appliedPromo);
       state.currentPayment = { ...payment, __current_session: true };
       rememberPayment(payment, identity, p.id);
       const flow = paymentFlowKey(state.currentPayment);

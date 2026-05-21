@@ -13,6 +13,7 @@ from app.services.payment_pricing_service import (
     build_quote,
     create_payment_intent,
     get_payment_settings,
+    normalize_scope,
     serialize_payment_request,
     update_exchange_rate,
 )
@@ -78,6 +79,7 @@ class ExchangeRateIn(BaseModel):
 class PromoCodeIn(BaseModel):
     admin_id: int
     code: str
+    scope: str = "vcoin"
     discount_percent: int
     is_active: bool = True
     expires_at: Optional[str] = None
@@ -160,6 +162,7 @@ def _serialize_promo(row: VCoinPromoCode) -> dict:
     return {
         "id": row.id,
         "code": row.code,
+        "scope": normalize_scope(getattr(row, "scope", None)),
         "discount_percent": row.discount_percent,
         "is_active": bool(row.is_active),
         "expires_at": _serialize_datetime(row.expires_at),
@@ -337,9 +340,11 @@ def save_promo_code(payload: PromoCodeIn, db: Session = Depends(get_db)):
     percent = int(payload.discount_percent or 0)
     if percent <= 0 or percent > 100:
         raise HTTPException(status_code=422, detail="discount_percent_must_be_1_100")
+    scope = normalize_scope(payload.scope)
     row = db.query(VCoinPromoCode).filter(VCoinPromoCode.code == code).first()
     if not row:
         row = VCoinPromoCode(code=code)
+    row.scope = scope
     row.discount_percent = percent
     row.is_active = bool(payload.is_active)
     row.expires_at = _parse_datetime(payload.expires_at)

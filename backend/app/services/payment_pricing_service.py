@@ -59,12 +59,20 @@ def update_exchange_rate(db: Session, exchange_rate_uzs: int) -> VCoinPaymentSet
     return row
 
 
-def get_valid_promo(db: Session, code: str | None) -> VCoinPromoCode | None:
+def normalize_scope(value: str | None) -> str:
+    cleaned = str(value or "vcoin").strip().lower().replace("-", "_")
+    return cleaned if cleaned in {"vcoin", "premiere"} else "vcoin"
+
+
+def get_valid_promo(db: Session, code: str | None, scope: str = "vcoin") -> VCoinPromoCode | None:
     normalized = normalize_code(code)
     if not normalized:
         return None
+    normalized_scope = normalize_scope(scope)
     promo = db.query(VCoinPromoCode).filter(VCoinPromoCode.code == normalized).first()
     if not promo:
+        raise HTTPException(status_code=404, detail="promo_code_not_found")
+    if normalize_scope(getattr(promo, "scope", None)) != normalized_scope:
         raise HTTPException(status_code=404, detail="promo_code_not_found")
     if not promo.is_active:
         raise HTTPException(status_code=422, detail="promo_code_inactive")

@@ -30,6 +30,18 @@ window.AdminVCoinPaymentsUI = window.AdminVCoinPaymentsUI || {};
     const screen = document.getElementById("screen-mocks");
     if (!screen) return;
     const exchangeRate = Number(settings?.exchange_rate_uzs || 5000);
+    const vcoinPromos = (Array.isArray(promos) ? promos : []).filter((promo) => (promo.scope || "vcoin") === "vcoin");
+    const premierePromos = (Array.isArray(promos) ? promos : []).filter((promo) => promo.scope === "premiere");
+    const renderPromoRows = (items) => Array.isArray(items) && items.length ? items.map((promo) => `
+      <div class="admin-vcoin-promo-row">
+        <div>
+          <strong>${escape(promo.code)}</strong>
+          <p>${Number(promo.discount_percent || 0)}% off - ${promo.is_active ? "Active" : "Disabled"} - ${formatDate(promo.expires_at)}</p>
+          <span>Used: ${Number(promo.successful_uses || 0)}${promo.usage_limit ? ` / ${Number(promo.usage_limit)}` : " / unlimited"}</span>
+        </div>
+        <button type="button" data-disable-promo="${Number(promo.id)}">Disable</button>
+      </div>
+    `).join("") : `<div class="admin-vcoin-empty">No promo codes yet.</div>`;
     screen.className = "container admin-vcoin-payments-host";
     screen.innerHTML = `
       <div class="admin-vcoin-page">
@@ -53,7 +65,7 @@ window.AdminVCoinPaymentsUI = window.AdminVCoinPaymentsUI || {};
 
         <section class="admin-vcoin-card">
           <h3>Promo codes</h3>
-          <form id="admin-vcoin-promo-form" class="admin-vcoin-form admin-vcoin-promo-form">
+          <form id="admin-vcoin-promo-form" class="admin-vcoin-form admin-vcoin-promo-form" data-promo-scope="vcoin">
             <label>Code<input name="code" placeholder="OGABEK" required></label>
             <label>Discount %<input name="discount_percent" type="number" min="1" max="100" required></label>
             <label>Expiration<input name="expires_at" type="datetime-local"></label>
@@ -63,16 +75,23 @@ window.AdminVCoinPaymentsUI = window.AdminVCoinPaymentsUI || {};
           </form>
 
           <div class="admin-vcoin-promos">
-            ${Array.isArray(promos) && promos.length ? promos.map((promo) => `
-              <div class="admin-vcoin-promo-row">
-                <div>
-                  <strong>${escape(promo.code)}</strong>
-                  <p>${Number(promo.discount_percent || 0)}% off - ${promo.is_active ? "Active" : "Disabled"} - ${formatDate(promo.expires_at)}</p>
-                  <span>Used: ${Number(promo.successful_uses || 0)}${promo.usage_limit ? ` / ${Number(promo.usage_limit)}` : " / unlimited"}</span>
-                </div>
-                <button type="button" data-disable-promo="${Number(promo.id)}">Disable</button>
-              </div>
-            `).join("") : `<div class="admin-vcoin-empty">No promo codes yet.</div>`}
+            ${renderPromoRows(vcoinPromos)}
+          </div>
+        </section>
+
+        <section class="admin-vcoin-card">
+          <h3>Premiere Promo</h3>
+          <form id="admin-premiere-promo-form" class="admin-vcoin-form admin-vcoin-promo-form" data-promo-scope="premiere">
+            <label>Code<input name="code" placeholder="PREMIERE25" required></label>
+            <label>Discount %<input name="discount_percent" type="number" min="1" max="100" required></label>
+            <label>Expiration<input name="expires_at" type="datetime-local"></label>
+            <label>Usage limit<input name="usage_limit" type="number" min="1" placeholder="Unlimited"></label>
+            <label class="admin-vcoin-check"><input name="is_active" type="checkbox" checked> Active</label>
+            <button type="submit">Save Premiere promo</button>
+          </form>
+
+          <div class="admin-vcoin-promos">
+            ${renderPromoRows(premierePromos)}
           </div>
         </section>
 

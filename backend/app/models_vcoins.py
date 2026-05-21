@@ -51,6 +51,7 @@ class VCoinPromoCode(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     code = Column(String, nullable=False, unique=True, index=True)
+    scope = Column(String, nullable=False, default="vcoin", index=True)
     discount_percent = Column(Integer, nullable=False)
     is_active = Column(Boolean, nullable=False, default=True)
     expires_at = Column(DateTime(timezone=True), nullable=True)

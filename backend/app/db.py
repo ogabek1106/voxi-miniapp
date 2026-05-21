@@ -967,6 +967,7 @@ def ensure_vcoin_schema():
             "CREATE TABLE IF NOT EXISTS vcoin_promo_codes ("
             "id SERIAL PRIMARY KEY, "
             "code VARCHAR NOT NULL UNIQUE, "
+            "scope VARCHAR NOT NULL DEFAULT 'vcoin', "
             "discount_percent INTEGER NOT NULL, "
             "is_active BOOLEAN NOT NULL DEFAULT TRUE, "
             "expires_at TIMESTAMPTZ NULL, "
@@ -977,6 +978,7 @@ def ensure_vcoin_schema():
             ");"
         ))
         conn.execute(text("ALTER TABLE vcoin_promo_codes ADD COLUMN IF NOT EXISTS code VARCHAR;"))
+        conn.execute(text("ALTER TABLE vcoin_promo_codes ADD COLUMN IF NOT EXISTS scope VARCHAR NOT NULL DEFAULT 'vcoin';"))
         conn.execute(text("ALTER TABLE vcoin_promo_codes ADD COLUMN IF NOT EXISTS discount_percent INTEGER;"))
         conn.execute(text("ALTER TABLE vcoin_promo_codes ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT TRUE;"))
         conn.execute(text("ALTER TABLE vcoin_promo_codes ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ;"))
@@ -987,6 +989,10 @@ def ensure_vcoin_schema():
         conn.execute(text(
             "CREATE UNIQUE INDEX IF NOT EXISTS uq_vcoin_promo_codes_code "
             "ON vcoin_promo_codes (code);"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_vcoin_promo_codes_scope "
+            "ON vcoin_promo_codes (scope);"
         ))
 
         conn.execute(text(

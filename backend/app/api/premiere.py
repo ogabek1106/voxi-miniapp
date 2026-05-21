@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.deps import get_db
 from app.services.payment_pricing_service import serialize_payment_request
 from app.services.premiere_service import (
+    build_premiere_quote,
     create_premiere_payment_intent,
     find_active_premiere_payment_for_identity,
     get_active_premiere,
@@ -23,6 +24,11 @@ class PremierePaymentIn(BaseModel):
     telegram_id: int | None = None
     user_id: int | None = None
     email: str | None = None
+    promo_code: str | None = None
+
+
+class PremiereQuoteIn(BaseModel):
+    promo_code: str | None = None
 
 
 def _bot_payment_link(token: str) -> str:
@@ -83,8 +89,15 @@ def create_payment_intent(pack_id: int, payload: PremierePaymentIn, db: Session 
         user_id=payload.user_id,
         email=payload.email,
         pack_id=pack_id,
+        promo_code=payload.promo_code,
     )
     return _serialize_premiere_payment(payment)
+
+
+@router.post("/{pack_id}/quote")
+def quote_premiere_payment(pack_id: int, payload: PremiereQuoteIn, db: Session = Depends(get_db)):
+    pack = get_pack(db, pack_id)
+    return {"ok": True, "quote": build_premiere_quote(db, pack, payload.promo_code)}
 
 
 @router.get("/payment-intents/{payment_token}")
