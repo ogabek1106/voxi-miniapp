@@ -336,6 +336,7 @@ window.showAdminPanel = function () {
     <button onclick="showAdminWordShuffleStats()">Word Shuffle Stats</button>
     <button onclick="showAdminFeedbackRatings()">Feedback Ratings</button>
     <button onclick="showAdminVCoinPayments()">V-Coin Payments</button>
+    <button onclick="showAdminPremiereSubscriptions()">Premiere Subscriptions</button>
     <button onclick="showAdminNotifications()">Notifications</button>
     <button onclick="showAnnouncementAdmin()">📢 Announcement</button>
     <button onclick="showDbStats()">📊 Database Stats</button>

@@ -51,6 +51,23 @@
     };
   }
 
+  function liveCountdownParts(endValue) {
+    if (!endValue) return { text: "Limited release", urgent: false, expired: false };
+    const diff = new Date(endValue).getTime() - Date.now();
+    if (diff <= 0) return { text: "Premiere ended", urgent: true, expired: true };
+    const totalSeconds = Math.floor(diff / 1000);
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    const pad = (value) => String(value).padStart(2, "0");
+    return {
+      text: `${pad(days)}d : ${pad(hours)}h : ${pad(minutes)}m : ${pad(seconds)}s`,
+      urgent: totalSeconds <= 86400,
+      expired: false,
+    };
+  }
+
   function themeClass(premiere) {
     const raw = String(premiere?.premiere_theme || "violet_aurora")
       .trim()
@@ -261,14 +278,17 @@
 
   function refreshCountdown() {
     if (!state.premiere) return;
-    const time = formatAvailableUntil(state.premiere.premiere_ends_at);
+    const time = liveCountdownParts(state.premiere.premiere_ends_at);
     if (time.expired) {
       render(null);
       closeDetails();
       return;
     }
-    document.querySelectorAll("[data-premiere-countdown]").forEach((node) => {
+    document.querySelectorAll("[data-premiere-home-countdown]").forEach((node) => {
       node.textContent = time.text;
+    });
+    document.querySelectorAll("[data-premiere-availability]").forEach((node) => {
+      node.textContent = formatAvailableUntil(state.premiere.premiere_ends_at).text;
     });
     document.querySelectorAll("[data-premiere-price]").forEach((node) => {
       node.textContent = formatMoney(accessPrice());
@@ -281,7 +301,7 @@
   function startCountdown() {
     clearTick();
     refreshCountdown();
-    state.tick = setInterval(refreshCountdown, 60000);
+    state.tick = setInterval(refreshCountdown, 1000);
   }
 
   function render(premiere, payment = null) {
@@ -297,7 +317,7 @@
       return;
     }
     const action = actionLabel(premiere);
-    const time = formatAvailableUntil(premiere.premiere_ends_at);
+    const time = liveCountdownParts(premiere.premiere_ends_at);
     node.innerHTML = `
       <button class="premiere-home-card ${themeClass(premiere)} ${time.urgent ? "is-urgent" : ""}" type="button" id="premiere-home-card">
         <span class="premiere-content">
@@ -305,7 +325,7 @@
           <span class="premiere-title">${esc(premiere.title)}</span>
           <span class="premiere-subtitle">${esc(premiereDescription(premiere))}</span>
           <span class="premiere-meta">
-            <span class="premiere-countdown" data-premiere-countdown>${esc(time.text)}</span>
+            <span class="premiere-countdown" data-premiere-home-countdown>${esc(time.text)}</span>
             <span> - </span>
             <span data-premiere-price>${esc(formatMoney(accessPrice()))}</span>
           </span>
@@ -357,7 +377,7 @@
         <p class="premiere-subtitle">${esc(premiereDescription(p))}</p>
         <div class="premiere-detail-list">
           <span><strong>Includes</strong><b>Listening, Reading, Writing, Speaking</b></span>
-          <span><strong>Availability</strong><b data-premiere-countdown>${esc(time.text)}</b></span>
+          <span><strong>Availability</strong><b data-premiere-availability>${esc(time.text)}</b></span>
           <span><strong>Access price</strong><b data-premiere-price>${esc(formatMoney(accessPrice()))}</b></span>
         </div>
         <div class="premiere-promo">

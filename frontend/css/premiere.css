@@ -432,10 +432,15 @@
 
 .premiere-promo-toggle {
   border: 0;
-  background: transparent;
-  color: var(--premiere-accent);
-  padding: 0;
-  font-size: 12px;
+  background: transparent !important;
+  color: var(--premiere-accent) !important;
+  padding: 0 !important;
+  width: auto !important;
+  min-height: 0 !important;
+  height: auto !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  font-size: 12px !important;
   font-weight: 900;
   line-height: 1.2;
   cursor: pointer;
