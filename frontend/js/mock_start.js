@@ -100,6 +100,11 @@ async function fetchReadingStartWithRetry(url, attempts = 3) {
   throw lastError;
 }
 
+function examTelegramId() {
+  if (typeof window.getExamTelegramId === "function") return window.getExamTelegramId();
+  return typeof window.getTelegramId === "function" ? window.getTelegramId() : null;
+}
+
 MockFlow.goToNextPart = function (currentPart, mockId, container) {
   MockDebug.log("MockFlow.goToNextPart.enter", { currentPart, mockId, active: MockFlow.active, flowMockId: MockFlow.mockId });
   if (!MockFlow.isActive(mockId) || !window.MockTransitionPage?.show) {
@@ -276,7 +281,7 @@ window.startFullMock = async function (mockId) {
   if (await window.PremiereUi?.interceptIfPremiere?.(mockId)) {
     return;
   }
-  const telegramId = window.getTelegramId?.();
+  const telegramId = examTelegramId();
   if (telegramId && !window.__isAdmin) {
     try {
       const existing = await apiPost(`/mock-tests/${mockId}/full-result`, { telegram_id: telegramId });
@@ -331,7 +336,7 @@ window.startMock = async function (mockId, options = {}) {
 
   try {
 
-    const telegramId = window.getTelegramId();
+    const telegramId = examTelegramId();
     UserReading.__sessionMode = options.fromFlow ? "full_mock" : "single_block";
     MockDebug.log("startMock.api.startReading", { mockId, telegramId });
     const sessionMode = options.fromFlow ? "full_mock" : "single_block";
@@ -578,7 +583,7 @@ window.startListeningMock = async function (mockId, options = {}) {
   }
 
   try {
-    const telegramId = window.getTelegramId();
+    const telegramId = examTelegramId();
     MockDebug.log("startListeningMock.api.startListening", { mockId, telegramId });
     const sessionMode = encodeURIComponent(UserListening.__sessionMode || "single_block");
     const retakeParam = options.retakePaymentReferenceId

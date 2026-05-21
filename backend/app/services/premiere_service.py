@@ -179,6 +179,12 @@ def disable_premiere(db: Session, pack_id: int) -> MockPack:
 
 
 def has_active_premiere_access(db: Session, telegram_id: int | None, mock_pack_id: int) -> bool:
+    if telegram_id and int(telegram_id) < 0:
+        return has_active_premiere_access_for_identity(
+            db,
+            mock_pack_id=mock_pack_id,
+            user_id=abs(int(telegram_id)),
+        )
     return has_active_premiere_access_for_identity(db, mock_pack_id=mock_pack_id, telegram_id=telegram_id)
 
 

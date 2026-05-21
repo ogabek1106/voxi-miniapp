@@ -27,6 +27,17 @@ window.getTelegramId = function () {
   return 1150875355;
 };
 
+window.getExamTelegramId = function () {
+  const telegramId = typeof window.getTelegramId === "function" ? Number(window.getTelegramId() || 0) : 0;
+  if (Number.isFinite(telegramId) && telegramId > 0) return telegramId;
+
+  const websiteUser = window.WebsiteAuthState?.getUser?.();
+  const userId = Number(websiteUser?.id || 0);
+  if (Number.isFinite(userId) && userId > 0) return -userId;
+
+  return null;
+};
+
 function applyTelegramTheme() {
   if (FORCE_LIGHT_THEME) {
     applyBaseLightTheme();

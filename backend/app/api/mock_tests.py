@@ -57,6 +57,10 @@ def _get_test_for_mock(db: Session, mock_id: int) -> ReadingTest:
 
 
 def _get_user_by_telegram(db: Session, telegram_id: int) -> User:
+    if int(telegram_id) < 0:
+        user = db.query(User).filter(User.id == abs(int(telegram_id))).first()
+        if user:
+            return user
     user = db.query(User).filter(User.telegram_id == telegram_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -68,7 +72,7 @@ def _session_mode(value: str | None) -> str:
 
 
 def _is_admin_user(user: User) -> bool:
-    return int(user.telegram_id) in ADMIN_IDS
+    return bool(user.telegram_id and int(user.telegram_id) in ADMIN_IDS)
 
 
 def _require_reading_paid_access(db: Session, telegram_id: int, mock_id: int, progress: ReadingProgress | None, is_admin: bool) -> None:

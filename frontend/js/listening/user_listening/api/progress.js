@@ -4,6 +4,7 @@ window.UserListening = window.UserListening || {};
 
 UserListening.getTelegramUserId = function () {
   return window.Telegram?.WebApp?.initDataUnsafe?.user?.id
+    || (typeof window.getExamTelegramId === "function" ? window.getExamTelegramId() : null)
     || (typeof window.getTelegramId === "function" ? window.getTelegramId() : null)
     || null;
 };
