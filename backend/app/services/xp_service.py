@@ -297,7 +297,7 @@ def get_leaderboard_display_name(
             return full_name
         if user.username and (viewer_is_admin or not settings or settings.show_full_username):
             return f"@{str(user.username).lstrip('@')}"
-        if settings and settings.show_full_name and full_name:
+        if full_name:
             return full_name if viewer_is_admin else mask_name(full_name)
         if viewer_is_admin and user.email:
             return user.email

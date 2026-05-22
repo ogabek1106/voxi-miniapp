@@ -54,7 +54,7 @@ body.mobile-browser-view #screen-home .home-xp {
 .xp-sheet {
   width: min(100%, 430px);
   max-height: 78vh;
-  overflow: auto;
+  overflow: hidden;
   box-sizing: border-box;
   border-radius: 24px;
   background: #ffffff;
@@ -117,7 +117,7 @@ body.mobile-browser-view #screen-home .home-xp {
 .xp-history-list {
   display: grid;
   gap: 8px;
-  max-height: 288px;
+  max-height: 190px;
   overflow-y: auto;
   padding-right: 2px;
   scrollbar-width: thin;
@@ -140,7 +140,8 @@ body.mobile-browser-view #screen-home .home-xp {
   gap: 12px;
   border-radius: 16px;
   background: #f6fbfe;
-  padding: 10px 12px;
+  min-height: 34px;
+  padding: 7px 12px;
   font-size: 13px;
 }
 
@@ -213,6 +214,11 @@ body.mobile-browser-view #screen-home .home-xp {
   font-size: 11px;
   font-weight: 900;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  padding: 0 8px;
 }
 
 .xp-nickname-save:disabled {
@@ -330,8 +336,8 @@ body.mobile-browser-view #screen-home .home-xp {
 }
 
 .xp-leaderboard-row.xp-rank-silver {
-  background: linear-gradient(135deg, #edf2f7 0%, #ffffff 74%);
-  box-shadow: 0 8px 22px rgba(100,116,139,0.12);
+  background: linear-gradient(135deg, #d8dee7 0%, #f8fafc 58%, #ffffff 100%);
+  box-shadow: 0 10px 26px rgba(100,116,139,0.22), inset 0 0 0 1px rgba(148,163,184,0.28);
 }
 
 .xp-leaderboard-row.xp-rank-bronze {
