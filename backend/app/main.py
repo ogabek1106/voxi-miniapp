@@ -5,7 +5,7 @@ import traceback
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from app.db import SessionLocal, engine
-from app.models import Base, User, XPEvent
+from app.models import Base, User
 from app.deps import get_db
 from pydantic import BaseModel
 from fastapi.staticfiles import StaticFiles
@@ -177,21 +177,19 @@ ensure_listening_instruction_schema()
 ensure_listening_progress_schema()
 
 
-def backfill_initial_xp_if_empty():
+def backfill_xp_on_startup():
     db = SessionLocal()
     try:
-        if db.query(XPEvent.id).first():
-            return
         from app.services.xp_backfill import backfill_xp_from_existing_activity
         summary = backfill_xp_from_existing_activity(db)
-        print("[XP_BACKFILL] initial summary: " + str(summary), flush=True)
+        print("[XP_BACKFILL] startup summary: " + str(summary), flush=True)
     except Exception as exc:
         print("[XP_BACKFILL] skipped: " + str(exc), flush=True)
     finally:
         db.close()
 
 
-backfill_initial_xp_if_empty()
+backfill_xp_on_startup()
 
 @app.get("/")
 async def root():

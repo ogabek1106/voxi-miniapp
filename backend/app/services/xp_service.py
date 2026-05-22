@@ -67,6 +67,17 @@ def _xp_row(db: Session, user: User | None, telegram_id: int | None) -> UserXP:
     return row
 
 
+def _identity_filters(user: User | None, telegram_id: int | None = None):
+    filters = []
+    if user:
+        filters.append(UserXP.user_id == user.id)
+        if user.telegram_id:
+            filters.append(UserXP.telegram_id == int(user.telegram_id))
+    if telegram_id:
+        filters.append(UserXP.telegram_id == int(telegram_id))
+    return filters
+
+
 def add_xp(
     db: Session,
     user_id: int | None = None,
@@ -114,12 +125,11 @@ def add_xp(
 
 def get_total_xp(db: Session, user_id: int | None = None, telegram_id: int | None = None) -> int:
     user = resolve_user(db, user_id=user_id, telegram_id=telegram_id)
-    row = None
-    if user:
-        row = db.query(UserXP).filter(UserXP.user_id == user.id).first()
-    if not row and telegram_id:
-        row = db.query(UserXP).filter(UserXP.telegram_id == int(telegram_id)).first()
-    return int(row.total_xp or 0) if row else 0
+    filters = _identity_filters(user, telegram_id)
+    if not filters:
+        return 0
+    total = db.query(func.coalesce(func.sum(UserXP.total_xp), 0)).filter(or_(*filters)).scalar()
+    return int(total or 0)
 
 
 def get_xp_history(
@@ -242,6 +252,23 @@ def get_display_name(user: User | None, settings: XPVisibilitySettings | None = 
     return mask_name(full_name or getattr(user, "email", None) or "Learner")
 
 
+def get_public_leaderboard_name(user: User | None, settings: XPVisibilitySettings | None = None, telegram_id: int | None = None) -> str:
+    if settings and settings.nickname:
+        return settings.nickname
+    if user:
+        full_name = " ".join(part for part in [getattr(user, "name", None), getattr(user, "surname", None)] if part).strip()
+        if full_name:
+            return full_name
+        if user.username:
+            return f"@{str(user.username).lstrip('@')}"
+        if user.email:
+            return user.email
+    if telegram_id:
+        suffix = str(abs(int(telegram_id)))[-4:]
+        return f"Learner {suffix}"
+    return "Learner"
+
+
 def get_leaderboard(db: Session, limit: int = 100) -> list[dict[str, Any]]:
     rows = (
         db.query(UserXP)
@@ -274,7 +301,7 @@ def get_leaderboard(db: Session, limit: int = 100) -> list[dict[str, Any]]:
         settings = get_or_create_settings(db, user, telegram_id)
         items.append({
             "rank": len(items) + 1,
-            "display_name": get_display_name(user, settings),
+            "display_name": get_public_leaderboard_name(user, settings, telegram_id),
             "xp": int(item["total_xp"] or 0),
         })
         if len(items) >= limit:
