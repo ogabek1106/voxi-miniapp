@@ -34,9 +34,11 @@ def get_my_xp(
     user = _current_user(db, request, telegram_id)
     if not user and not telegram_id:
         raise HTTPException(status_code=401, detail="user_required")
+    settings = xp_service.get_or_create_settings(db, user, telegram_id)
     return {
         "total_xp": xp_service.get_total_xp(db, user_id=user.id if user else None, telegram_id=telegram_id),
         "history": xp_service.get_xp_history(db, user_id=user.id if user else None, telegram_id=telegram_id, limit=50),
+        "display_name": xp_service.get_display_name(user, settings),
     }
 
 
@@ -63,12 +65,30 @@ def update_settings(payload: XPSettingsIn, request: Request, db: Session = Depen
     user = _current_user(db, request, payload.telegram_id)
     if not user and not payload.telegram_id:
         raise HTTPException(status_code=401, detail="user_required")
-    settings = xp_service.update_settings(
-        db,
-        user=user,
-        telegram_id=payload.telegram_id,
-        nickname=payload.nickname,
-        show_full_name=payload.show_full_name,
-        show_full_username=payload.show_full_username,
-    )
+    try:
+        settings = xp_service.update_settings(
+            db,
+            user=user,
+            telegram_id=payload.telegram_id,
+            nickname=payload.nickname,
+            show_full_name=payload.show_full_name,
+            show_full_username=payload.show_full_username,
+        )
+    except ValueError as exc:
+        if str(exc) == "nickname_taken":
+            raise HTTPException(status_code=409, detail="This nickname is already taken")
+        raise
     return xp_service.serialize_settings(settings)
+
+
+@router.get("/nickname/check")
+def check_nickname(
+    nickname: str,
+    request: Request,
+    telegram_id: int | None = Query(default=None),
+    db: Session = Depends(get_db),
+):
+    user = _current_user(db, request, telegram_id)
+    return {
+        "available": not xp_service.nickname_taken(db, nickname, user=user, telegram_id=telegram_id),
+    }

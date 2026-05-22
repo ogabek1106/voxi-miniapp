@@ -6,6 +6,9 @@ window.XPUI = window.XPUI || {};
     history: [],
     settings: null,
     leaderboard: [],
+    nicknameDraft: "",
+    settingsMessage: "",
+    displayName: "",
   };
 
   function telegramId() {
@@ -53,12 +56,14 @@ window.XPUI = window.XPUI || {};
     const data = await window.apiGet(`/xp/me${querySuffix()}`);
     state.total = Math.max(0, Number(data?.total_xp || 0));
     state.history = Array.isArray(data?.history) ? data.history : [];
+    state.displayName = data?.display_name || "";
     setIndicatorValue(state.total);
     return data;
   }
 
   async function loadSettings() {
     state.settings = await window.apiGet(`/xp/settings${querySuffix()}`);
+    state.nicknameDraft = state.settings?.nickname || "";
     return state.settings;
   }
 
@@ -97,21 +102,28 @@ window.XPUI = window.XPUI || {};
 
   function renderSettings() {
     const settings = state.settings || {};
+    const nickname = state.nicknameDraft ?? settings.nickname ?? "";
+    const nicknameChanged = String(nickname || "") !== String(settings.nickname || "");
     return `
       <div class="xp-settings">
         <p class="xp-settings-title">Leaderboard privacy</p>
-        <input id="xp-nickname" maxlength="40" placeholder="Custom nickname" value="${escapeHtml(settings.nickname || "")}">
+        <div class="xp-nickname-field">
+          <input id="xp-nickname" maxlength="40" placeholder="Custom nickname" value="${escapeHtml(nickname)}">
+          <button class="xp-nickname-save" type="button" id="xp-save-nickname" ${nicknameChanged ? "" : "disabled"}>Save</button>
+        </div>
+        ${state.settingsMessage ? `<p class="xp-settings-message">${escapeHtml(state.settingsMessage)}</p>` : ""}
         <div class="xp-toggle-group">
-          <label class="xp-toggle-row">
+          <label class="xp-toggle-row xp-switch-row">
             <input id="xp-show-full-name" type="checkbox" ${settings.show_full_name ? "checked" : ""}>
-            <span>Show full profile name</span>
+            <span class="xp-switch-visual" aria-hidden="true"></span>
+            <span class="xp-switch-label">Show full profile name</span>
           </label>
-          <label class="xp-toggle-row">
+          <label class="xp-toggle-row xp-switch-row">
             <input id="xp-show-full-username" type="checkbox" ${settings.show_full_username !== false ? "checked" : ""}>
-            <span>Show full Telegram username</span>
+            <span class="xp-switch-visual" aria-hidden="true"></span>
+            <span class="xp-switch-label">Show full Telegram username</span>
           </label>
         </div>
-        <button class="xp-save" type="button" id="xp-save-settings">Save privacy settings</button>
       </div>
     `;
   }
@@ -122,13 +134,16 @@ window.XPUI = window.XPUI || {};
       ? `
         <div class="xp-leaderboard">
           <p class="xp-leaderboard-title">Global Leaderboard</p>
-          ${state.leaderboard.length ? state.leaderboard.map((item) => `
-            <div class="xp-leaderboard-row">
-              <span class="xp-rank">#${Number(item.rank || 0)}</span>
+          ${state.leaderboard.length ? state.leaderboard.map((item) => {
+            const rank = Number(item.rank || 0);
+            const medal = rank === 1 ? "xp-rank-gold" : rank === 2 ? "xp-rank-silver" : rank === 3 ? "xp-rank-bronze" : "";
+            return `
+            <div class="xp-leaderboard-row ${medal}">
+              <span class="xp-rank">${rank}</span>
               <span class="xp-name">${escapeHtml(item.display_name || "Learner")}</span>
               <span class="xp-score">${Number(item.xp || 0)} XP</span>
             </div>
-          `).join("") : `<p class="xp-empty">No XP leaders yet.</p>`}
+          `;}).join("") : `<p class="xp-empty">No XP leaders yet.</p>`}
         </div>
       `
       : "";
@@ -138,7 +153,7 @@ window.XPUI = window.XPUI || {};
         <div class="xp-sheet" role="dialog" aria-modal="true" aria-label="XP">
           <div class="xp-sheet-head">
             <div>
-              <h3 class="xp-title">${mode === "leaderboard" ? "Leaderboard" : "Global XP"}</h3>
+              <h3 class="xp-title">${mode === "leaderboard" ? "Leaderboard" : escapeHtml(state.displayName || "Global XP")}</h3>
               <p class="xp-total">Total XP: <strong>${Number(state.total || 0)}</strong></p>
             </div>
             <button class="xp-close" type="button" aria-label="Close XP">×</button>
@@ -175,16 +190,53 @@ window.XPUI = window.XPUI || {};
     renderSheet("leaderboard");
   }
 
-  async function saveSettings() {
+  async function saveSettings(overrides = {}) {
     const id = telegramId();
+    const nicknameValue = document.getElementById("xp-nickname")?.value ?? state.settings?.nickname ?? "";
     const payload = {
       telegram_id: id,
-      nickname: document.getElementById("xp-nickname")?.value || "",
-      show_full_name: Boolean(document.getElementById("xp-show-full-name")?.checked),
-      show_full_username: Boolean(document.getElementById("xp-show-full-username")?.checked),
+      nickname: overrides.nickname ?? nicknameValue,
+      show_full_name: overrides.show_full_name ?? Boolean(document.getElementById("xp-show-full-name")?.checked),
+      show_full_username: overrides.show_full_username ?? Boolean(document.getElementById("xp-show-full-username")?.checked),
     };
     state.settings = await window.apiPost("/xp/settings", payload);
+    state.nicknameDraft = state.settings?.nickname || "";
+    state.settingsMessage = "";
     renderSheet("summary");
+  }
+
+  async function saveNickname() {
+    const nickname = (document.getElementById("xp-nickname")?.value || "").trim();
+    state.nicknameDraft = nickname;
+    state.settingsMessage = "";
+    if (nickname && nickname !== (state.settings?.nickname || "")) {
+      const data = await window.apiGet(`/xp/nickname/check${querySuffix()}${querySuffix() ? "&" : "?"}nickname=${encodeURIComponent(nickname)}`);
+      if (data?.available === false) {
+        state.settingsMessage = "This nickname is already taken";
+        renderSheet("summary");
+        return;
+      }
+    }
+    try {
+      await saveSettings({ nickname });
+    } catch (error) {
+      state.settingsMessage = error?.status === 409 ? "This nickname is already taken" : "Could not save nickname";
+      renderSheet("summary");
+    }
+  }
+
+  async function autosaveToggle(event) {
+    const target = event.target;
+    if (!target || !target.matches("#xp-show-full-name, #xp-show-full-username")) return;
+    try {
+      await saveSettings({
+        show_full_name: target.id === "xp-show-full-name" ? target.checked : undefined,
+        show_full_username: target.id === "xp-show-full-username" ? target.checked : undefined,
+      });
+    } catch (_) {
+      state.settingsMessage = "Could not save privacy setting";
+      renderSheet("summary");
+    }
   }
 
   function bind() {
@@ -204,10 +256,22 @@ window.XPUI = window.XPUI || {};
         showLeaderboard(event);
         return;
       }
-      if (event.target.closest("#xp-save-settings")) {
-        saveSettings();
+      if (event.target.closest("#xp-save-nickname")) {
+        saveNickname();
       }
     });
+    document.addEventListener("input", (event) => {
+      if (!event.target.matches("#xp-nickname")) return;
+      state.nicknameDraft = event.target.value;
+      const save = document.getElementById("xp-save-nickname");
+      if (save) save.disabled = String(state.nicknameDraft || "") === String(state.settings?.nickname || "");
+      if (state.settingsMessage) {
+        state.settingsMessage = "";
+        const message = document.querySelector(".xp-settings-message");
+        if (message) message.remove();
+      }
+    });
+    document.addEventListener("change", autosaveToggle);
   }
 
   window.XPUI.refresh = async function () {

@@ -92,6 +92,11 @@ def ensure_xp_schema():
         conn.execute(text("CREATE INDEX IF NOT EXISTS ix_xp_events_telegram_created ON xp_events (telegram_id, created_at DESC);"))
         conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uq_xp_visibility_user_id ON xp_visibility_settings (user_id) WHERE user_id IS NOT NULL;"))
         conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uq_xp_visibility_telegram_id ON xp_visibility_settings (telegram_id) WHERE telegram_id IS NOT NULL;"))
+        conn.execute(text(
+            "CREATE UNIQUE INDEX IF NOT EXISTS uq_xp_visibility_nickname_lower "
+            "ON xp_visibility_settings (LOWER(nickname)) "
+            "WHERE nickname IS NOT NULL AND BTRIM(nickname) <> '';"
+        ))
         conn.commit()
 
 

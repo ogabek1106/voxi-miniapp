@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import or_
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from app.config import ADMIN_IDS
@@ -87,8 +87,6 @@ def add_xp(
 
     user = resolve_user(db, user_id=user_id, telegram_id=telegram_id)
     identity_telegram_id = int(user.telegram_id) if user and user.telegram_id else (int(telegram_id) if telegram_id else None)
-    if is_admin_identity(user, identity_telegram_id):
-        return None
     if not user and not identity_telegram_id:
         return None
 
@@ -180,7 +178,10 @@ def update_settings(
     show_full_username: bool,
 ) -> XPVisibilitySettings:
     row = get_or_create_settings(db, user, telegram_id)
-    row.nickname = (nickname or "").strip()[:40] or None
+    cleaned_nickname = (nickname or "").strip()[:40] or None
+    if cleaned_nickname and nickname_taken(db, cleaned_nickname, user=user, telegram_id=telegram_id):
+        raise ValueError("nickname_taken")
+    row.nickname = cleaned_nickname
     row.show_full_name = bool(show_full_name)
     row.show_full_username = bool(show_full_username)
     row.updated_at = _utcnow()
@@ -192,6 +193,21 @@ def update_settings(
     db.commit()
     db.refresh(row)
     return row
+
+
+def nickname_taken(db: Session, nickname: str, user: User | None = None, telegram_id: int | None = None) -> bool:
+    cleaned = (nickname or "").strip()
+    if not cleaned:
+        return False
+    query = db.query(XPVisibilitySettings).filter(func.lower(XPVisibilitySettings.nickname) == cleaned.lower())
+    existing = query.first()
+    if not existing:
+        return False
+    if user and existing.user_id == user.id:
+        return False
+    if telegram_id and existing.telegram_id == int(telegram_id):
+        return False
+    return True
 
 
 def mask_name(name: str | None) -> str:
@@ -210,6 +226,9 @@ def mask_name(name: str | None) -> str:
 
 
 def get_display_name(user: User | None, settings: XPVisibilitySettings | None = None) -> str:
+    if is_admin_identity(user):
+        full_admin_name = " ".join(part for part in [getattr(user, "name", None), getattr(user, "surname", None)] if part).strip()
+        return full_admin_name or getattr(user, "username", None) or getattr(user, "email", None) or "Admin"
     if settings and settings.nickname:
         return settings.nickname
     if user and user.username:
@@ -228,19 +247,35 @@ def get_leaderboard(db: Session, limit: int = 100) -> list[dict[str, Any]]:
         db.query(UserXP)
         .filter(UserXP.total_xp > 0)
         .order_by(UserXP.total_xp.desc(), UserXP.updated_at.asc())
-        .limit(max(1, min(int(limit or 100), 200)) * 2)
         .all()
     )
-    items: list[dict[str, Any]] = []
+    aggregated: dict[str, dict[str, Any]] = {}
     for row in rows:
         user = resolve_user(db, user_id=row.user_id, telegram_id=row.telegram_id)
-        if is_admin_identity(user, row.telegram_id):
+        key = f"user:{user.id}" if user else f"telegram:{int(row.telegram_id or 0)}"
+        if key == "telegram:0":
             continue
-        settings = get_or_create_settings(db, user, row.telegram_id)
+        if key not in aggregated:
+            aggregated[key] = {"user": user, "telegram_id": row.telegram_id, "total_xp": 0, "updated_at": row.updated_at}
+        aggregated[key]["total_xp"] += int(row.total_xp or 0)
+        if row.updated_at and (not aggregated[key]["updated_at"] or row.updated_at < aggregated[key]["updated_at"]):
+            aggregated[key]["updated_at"] = row.updated_at
+
+    sorted_rows = sorted(
+        aggregated.values(),
+        key=lambda item: (-int(item["total_xp"] or 0), item["updated_at"] or _utcnow()),
+    )
+    items: list[dict[str, Any]] = []
+    for item in sorted_rows:
+        user = item["user"]
+        telegram_id = item["telegram_id"]
+        if is_admin_identity(user, telegram_id):
+            continue
+        settings = get_or_create_settings(db, user, telegram_id)
         items.append({
             "rank": len(items) + 1,
             "display_name": get_display_name(user, settings),
-            "xp": int(row.total_xp or 0),
+            "xp": int(item["total_xp"] or 0),
         })
         if len(items) >= limit:
             break
