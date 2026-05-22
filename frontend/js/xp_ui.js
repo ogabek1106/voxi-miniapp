@@ -101,14 +101,16 @@ window.XPUI = window.XPUI || {};
       <div class="xp-settings">
         <p class="xp-settings-title">Leaderboard privacy</p>
         <input id="xp-nickname" maxlength="40" placeholder="Custom nickname" value="${escapeHtml(settings.nickname || "")}">
-        <label class="xp-toggle-row">
-          <input id="xp-show-full-name" type="checkbox" ${settings.show_full_name ? "checked" : ""}>
-          <span>Show full profile name</span>
-        </label>
-        <label class="xp-toggle-row">
-          <input id="xp-show-full-username" type="checkbox" ${settings.show_full_username !== false ? "checked" : ""}>
-          <span>Show full Telegram username</span>
-        </label>
+        <div class="xp-toggle-group">
+          <label class="xp-toggle-row">
+            <input id="xp-show-full-name" type="checkbox" ${settings.show_full_name ? "checked" : ""}>
+            <span>Show full profile name</span>
+          </label>
+          <label class="xp-toggle-row">
+            <input id="xp-show-full-username" type="checkbox" ${settings.show_full_username !== false ? "checked" : ""}>
+            <span>Show full Telegram username</span>
+          </label>
+        </div>
         <button class="xp-save" type="button" id="xp-save-settings">Save privacy settings</button>
       </div>
     `;

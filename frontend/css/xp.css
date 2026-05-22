@@ -8,10 +8,10 @@
 #screen-home .home-xp,
 .website-xp-button {
   border: 0;
-  min-width: 76px;
+  min-width: 92px;
   height: 42px;
   border-radius: 18px;
-  background: linear-gradient(135deg, #fff9ec 0%, #ffffff 56%, #eef9ff 100%);
+  background: #FFFFFF;
   box-shadow: 0 8px 24px rgba(20,40,60,0.08);
   display: inline-flex;
   align-items: center;
@@ -23,6 +23,14 @@
   padding: 10px 13px;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+}
+
+body.view-miniapp #screen-home .home-xp,
+body.mobile-browser-view #screen-home .home-xp {
+  min-width: 74px;
+  height: 40px;
+  padding: 8px 10px;
+  gap: 6px;
 }
 
 .home-xp-label,
@@ -167,7 +175,7 @@
   padding-top: 14px;
 }
 
-.xp-settings input {
+.xp-settings #xp-nickname {
   width: 100%;
   box-sizing: border-box;
   border: 1px solid rgba(20,40,60,0.12);
@@ -177,14 +185,67 @@
   font-size: 14px;
 }
 
+.xp-toggle-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
 .xp-toggle-row {
   display: flex;
   align-items: center;
-  gap: 9px;
-  margin-top: 10px;
+  gap: 10px;
+  min-height: 46px;
+  border-radius: 15px;
+  background: #f6fbfe;
+  padding: 10px 12px;
+  box-sizing: border-box;
   color: #526273;
-  font-size: 13px;
-  font-weight: 750;
+  font-size: 12px;
+  line-height: 1.25;
+  font-weight: 850;
+}
+
+.xp-toggle-row input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  margin: 0;
+  border: 2px solid rgba(82,98,115,0.26);
+  border-radius: 7px;
+  background: #ffffff;
+  display: inline-grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.xp-toggle-row input[type="checkbox"]::after {
+  content: "";
+  width: 9px;
+  height: 5px;
+  border-left: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  transform: rotate(-45deg) translateY(-1px);
+  opacity: 0;
+}
+
+.xp-toggle-row input[type="checkbox"]:checked {
+  border-color: #00a3e0;
+  background: #00a3e0;
+  box-shadow: 0 8px 18px rgba(0,163,224,0.18);
+}
+
+.xp-toggle-row input[type="checkbox"]:checked::after {
+  opacity: 1;
+}
+
+@media (max-width: 420px) {
+  .xp-toggle-group {
+    grid-template-columns: 1fr;
+  }
 }
 
 .xp-save {

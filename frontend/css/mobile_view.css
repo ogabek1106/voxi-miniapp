@@ -117,7 +117,8 @@ body.mobile-browser-view .website-header-actions .voxi-notification-bell {
   flex: 0 0 38px;
 }
 
-body.mobile-browser-view .website-balance-button {
+body.mobile-browser-view .website-balance-button,
+body.mobile-browser-view .website-xp-button {
   height: 38px;
   min-width: 62px;
   padding-left: 10px;

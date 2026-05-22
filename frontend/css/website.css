@@ -183,6 +183,7 @@ body.view-website .website-header.is-compact .website-brand-text {
 }
 
 .website-balance-button,
+.website-xp-button,
 .website-profile-button {
   width: auto;
   margin: 0;
@@ -196,7 +197,8 @@ body.view-website .website-header.is-compact .website-brand-text {
   cursor: pointer;
 }
 
-.website-balance-button {
+.website-balance-button,
+.website-xp-button {
   height: 46px;
   gap: 8px;
   padding: 0 16px;
@@ -206,7 +208,8 @@ body.view-website .website-header.is-compact .website-brand-text {
   transition: box-shadow 140ms ease;
 }
 
-body.view-website .website-header.is-compact .website-balance-button {
+body.view-website .website-header.is-compact .website-balance-button,
+body.view-website .website-header.is-compact .website-xp-button {
   height: 34px;
   padding: 0 12px;
   border-radius: 14px;
