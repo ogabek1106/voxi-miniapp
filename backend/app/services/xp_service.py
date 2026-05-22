@@ -345,6 +345,7 @@ def get_leaderboard(
     )
     items: list[dict[str, Any]] = []
     rank_position = 0
+    viewer_found = False
     for item in sorted_rows:
         user = item["user"]
         telegram_id = item["telegram_id"]
@@ -353,6 +354,7 @@ def get_leaderboard(
         rank_position += 1
         settings = get_or_create_settings(db, user, telegram_id)
         is_current_user = bool(viewer_key and _leaderboard_identity_key(user, telegram_id) == viewer_key)
+        viewer_found = viewer_found or is_current_user
         if len(items) >= limit and not is_current_user:
             continue
         items.append({
@@ -363,6 +365,23 @@ def get_leaderboard(
         })
         if len(items) >= limit and is_current_user:
             break
+    if viewer_key and not viewer_found and not is_admin_identity(viewer_user, viewer_telegram_id):
+        settings = get_or_create_settings(db, viewer_user, viewer_telegram_id)
+        items.append({
+            "rank": rank_position + 1,
+            "display_name": get_leaderboard_display_name(
+                viewer_user,
+                settings,
+                viewer_telegram_id,
+                viewer_is_admin=viewer_is_admin,
+            ),
+            "xp": get_total_xp(
+                db,
+                user_id=viewer_user.id if viewer_user else None,
+                telegram_id=viewer_telegram_id,
+            ),
+            "is_current_user": True,
+        })
     return items
 
 
