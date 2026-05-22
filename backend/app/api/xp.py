@@ -43,8 +43,18 @@ def get_my_xp(
 
 
 @router.get("/leaderboard")
-def get_leaderboard(limit: int = Query(default=100, ge=1, le=200), db: Session = Depends(get_db)):
-    return xp_service.get_leaderboard(db, limit=limit)
+def get_leaderboard(
+    request: Request,
+    telegram_id: int | None = Query(default=None),
+    limit: int = Query(default=100, ge=1, le=200),
+    db: Session = Depends(get_db),
+):
+    viewer = _current_user(db, request, telegram_id)
+    return xp_service.get_leaderboard(
+        db,
+        limit=limit,
+        viewer_is_admin=xp_service.is_admin_identity(viewer, telegram_id),
+    )
 
 
 @router.get("/settings")

@@ -114,6 +114,16 @@ body.mobile-browser-view #screen-home .home-xp {
   margin: 16px 0 0;
 }
 
+.xp-history-list {
+  display: grid;
+  gap: 8px;
+  max-height: 288px;
+  overflow-y: auto;
+  padding-right: 2px;
+  scrollbar-width: thin;
+  overscroll-behavior: contain;
+}
+
 .xp-history-title,
 .xp-settings-title,
 .xp-leaderboard-title {
@@ -176,7 +186,10 @@ body.mobile-browser-view #screen-home .home-xp {
 }
 
 .xp-nickname-field {
-  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
 }
 
 .xp-settings #xp-nickname {
@@ -184,16 +197,12 @@ body.mobile-browser-view #screen-home .home-xp {
   box-sizing: border-box;
   border: 1px solid rgba(20,40,60,0.12);
   border-radius: 14px;
-  padding: 10px 56px 10px 12px;
+  padding: 10px 12px;
   font: inherit;
   font-size: 14px;
 }
 
 .xp-nickname-save {
-  position: absolute;
-  top: 50%;
-  right: 8px;
-  transform: translateY(-50%);
   min-width: 40px;
   height: 24px;
   border: 0;

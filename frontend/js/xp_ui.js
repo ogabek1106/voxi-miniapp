@@ -68,7 +68,8 @@ window.XPUI = window.XPUI || {};
   }
 
   async function loadLeaderboard() {
-    const rows = await window.apiGet("/xp/leaderboard?limit=100");
+    const suffix = querySuffix();
+    const rows = await window.apiGet(`/xp/leaderboard${suffix}${suffix ? "&" : "?"}limit=100`);
     state.leaderboard = Array.isArray(rows) ? rows : [];
     return state.leaderboard;
   }
@@ -161,7 +162,7 @@ window.XPUI = window.XPUI || {};
           ${mode === "leaderboard" ? leaderboard : `
             <div class="xp-history">
               <p class="xp-history-title">Recent XP history</p>
-              ${renderHistory()}
+              <div class="xp-history-list">${renderHistory()}</div>
             </div>
             <a href="#" class="xp-link" id="xp-see-leaderboard">See Leaderboard</a>
             ${renderSettings()}

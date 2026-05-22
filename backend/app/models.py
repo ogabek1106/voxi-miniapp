@@ -57,6 +57,7 @@ class XPVisibilitySettings(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True)
     telegram_id = Column(BigInteger, nullable=True, index=True)
     nickname = Column(String, nullable=True)
+    public_anon_code = Column(String, nullable=True, index=True)
     show_full_name = Column(Boolean, nullable=False, default=False)
     show_full_username = Column(Boolean, nullable=False, default=True)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)

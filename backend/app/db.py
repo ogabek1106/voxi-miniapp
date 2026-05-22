@@ -79,6 +79,7 @@ def ensure_xp_schema():
         conn.execute(text("ALTER TABLE xp_visibility_settings ADD COLUMN IF NOT EXISTS user_id INTEGER;"))
         conn.execute(text("ALTER TABLE xp_visibility_settings ADD COLUMN IF NOT EXISTS telegram_id BIGINT;"))
         conn.execute(text("ALTER TABLE xp_visibility_settings ADD COLUMN IF NOT EXISTS nickname VARCHAR;"))
+        conn.execute(text("ALTER TABLE xp_visibility_settings ADD COLUMN IF NOT EXISTS public_anon_code VARCHAR;"))
         conn.execute(text("ALTER TABLE xp_visibility_settings ADD COLUMN IF NOT EXISTS show_full_name BOOLEAN NOT NULL DEFAULT FALSE;"))
         conn.execute(text("ALTER TABLE xp_visibility_settings ADD COLUMN IF NOT EXISTS show_full_username BOOLEAN NOT NULL DEFAULT TRUE;"))
         conn.execute(text("ALTER TABLE xp_visibility_settings ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
@@ -96,6 +97,11 @@ def ensure_xp_schema():
             "CREATE UNIQUE INDEX IF NOT EXISTS uq_xp_visibility_nickname_lower "
             "ON xp_visibility_settings (LOWER(nickname)) "
             "WHERE nickname IS NOT NULL AND BTRIM(nickname) <> '';"
+        ))
+        conn.execute(text(
+            "CREATE UNIQUE INDEX IF NOT EXISTS uq_xp_visibility_public_anon_code "
+            "ON xp_visibility_settings (public_anon_code) "
+            "WHERE public_anon_code IS NOT NULL AND BTRIM(public_anon_code) <> '';"
         ))
         conn.commit()
 

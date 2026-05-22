@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 from datetime import datetime, timezone
 from typing import Any
 
@@ -76,6 +77,25 @@ def _identity_filters(user: User | None, telegram_id: int | None = None):
     if telegram_id:
         filters.append(UserXP.telegram_id == int(telegram_id))
     return filters
+
+
+def _anon_seed(user: User | None, telegram_id: int | None = None) -> str:
+    if user:
+        return f"user:{user.id}"
+    if telegram_id:
+        return f"telegram:{int(telegram_id)}"
+    return f"anon:{_utcnow().timestamp()}"
+
+
+def _generate_public_anon_code(db: Session, user: User | None, telegram_id: int | None, current_id: int | None = None) -> str:
+    seed = _anon_seed(user, telegram_id)
+    base = int(hashlib.sha256(seed.encode("utf-8")).hexdigest()[:10], 16) % 10000
+    for offset in range(10000):
+        code = f"{(base + offset) % 10000:04d}"
+        existing = db.query(XPVisibilitySettings).filter(XPVisibilitySettings.public_anon_code == code).first()
+        if not existing or (current_id and existing.id == current_id):
+            return code
+    return f"{base:04d}"
 
 
 def add_xp(
@@ -168,11 +188,18 @@ def get_or_create_settings(db: Session, user: User | None, telegram_id: int | No
         row = XPVisibilitySettings(
             user_id=user.id if user else None,
             telegram_id=user.telegram_id if user and user.telegram_id else telegram_id,
+            public_anon_code=_generate_public_anon_code(db, user, telegram_id),
             show_full_name=False,
             show_full_username=True,
             created_at=_utcnow(),
             updated_at=_utcnow(),
         )
+        db.add(row)
+        db.commit()
+        db.refresh(row)
+    elif not row.public_anon_code:
+        row.public_anon_code = _generate_public_anon_code(db, user, telegram_id, current_id=row.id)
+        row.updated_at = _utcnow()
         db.add(row)
         db.commit()
         db.refresh(row)
@@ -253,23 +280,32 @@ def get_display_name(user: User | None, settings: XPVisibilitySettings | None = 
 
 
 def get_public_leaderboard_name(user: User | None, settings: XPVisibilitySettings | None = None, telegram_id: int | None = None) -> str:
+    return get_leaderboard_display_name(user, settings, telegram_id, viewer_is_admin=False)
+
+
+def get_leaderboard_display_name(
+    user: User | None,
+    settings: XPVisibilitySettings | None = None,
+    telegram_id: int | None = None,
+    viewer_is_admin: bool = False,
+) -> str:
     if settings and settings.nickname:
         return settings.nickname
     if user:
         full_name = " ".join(part for part in [getattr(user, "name", None), getattr(user, "surname", None)] if part).strip()
-        if full_name:
+        if viewer_is_admin and full_name:
             return full_name
-        if user.username:
+        if user.username and (viewer_is_admin or not settings or settings.show_full_username):
             return f"@{str(user.username).lstrip('@')}"
-        if user.email:
+        if settings and settings.show_full_name and full_name:
+            return full_name if viewer_is_admin else mask_name(full_name)
+        if viewer_is_admin and user.email:
             return user.email
-    if telegram_id:
-        suffix = str(abs(int(telegram_id)))[-4:]
-        return f"Learner {suffix}"
-    return "Learner"
+    code = (settings.public_anon_code if settings and settings.public_anon_code else None) or "0000"
+    return f"Learner {str(code).zfill(4)[-4:]}"
 
 
-def get_leaderboard(db: Session, limit: int = 100) -> list[dict[str, Any]]:
+def get_leaderboard(db: Session, limit: int = 100, viewer_is_admin: bool = False) -> list[dict[str, Any]]:
     rows = (
         db.query(UserXP)
         .filter(UserXP.total_xp > 0)
@@ -301,7 +337,7 @@ def get_leaderboard(db: Session, limit: int = 100) -> list[dict[str, Any]]:
         settings = get_or_create_settings(db, user, telegram_id)
         items.append({
             "rank": len(items) + 1,
-            "display_name": get_public_leaderboard_name(user, settings, telegram_id),
+            "display_name": get_leaderboard_display_name(user, settings, telegram_id, viewer_is_admin=viewer_is_admin),
             "xp": int(item["total_xp"] or 0),
         })
         if len(items) >= limit:
