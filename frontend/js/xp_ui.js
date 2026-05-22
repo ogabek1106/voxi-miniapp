@@ -129,17 +129,33 @@ window.XPUI = window.XPUI || {};
     `;
   }
 
+  function leaderboardRowsForDisplay() {
+    const rows = Array.isArray(state.leaderboard) ? state.leaderboard : [];
+    const topRows = rows.slice(0, 7);
+    const current = rows.find((item) => item?.is_current_user);
+    if (!current || Number(current.rank || 0) <= 7) return topRows;
+    const display = topRows.slice();
+    if (Number(current.rank || 0) > 8) {
+      display.push({ is_gap: true });
+    }
+    display.push(current);
+    return display;
+  }
+
   function renderSheet(mode = "summary") {
     const root = sheetRoot();
     const leaderboard = mode === "leaderboard"
       ? `
         <div class="xp-leaderboard">
           <p class="xp-leaderboard-title">Global Leaderboard</p>
-          ${state.leaderboard.length ? state.leaderboard.map((item) => {
+          ${state.leaderboard.length ? leaderboardRowsForDisplay().map((item) => {
+            if (item.is_gap) {
+              return `<div class="xp-leaderboard-gap" aria-hidden="true">...</div>`;
+            }
             const rank = Number(item.rank || 0);
             const medal = rank === 1 ? "xp-rank-gold" : rank === 2 ? "xp-rank-silver" : rank === 3 ? "xp-rank-bronze" : "";
             return `
-            <div class="xp-leaderboard-row ${medal}">
+            <div class="xp-leaderboard-row ${medal} ${item.is_current_user ? "is-current-user" : ""}">
               <span class="xp-rank">${rank}</span>
               <span class="xp-name">${escapeHtml(item.display_name || "Learner")}</span>
               <span class="xp-score">${Number(item.xp || 0)} XP</span>

@@ -54,6 +54,8 @@ def get_leaderboard(
         db,
         limit=limit,
         viewer_is_admin=xp_service.is_admin_identity(viewer, telegram_id),
+        viewer_user=viewer,
+        viewer_telegram_id=telegram_id,
     )
 
 

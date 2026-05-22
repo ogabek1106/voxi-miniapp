@@ -305,7 +305,22 @@ def get_leaderboard_display_name(
     return f"Learner {str(code).zfill(4)[-4:]}"
 
 
-def get_leaderboard(db: Session, limit: int = 100, viewer_is_admin: bool = False) -> list[dict[str, Any]]:
+def _leaderboard_identity_key(user: User | None, telegram_id: int | None) -> str | None:
+    if user:
+        return f"user:{user.id}"
+    if telegram_id:
+        return f"telegram:{int(telegram_id)}"
+    return None
+
+
+def get_leaderboard(
+    db: Session,
+    limit: int = 100,
+    viewer_is_admin: bool = False,
+    viewer_user: User | None = None,
+    viewer_telegram_id: int | None = None,
+) -> list[dict[str, Any]]:
+    viewer_key = _leaderboard_identity_key(viewer_user, viewer_telegram_id)
     rows = (
         db.query(UserXP)
         .filter(UserXP.total_xp > 0)
@@ -315,8 +330,8 @@ def get_leaderboard(db: Session, limit: int = 100, viewer_is_admin: bool = False
     aggregated: dict[str, dict[str, Any]] = {}
     for row in rows:
         user = resolve_user(db, user_id=row.user_id, telegram_id=row.telegram_id)
-        key = f"user:{user.id}" if user else f"telegram:{int(row.telegram_id or 0)}"
-        if key == "telegram:0":
+        key = _leaderboard_identity_key(user, row.telegram_id)
+        if not key:
             continue
         if key not in aggregated:
             aggregated[key] = {"user": user, "telegram_id": row.telegram_id, "total_xp": 0, "updated_at": row.updated_at}
@@ -329,18 +344,24 @@ def get_leaderboard(db: Session, limit: int = 100, viewer_is_admin: bool = False
         key=lambda item: (-int(item["total_xp"] or 0), item["updated_at"] or _utcnow()),
     )
     items: list[dict[str, Any]] = []
+    rank_position = 0
     for item in sorted_rows:
         user = item["user"]
         telegram_id = item["telegram_id"]
         if is_admin_identity(user, telegram_id):
             continue
+        rank_position += 1
         settings = get_or_create_settings(db, user, telegram_id)
+        is_current_user = bool(viewer_key and _leaderboard_identity_key(user, telegram_id) == viewer_key)
+        if len(items) >= limit and not is_current_user:
+            continue
         items.append({
-            "rank": len(items) + 1,
+            "rank": rank_position,
             "display_name": get_leaderboard_display_name(user, settings, telegram_id, viewer_is_admin=viewer_is_admin),
             "xp": int(item["total_xp"] or 0),
+            "is_current_user": is_current_user,
         })
-        if len(items) >= limit:
+        if len(items) >= limit and is_current_user:
             break
     return items
 
