@@ -20,6 +20,81 @@ SessionLocal = sessionmaker(
 Base = declarative_base()
 
 
+def ensure_xp_schema():
+    with engine.connect() as conn:
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS user_xp ("
+            "id SERIAL PRIMARY KEY, "
+            "user_id INTEGER NULL REFERENCES users(id) ON DELETE CASCADE, "
+            "telegram_id BIGINT NULL, "
+            "total_xp INTEGER NOT NULL DEFAULT 0, "
+            "created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), "
+            "updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()"
+            ");"
+        ))
+        conn.execute(text("ALTER TABLE user_xp ADD COLUMN IF NOT EXISTS user_id INTEGER;"))
+        conn.execute(text("ALTER TABLE user_xp ADD COLUMN IF NOT EXISTS telegram_id BIGINT;"))
+        conn.execute(text("ALTER TABLE user_xp ADD COLUMN IF NOT EXISTS total_xp INTEGER NOT NULL DEFAULT 0;"))
+        conn.execute(text("ALTER TABLE user_xp ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text("ALTER TABLE user_xp ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS xp_events ("
+            "id SERIAL PRIMARY KEY, "
+            "user_id INTEGER NULL REFERENCES users(id) ON DELETE SET NULL, "
+            "telegram_id BIGINT NULL, "
+            "amount INTEGER NOT NULL, "
+            "source_type VARCHAR NOT NULL, "
+            "reason VARCHAR NOT NULL, "
+            "related_attempt_id INTEGER NULL, "
+            "related_session_id INTEGER NULL, "
+            "event_key VARCHAR NULL, "
+            "meta JSONB NULL, "
+            "created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()"
+            ");"
+        ))
+        conn.execute(text("ALTER TABLE xp_events ADD COLUMN IF NOT EXISTS user_id INTEGER;"))
+        conn.execute(text("ALTER TABLE xp_events ADD COLUMN IF NOT EXISTS telegram_id BIGINT;"))
+        conn.execute(text("ALTER TABLE xp_events ADD COLUMN IF NOT EXISTS amount INTEGER NOT NULL DEFAULT 0;"))
+        conn.execute(text("ALTER TABLE xp_events ADD COLUMN IF NOT EXISTS source_type VARCHAR;"))
+        conn.execute(text("ALTER TABLE xp_events ADD COLUMN IF NOT EXISTS reason VARCHAR;"))
+        conn.execute(text("ALTER TABLE xp_events ADD COLUMN IF NOT EXISTS related_attempt_id INTEGER;"))
+        conn.execute(text("ALTER TABLE xp_events ADD COLUMN IF NOT EXISTS related_session_id INTEGER;"))
+        conn.execute(text("ALTER TABLE xp_events ADD COLUMN IF NOT EXISTS event_key VARCHAR;"))
+        conn.execute(text("ALTER TABLE xp_events ADD COLUMN IF NOT EXISTS meta JSONB;"))
+        conn.execute(text("ALTER TABLE xp_events ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS xp_visibility_settings ("
+            "id SERIAL PRIMARY KEY, "
+            "user_id INTEGER NULL REFERENCES users(id) ON DELETE CASCADE, "
+            "telegram_id BIGINT NULL, "
+            "nickname VARCHAR NULL, "
+            "show_full_name BOOLEAN NOT NULL DEFAULT FALSE, "
+            "show_full_username BOOLEAN NOT NULL DEFAULT TRUE, "
+            "created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), "
+            "updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()"
+            ");"
+        ))
+        conn.execute(text("ALTER TABLE xp_visibility_settings ADD COLUMN IF NOT EXISTS user_id INTEGER;"))
+        conn.execute(text("ALTER TABLE xp_visibility_settings ADD COLUMN IF NOT EXISTS telegram_id BIGINT;"))
+        conn.execute(text("ALTER TABLE xp_visibility_settings ADD COLUMN IF NOT EXISTS nickname VARCHAR;"))
+        conn.execute(text("ALTER TABLE xp_visibility_settings ADD COLUMN IF NOT EXISTS show_full_name BOOLEAN NOT NULL DEFAULT FALSE;"))
+        conn.execute(text("ALTER TABLE xp_visibility_settings ADD COLUMN IF NOT EXISTS show_full_username BOOLEAN NOT NULL DEFAULT TRUE;"))
+        conn.execute(text("ALTER TABLE xp_visibility_settings ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text("ALTER TABLE xp_visibility_settings ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+
+        conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uq_user_xp_user_id ON user_xp (user_id) WHERE user_id IS NOT NULL;"))
+        conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uq_user_xp_telegram_id ON user_xp (telegram_id) WHERE telegram_id IS NOT NULL;"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_user_xp_total_xp ON user_xp (total_xp DESC);"))
+        conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uq_xp_events_event_key ON xp_events (event_key) WHERE event_key IS NOT NULL;"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_xp_events_user_created ON xp_events (user_id, created_at DESC);"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_xp_events_telegram_created ON xp_events (telegram_id, created_at DESC);"))
+        conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uq_xp_visibility_user_id ON xp_visibility_settings (user_id) WHERE user_id IS NOT NULL;"))
+        conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uq_xp_visibility_telegram_id ON xp_visibility_settings (telegram_id) WHERE telegram_id IS NOT NULL;"))
+        conn.commit()
+
+
 def ensure_reading_progress_columns():
     with engine.connect() as conn:
         conn.execute(text(

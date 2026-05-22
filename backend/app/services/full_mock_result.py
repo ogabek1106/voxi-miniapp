@@ -293,6 +293,8 @@ def build_full_mock_result(db: Session, mock_id: int, telegram_id: int) -> Dict[
         overall_band=calc["overall_band"],
         status="completed",
     )
+    from app.services import xp_service
+    xp_service.award_full_mock_result(db, row)
     return {
         "status": "completed",
         "pending_parts": [],

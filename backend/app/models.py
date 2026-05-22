@@ -23,6 +23,46 @@ class User(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=True)
 
 
+class UserXP(Base):
+    __tablename__ = "user_xp"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True)
+    telegram_id = Column(BigInteger, nullable=True, index=True)
+    total_xp = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+
+class XPEvent(Base):
+    __tablename__ = "xp_events"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    telegram_id = Column(BigInteger, nullable=True, index=True)
+    amount = Column(Integer, nullable=False)
+    source_type = Column(String, nullable=False, index=True)
+    reason = Column(String, nullable=False, index=True)
+    related_attempt_id = Column(Integer, nullable=True, index=True)
+    related_session_id = Column(Integer, nullable=True, index=True)
+    event_key = Column(String, nullable=True, unique=True, index=True)
+    meta = Column(JSON, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+
+
+class XPVisibilitySettings(Base):
+    __tablename__ = "xp_visibility_settings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True)
+    telegram_id = Column(BigInteger, nullable=True, index=True)
+    nickname = Column(String, nullable=True)
+    show_full_name = Column(Boolean, nullable=False, default=False)
+    show_full_username = Column(Boolean, nullable=False, default=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+
 class AppAnnouncement(Base):
     __tablename__ = "app_announcements"
 

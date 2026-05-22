@@ -98,6 +98,8 @@ function renderHomeIdentity(me) {
   if (window.WebsiteHeader?.update) {
     window.WebsiteHeader.update(me || {});
   }
+
+  window.XPUI?.refresh?.();
 }
 
 function ensureListeningHomeButton(visible) {

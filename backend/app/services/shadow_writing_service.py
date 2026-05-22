@@ -132,6 +132,8 @@ def complete_attempt(db: Session, payload) -> ShadowWritingAttempt | None:
     attempt.typed_chars = max(0, int(payload.typed_chars or 0))
     db.commit()
     db.refresh(attempt)
+    from app.services import xp_service
+    xp_service.award_shadow_writing_attempt(db, attempt)
     return attempt
 
 

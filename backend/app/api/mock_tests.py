@@ -230,6 +230,11 @@ def _finalize_progress(progress: ReadingProgress, questions: List[ReadingQuestio
     return result
 
 
+def _award_reading_xp(db: Session, progress: ReadingProgress) -> None:
+    from app.services import xp_service
+    xp_service.award_reading_completion(db, progress)
+
+
 def _query_questions_for_test(db: Session, test_id: int) -> List[ReadingQuestion]:
     return (
         db.query(ReadingQuestion)
@@ -496,6 +501,7 @@ def start_reading_test(
                     db.add(progress)
                     db.commit()
                     db.refresh(progress)
+                    _award_reading_xp(db, progress)
                     response = _build_submitted_start_response(progress, result, mock_id, test)
                     _reading_start_debug("RESPONSE_KEYS", {"keys": list(response.keys())})
                     return response
@@ -630,6 +636,8 @@ def submit_reading_test(mock_id: int, payload: ReadingSubmitIn, db: Session = De
     result = _finalize_progress(progress, questions, now)
     db.add(progress)
     db.commit()
+    db.refresh(progress)
+    _award_reading_xp(db, progress)
 
     return result
 
@@ -683,6 +691,8 @@ def save_reading_progress(mock_id: int, payload: ReadingSaveIn, db: Session = De
         _finalize_progress(progress, questions, _auto_submitted_at(progress.ends_at, now))
         db.add(progress)
         db.commit()
+        db.refresh(progress)
+        _award_reading_xp(db, progress)
         return {"status": "auto_submitted"}
 
     progress.updated_at = now
@@ -724,6 +734,7 @@ def resume_reading_progress(mock_id: int, telegram_id: int, session_mode: str = 
         db.add(progress)
         db.commit()
         db.refresh(progress)
+        _award_reading_xp(db, progress)
 
     return {
         "answers": progress.answers or {},

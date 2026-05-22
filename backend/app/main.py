@@ -38,6 +38,7 @@ from app.api.notifications import router as notifications_router
 from app.api.feedback import router as feedback_router
 from app.api.premiere import router as premiere_router
 from app.api.admin_premiere import router as admin_premiere_router
+from app.api.xp import router as xp_router
 from app.api.auth import router as auth_router
 from app.api.auth_google import router as auth_google_router
 from .db import (
@@ -61,6 +62,7 @@ from .db import (
     ensure_notification_schema,
     ensure_feedback_schema,
     ensure_premiere_schema,
+    ensure_xp_schema,
 )
 from app.api.admin_upload import router as admin_upload_router
 from app.api.result_images import router as result_images_router
@@ -86,6 +88,7 @@ ensure_word_shuffle_schema()
 ensure_activity_schema()
 ensure_notification_schema()
 ensure_feedback_schema()
+ensure_xp_schema()
 app = FastAPI(title="Voxi Mini App API")
 app.include_router(mock_list.router)
 app.include_router(admin_upload_router)
@@ -118,6 +121,7 @@ app.include_router(notifications_router)
 app.include_router(feedback_router)
 app.include_router(premiere_router)
 app.include_router(admin_premiere_router)
+app.include_router(xp_router)
 app.include_router(auth_router)
 app.include_router(auth_google_router)
 app.mount("/media", StaticFiles(directory="/data/media"), name="media")

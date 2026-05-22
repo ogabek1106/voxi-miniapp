@@ -347,5 +347,8 @@ def submit_listening(mock_id: int, payload: ListeningSubmitIn, db: Session = Dep
     progress.updated_at = now
     db.add(progress)
     db.commit()
+    db.refresh(progress)
+    from app.services import xp_service
+    xp_service.award_listening_completion(db, progress)
 
     return result

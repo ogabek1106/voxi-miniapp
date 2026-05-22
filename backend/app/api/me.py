@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.deps import get_db
 from app.models import User, ReadingProgress, ReadingTest
 from app.config import ADMIN_IDS
-from app.api.mock_tests import _auto_submitted_at, _finalize_progress, _is_time_up, _query_questions_for_test, _utcnow
+from app.api.mock_tests import _auto_submitted_at, _award_reading_xp, _finalize_progress, _is_time_up, _query_questions_for_test, _utcnow
 
 router = APIRouter()
 
@@ -43,6 +43,8 @@ def get_me(telegram_id: int, db: Session = Depends(get_db)):
             questions_cache[progress.test_id] = _query_questions_for_test(db, progress.test_id)
         _finalize_progress(progress, questions_cache[progress.test_id], _auto_submitted_at(progress.ends_at, now))
         db.add(progress)
+        db.flush()
+        _award_reading_xp(db, progress)
         changed = True
     if changed:
         db.commit()

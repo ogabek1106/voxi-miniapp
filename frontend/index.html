@@ -41,6 +41,7 @@
   <link rel="stylesheet" href="css/notifications.css?v=4">
   <link rel="stylesheet" href="css/feedback.css?v=1">
   <link rel="stylesheet" href="css/admin_feedback.css?v=1">
+  <link rel="stylesheet" href="css/xp.css?v=1">
   <link rel="stylesheet" href="css/shadow_writing_card.css?v=6">
   <link rel="stylesheet" href="css/premiere.css?v=8">
   <link rel="icon" type="image/png" href="./assets/favicon.png">
@@ -1520,9 +1521,15 @@
                 <div class="home-user-level">Beginner</div>
               </div>
             </div>
-            <div class="home-balance">
-              <img class="vcoin-icon" src="./assets/vcoin.png" alt="" aria-hidden="true">
-              <span id="home-balance-value">0</span>
+            <div class="home-reward-row">
+              <div class="home-balance">
+                <img class="vcoin-icon" src="./assets/vcoin.png" alt="" aria-hidden="true">
+                <span id="home-balance-value">0</span>
+              </div>
+              <button class="home-xp" type="button" data-xp-open="1" aria-label="Open XP">
+                <span class="home-xp-label">XP</span>
+                <span id="home-xp-value">0</span>
+              </button>
             </div>
           </div>
 
@@ -2133,6 +2140,7 @@
   <script src="./js/activity/heartbeat.js?v=1"></script>
   <script src="./js/app.js?v=8"></script>
   <script src="./js/vcoins_ui.js?v=8"></script>
+  <script src="./js/xp_ui.js?v=1"></script>
   <script src="./js/website/components/profile_sheet.js?v=3"></script>
   <script src="./js/website/components/profile_editor.js?v=1"></script>
   <script src="./js/website/components/header.js?v=10"></script>

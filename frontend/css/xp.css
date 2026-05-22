@@ -1,0 +1,236 @@
+#screen-home .home-reward-row,
+.website-reward-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#screen-home .home-xp,
+.website-xp-button {
+  border: 0;
+  min-width: 76px;
+  height: 42px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #fff9ec 0%, #ffffff 56%, #eef9ff 100%);
+  box-shadow: 0 8px 24px rgba(20,40,60,0.08);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #17212B;
+  font-size: 14px;
+  font-weight: 900;
+  padding: 10px 13px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.home-xp-label,
+.website-xp-label {
+  color: #f59e0b;
+  letter-spacing: 0;
+}
+
+.xp-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10005;
+  background: rgba(17,24,39,0.28);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 0 12px calc(18px + env(safe-area-inset-bottom, 0px));
+}
+
+.xp-sheet {
+  width: min(100%, 430px);
+  max-height: 78vh;
+  overflow: auto;
+  box-sizing: border-box;
+  border-radius: 24px;
+  background: #ffffff;
+  color: #17212B;
+  padding: 16px 16px 20px;
+  box-shadow: 0 -14px 40px rgba(20,40,60,0.20);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+@media (min-width: 700px) {
+  .xp-sheet-backdrop {
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding: 92px 24px 24px;
+  }
+
+  .xp-sheet {
+    max-height: min(720px, 78vh);
+  }
+}
+
+.xp-sheet-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.xp-title {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 950;
+}
+
+.xp-total {
+  margin: 5px 0 0;
+  color: #607080;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.xp-close {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 14px;
+  background: #f4f8fb;
+  color: #526273;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.xp-history {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0 0;
+}
+
+.xp-history-title,
+.xp-settings-title,
+.xp-leaderboard-title {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 900;
+  color: #17212B;
+}
+
+.xp-history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-radius: 16px;
+  background: #f6fbfe;
+  padding: 10px 12px;
+  font-size: 13px;
+}
+
+.xp-history-reason {
+  color: #526273;
+  font-weight: 750;
+}
+
+.xp-history-amount {
+  flex: 0 0 auto;
+  color: #00a3e0;
+  font-weight: 950;
+}
+
+.xp-empty {
+  margin: 0;
+  border-radius: 16px;
+  background: #f6fbfe;
+  padding: 12px;
+  color: #607080;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.xp-link {
+  display: inline-block;
+  margin: 16px 0 0;
+  border: 0;
+  background: transparent;
+  color: #00a3e0;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 900;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.xp-settings {
+  margin-top: 18px;
+  border-top: 1px solid rgba(20,40,60,0.08);
+  padding-top: 14px;
+}
+
+.xp-settings input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(20,40,60,0.12);
+  border-radius: 14px;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 14px;
+}
+
+.xp-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 10px;
+  color: #526273;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.xp-save {
+  margin-top: 12px;
+  width: 100%;
+  border: 0;
+  border-radius: 15px;
+  background: #17212B;
+  color: #fff;
+  padding: 11px 14px;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.xp-leaderboard {
+  display: grid;
+  gap: 7px;
+  margin-top: 12px;
+}
+
+.xp-leaderboard-row {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  border-radius: 15px;
+  background: #f7fbfe;
+  padding: 10px 12px;
+  font-size: 14px;
+}
+
+.xp-rank {
+  color: #8a99a8;
+  font-weight: 900;
+}
+
+.xp-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 850;
+}
+
+.xp-score {
+  color: #00a3e0;
+  font-weight: 950;
+}

@@ -40,10 +40,16 @@ window.WebsiteHeader = window.WebsiteHeader || {};
       </div>
 
       <div class="website-header-actions">
-        <button class="website-balance-button" data-vcoin-open="1" aria-label="Open V-Coin balance">
-          <img class="vcoin-icon" src="./assets/vcoin.png" alt="" aria-hidden="true">
-          <span id="website-balance-value">0</span>
-        </button>
+        <span class="website-reward-row">
+          <button class="website-balance-button" data-vcoin-open="1" aria-label="Open V-Coin balance">
+            <img class="vcoin-icon" src="./assets/vcoin.png" alt="" aria-hidden="true">
+            <span id="website-balance-value">0</span>
+          </button>
+          <button class="website-xp-button" type="button" data-xp-open="1" aria-label="Open XP">
+            <span class="website-xp-label">XP</span>
+            <span id="website-xp-value">0</span>
+          </button>
+        </span>
         <button class="voxi-notification-bell" type="button" aria-label="Open notifications">
           ${notificationBellMarkup()}
         </button>
@@ -100,10 +106,16 @@ window.WebsiteHeader = window.WebsiteHeader || {};
     }
 
     actions.innerHTML = `
-      <button class="website-balance-button" data-vcoin-open="1" aria-label="Open V-Coin balance">
-        <img class="vcoin-icon" src="./assets/vcoin.png" alt="" aria-hidden="true">
-        <span id="website-balance-value">${window.SharedUser?.getBalance(user) || 0}</span>
-      </button>
+      <span class="website-reward-row">
+        <button class="website-balance-button" data-vcoin-open="1" aria-label="Open V-Coin balance">
+          <img class="vcoin-icon" src="./assets/vcoin.png" alt="" aria-hidden="true">
+          <span id="website-balance-value">${window.SharedUser?.getBalance(user) || 0}</span>
+        </button>
+        <button class="website-xp-button" type="button" data-xp-open="1" aria-label="Open XP">
+          <span class="website-xp-label">XP</span>
+          <span id="website-xp-value">0</span>
+        </button>
+      </span>
       <button class="voxi-notification-bell" type="button" aria-label="Open notifications">
         ${notificationBellMarkup()}
       </button>
@@ -122,6 +134,7 @@ window.WebsiteHeader = window.WebsiteHeader || {};
     document.getElementById("website-profile-button")?.addEventListener("click", () => window.WebsiteProfileSheet?.open());
     document.querySelector("#website-header .voxi-notification-bell")?.addEventListener("click", () => window.VoxiNotifications?.toggle?.());
     window.VoxiNotificationsUI?.updateBells?.();
+    window.XPUI?.refresh?.();
   };
 
   window.WebsiteHeader.update = function (me) {

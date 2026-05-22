@@ -232,6 +232,8 @@ def record_attempt(db: Session, payload) -> VocabularyOddOneOutAttempt:
     attempt.completed_at = datetime.utcnow()
     db.commit()
     db.refresh(attempt)
+    from app.services import xp_service
+    xp_service.award_odd_one_out_attempt(db, attempt)
     return attempt
 
 

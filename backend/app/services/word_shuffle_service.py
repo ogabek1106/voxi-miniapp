@@ -120,6 +120,8 @@ def create_session(db: Session, payload) -> WordShuffleSession:
     db.add(session)
     db.commit()
     db.refresh(session)
+    from app.services import xp_service
+    xp_service.award_word_shuffle_session(db, session)
     return session
 
 
