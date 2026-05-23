@@ -1804,6 +1804,64 @@ def ensure_word_shuffle_schema():
         conn.execute(text("CREATE INDEX IF NOT EXISTS ix_word_shuffle_sessions_telegram_id ON word_shuffle_sessions (telegram_id);"))
 
 
+def ensure_match_words_schema():
+    with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS match_words ("
+            "id SERIAL PRIMARY KEY, "
+            "english_text VARCHAR NOT NULL, "
+            "translation_text VARCHAR NOT NULL, "
+            "level VARCHAR NOT NULL DEFAULT 'B1', "
+            "theme VARCHAR NULL, "
+            "is_active BOOLEAN NOT NULL DEFAULT FALSE, "
+            "created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), "
+            "updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()"
+            ");"
+        ))
+        conn.execute(text("ALTER TABLE match_words ADD COLUMN IF NOT EXISTS english_text VARCHAR;"))
+        conn.execute(text("ALTER TABLE match_words ADD COLUMN IF NOT EXISTS translation_text VARCHAR;"))
+        conn.execute(text("ALTER TABLE match_words ADD COLUMN IF NOT EXISTS level VARCHAR NOT NULL DEFAULT 'B1';"))
+        conn.execute(text("ALTER TABLE match_words ADD COLUMN IF NOT EXISTS theme VARCHAR;"))
+        conn.execute(text("ALTER TABLE match_words ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT FALSE;"))
+        conn.execute(text("ALTER TABLE match_words ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text("ALTER TABLE match_words ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS match_words_sessions ("
+            "id SERIAL PRIMARY KEY, "
+            "user_id INTEGER NULL, "
+            "telegram_id BIGINT NULL, "
+            "correct_count INTEGER NOT NULL DEFAULT 0, "
+            "wrong_count INTEGER NOT NULL DEFAULT 0, "
+            "best_combo INTEGER NOT NULL DEFAULT 0, "
+            "survived_seconds INTEGER NOT NULL DEFAULT 0, "
+            "average_match_seconds DOUBLE PRECISION NULL, "
+            "xp_earned INTEGER NOT NULL DEFAULT 0, "
+            "status VARCHAR NOT NULL DEFAULT 'started', "
+            "meta JSONB NULL, "
+            "started_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), "
+            "finished_at TIMESTAMPTZ NULL"
+            ");"
+        ))
+        conn.execute(text("ALTER TABLE match_words_sessions ADD COLUMN IF NOT EXISTS user_id INTEGER;"))
+        conn.execute(text("ALTER TABLE match_words_sessions ADD COLUMN IF NOT EXISTS telegram_id BIGINT;"))
+        conn.execute(text("ALTER TABLE match_words_sessions ADD COLUMN IF NOT EXISTS correct_count INTEGER NOT NULL DEFAULT 0;"))
+        conn.execute(text("ALTER TABLE match_words_sessions ADD COLUMN IF NOT EXISTS wrong_count INTEGER NOT NULL DEFAULT 0;"))
+        conn.execute(text("ALTER TABLE match_words_sessions ADD COLUMN IF NOT EXISTS best_combo INTEGER NOT NULL DEFAULT 0;"))
+        conn.execute(text("ALTER TABLE match_words_sessions ADD COLUMN IF NOT EXISTS survived_seconds INTEGER NOT NULL DEFAULT 0;"))
+        conn.execute(text("ALTER TABLE match_words_sessions ADD COLUMN IF NOT EXISTS average_match_seconds DOUBLE PRECISION;"))
+        conn.execute(text("ALTER TABLE match_words_sessions ADD COLUMN IF NOT EXISTS xp_earned INTEGER NOT NULL DEFAULT 0;"))
+        conn.execute(text("ALTER TABLE match_words_sessions ADD COLUMN IF NOT EXISTS status VARCHAR NOT NULL DEFAULT 'started';"))
+        conn.execute(text("ALTER TABLE match_words_sessions ADD COLUMN IF NOT EXISTS meta JSONB;"))
+        conn.execute(text("ALTER TABLE match_words_sessions ADD COLUMN IF NOT EXISTS started_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text("ALTER TABLE match_words_sessions ADD COLUMN IF NOT EXISTS finished_at TIMESTAMPTZ;"))
+
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_match_words_active_level ON match_words (is_active, level);"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_match_words_theme ON match_words (theme);"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_match_words_sessions_user_id ON match_words_sessions (user_id);"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_match_words_sessions_telegram_id ON match_words_sessions (telegram_id);"))
+
+
 def ensure_activity_schema():
     with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
         conn.execute(text(
