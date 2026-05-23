@@ -337,37 +337,6 @@ class WordShuffleSession(Base):
     finished_at = Column(DateTime(timezone=True), nullable=True)
 
 
-class MatchWord(Base):
-    __tablename__ = "match_words"
-
-    id = Column(Integer, primary_key=True, index=True)
-    english_text = Column(String, nullable=False)
-    translation_text = Column(String, nullable=False)
-    level = Column(String, nullable=False, default="B1")
-    theme = Column(String, nullable=True)
-    is_active = Column(Boolean, nullable=False, default=False)
-    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-
-
-class MatchWordsSession(Base):
-    __tablename__ = "match_words_sessions"
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
-    telegram_id = Column(BigInteger, nullable=True, index=True)
-    correct_count = Column(Integer, nullable=False, default=0)
-    wrong_count = Column(Integer, nullable=False, default=0)
-    best_combo = Column(Integer, nullable=False, default=0)
-    survived_seconds = Column(Integer, nullable=False, default=0)
-    average_match_seconds = Column(Float, nullable=True)
-    xp_earned = Column(Integer, nullable=False, default=0)
-    status = Column(String, nullable=False, default="started")
-    meta = Column(JSON, nullable=True)
-    started_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
-    finished_at = Column(DateTime(timezone=True), nullable=True)
-
-
 class ReadingTestStatus(enum.Enum):
     draft = "draft"
     published = "published"

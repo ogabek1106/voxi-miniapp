@@ -35,7 +35,6 @@ window.XPUI = window.XPUI || {};
       .replace(/^shadow_/, "Shadow Writing ")
       .replace(/^odd_/, "Odd One Out ")
       .replace(/^word_shuffle_/, "Word Shuffle ")
-      .replace(/^match_words_/, "Match Words ")
       .replace(/^full_mock_/, "Full Mock ")
       .replace(/^reading_/, "Reading ")
       .replace(/^listening_/, "Listening ")

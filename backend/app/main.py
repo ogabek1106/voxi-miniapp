@@ -33,8 +33,6 @@ from app.api.admin_word_merge import router as admin_word_merge_router
 from app.api.word_merge import router as word_merge_router
 from app.api.admin_word_shuffle import router as admin_word_shuffle_router
 from app.api.word_shuffle import router as word_shuffle_router
-from app.api.admin_match_words import router as admin_match_words_router
-from app.api.match_words import router as match_words_router
 from app.api.activity import router as activity_router
 from app.api.notifications import router as notifications_router
 from app.api.feedback import router as feedback_router
@@ -60,7 +58,6 @@ from .db import (
     ensure_vocabulary_puzzle_schema,
     ensure_word_merge_schema,
     ensure_word_shuffle_schema,
-    ensure_match_words_schema,
     ensure_activity_schema,
     ensure_notification_schema,
     ensure_feedback_schema,
@@ -88,7 +85,6 @@ ensure_shadow_writing_schema()
 ensure_vocabulary_puzzle_schema()
 ensure_word_merge_schema()
 ensure_word_shuffle_schema()
-ensure_match_words_schema()
 ensure_activity_schema()
 ensure_notification_schema()
 ensure_feedback_schema()
@@ -120,8 +116,6 @@ app.include_router(admin_word_merge_router)
 app.include_router(word_merge_router)
 app.include_router(admin_word_shuffle_router)
 app.include_router(word_shuffle_router)
-app.include_router(admin_match_words_router)
-app.include_router(match_words_router)
 app.include_router(activity_router)
 app.include_router(notifications_router)
 app.include_router(feedback_router)

@@ -334,7 +334,6 @@ window.showAdminPanel = function () {
     <button onclick="showAdminWordMerge()">Voxi Word Merge</button>
     <button onclick="showAdminWordShuffle()">Voxi Word Shuffle</button>
     <button onclick="showAdminWordShuffleStats()">Word Shuffle Stats</button>
-    <button onclick="showAdminMatchWords()">Match Words</button>
     <button onclick="showAdminFeedbackRatings()">Feedback Ratings</button>
     <button onclick="showAdminVCoinPayments()">V-Coin Payments</button>
     <button onclick="showAdminPremiereSubscriptions()">Premiere Subscriptions</button>
