@@ -18,13 +18,17 @@ body.match-words-active #screen-mocks {
   overflow: hidden;
 }
 
+body.match-words-active:not(.view-miniapp):not(.mobile-browser-view) #screen-mocks {
+  top: 118px;
+  height: calc(100vh - 118px);
+  height: calc(100dvh - 118px);
+}
+
 .match-words-screen {
-  height: 100vh;
-  height: 100dvh;
-  max-height: 100vh;
-  max-height: 100dvh;
+  height: 100%;
+  max-height: 100%;
   box-sizing: border-box;
-  padding: max(6px, env(safe-area-inset-top)) 10px max(8px, env(safe-area-inset-bottom));
+  padding: max(12px, env(safe-area-inset-top)) 10px max(24px, env(safe-area-inset-bottom));
   background:
     radial-gradient(circle at 50% 0%, rgba(0, 186, 255, 0.14), transparent 32%),
     linear-gradient(180deg, #f7fbff 0%, #edf6fb 100%);
@@ -37,7 +41,7 @@ body.match-words-active #screen-mocks {
   display: flex;
   flex-direction: column;
   gap: clamp(5px, 1vh, 9px);
-  max-width: 720px;
+  max-width: 640px;
   height: 100%;
   min-height: 0;
   margin: 0 auto;
@@ -50,6 +54,7 @@ body.match-words-active #screen-mocks {
   gap: clamp(3px, 0.55vh, 5px);
   padding-top: 0;
   flex: 0 0 auto;
+  min-height: 58px;
 }
 
 .match-words-timer {
@@ -208,18 +213,22 @@ body.match-words-active #screen-mocks {
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: clamp(7px, 2vw, 11px);
+  gap: clamp(7px, 2vw, 12px);
   align-items: stretch;
-  flex: 1;
+  flex: 0 1 min(640px, calc(100% - 88px));
+  width: min(100%, 620px);
+  height: min(640px, calc(100% - 88px));
   min-height: 0;
-  padding: 1px 0 0;
+  align-self: center;
+  padding: 4px 0 26px;
+  box-sizing: border-box;
   overflow: hidden;
 }
 
 .match-words-column {
   display: grid;
   grid-template-rows: repeat(5, minmax(0, 1fr));
-  gap: clamp(5px, 1vh, 9px);
+  gap: clamp(7px, 1vh, 10px);
   min-height: 0;
 }
 
@@ -232,7 +241,7 @@ body.match-words-active #screen-mocks {
   height: 100%;
   padding: clamp(6px, 1vh, 10px) 8px;
   border: 0;
-  border-radius: 18px;
+  border-radius: 17px;
   background: rgba(255, 255, 255, 0.9);
   color: #17212b;
   box-shadow: 0 13px 26px rgba(35, 66, 92, 0.11), inset 0 0 0 1px rgba(255, 255, 255, 0.88);
