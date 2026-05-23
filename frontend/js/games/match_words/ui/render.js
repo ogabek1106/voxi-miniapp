@@ -15,10 +15,6 @@ window.MatchWordsUI = window.MatchWordsUI || {};
     return String(value).replace(/["\\]/g, "\\$&");
   }
 
-  function pairByUid(uid) {
-    return MatchWordsState.get().visiblePairs.find((pair) => pair.uid === uid);
-  }
-
   function renderCard(pair, side) {
     const text = side === "english" ? pair.english_text : pair.translation_text;
     const selected = MatchWordsState.get().selectedEnglishId === pair.uid && side === "english";
@@ -34,22 +30,33 @@ window.MatchWordsUI = window.MatchWordsUI || {};
   }
 
   function handleCardPress(event, button) {
+    if (!button || button.classList.contains("is-disabled")) return;
     if (button.dataset.pressHandled === "1") return;
     button.dataset.pressHandled = "1";
     window.setTimeout(() => {
       button.dataset.pressHandled = "0";
-    }, 220);
+    }, 80);
     if (event.cancelable) event.preventDefault();
     event.stopPropagation();
     MatchWordsAnimations.tapGlow(event);
     MatchWordsEngine.select(button.dataset.uid, button.dataset.side);
   }
 
+  function handleBoardPress(event) {
+    const button = event.target?.closest?.(".match-word-card");
+    if (!button) return;
+    handleCardPress(event, button);
+  }
+
   function bindCards() {
+    const board = document.getElementById("match-words-board");
+    if (board) {
+      board.addEventListener("pointerdown", handleBoardPress, { capture: true, passive: false });
+      board.addEventListener("touchstart", handleBoardPress, { capture: true, passive: false });
+      board.addEventListener("mousedown", handleBoardPress, { capture: true });
+    }
+
     document.querySelectorAll(".match-word-card").forEach((button) => {
-      button.addEventListener("pointerdown", (event) => handleCardPress(event, button), { passive: false });
-      button.addEventListener("touchstart", (event) => handleCardPress(event, button), { passive: false });
-      button.addEventListener("mousedown", (event) => handleCardPress(event, button));
       button.addEventListener("dragstart", (event) => event.preventDefault());
       button.addEventListener("contextmenu", (event) => event.preventDefault());
     });

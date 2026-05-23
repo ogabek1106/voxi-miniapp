@@ -223,6 +223,9 @@ body.match-words-active:not(.view-miniapp):not(.mobile-browser-view) #screen-moc
   padding: 4px 0 26px;
   box-sizing: border-box;
   overflow: hidden;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .match-words-column {
@@ -230,6 +233,7 @@ body.match-words-active:not(.view-miniapp):not(.mobile-browser-view) #screen-moc
   grid-template-rows: repeat(5, minmax(0, 1fr));
   gap: clamp(7px, 1vh, 10px);
   min-height: 0;
+  touch-action: manipulation;
 }
 
 .match-word-card {
