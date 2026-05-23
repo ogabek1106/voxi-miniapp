@@ -1,0 +1,373 @@
+.match-words-screen {
+  min-height: 100vh;
+  padding: max(18px, env(safe-area-inset-top)) 14px max(22px, env(safe-area-inset-bottom));
+  background:
+    radial-gradient(circle at 50% 0%, rgba(0, 186, 255, 0.14), transparent 32%),
+    linear-gradient(180deg, #f7fbff 0%, #edf6fb 100%);
+  color: #17212b;
+  overflow: hidden;
+}
+
+.match-words-shell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 720px;
+  min-height: calc(100vh - 36px);
+  margin: 0 auto;
+}
+
+.match-words-top {
+  display: grid;
+  justify-items: center;
+  gap: 7px;
+  padding-top: 4px;
+}
+
+.match-words-timer {
+  position: relative;
+  min-width: 132px;
+  padding: 10px 24px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 14px 34px rgba(40, 72, 99, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.86);
+  color: #159fe0;
+  font-size: clamp(34px, 10vw, 52px);
+  font-weight: 950;
+  line-height: 1;
+  text-align: center;
+  letter-spacing: 0;
+  transition: color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.match-words-timer.is-blue {
+  color: #0ba7e8;
+  box-shadow: 0 16px 38px rgba(0, 186, 255, 0.16);
+}
+
+.match-words-timer.is-orange {
+  color: #f29a32;
+  box-shadow: 0 16px 38px rgba(242, 154, 50, 0.18);
+}
+
+.match-words-timer.is-red {
+  color: #ed5b63;
+  box-shadow: 0 16px 38px rgba(237, 91, 99, 0.18);
+}
+
+.match-words-timer.is-heartbeat {
+  animation: matchWordsHeartbeat 980ms ease-in-out infinite;
+}
+
+.match-words-float {
+  position: absolute;
+  left: 50%;
+  top: 72px;
+  z-index: 20;
+  transform: translateX(-50%);
+  color: #27b66e;
+  font-size: 20px;
+  font-weight: 950;
+  pointer-events: none;
+  animation: matchWordsTimeFloat 620ms ease-out forwards;
+}
+
+.match-words-float.is-bad {
+  color: #ee5a66;
+}
+
+.match-words-combo {
+  min-height: 28px;
+  padding: 4px 14px;
+  border-radius: 999px;
+  color: #269ed8;
+  font-size: 16px;
+  font-weight: 950;
+  opacity: 0;
+  transform: scale(0.92);
+  transition: opacity 160ms ease, transform 160ms ease, color 160ms ease, box-shadow 160ms ease;
+}
+
+.match-words-combo.is-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.match-words-combo.is-pop {
+  animation: matchWordsComboPop 420ms cubic-bezier(0.2, 1.3, 0.25, 1);
+}
+
+.match-words-combo.combo-2 {
+  background: rgba(0, 186, 255, 0.1);
+  box-shadow: 0 8px 20px rgba(0, 186, 255, 0.12);
+}
+
+.match-words-combo.combo-3 {
+  background: rgba(0, 186, 255, 0.14);
+  animation: matchWordsComboPulse 1.35s ease-in-out infinite;
+}
+
+.match-words-combo.combo-4 {
+  background: linear-gradient(90deg, rgba(0, 186, 255, 0.16), rgba(255, 185, 80, 0.16));
+  color: #0a98df;
+  box-shadow: 0 10px 28px rgba(0, 186, 255, 0.18), 0 0 22px rgba(255, 185, 80, 0.12);
+  animation: matchWordsComboPulse 1.05s ease-in-out infinite;
+}
+
+.match-words-stats {
+  display: flex;
+  gap: 8px;
+  color: #637181;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.match-words-stats span {
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.match-words-board {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  flex: 1;
+  padding: 4px 0 12px;
+}
+
+.match-words-column {
+  display: grid;
+  gap: 11px;
+}
+
+.match-word-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: clamp(62px, 14vh, 86px);
+  padding: 12px 10px;
+  border: 0;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #17212b;
+  box-shadow: 0 13px 26px rgba(35, 66, 92, 0.11), inset 0 0 0 1px rgba(255, 255, 255, 0.88);
+  font: inherit;
+  font-size: clamp(16px, 4.3vw, 21px);
+  font-weight: 900;
+  line-height: 1.14;
+  letter-spacing: 0;
+  text-align: center;
+  word-break: break-word;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: transform 150ms cubic-bezier(0.2, 0.9, 0.22, 1), box-shadow 150ms ease, background 150ms ease, opacity 180ms ease;
+}
+
+.match-word-card::after {
+  content: "";
+  position: absolute;
+  inset: 14%;
+  border-radius: inherit;
+  background: radial-gradient(circle at var(--tap-x, 50%) var(--tap-y, 50%), rgba(0, 186, 255, 0.22), transparent 45%);
+  opacity: 0;
+  transition: opacity 180ms ease;
+  pointer-events: none;
+}
+
+.match-word-card:active,
+.match-word-card.is-selected {
+  transform: translateY(-2px) scale(1.025);
+  box-shadow: 0 16px 30px rgba(0, 186, 255, 0.16), 0 0 0 2px rgba(0, 186, 255, 0.22);
+}
+
+.match-word-card:active::after,
+.match-word-card.is-selected::after {
+  opacity: 1;
+}
+
+.match-word-card.is-correct {
+  background: #f0fff6;
+  box-shadow: 0 16px 30px rgba(41, 188, 114, 0.18), 0 0 0 2px rgba(41, 188, 114, 0.34);
+  animation: matchWordsCorrectPulse 160ms ease-out;
+}
+
+.match-word-card.is-wrong {
+  background: #fff2f4;
+  box-shadow: 0 14px 28px rgba(238, 90, 102, 0.18), 0 0 0 2px rgba(238, 90, 102, 0.32);
+  animation: matchWordsWrongShake 360ms ease-in-out;
+}
+
+.match-word-card.is-removing {
+  opacity: 0;
+  transform: translateY(10px) scale(0.9);
+  transition: opacity 220ms ease, transform 220ms ease;
+  pointer-events: none;
+}
+
+.match-word-card.is-entering {
+  animation: matchWordsCardEnter 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.match-word-card.is-disabled {
+  pointer-events: none;
+}
+
+.match-words-empty,
+.match-words-result {
+  margin: auto;
+  padding: 24px;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 18px 45px rgba(35, 66, 92, 0.16);
+  text-align: center;
+}
+
+.match-words-empty {
+  display: grid;
+  gap: 14px;
+  color: #637181;
+  font-weight: 850;
+}
+
+.match-words-empty button,
+.match-words-result button {
+  border: 0;
+  border-radius: 18px;
+  padding: 12px 18px;
+  background: #17212b;
+  color: #fff;
+  font-weight: 950;
+}
+
+.match-words-result {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  z-index: 30;
+  width: min(92vw, 380px);
+  transform: translate(-50%, -50%);
+  animation: matchWordsResultIn 360ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.match-words-result h2 {
+  margin: 0 0 12px;
+  font-size: 32px;
+  font-weight: 950;
+}
+
+.match-words-result-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.match-words-result-grid div {
+  padding: 12px 8px;
+  border-radius: 18px;
+  background: #f3f8fb;
+  color: #637181;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.match-words-result-grid strong {
+  display: block;
+  margin-top: 3px;
+  color: #17212b;
+  font-size: 22px;
+  font-weight: 950;
+}
+
+.match-words-result-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.match-words-result-actions button {
+  flex: 1;
+}
+
+.match-words-result-actions button:last-child {
+  background: #eff6fa;
+  color: #17212b;
+}
+
+.match-words-screen.is-game-over .match-words-board,
+.match-words-screen.is-game-over .match-words-top {
+  opacity: 0.42;
+  filter: saturate(0.8);
+  transition: opacity 260ms ease, filter 260ms ease;
+}
+
+@keyframes matchWordsHeartbeat {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.035); }
+}
+
+@keyframes matchWordsTimeFloat {
+  from { opacity: 1; transform: translate(-50%, 0) scale(0.95); }
+  to { opacity: 0; transform: translate(-50%, -36px) scale(1.12); }
+}
+
+@keyframes matchWordsComboPop {
+  0% { transform: scale(0.86); }
+  60% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+
+@keyframes matchWordsComboPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.045); }
+}
+
+@keyframes matchWordsCorrectPulse {
+  0% { transform: translateY(-1px) scale(1); }
+  100% { transform: translateY(-3px) scale(1.05); }
+}
+
+@keyframes matchWordsWrongShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-5px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+@keyframes matchWordsCardEnter {
+  from { opacity: 0; transform: translateY(12px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes matchWordsResultIn {
+  from { opacity: 0; transform: translate(-50%, -45%) scale(0.96); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+@media (min-width: 700px) {
+  .match-words-screen {
+    padding-inline: 26px;
+  }
+
+  .match-words-board {
+    gap: 18px;
+  }
+
+  .match-words-column {
+    gap: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .match-words-timer,
+  .match-words-combo,
+  .match-word-card,
+  .match-words-result {
+    animation: none !important;
+    transition-duration: 1ms !important;
+  }
+}

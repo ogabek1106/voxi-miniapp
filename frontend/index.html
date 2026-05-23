@@ -31,12 +31,14 @@
   <link rel="stylesheet" href="css/word_merge_animations.css?v=1">
   <link rel="stylesheet" href="css/admin_word_shuffle.css?v=1">
   <link rel="stylesheet" href="css/admin_word_shuffle_stats.css?v=1">
+  <link rel="stylesheet" href="css/admin_match_words.css?v=1">
   <link rel="stylesheet" href="css/admin_vcoin_payments.css?v=1">
   <link rel="stylesheet" href="css/word_shuffle.css?v=2">
   <link rel="stylesheet" href="css/word_shuffle_layout.css?v=1">
   <link rel="stylesheet" href="css/word_shuffle_board.css?v=1">
   <link rel="stylesheet" href="css/word_shuffle_pieces.css?v=1">
   <link rel="stylesheet" href="css/word_shuffle_effects.css?v=1">
+  <link rel="stylesheet" href="css/match_words.css?v=1">
   <link rel="stylesheet" href="css/auth_gate.css?v=1">
   <link rel="stylesheet" href="css/notifications.css?v=4">
   <link rel="stylesheet" href="css/feedback.css?v=1">
@@ -1782,6 +1784,19 @@
                   <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
                 </svg>
               </div>
+              <div class="home-card home-card--wide home-card--mock" onclick="showMatchWordsEntry()" role="button" tabindex="0">
+                <span class="home-card-feature-badge home-card-feature-badge--purple">NEW</span>
+                <span class="home-card-icon-wrap" aria-hidden="true">
+                  <svg class="home-card-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M7 8h6M7 12h4M17 7l2 2-2 2M11 17h6M5 15l2 2-2 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                  </svg>
+                </span>
+                <h3 class="home-card-title">Match Words</h3>
+                <p class="home-card-subtitle">Tap pairs before time runs out</p>
+                <svg class="home-card-arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+              </div>
             </div>
             </div>
 
@@ -2077,6 +2092,12 @@
   <script src="/js/admin_word_shuffle/form.js?v=1"></script>
   <script src="/js/admin_word_shuffle/list.js?v=1"></script>
   <script src="/js/admin_word_shuffle/loader.js?v=1"></script>
+  <script src="/js/admin_match_words/api.js?v=1"></script>
+  <script src="/js/admin_match_words/state.js?v=1"></script>
+  <script src="/js/admin_match_words/ui.js?v=1"></script>
+  <script src="/js/admin_match_words/form.js?v=1"></script>
+  <script src="/js/admin_match_words/list.js?v=1"></script>
+  <script src="/js/admin_match_words/loader.js?v=1"></script>
   <script src="/js/admin_word_shuffle_stats/api.js?v=1"></script>
   <script src="/js/admin_word_shuffle_stats/state.js?v=1"></script>
   <script src="/js/admin_word_shuffle_stats/ui.js?v=1"></script>
@@ -2130,6 +2151,14 @@
   <script src="./js/word_shuffle/drag.js?v=1"></script>
   <script src="./js/word_shuffle/engine.js?v=1"></script>
   <script src="./js/word_shuffle/loader.js?v=1"></script>
+  <script src="./js/games/match_words/api/api.js?v=1"></script>
+  <script src="./js/games/match_words/state/state.js?v=1"></script>
+  <script src="./js/games/match_words/animations/cards.js?v=1"></script>
+  <script src="./js/games/match_words/ui/render.js?v=1"></script>
+  <script src="./js/games/match_words/core/combo.js?v=1"></script>
+  <script src="./js/games/match_words/core/timer.js?v=1"></script>
+  <script src="./js/games/match_words/core/engine.js?v=1"></script>
+  <script src="./js/games/match_words/loader/loader.js?v=1"></script>
   <script src="./js/notifications/api.js?v=1"></script>
   <script src="./js/notifications/state.js?v=1"></script>
   <script src="./js/notifications/ui.js?v=3"></script>

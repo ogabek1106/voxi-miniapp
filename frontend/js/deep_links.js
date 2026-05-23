@@ -5,6 +5,7 @@ window.VoxiDeepLinks = window.VoxiDeepLinks || {};
     "odd-one-out": () => window.showVocabularyOddOneOutEntry?.(),
     "shadow-writing": () => window.showShadowWritingEntry?.(),
     "word-shuffle": () => window.showWordShuffleEntry?.(),
+    "match-words": () => window.showMatchWordsEntry?.(),
     "ielts-mock-test": () => window.showMocksEntry?.(),
     premiere: () => window.PremiereUi?.openGrantedPremiere?.(),
     reading: () => window.showReadingEntry?.(),
