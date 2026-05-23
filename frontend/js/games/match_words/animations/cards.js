@@ -18,8 +18,9 @@ window.MatchWordsAnimations = window.MatchWordsAnimations || {};
   MatchWordsAnimations.tapGlow = function (event) {
     const el = event.currentTarget;
     const rect = el.getBoundingClientRect();
-    const x = ((event.clientX - rect.left) / rect.width) * 100;
-    const y = ((event.clientY - rect.top) / rect.height) * 100;
+    const point = event.touches?.[0] || event.changedTouches?.[0] || event;
+    const x = ((point.clientX - rect.left) / rect.width) * 100;
+    const y = ((point.clientY - rect.top) / rect.height) * 100;
     el.style.setProperty("--tap-x", `${Math.max(0, Math.min(100, x))}%`);
     el.style.setProperty("--tap-y", `${Math.max(0, Math.min(100, y))}%`);
   };

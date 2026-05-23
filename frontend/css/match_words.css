@@ -1,10 +1,20 @@
+html.match-words-active,
+html.match-words-active body,
 body.match-words-active {
+  height: 100%;
   overflow: hidden;
+  overscroll-behavior: none;
 }
 
 body.match-words-active #screen-mocks {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
   height: 100vh;
   height: 100dvh;
+  max-width: none;
+  margin: 0;
+  padding: 0;
   overflow: hidden;
 }
 
@@ -14,7 +24,7 @@ body.match-words-active #screen-mocks {
   max-height: 100vh;
   max-height: 100dvh;
   box-sizing: border-box;
-  padding: max(8px, env(safe-area-inset-top)) 12px max(10px, env(safe-area-inset-bottom));
+  padding: max(6px, env(safe-area-inset-top)) 10px max(8px, env(safe-area-inset-bottom));
   background:
     radial-gradient(circle at 50% 0%, rgba(0, 186, 255, 0.14), transparent 32%),
     linear-gradient(180deg, #f7fbff 0%, #edf6fb 100%);
@@ -26,7 +36,7 @@ body.match-words-active #screen-mocks {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: clamp(8px, 1.35vh, 12px);
+  gap: clamp(5px, 1vh, 9px);
   max-width: 720px;
   height: 100%;
   min-height: 0;
@@ -37,7 +47,7 @@ body.match-words-active #screen-mocks {
 .match-words-top {
   display: grid;
   justify-items: center;
-  gap: clamp(4px, 0.8vh, 7px);
+  gap: clamp(3px, 0.55vh, 5px);
   padding-top: 0;
   flex: 0 0 auto;
 }
@@ -47,9 +57,9 @@ body.match-words-active #screen-mocks {
   display: grid;
   grid-template-columns: minmax(150px, 240px) auto;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   width: min(86vw, 340px);
-  padding: 8px 12px;
+  padding: 7px 11px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.9);
   --timer-glow: rgba(0, 186, 255, 0.16);
@@ -88,7 +98,7 @@ body.match-words-active #screen-mocks {
 
 .match-words-timer-track {
   position: relative;
-  height: 8px;
+  height: 7px;
   border-radius: 999px;
   background: rgba(99, 113, 129, 0.12);
   overflow: visible;
@@ -109,8 +119,8 @@ body.match-words-active #screen-mocks {
   position: absolute;
   left: var(--timer-progress, 100%);
   top: 50%;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   background: #fff;
   box-shadow: 0 0 0 5px var(--timer-glow), 0 6px 18px rgba(35, 66, 92, 0.16);
@@ -119,7 +129,7 @@ body.match-words-active #screen-mocks {
 
 .match-words-timer-label {
   color: #17212b;
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 950;
   line-height: 1;
   white-space: nowrap;
@@ -143,11 +153,11 @@ body.match-words-active #screen-mocks {
 }
 
 .match-words-combo {
-  min-height: 24px;
-  padding: 3px 13px;
+  min-height: 21px;
+  padding: 2px 12px;
   border-radius: 999px;
   color: #269ed8;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 950;
   opacity: 0;
   transform: scale(0.92);
@@ -182,14 +192,14 @@ body.match-words-active #screen-mocks {
 
 .match-words-stats {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   color: #637181;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 850;
 }
 
 .match-words-stats span {
-  padding: 4px 9px;
+  padding: 3px 8px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.72);
 }
@@ -198,18 +208,18 @@ body.match-words-active #screen-mocks {
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: clamp(8px, 2.4vw, 12px);
+  gap: clamp(7px, 2vw, 11px);
   align-items: stretch;
   flex: 1;
   min-height: 0;
-  padding: 2px 0 0;
+  padding: 1px 0 0;
   overflow: hidden;
 }
 
 .match-words-column {
   display: grid;
   grid-template-rows: repeat(5, minmax(0, 1fr));
-  gap: clamp(7px, 1.25vh, 11px);
+  gap: clamp(5px, 1vh, 9px);
   min-height: 0;
 }
 
@@ -220,14 +230,14 @@ body.match-words-active #screen-mocks {
   justify-content: center;
   min-height: 0;
   height: 100%;
-  padding: clamp(8px, 1.4vh, 12px) 9px;
+  padding: clamp(6px, 1vh, 10px) 8px;
   border: 0;
-  border-radius: 22px;
+  border-radius: 18px;
   background: rgba(255, 255, 255, 0.9);
   color: #17212b;
   box-shadow: 0 13px 26px rgba(35, 66, 92, 0.11), inset 0 0 0 1px rgba(255, 255, 255, 0.88);
   font: inherit;
-  font-size: clamp(14px, 3.7vw, 20px);
+  font-size: clamp(13px, 3.45vw, 19px);
   font-weight: 900;
   line-height: 1.14;
   letter-spacing: 0;
@@ -238,6 +248,7 @@ body.match-words-active #screen-mocks {
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
+  cursor: pointer;
   transition: transform 180ms cubic-bezier(0.2, 0.9, 0.22, 1), box-shadow 180ms ease, background 180ms ease, opacity 360ms ease;
 }
 
@@ -432,6 +443,28 @@ body.match-words-active #screen-mocks {
 
   .match-words-column {
     gap: 12px;
+  }
+}
+
+@media (max-height: 760px) {
+  .match-words-screen {
+    padding-top: max(4px, env(safe-area-inset-top));
+    padding-bottom: max(6px, env(safe-area-inset-bottom));
+  }
+
+  .match-words-shell {
+    gap: 5px;
+  }
+
+  .match-words-column {
+    gap: 5px;
+  }
+
+  .match-word-card {
+    padding-block: 5px;
+    border-radius: 16px;
+    font-size: clamp(12px, 3.15vw, 18px);
+    line-height: 1.08;
   }
 }
 

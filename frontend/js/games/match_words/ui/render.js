@@ -33,13 +33,25 @@ window.MatchWordsUI = window.MatchWordsUI || {};
     `;
   }
 
+  function handleCardPress(event, button) {
+    if (button.dataset.pressHandled === "1") return;
+    button.dataset.pressHandled = "1";
+    window.setTimeout(() => {
+      button.dataset.pressHandled = "0";
+    }, 220);
+    if (event.cancelable) event.preventDefault();
+    event.stopPropagation();
+    MatchWordsAnimations.tapGlow(event);
+    MatchWordsEngine.select(button.dataset.uid, button.dataset.side);
+  }
+
   function bindCards() {
     document.querySelectorAll(".match-word-card").forEach((button) => {
-      button.addEventListener("pointerdown", (event) => {
-        event.preventDefault();
-        MatchWordsAnimations.tapGlow(event);
-        MatchWordsEngine.select(button.dataset.uid, button.dataset.side);
-      });
+      button.addEventListener("pointerdown", (event) => handleCardPress(event, button), { passive: false });
+      button.addEventListener("touchstart", (event) => handleCardPress(event, button), { passive: false });
+      button.addEventListener("mousedown", (event) => handleCardPress(event, button));
+      button.addEventListener("dragstart", (event) => event.preventDefault());
+      button.addEventListener("contextmenu", (event) => event.preventDefault());
     });
   }
 
@@ -51,6 +63,7 @@ window.MatchWordsUI = window.MatchWordsUI || {};
     hideAllScreens();
     window.hideAnnouncement?.();
     window.setBottomNavVisible?.(false);
+    document.documentElement.classList.add("match-words-active");
     document.body.classList.add("match-words-active");
     const screen = MatchWordsUI.screen();
     if (!screen) return;
@@ -66,14 +79,13 @@ window.MatchWordsUI = window.MatchWordsUI || {};
 
   MatchWordsUI.renderEmpty = function (message) {
     const screen = MatchWordsUI.screen();
-    const backAction = MatchWordsState.get().returnToAdmin ? "showAdminMatchWords()" : "goHome()";
     if (!screen) return;
     screen.innerHTML = `
       <div class="match-words-screen">
         <div class="match-words-shell">
           <div class="match-words-empty">
             <span>${escape(message || "Match Words is being prepared.")}</span>
-            <button type="button" onclick="${backAction}">Back</button>
+            <button type="button" onclick="MatchWordsLoader.exit()">Back</button>
           </div>
         </div>
       </div>

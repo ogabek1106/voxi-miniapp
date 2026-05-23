@@ -53,6 +53,7 @@ window.MatchWordsLoader = window.MatchWordsLoader || {};
     } catch (error) {
       console.error("Match Words exit finish error:", error);
     }
+    document.documentElement.classList.remove("match-words-active");
     document.body.classList.remove("match-words-active");
     if (MatchWordsState.get().returnToAdmin && typeof showAdminMatchWords === "function") {
       showAdminMatchWords();
