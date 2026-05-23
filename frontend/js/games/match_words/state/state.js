@@ -30,6 +30,14 @@ window.MatchWordsState = window.MatchWordsState || {};
 
   let state = { ...initial };
 
+  function emptyItem() {
+    return {
+      uid: `empty-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      isEmpty: true,
+      entering: true,
+    };
+  }
+
   function clonePair(entry) {
     return {
       uid: `${entry.id}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
@@ -63,19 +71,40 @@ window.MatchWordsState = window.MatchWordsState || {};
     return copy;
   }
 
+  function uniqueEntries(entries) {
+    const seen = new Set();
+    return entries.filter((entry) => {
+      if (!entry?.english_text || !entry?.translation_text) return false;
+      const key = `${String(entry.english_text).trim().toLowerCase()}::${String(entry.translation_text).trim().toLowerCase()}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
   MatchWordsState.reset = function (entries = []) {
-    const clean = shuffled(entries.filter((entry) => entry?.english_text && entry?.translation_text));
+    const clean = shuffled(uniqueEntries(entries));
     const visibleCount = Math.min(5, Math.max(0, clean.length));
     const visiblePairs = [];
     for (let i = 0; i < visibleCount; i += 1) {
       visiblePairs.push(clonePair(clean[i]));
     }
-    const missingLeftUid = visiblePairs[visiblePairs.length - 1]?.uid || null;
-    const firstDecoyEntry = clean[visibleCount] || clean[0] || null;
+    while (visiblePairs.length < 5) {
+      visiblePairs.push(emptyItem());
+    }
+    const missingLeftUid = visibleCount > 1 ? [...visiblePairs].reverse().find((pair) => !pair.isEmpty)?.uid || null : null;
+    const firstDecoyEntry = clean[visibleCount] || null;
+    const rightMatchCount = missingLeftUid ? Math.max(0, visibleCount - 1) : visibleCount;
     const visibleRightItems = shuffled([
-      ...visiblePairs.slice(0, Math.max(0, visiblePairs.length - 1)).map((pair) => ({ uid: pair.uid, isDecoy: false, entering: pair.entering })),
+      ...visiblePairs
+        .filter((pair) => !pair.isEmpty)
+        .slice(0, rightMatchCount)
+        .map((pair) => ({ uid: pair.uid, isDecoy: false, entering: pair.entering })),
       ...(firstDecoyEntry ? [cloneDecoy(firstDecoyEntry)] : []),
     ]);
+    while (visibleRightItems.length < 5) {
+      visibleRightItems.push(emptyItem());
+    }
     state = {
       ...initial,
       entries: clean,
@@ -107,6 +136,7 @@ window.MatchWordsState = window.MatchWordsState || {};
   };
 
   MatchWordsState.markRemoving = function (uid) {
+    if (!uid) return;
     state.visiblePairs = state.visiblePairs.map((pair) => pair.uid === uid ? { ...pair, removing: true } : pair);
     state.visibleRightItems = state.visibleRightItems.map((item) => item.uid === uid ? { ...item, removing: true } : item);
   };
@@ -114,28 +144,32 @@ window.MatchWordsState = window.MatchWordsState || {};
   MatchWordsState.replacePair = function (uid) {
     const entries = state.entries;
     if (!entries.length) return null;
-    const entry = entries[state.nextIndex % entries.length];
-    const nextPair = clonePair(entry);
+    const entry = state.nextIndex < entries.length ? entries[state.nextIndex] : null;
+    const nextPair = entry ? clonePair(entry) : emptyItem();
     const previousMissingUid = state.missingLeftUid;
-    state.nextIndex += 1;
+    if (entry) state.nextIndex += 1;
     state.visiblePairs = state.visiblePairs.map((pair) => pair.uid === uid ? nextPair : pair);
     state.visibleRightItems = state.visibleRightItems.map((item) => {
       if (item.uid !== uid) return item;
       if (previousMissingUid) return { uid: previousMissingUid, isDecoy: false, entering: true };
-      const decoyEntry = entries[state.decoyIndex % entries.length];
-      state.decoyIndex += 1;
-      return cloneDecoy(decoyEntry);
+      const decoyEntry = state.decoyIndex < entries.length ? entries[state.decoyIndex] : null;
+      if (decoyEntry) {
+        state.decoyIndex += 1;
+        return cloneDecoy(decoyEntry);
+      }
+      return emptyItem();
     });
-    state.missingLeftUid = nextPair.uid;
-    return nextPair;
+    state.missingLeftUid = nextPair.isEmpty ? null : nextPair.uid;
+    return nextPair.isEmpty ? null : nextPair;
   };
 
   MatchWordsState.findPair = function (uid) {
-    return state.visiblePairs.find((pair) => pair.uid === uid) || null;
+    return state.visiblePairs.find((pair) => pair.uid === uid && !pair.isEmpty) || null;
   };
 
   MatchWordsState.getRightItems = function () {
     return state.visibleRightItems.map((item) => {
+      if (item.isEmpty) return item;
       if (item.isDecoy) return item;
       const pair = MatchWordsState.findPair(item.uid);
       return pair ? { ...pair, ...item, translation_text: pair.translation_text } : item;

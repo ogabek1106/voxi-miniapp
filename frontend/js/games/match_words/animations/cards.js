@@ -16,7 +16,8 @@ window.MatchWordsAnimations = window.MatchWordsAnimations || {};
   }
 
   MatchWordsAnimations.tapGlow = function (event) {
-    const el = event.currentTarget;
+    const el = event.target?.closest?.(".match-word-card") || event.currentTarget;
+    if (!el?.getBoundingClientRect) return;
     const rect = el.getBoundingClientRect();
     const point = event.touches?.[0] || event.changedTouches?.[0] || event;
     const x = ((point.clientX - rect.left) / rect.width) * 100;

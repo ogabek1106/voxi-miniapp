@@ -16,6 +16,14 @@ window.MatchWordsUI = window.MatchWordsUI || {};
   }
 
   function renderCard(pair, side) {
+    if (pair.isEmpty) {
+      return `
+        <div
+          class="match-word-card is-empty is-disabled ${pair.entering ? "is-entering" : ""}"
+          aria-hidden="true"
+        ></div>
+      `;
+    }
     const text = side === "english" ? pair.english_text : pair.translation_text;
     const state = MatchWordsState.get();
     const selected =

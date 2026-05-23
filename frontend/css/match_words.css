@@ -314,6 +314,16 @@ body.match-words-active:not(.view-miniapp):not(.mobile-browser-view) #screen-moc
   pointer-events: none;
 }
 
+.match-word-card.is-empty {
+  background: rgba(255, 255, 255, 0.34);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.42);
+  cursor: default;
+}
+
+.match-word-card.is-empty::after {
+  display: none;
+}
+
 .match-words-empty,
 .match-words-result {
   margin: auto;
