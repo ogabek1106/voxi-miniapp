@@ -72,12 +72,18 @@ window.MatchWordsState = window.MatchWordsState || {};
   }
 
   function uniqueEntries(entries) {
-    const seen = new Set();
+    const seenPairs = new Set();
+    const seenEnglish = new Set();
+    const seenTranslations = new Set();
     return entries.filter((entry) => {
       if (!entry?.english_text || !entry?.translation_text) return false;
-      const key = `${String(entry.english_text).trim().toLowerCase()}::${String(entry.translation_text).trim().toLowerCase()}`;
-      if (seen.has(key)) return false;
-      seen.add(key);
+      const englishKey = String(entry.english_text).trim().toLowerCase();
+      const translationKey = String(entry.translation_text).trim().toLowerCase();
+      const pairKey = `${englishKey}::${translationKey}`;
+      if (seenPairs.has(pairKey) || seenEnglish.has(englishKey) || seenTranslations.has(translationKey)) return false;
+      seenPairs.add(pairKey);
+      seenEnglish.add(englishKey);
+      seenTranslations.add(translationKey);
       return true;
     });
   }
@@ -110,8 +116,8 @@ window.MatchWordsState = window.MatchWordsState || {};
       entries: clean,
       visiblePairs,
       visibleRightItems,
-      nextIndex: visibleCount,
-      decoyIndex: visibleCount + 1,
+      nextIndex: firstDecoyEntry ? visibleCount + 1 : visibleCount,
+      decoyIndex: firstDecoyEntry ? visibleCount + 1 : visibleCount,
       missingLeftUid,
       timeLeft: 60,
       startedAt: performance.now(),
@@ -152,11 +158,6 @@ window.MatchWordsState = window.MatchWordsState || {};
     state.visibleRightItems = state.visibleRightItems.map((item) => {
       if (item.uid !== uid) return item;
       if (previousMissingUid) return { uid: previousMissingUid, isDecoy: false, entering: true };
-      const decoyEntry = state.decoyIndex < entries.length ? entries[state.decoyIndex] : null;
-      if (decoyEntry) {
-        state.decoyIndex += 1;
-        return cloneDecoy(decoyEntry);
-      }
       return emptyItem();
     });
     state.missingLeftUid = nextPair.isEmpty ? null : nextPair.uid;
