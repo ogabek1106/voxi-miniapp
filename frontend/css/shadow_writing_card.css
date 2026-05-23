@@ -1,7 +1,7 @@
 .home-feature-row {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
   align-items: stretch;
   overflow: visible;
@@ -9,7 +9,8 @@
 
 .odd-one-out-feature-wrap,
 .shadow-writing-feature-wrap,
-.word-shuffle-feature-wrap {
+.word-shuffle-feature-wrap,
+.match-words-feature-wrap {
   position: relative;
   display: flex;
   width: 100%;
@@ -36,7 +37,8 @@ body #screen-home .home-card:hover::before {
 
 #screen-home .home-card--shadow-writing-feature,
 #screen-home .home-card--odd-one-out-feature,
-#screen-home .home-card--word-shuffle-feature {
+#screen-home .home-card--word-shuffle-feature,
+#screen-home .home-card--match-words-feature {
   position: relative;
   z-index: 2;
   width: 100%;
@@ -57,6 +59,10 @@ body #screen-home .home-card:hover::before {
 
 #screen-home .home-card--word-shuffle-feature {
   animation-delay: 1.2s;
+}
+
+#screen-home .home-card--match-words-feature {
+  animation-delay: 3.6s;
 }
 
 .odd-one-out-bubbles,
@@ -282,6 +288,11 @@ body #screen-home .home-card:hover::before {
   color: #7c3aed;
 }
 
+#screen-home .home-card-feature-badge--yellow {
+  background: rgba(254, 240, 138, 0.62);
+  color: #b7791f;
+}
+
 #screen-home .home-card-shadow-icon {
   transform-origin: 50% 50%;
 }
@@ -290,7 +301,8 @@ body #screen-home .home-card:hover::before {
   .sw-bubble,
   #screen-home .home-card--shadow-writing-feature,
   #screen-home .home-card--odd-one-out-feature,
-  #screen-home .home-card--word-shuffle-feature {
+  #screen-home .home-card--word-shuffle-feature,
+  #screen-home .home-card--match-words-feature {
     animation: none;
   }
 }
