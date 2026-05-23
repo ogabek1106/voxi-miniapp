@@ -4,6 +4,7 @@ window.MatchWordsTimer = window.MatchWordsTimer || {};
   let lastFrame = 0;
 
   function timerClass(seconds) {
+    if (seconds >= 50) return "is-soft";
     if (seconds < 15) return "is-red";
     if (seconds < 30) return "is-orange";
     return "is-blue";
@@ -52,7 +53,10 @@ window.MatchWordsTimer = window.MatchWordsTimer || {};
     const timer = document.getElementById("match-words-timer");
     if (!timer) return;
     const seconds = MatchWordsState.get().timeLeft || 0;
-    timer.textContent = Math.ceil(seconds).toString();
+    const progress = Math.max(0, Math.min(100, (seconds / 60) * 100));
+    timer.style.setProperty("--timer-progress", `${progress}%`);
     timer.className = `match-words-timer ${timerClass(seconds)}${seconds < 10 ? " is-heartbeat" : ""}`;
+    const label = document.getElementById("match-words-timer-label");
+    if (label) label.textContent = `${Math.ceil(seconds)}s`;
   };
 })();

@@ -28,14 +28,16 @@ window.MatchWordsUI = window.MatchWordsUI || {};
         class="match-word-card ${selected ? "is-selected" : ""} ${pair.removing ? "is-removing is-disabled" : ""} ${pair.entering ? "is-entering" : ""}"
         data-uid="${escape(pair.uid)}"
         data-side="${side}"
+        draggable="false"
       >${escape(text)}</button>
     `;
   }
 
   function bindCards() {
     document.querySelectorAll(".match-word-card").forEach((button) => {
-      button.addEventListener("pointerdown", MatchWordsAnimations.tapGlow);
-      button.addEventListener("click", () => {
+      button.addEventListener("pointerdown", (event) => {
+        event.preventDefault();
+        MatchWordsAnimations.tapGlow(event);
         MatchWordsEngine.select(button.dataset.uid, button.dataset.side);
       });
     });
@@ -82,13 +84,19 @@ window.MatchWordsUI = window.MatchWordsUI || {};
     const screen = MatchWordsUI.screen();
     const state = MatchWordsState.get();
     if (!screen) return;
-    const rightPairs = state.visibleRightOrder.map(pairByUid).filter(Boolean);
+    const rightPairs = MatchWordsState.getRightItems();
     screen.innerHTML = `
       <div class="match-words-screen" id="match-words-screen">
         <div class="match-words-shell">
           <div id="match-words-floats"></div>
           <header class="match-words-top">
-            <div id="match-words-timer" class="match-words-timer is-blue">60</div>
+            <div id="match-words-timer" class="match-words-timer is-blue" style="--timer-progress: 100%;">
+              <div class="match-words-timer-track" aria-hidden="true">
+                <span class="match-words-timer-fill"></span>
+                <span class="match-words-timer-handle"></span>
+              </div>
+              <span id="match-words-timer-label" class="match-words-timer-label">60s</span>
+            </div>
             <div id="match-words-combo" class="match-words-combo"></div>
             <div class="match-words-stats">
               <span id="match-words-matches">Matches ${Number(state.correctCount || 0)}</span>

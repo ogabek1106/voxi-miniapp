@@ -27,7 +27,7 @@ window.MatchWordsLoader = window.MatchWordsLoader || {};
       const data = await MatchWordsApi.gameData();
       const entries = Array.isArray(data?.entries) ? data.entries : [];
       MatchWordsState.reset(entries);
-      if (entries.length < 4) {
+      if (entries.length < 6) {
         MatchWordsUI.renderEmpty("Match Words is being prepared.");
         return;
       }

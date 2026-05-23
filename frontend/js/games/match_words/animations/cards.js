@@ -33,10 +33,10 @@ window.MatchWordsAnimations = window.MatchWordsAnimations || {};
       left?.classList.add("is-removing");
       right?.classList.add("is-removing");
       MatchWordsState.markRemoving(uid);
-    }, 150);
+    }, 210);
     setTimeout(() => {
       done?.();
-    }, 480);
+    }, 760);
   };
 
   MatchWordsAnimations.enterPair = function (uid) {
@@ -47,7 +47,7 @@ window.MatchWordsAnimations = window.MatchWordsAnimations || {};
         card(uid, "english")?.classList.remove("is-entering");
         card(uid, "translation")?.classList.remove("is-entering");
         MatchWordsState.markEntered();
-      }, 280);
+      }, 440);
     });
   };
 

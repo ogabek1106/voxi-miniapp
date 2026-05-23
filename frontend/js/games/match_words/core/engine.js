@@ -16,10 +16,10 @@ window.MatchWordsEngine = window.MatchWordsEngine || {};
   MatchWordsEngine.select = function (uid, side) {
     const state = MatchWordsState.get();
     if (!state.isRunning || state.isFinishing) return;
-    const pair = MatchWordsState.findPair(uid);
-    if (!pair || pair.removing) return;
 
     if (side === "english") {
+      const pair = MatchWordsState.findPair(uid);
+      if (!pair || pair.removing) return;
       MatchWordsState.set({ selectedEnglishId: uid });
       MatchWordsUI.updateSelection();
       return;

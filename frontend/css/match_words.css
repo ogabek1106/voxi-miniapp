@@ -1,6 +1,20 @@
+body.match-words-active {
+  overflow: hidden;
+}
+
+body.match-words-active #screen-mocks {
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
 .match-words-screen {
-  min-height: 100vh;
-  padding: max(18px, env(safe-area-inset-top)) 14px max(22px, env(safe-area-inset-bottom));
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+  box-sizing: border-box;
+  padding: max(8px, env(safe-area-inset-top)) 12px max(10px, env(safe-area-inset-bottom));
   background:
     radial-gradient(circle at 50% 0%, rgba(0, 186, 255, 0.14), transparent 32%),
     linear-gradient(180deg, #f7fbff 0%, #edf6fb 100%);
@@ -12,47 +26,59 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: clamp(8px, 1.35vh, 12px);
   max-width: 720px;
-  min-height: calc(100vh - 36px);
+  height: 100%;
+  min-height: 0;
   margin: 0 auto;
+  overflow: hidden;
 }
 
 .match-words-top {
   display: grid;
   justify-items: center;
-  gap: 7px;
-  padding-top: 4px;
+  gap: clamp(4px, 0.8vh, 7px);
+  padding-top: 0;
+  flex: 0 0 auto;
 }
 
 .match-words-timer {
   position: relative;
-  min-width: 132px;
-  padding: 10px 24px;
+  display: grid;
+  grid-template-columns: minmax(150px, 240px) auto;
+  align-items: center;
+  gap: 12px;
+  width: min(86vw, 340px);
+  padding: 8px 12px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.9);
+  --timer-glow: rgba(0, 186, 255, 0.16);
   box-shadow: 0 14px 34px rgba(40, 72, 99, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.86);
-  color: #159fe0;
-  font-size: clamp(34px, 10vw, 52px);
-  font-weight: 950;
-  line-height: 1;
-  text-align: center;
-  letter-spacing: 0;
+  color: #0ba7e8;
   transition: color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.match-words-timer.is-soft {
+  color: #58bde7;
+  --timer-glow: rgba(88, 189, 231, 0.14);
+  box-shadow: 0 14px 34px rgba(88, 189, 231, 0.12);
 }
 
 .match-words-timer.is-blue {
   color: #0ba7e8;
+  --timer-glow: rgba(0, 186, 255, 0.18);
   box-shadow: 0 16px 38px rgba(0, 186, 255, 0.16);
 }
 
 .match-words-timer.is-orange {
   color: #f29a32;
+  --timer-glow: rgba(242, 154, 50, 0.2);
   box-shadow: 0 16px 38px rgba(242, 154, 50, 0.18);
 }
 
 .match-words-timer.is-red {
   color: #ed5b63;
+  --timer-glow: rgba(237, 91, 99, 0.22);
   box-shadow: 0 16px 38px rgba(237, 91, 99, 0.18);
 }
 
@@ -60,10 +86,49 @@
   animation: matchWordsHeartbeat 980ms ease-in-out infinite;
 }
 
+.match-words-timer-track {
+  position: relative;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(99, 113, 129, 0.12);
+  overflow: visible;
+}
+
+.match-words-timer-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--timer-progress, 100%);
+  height: 100%;
+  border-radius: inherit;
+  background: currentColor;
+  box-shadow: 0 0 14px var(--timer-glow);
+}
+
+.match-words-timer-handle {
+  position: absolute;
+  left: var(--timer-progress, 100%);
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 5px var(--timer-glow), 0 6px 18px rgba(35, 66, 92, 0.16);
+  transform: translate(-50%, -50%);
+}
+
+.match-words-timer-label {
+  color: #17212b;
+  font-size: 17px;
+  font-weight: 950;
+  line-height: 1;
+  white-space: nowrap;
+}
+
 .match-words-float {
   position: absolute;
   left: 50%;
-  top: 72px;
+  top: 48px;
   z-index: 20;
   transform: translateX(-50%);
   color: #27b66e;
@@ -78,8 +143,8 @@
 }
 
 .match-words-combo {
-  min-height: 28px;
-  padding: 4px 14px;
+  min-height: 24px;
+  padding: 3px 13px;
   border-radius: 999px;
   color: #269ed8;
   font-size: 16px;
@@ -124,7 +189,7 @@
 }
 
 .match-words-stats span {
-  padding: 5px 9px;
+  padding: 4px 9px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.72);
 }
@@ -133,15 +198,19 @@
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 12px;
-  align-items: start;
+  gap: clamp(8px, 2.4vw, 12px);
+  align-items: stretch;
   flex: 1;
-  padding: 4px 0 12px;
+  min-height: 0;
+  padding: 2px 0 0;
+  overflow: hidden;
 }
 
 .match-words-column {
   display: grid;
-  gap: 11px;
+  grid-template-rows: repeat(5, minmax(0, 1fr));
+  gap: clamp(7px, 1.25vh, 11px);
+  min-height: 0;
 }
 
 .match-word-card {
@@ -149,15 +218,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: clamp(62px, 14vh, 86px);
-  padding: 12px 10px;
+  min-height: 0;
+  height: 100%;
+  padding: clamp(8px, 1.4vh, 12px) 9px;
   border: 0;
   border-radius: 22px;
   background: rgba(255, 255, 255, 0.9);
   color: #17212b;
   box-shadow: 0 13px 26px rgba(35, 66, 92, 0.11), inset 0 0 0 1px rgba(255, 255, 255, 0.88);
   font: inherit;
-  font-size: clamp(16px, 4.3vw, 21px);
+  font-size: clamp(14px, 3.7vw, 20px);
   font-weight: 900;
   line-height: 1.14;
   letter-spacing: 0;
@@ -165,7 +235,10 @@
   word-break: break-word;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-  transition: transform 150ms cubic-bezier(0.2, 0.9, 0.22, 1), box-shadow 150ms ease, background 150ms ease, opacity 180ms ease;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  transition: transform 180ms cubic-bezier(0.2, 0.9, 0.22, 1), box-shadow 180ms ease, background 180ms ease, opacity 360ms ease;
 }
 
 .match-word-card::after {
@@ -193,7 +266,7 @@
 .match-word-card.is-correct {
   background: #f0fff6;
   box-shadow: 0 16px 30px rgba(41, 188, 114, 0.18), 0 0 0 2px rgba(41, 188, 114, 0.34);
-  animation: matchWordsCorrectPulse 160ms ease-out;
+  animation: matchWordsCorrectPulse 210ms ease-out;
 }
 
 .match-word-card.is-wrong {
@@ -205,12 +278,12 @@
 .match-word-card.is-removing {
   opacity: 0;
   transform: translateY(10px) scale(0.9);
-  transition: opacity 220ms ease, transform 220ms ease;
+  transition: opacity 380ms ease, transform 380ms ease;
   pointer-events: none;
 }
 
 .match-word-card.is-entering {
-  animation: matchWordsCardEnter 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: matchWordsCardEnter 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .match-word-card.is-disabled {
@@ -358,7 +431,7 @@
   }
 
   .match-words-column {
-    gap: 14px;
+    gap: 12px;
   }
 }
 
