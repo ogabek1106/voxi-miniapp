@@ -58,13 +58,9 @@ body.match-words-active:not(.view-miniapp):not(.mobile-browser-view) #screen-moc
 }
 
 .match-words-back {
-  position: absolute;
-  left: 0;
-  top: 0;
-  z-index: 25;
   border: 0;
   border-radius: 999px;
-  padding: 9px 14px;
+  padding: 10px 22px;
   background: rgba(255, 255, 255, 0.9);
   color: #17212b;
   box-shadow: 0 12px 26px rgba(35, 66, 92, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.86);
@@ -78,6 +74,14 @@ body.match-words-active:not(.view-miniapp):not(.mobile-browser-view) #screen-moc
 
 .match-words-back:active {
   transform: scale(0.97);
+}
+
+.match-words-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 0 0 42px;
+  padding-bottom: max(2px, env(safe-area-inset-bottom));
 }
 
 .match-words-timer {
@@ -238,12 +242,12 @@ body.match-words-active:not(.view-miniapp):not(.mobile-browser-view) #screen-moc
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: clamp(7px, 2vw, 12px);
   align-items: stretch;
-  flex: 0 1 min(640px, calc(100% - 88px));
+  flex: 0 1 min(640px, calc(100% - 130px));
   width: min(100%, 620px);
-  height: min(640px, calc(100% - 88px));
+  height: min(640px, calc(100% - 130px));
   min-height: 0;
   align-self: center;
-  padding: 4px 0 26px;
+  padding: 2px 0 6px;
   box-sizing: border-box;
   overflow: hidden;
   touch-action: manipulation;

@@ -325,10 +325,10 @@ function renderMatchWordsAssetLoading() {
   if (!screenMocks) return;
   screenMocks.style.display = "block";
   screenMocks.innerHTML = `
-    <div style="min-height:calc(100vh - 140px);display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;background:linear-gradient(180deg,#f7fbff 0%,#edf6fb 100%);">
-      <div style="width:min(90vw,360px);padding:24px;border-radius:28px;background:rgba(255,255,255,0.92);box-shadow:0 18px 45px rgba(35,66,92,0.14);text-align:center;">
-        <strong style="display:block;color:#17212b;font-size:24px;font-weight:950;margin-bottom:8px;">Match Words</strong>
-        <span style="display:block;color:#637181;font-size:15px;font-weight:850;">Preparing game...</span>
+    <div style="min-height:calc(100vh - 140px);display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;background:#F5F9FC;">
+      <div style="display:grid;gap:14px;justify-items:center;text-align:center;">
+        <div class="initial-loader-ring" aria-hidden="true"></div>
+        <strong style="display:block;color:#17212b;font-size:20px;font-weight:950;">Preparing Match Words...</strong>
       </div>
     </div>
   `;
@@ -336,13 +336,13 @@ function renderMatchWordsAssetLoading() {
 
 window.loadMatchWordsGameAssets = window.loadMatchWordsGameAssets || (async function () {
   const cssFiles = [
-    "css/match_words.css?v=public-3",
+    "css/match_words.css?v=public-4",
   ];
   const scriptFiles = [
     "/js/games/match_words/api/api.js?v=public-2",
     "/js/games/match_words/state/state.js?v=public-2",
     "/js/games/match_words/animations/cards.js?v=public-2",
-    "/js/games/match_words/ui/render.js?v=public-3",
+    "/js/games/match_words/ui/render.js?v=public-4",
     "/js/games/match_words/core/combo.js?v=public-2",
     "/js/games/match_words/core/timer.js?v=public-2",
     "/js/games/match_words/core/engine.js?v=public-2",
