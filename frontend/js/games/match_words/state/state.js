@@ -9,6 +9,7 @@ window.MatchWordsState = window.MatchWordsState || {};
     decoyIndex: 0,
     missingLeftUid: null,
     selectedEnglishId: null,
+    selectedTranslationId: null,
     sessionId: null,
     returnToAdmin: false,
     isRunning: false,

@@ -20,18 +20,32 @@ window.MatchWordsEngine = window.MatchWordsEngine || {};
     if (side === "english") {
       const pair = MatchWordsState.findPair(uid);
       if (!pair || pair.removing) return;
-      MatchWordsState.set({ selectedEnglishId: uid });
+      if (state.selectedTranslationId) {
+        if (state.selectedTranslationId === uid) {
+          MatchWordsEngine.correct(uid);
+        } else {
+          MatchWordsEngine.wrong(uid, state.selectedTranslationId);
+        }
+        return;
+      }
+      MatchWordsState.set({ selectedEnglishId: uid, selectedTranslationId: null });
       MatchWordsUI.updateSelection();
       return;
     }
 
-    const selected = state.selectedEnglishId;
-    if (!selected) return;
-    if (selected === uid) {
-      MatchWordsEngine.correct(uid);
-    } else {
-      MatchWordsEngine.wrong(selected, uid);
+    const item = MatchWordsState.getRightItems().find((rightItem) => rightItem.uid === uid);
+    if (!item || item.removing) return;
+    if (state.selectedEnglishId) {
+      if (state.selectedEnglishId === uid) {
+        MatchWordsEngine.correct(uid);
+      } else {
+        MatchWordsEngine.wrong(state.selectedEnglishId, uid);
+      }
+      return;
     }
+
+    MatchWordsState.set({ selectedEnglishId: null, selectedTranslationId: uid });
+    MatchWordsUI.updateSelection();
   };
 
   MatchWordsEngine.correct = function (uid) {
@@ -42,6 +56,7 @@ window.MatchWordsEngine = window.MatchWordsEngine || {};
     const matchSeconds = Math.max(0.2, (now - Number(state.lastMatchAt || now)) / 1000);
     MatchWordsState.set({
       selectedEnglishId: null,
+      selectedTranslationId: null,
       correctCount: Number(state.correctCount || 0) + 1,
       lastMatchAt: now,
       matchTimes: [...state.matchTimes, matchSeconds],
@@ -61,7 +76,11 @@ window.MatchWordsEngine = window.MatchWordsEngine || {};
 
   MatchWordsEngine.wrong = function (englishUid, translationUid) {
     const state = MatchWordsState.get();
-    MatchWordsState.set({ selectedEnglishId: null, wrongCount: Number(state.wrongCount || 0) + 1 });
+    MatchWordsState.set({
+      selectedEnglishId: null,
+      selectedTranslationId: null,
+      wrongCount: Number(state.wrongCount || 0) + 1,
+    });
     MatchWordsCombo.reset();
     MatchWordsTimer.addSeconds(-2);
     MatchWordsUI.updateSelection();

@@ -17,7 +17,10 @@ window.MatchWordsUI = window.MatchWordsUI || {};
 
   function renderCard(pair, side) {
     const text = side === "english" ? pair.english_text : pair.translation_text;
-    const selected = MatchWordsState.get().selectedEnglishId === pair.uid && side === "english";
+    const state = MatchWordsState.get();
+    const selected =
+      (side === "english" && state.selectedEnglishId === pair.uid) ||
+      (side === "translation" && state.selectedTranslationId === pair.uid);
     return `
       <button
         type="button"
@@ -142,9 +145,13 @@ window.MatchWordsUI = window.MatchWordsUI || {};
 
   MatchWordsUI.updateSelection = function () {
     document.querySelectorAll(".match-word-card.is-selected").forEach((el) => el.classList.remove("is-selected"));
-    const selected = MatchWordsState.get().selectedEnglishId;
-    if (!selected) return;
-    document.querySelector(`.match-word-card[data-uid="${cssEscape(selected)}"][data-side="english"]`)?.classList.add("is-selected");
+    const state = MatchWordsState.get();
+    if (state.selectedEnglishId) {
+      document.querySelector(`.match-word-card[data-uid="${cssEscape(state.selectedEnglishId)}"][data-side="english"]`)?.classList.add("is-selected");
+    }
+    if (state.selectedTranslationId) {
+      document.querySelector(`.match-word-card[data-uid="${cssEscape(state.selectedTranslationId)}"][data-side="translation"]`)?.classList.add("is-selected");
+    }
   };
 
   MatchWordsUI.updateCombo = function (pop) {
