@@ -119,6 +119,7 @@ window.MatchWordsUI = window.MatchWordsUI || {};
       <div class="match-words-screen" id="match-words-screen">
         <div class="match-words-shell">
           <div id="match-words-floats"></div>
+          <button class="match-words-back" type="button" onclick="MatchWordsLoader.exit()">Back</button>
           <header class="match-words-top">
             <div id="match-words-timer" class="match-words-timer is-blue" style="--timer-progress: 100%;">
               <div class="match-words-timer-track" aria-hidden="true">
