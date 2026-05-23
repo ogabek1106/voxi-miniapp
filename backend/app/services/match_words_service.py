@@ -2,9 +2,10 @@ import random
 from datetime import datetime
 
 from fastapi import HTTPException
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.models import MatchWord, MatchWordsSession
+from app.models import MatchWord, MatchWordsSession, User
 
 
 LEVELS = {"A1", "A2", "B1", "B2", "C1", "C2"}
@@ -102,6 +103,60 @@ def build_game_payload(db: Session) -> dict:
     ]
     random.shuffle(entries)
     return {"entries": [serialize_entry(entry) for entry in entries]}
+
+
+def list_admin_stats(db: Session) -> dict:
+    sessions = (
+        db.query(MatchWordsSession, User)
+        .outerjoin(User, MatchWordsSession.user_id == User.id)
+        .order_by(MatchWordsSession.started_at.desc())
+        .limit(300)
+        .all()
+    )
+    finished_query = db.query(MatchWordsSession).filter(MatchWordsSession.finished_at.isnot(None))
+    total_sessions = finished_query.count()
+    unique_users = (
+        db.query(func.count(func.distinct(func.coalesce(MatchWordsSession.telegram_id, MatchWordsSession.user_id))))
+        .filter(MatchWordsSession.finished_at.isnot(None))
+        .scalar()
+        or 0
+    )
+    total_correct = db.query(func.coalesce(func.sum(MatchWordsSession.correct_count), 0)).scalar() or 0
+    total_wrong = db.query(func.coalesce(func.sum(MatchWordsSession.wrong_count), 0)).scalar() or 0
+    highest_combo = db.query(func.coalesce(func.max(MatchWordsSession.best_combo), 0)).scalar() or 0
+    total_xp = db.query(func.coalesce(func.sum(MatchWordsSession.xp_earned), 0)).scalar() or 0
+    avg_survival = db.query(func.coalesce(func.avg(MatchWordsSession.survived_seconds), 0)).scalar() or 0
+
+    return {
+        "summary": {
+            "total_sessions": int(total_sessions),
+            "unique_users": int(unique_users),
+            "total_correct": int(total_correct),
+            "total_wrong": int(total_wrong),
+            "highest_combo": int(highest_combo),
+            "total_xp": int(total_xp),
+            "average_survival_seconds": round(float(avg_survival or 0), 1),
+        },
+        "items": [_serialize_session(session, user) for session, user in sessions],
+    }
+
+
+def _serialize_session(session: MatchWordsSession, user: User | None) -> dict:
+    full_name = " ".join([user.name or "", user.surname or ""]).strip() if user else ""
+    return {
+        "id": session.id,
+        "telegram_id": session.telegram_id,
+        "user_name": full_name or (user.username if user else None) or (str(session.telegram_id) if session.telegram_id else "Visitor"),
+        "correct_count": int(session.correct_count or 0),
+        "wrong_count": int(session.wrong_count or 0),
+        "best_combo": int(session.best_combo or 0),
+        "survived_seconds": int(session.survived_seconds or 0),
+        "average_match_seconds": session.average_match_seconds,
+        "xp_earned": int(session.xp_earned or 0),
+        "status": session.status,
+        "started_at": session.started_at.isoformat() if session.started_at else None,
+        "finished_at": session.finished_at.isoformat() if session.finished_at else None,
+    }
 
 
 def create_session(db: Session, payload) -> MatchWordsSession:

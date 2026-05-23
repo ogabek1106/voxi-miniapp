@@ -69,7 +69,9 @@ window.MatchWordsLoader = window.MatchWordsLoader || {};
   };
 })();
 
-window.showMatchWordsEntry = function () {
-  MatchWordsState.set({ returnToAdmin: false });
-  MatchWordsLoader.start();
-};
+if (typeof window.showMatchWordsEntry !== "function") {
+  window.showMatchWordsEntry = function () {
+    MatchWordsState.set({ returnToAdmin: false });
+    MatchWordsLoader.start();
+  };
+}

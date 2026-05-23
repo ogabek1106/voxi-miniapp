@@ -16,6 +16,8 @@ window.MatchWordsEngine = window.MatchWordsEngine || {};
   MatchWordsEngine.select = function (uid, side) {
     const state = MatchWordsState.get();
     if (!state.isRunning || state.isFinishing) return;
+    MatchWordsTimer.checkExpired?.();
+    if (!MatchWordsState.get().isRunning || MatchWordsState.get().isFinishing) return;
 
     if (side === "english") {
       const pair = MatchWordsState.findPair(uid);
@@ -95,7 +97,7 @@ window.MatchWordsEngine = window.MatchWordsEngine || {};
     MatchWordsState.set({ isFinishing: true, survivedSeconds });
     let result = { xp_earned: 0 };
     try {
-      result = await MatchWordsLoader.finishIfNeeded("finished");
+      result = await MatchWordsLoader.finishIfNeeded("timeout");
       MatchWordsState.set({ xpEarned: Number(result?.xp_earned || 0) });
     } catch (error) {
       console.error("Match Words finish error:", error);

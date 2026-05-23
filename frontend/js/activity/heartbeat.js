@@ -70,6 +70,7 @@ window.VoxiActivity = window.VoxiActivity || {};
 
   function visiblePage() {
     if (document.body?.classList.contains("word-shuffle-active")) return "word_shuffle";
+    if (document.body?.classList.contains("match-words-active")) return "match_words";
     if (document.body?.classList.contains("word-merge-active")) return "word_merge";
     if (document.body?.classList.contains("vocab-ooo-active")) return "odd_one_out";
     const visible = ["screen-reading", "screen-writing", "screen-speaking", "screen-profile", "screen-mocks", "screen-home"]
@@ -120,6 +121,7 @@ window.VoxiActivity = window.VoxiActivity || {};
       showShadowWritingEntry: "shadow_writing",
       showVocabularyOddOneOutEntry: "odd_one_out",
       showWordShuffleEntry: "word_shuffle",
+      showMatchWordsEntry: "match_words",
     };
     Object.entries(mappings).forEach(([name, page]) => {
       const original = window[name];

@@ -8,6 +8,7 @@ from app.models import (
     FeatureUsageCounter,
     ReadingProgress,
     User,
+    MatchWordsSession,
     VocabularyOddOneOutAttempt,
     WordMergeSession,
     WordShuffleSession,
@@ -15,7 +16,7 @@ from app.models import (
 
 ONLINE_SECONDS = 90
 IDLE_SECONDS = 300
-GAME_FEATURES = {"word_shuffle", "word_merge", "odd_one_out", "shadow_writing"}
+GAME_FEATURES = {"word_shuffle", "word_merge", "odd_one_out", "shadow_writing", "match_words"}
 
 
 def record_heartbeat(db: Session, payload) -> AppActivitySession:
@@ -158,6 +159,7 @@ def _total_games_played(db: Session) -> int:
         db.query(WordShuffleSession).filter(WordShuffleSession.finished_at.isnot(None)).count()
         + db.query(WordMergeSession).filter(WordMergeSession.finished_at.isnot(None)).count()
         + db.query(VocabularyOddOneOutAttempt).count()
+        + db.query(MatchWordsSession).filter(MatchWordsSession.finished_at.isnot(None)).count()
     )
 
 
@@ -166,6 +168,7 @@ def _games_played_today(db: Session, today_start: datetime) -> int:
         db.query(WordShuffleSession).filter(WordShuffleSession.finished_at >= today_start).count()
         + db.query(WordMergeSession).filter(WordMergeSession.finished_at >= today_start).count()
         + db.query(VocabularyOddOneOutAttempt).filter(VocabularyOddOneOutAttempt.completed_at >= today_start).count()
+        + db.query(MatchWordsSession).filter(MatchWordsSession.finished_at >= today_start).count()
     )
 
 

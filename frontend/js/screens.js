@@ -42,6 +42,8 @@ function hideAllScreens() {
   if (screenMocks) screenMocks.classList.remove("vocab-ooo-host");
   if (screenMocks) screenMocks.classList.remove("admin-live-host");
   document.body.classList.remove("vocab-ooo-active");
+  document.body.classList.remove("match-words-active");
+  document.documentElement.classList.remove("match-words-active");
 }
 window.hideAllScreens = hideAllScreens;
 function setBottomNavVisible(visible) {
@@ -316,26 +318,71 @@ async function showAnnouncement() {
   }
 }
 
-window.loadMatchWordsAdminAssets = window.loadMatchWordsAdminAssets || (async function () {
+window.loadMatchWordsGameAssets = window.loadMatchWordsGameAssets || (async function () {
   const cssFiles = [
-    "css/admin_match_words.css?v=internal-1",
-    "css/match_words.css?v=internal-1",
+    "css/match_words.css?v=public-2",
   ];
   const scriptFiles = [
-    "/js/games/match_words/api/api.js?v=internal-1",
-    "/js/games/match_words/state/state.js?v=internal-1",
-    "/js/games/match_words/animations/cards.js?v=internal-1",
-    "/js/games/match_words/ui/render.js?v=internal-1",
-    "/js/games/match_words/core/combo.js?v=internal-1",
-    "/js/games/match_words/core/timer.js?v=internal-1",
-    "/js/games/match_words/core/engine.js?v=internal-1",
-    "/js/games/match_words/loader/loader.js?v=internal-1",
-    "/js/admin_match_words/api.js?v=internal-1",
-    "/js/admin_match_words/state.js?v=internal-1",
-    "/js/admin_match_words/ui.js?v=internal-1",
-    "/js/admin_match_words/form.js?v=internal-1",
-    "/js/admin_match_words/list.js?v=internal-1",
-    "/js/admin_match_words/loader.js?v=internal-1",
+    "/js/games/match_words/api/api.js?v=public-2",
+    "/js/games/match_words/state/state.js?v=public-2",
+    "/js/games/match_words/animations/cards.js?v=public-2",
+    "/js/games/match_words/ui/render.js?v=public-2",
+    "/js/games/match_words/core/combo.js?v=public-2",
+    "/js/games/match_words/core/timer.js?v=public-2",
+    "/js/games/match_words/core/engine.js?v=public-2",
+    "/js/games/match_words/loader/loader.js?v=public-2",
+  ];
+
+  cssFiles.forEach((href) => {
+    if (document.querySelector(`link[data-match-words-asset="${href}"]`)) return;
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = href;
+    link.dataset.matchWordsAsset = href;
+    document.head.appendChild(link);
+  });
+
+  for (const src of scriptFiles) {
+    if (document.querySelector(`script[data-match-words-asset="${src}"]`)) continue;
+    await new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = src;
+      script.dataset.matchWordsAsset = src;
+      script.onload = resolve;
+      script.onerror = () => reject(new Error(`Failed to load ${src}`));
+      document.body.appendChild(script);
+    });
+  }
+});
+
+window.showMatchWordsEntry = async function () {
+  try {
+    await window.loadMatchWordsGameAssets();
+    window.MatchWordsState?.set?.({ returnToAdmin: false });
+    window.MatchWordsLoader?.start?.();
+  } catch (error) {
+    console.error("Match Words load failed:", error);
+    alert("Could not load Match Words.");
+  }
+};
+
+window.loadMatchWordsAdminAssets = window.loadMatchWordsAdminAssets || (async function () {
+  await window.loadMatchWordsGameAssets();
+  const cssFiles = [
+    "css/admin_match_words.css?v=public-2",
+  ];
+  const scriptFiles = [
+    "/js/admin_match_words/api.js?v=public-2",
+    "/js/admin_match_words/state.js?v=public-2",
+    "/js/admin_match_words/ui.js?v=public-2",
+    "/js/admin_match_words/form.js?v=public-2",
+    "/js/admin_match_words/list.js?v=public-2",
+    "/js/admin_match_words/loader.js?v=public-2",
+    "/js/admin_match_words_stats/api.js?v=public-2",
+    "/js/admin_match_words_stats/state.js?v=public-2",
+    "/js/admin_match_words_stats/ui.js?v=public-2",
+    "/js/admin_match_words_stats/table.js?v=public-2",
+    "/js/admin_match_words_stats/loader.js?v=public-2",
   ];
 
   cssFiles.forEach((href) => {
@@ -389,6 +436,7 @@ window.showAdminPanel = function () {
     <button onclick="showAdminWordShuffle()">Voxi Word Shuffle</button>
     <button onclick="showAdminWordShuffleStats()">Word Shuffle Stats</button>
     <button onclick="showAdminMatchWords()">Match Words</button>
+    <button onclick="loadMatchWordsAdminAssets().then(() => showAdminMatchWordsStats())">Match Words Stats</button>
     <button onclick="showAdminFeedbackRatings()">Feedback Ratings</button>
     <button onclick="showAdminVCoinPayments()">V-Coin Payments</button>
     <button onclick="showAdminPremiereSubscriptions()">Premiere Subscriptions</button>

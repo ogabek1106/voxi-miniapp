@@ -42,7 +42,7 @@
   <link rel="stylesheet" href="css/feedback.css?v=1">
   <link rel="stylesheet" href="css/admin_feedback.css?v=1">
   <link rel="stylesheet" href="css/xp.css?v=4">
-  <link rel="stylesheet" href="css/shadow_writing_card.css?v=6">
+  <link rel="stylesheet" href="css/shadow_writing_card.css?v=7">
   <link rel="stylesheet" href="css/premiere.css?v=8">
   <link rel="icon" type="image/png" href="./assets/favicon.png">
   <link rel="apple-touch-icon" href="./assets/favicon.png">
@@ -1546,6 +1546,19 @@
           </div>
 
           <div class="home-cards">
+            <div class="home-card home-card--wide home-card--mock" onclick="showMocksEntry()" role="button" tabindex="0">
+              <span class="home-card-icon-wrap" aria-hidden="true">
+                <svg class="home-card-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M4 7h16v10H4zM8 11h8M8 14h5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path>
+                </svg>
+              </span>
+              <h3 class="home-card-title">IELTS Mock Test</h3>
+              <p class="home-card-subtitle">Full real exam simulation</p>
+              <svg class="home-card-arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </div>
+
             <div class="home-feature-row">
             <div class="shadow-writing-feature-wrap">
               <div class="shadow-writing-bubbles" aria-hidden="true">
@@ -1783,19 +1796,23 @@
                 </svg>
               </div>
             </div>
-            </div>
 
-            <div class="home-card home-card--wide home-card--mock" onclick="showMocksEntry()" role="button" tabindex="0">
-              <span class="home-card-icon-wrap" aria-hidden="true">
-                <svg class="home-card-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M4 7h16v10H4zM8 11h8M8 14h5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path>
+            <div class="match-words-feature-wrap">
+              <div class="home-card home-card--wide home-card--mock home-card--match-words-feature" onclick="showMatchWordsEntry()" role="button" tabindex="0">
+                <span class="home-card-feature-badge home-card-feature-badge--yellow">NEW</span>
+                <span class="home-card-icon-wrap home-card-match-words-icon" aria-hidden="true">
+                  <svg class="home-card-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M7 7h5M7 12h5M7 17h5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path>
+                    <path d="M15.5 8.5l2-2 2 2M17.5 6.5V17.5M15.5 15.5l2 2 2-2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>
+                  </svg>
+                </span>
+                <h3 class="home-card-title">Match Words</h3>
+                <p class="home-card-subtitle">Tap matching pairs fast</p>
+                <svg class="home-card-arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
                 </svg>
-              </span>
-              <h3 class="home-card-title">IELTS Mock Test</h3>
-              <p class="home-card-subtitle">Full real exam simulation</p>
-              <svg class="home-card-arrow" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
-              </svg>
+              </div>
+            </div>
             </div>
 
             <div class="home-card home-card--small" onclick="showReadingEntry()" role="button" tabindex="0">
@@ -1896,7 +1913,7 @@
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="./js/api.js?v=2"></script>
-  <script src="./js/deep_links.js?v=2"></script>
+  <script src="./js/deep_links.js?v=3"></script>
   <script src="./js/shared/api/api_client.js?v=1"></script>
   <script src="./js/shared/auth/view_mode.js?v=2"></script>
   <script src="./js/core/mobile_view.js?v=1"></script>
@@ -1920,7 +1937,7 @@
   <script src="./js/exam_exit_guard.js?v=2"></script>
   <script src="./js/test_reentry.js?v=1"></script>
   <script src="./js/profile/ui/last_activity.js"></script>
-  <script src="./js/screens.js?v=10"></script>
+  <script src="./js/screens.js?v=11"></script>
   <script src="./js/admin_reading_stats.js?v=1"></script>
   <script src="js/mock_list.js"></script>
   <script src="js/user_reading/ui/header.js?v=4"></script>
@@ -2137,7 +2154,7 @@
   <script src="./js/premiere/api.js?v=3"></script>
   <script src="./js/premiere/ui.js?v=15"></script>
   <script src="./js/premiere/loader.js?v=4"></script>
-  <script src="./js/activity/heartbeat.js?v=1"></script>
+  <script src="./js/activity/heartbeat.js?v=2"></script>
   <script src="./js/app.js?v=8"></script>
   <script src="./js/vcoins_ui.js?v=8"></script>
   <script src="./js/xp_ui.js?v=4"></script>

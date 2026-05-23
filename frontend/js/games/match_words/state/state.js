@@ -15,6 +15,7 @@ window.MatchWordsState = window.MatchWordsState || {};
     isRunning: false,
     isFinishing: false,
     startedAt: 0,
+    deadlineAt: 0,
     lastMatchAt: 0,
     timeLeft: 60,
     correctCount: 0,
