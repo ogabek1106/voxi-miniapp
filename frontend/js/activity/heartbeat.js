@@ -120,7 +120,6 @@ window.VoxiActivity = window.VoxiActivity || {};
       showShadowWritingEntry: "shadow_writing",
       showVocabularyOddOneOutEntry: "odd_one_out",
       showWordShuffleEntry: "word_shuffle",
-      showMatchWordsEntry: "match_words",
     };
     Object.entries(mappings).forEach(([name, page]) => {
       const original = window[name];

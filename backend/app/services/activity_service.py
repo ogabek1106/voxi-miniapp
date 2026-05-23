@@ -15,7 +15,7 @@ from app.models import (
 
 ONLINE_SECONDS = 90
 IDLE_SECONDS = 300
-GAME_FEATURES = {"word_shuffle", "word_merge", "match_words", "odd_one_out", "shadow_writing"}
+GAME_FEATURES = {"word_shuffle", "word_merge", "odd_one_out", "shadow_writing"}
 
 
 def record_heartbeat(db: Session, payload) -> AppActivitySession:
