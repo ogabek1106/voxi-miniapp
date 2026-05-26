@@ -19,10 +19,87 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnHome = document.getElementById("btn-home");
   const btnProfile = document.getElementById("btn-profile");
 
-  if (btnHome) btnHome.addEventListener("click", goHome);
-  if (btnProfile) btnProfile.addEventListener("click", goProfile);
+  if (btnHome) btnHome.addEventListener("click", navigateToHome);
+  if (btnProfile) btnProfile.addEventListener("click", () => navigateToFeature("profile"));
   const btnMockPacks = document.getElementById("btn-mock-packs");
   if (btnMockPacks) btnMockPacks.addEventListener("click", showAdminMockPacks);
+});
+
+const FEATURE_ROUTES = {
+  "ielts-mock-test": () => window.showMocksEntry?.(),
+  reading: () => window.showReadingEntry?.(),
+  listening: () => window.showListeningEntry?.(),
+  writing: () => window.showWritingEntry?.(),
+  speaking: () => window.showSpeakingEntry?.(),
+  "shadow-writing": () => window.showShadowWritingEntry?.(),
+  "odd-one-out": () => window.showVocabularyOddOneOutEntry?.(),
+  "word-shuffle": () => window.showWordShuffleEntry?.(),
+  "match-words": () => window.showMatchWordsEntry?.(),
+  profile: () => window.goProfile?.(),
+};
+
+function routeKey(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function routeUrl(page) {
+  const key = routeKey(page);
+  return key ? `/?page=${encodeURIComponent(key)}` : "/";
+}
+
+window.openFeatureByRoute = function (page) {
+  const key = routeKey(page);
+  const handler = FEATURE_ROUTES[key];
+  if (!handler) {
+    window.goHome?.();
+    return false;
+  }
+  handler();
+  return true;
+};
+
+window.navigateToFeature = function (page) {
+  const key = routeKey(page);
+  if (!FEATURE_ROUTES[key]) {
+    window.goHome?.();
+    return false;
+  }
+  history.pushState({ page: key }, "", routeUrl(key));
+  return window.openFeatureByRoute(key);
+};
+
+window.renderHomePage = function () {
+  window.goHome?.();
+};
+
+window.navigateToHome = function () {
+  history.pushState({}, "", "/");
+  window.renderHomePage();
+};
+
+window.VoxiRouter = window.VoxiRouter || {};
+window.VoxiRouter.restoreInitialRoute = function () {
+  const params = new URLSearchParams(window.location.search);
+  const page = routeKey(params.get("page"));
+  const open = routeKey(params.get("open"));
+  if (!page) {
+    if (open) return false;
+    history.replaceState({}, "", "/");
+    window.renderHomePage();
+    return false;
+  }
+  history.replaceState({ page }, "", routeUrl(page));
+  return window.openFeatureByRoute(page);
+};
+
+window.addEventListener("popstate", () => {
+  const params = new URLSearchParams(window.location.search);
+  const page = routeKey(params.get("page"));
+  if (!page) {
+    window.renderHomePage();
+    return;
+  }
+  window.openFeatureByRoute(page);
 });
 
 function hideAllScreens() {

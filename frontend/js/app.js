@@ -254,6 +254,7 @@ document.addEventListener("DOMContentLoaded", () => {
     window.WebsiteLayout?.init?.();
     markAppReady();
     window.VoxiNotifications?.init?.();
+    window.VoxiRouter?.restoreInitialRoute?.();
     window.VoxiDeepLinks?.handleCurrentUrl?.();
 
     document.addEventListener("visibilitychange", () => {
@@ -274,6 +275,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loadMe();
   markAppReady();
   window.VoxiNotifications?.init?.();
+  window.VoxiRouter?.restoreInitialRoute?.();
   window.VoxiDeepLinks?.handleCurrentUrl?.();
 
   document.addEventListener("visibilitychange", () => {

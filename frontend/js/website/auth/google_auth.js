@@ -79,6 +79,7 @@ window.WebsiteGoogleAuth = window.WebsiteGoogleAuth || {};
         try {
           const result = await window.WebsiteAuthApi.googleLogin(response.credential);
           window.WebsiteAuthState.setUser(result.user);
+          history.replaceState({}, "", "/");
           activeOnSuccess?.(result.user);
         } catch (error) {
           console.error("Google website login failed", error);
