@@ -30,6 +30,20 @@ window.XPUI = window.XPUI || {};
       .replace(/'/g, "&#039;");
   }
 
+  function assetUrl(url) {
+    const value = String(url || "").trim();
+    if (!value) return "";
+    if (/^https?:\/\//i.test(value)) return value;
+    if (value.startsWith("/media/") && window.apiUrl) return window.apiUrl(value);
+    return value;
+  }
+
+  function leaderboardBadge(item) {
+    const url = assetUrl(item?.badge?.icon_url);
+    if (!url) return `<span class="xp-leaderboard-badge" aria-hidden="true"></span>`;
+    return `<span class="xp-leaderboard-badge"><img src="${escapeHtml(url)}" alt="" aria-hidden="true"></span>`;
+  }
+
   function reasonLabel(reason) {
     return String(reason || "xp_award")
       .replace(/^shadow_/, "Shadow Writing ")
@@ -158,6 +172,7 @@ window.XPUI = window.XPUI || {};
             <div class="xp-leaderboard-row ${medal} ${item.is_current_user ? "is-current-user" : ""}">
               <span class="xp-rank">${rank}</span>
               <span class="xp-name">${escapeHtml(item.display_name || "Learner")}</span>
+              ${leaderboardBadge(item)}
               <span class="xp-score">${Number(item.xp || 0)} XP</span>
             </div>
           `;}).join("") : `<p class="xp-empty">No XP leaders yet.</p>`}

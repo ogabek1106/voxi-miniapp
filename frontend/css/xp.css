@@ -321,7 +321,7 @@ body.mobile-browser-view #screen-home .home-xp {
 .xp-leaderboard-row {
   position: relative;
   display: grid;
-  grid-template-columns: 36px minmax(0, 1fr) auto;
+  grid-template-columns: 36px minmax(0, 1fr) 28px auto;
   align-items: center;
   gap: 10px;
   border-radius: 15px;
@@ -389,6 +389,21 @@ body.mobile-browser-view #screen-home .home-xp {
   text-overflow: ellipsis;
   white-space: nowrap;
   font-weight: 850;
+}
+
+.xp-leaderboard-badge {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.xp-leaderboard-badge img {
+  max-width: 24px;
+  max-height: 24px;
+  object-fit: contain;
+  display: block;
 }
 
 .xp-score {

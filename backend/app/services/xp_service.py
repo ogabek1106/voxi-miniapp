@@ -9,10 +9,12 @@ from sqlalchemy.orm import Session
 
 from app.config import ADMIN_IDS
 from app.models import (
+    Badge,
     FullMockResult,
     ListeningProgress,
     ReadingProgress,
     User,
+    UserBadge,
     UserXP,
     VocabularyOddOneOutAttempt,
     WordShuffleSession,
@@ -313,6 +315,25 @@ def _leaderboard_identity_key(user: User | None, telegram_id: int | None) -> str
     return None
 
 
+def get_leaderboard_badge(db: Session, user: User | None) -> dict[str, Any] | None:
+    if not user:
+        return None
+    row = (
+        db.query(UserBadge, Badge)
+        .join(Badge, Badge.id == UserBadge.badge_id)
+        .filter(UserBadge.user_id == user.id, Badge.is_active.is_(True))
+        .order_by(UserBadge.is_featured.desc(), Badge.sort_order.asc(), UserBadge.unlocked_at.asc())
+        .first()
+    )
+    if not row:
+        return None
+    _user_badge, badge = row
+    return {
+        "code": badge.code,
+        "icon_url": badge.icon_url,
+    }
+
+
 def get_leaderboard(
     db: Session,
     limit: int = 100,
@@ -360,6 +381,7 @@ def get_leaderboard(
         items.append({
             "rank": rank_position,
             "display_name": get_leaderboard_display_name(user, settings, telegram_id, viewer_is_admin=viewer_is_admin),
+            "badge": get_leaderboard_badge(db, user),
             "xp": int(item["total_xp"] or 0),
             "is_current_user": is_current_user,
         })
@@ -375,6 +397,7 @@ def get_leaderboard(
                 viewer_telegram_id,
                 viewer_is_admin=viewer_is_admin,
             ),
+            "badge": get_leaderboard_badge(db, viewer_user),
             "xp": get_total_xp(
                 db,
                 user_id=viewer_user.id if viewer_user else None,
