@@ -1,18 +1,21 @@
-#screen-mocks.admin-gamification-host {
-  width: 100%;
-  max-width: none;
-  height: auto;
-  min-height: 100%;
-  align-items: stretch;
-  text-align: left;
+#screen-mocks.container.admin-gamification-host {
+  width: 100% !important;
+  max-width: none !important;
+  height: auto !important;
+  min-height: 100% !important;
+  align-items: stretch !important;
+  text-align: left !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 .admin-gamification-page {
-  width: min(1180px, calc(100vw - 64px));
+  width: min(1180px, calc(100vw - 96px));
   max-width: none;
   margin: 0 auto;
-  padding: 24px;
+  padding: 64px 0 40px;
   color: #17212b;
+  box-sizing: border-box;
 }
 
 .admin-gamification-head,
@@ -28,6 +31,7 @@
   align-items: flex-start;
   justify-content: space-between;
   margin-bottom: 18px;
+  width: 100%;
 }
 
 .admin-gamification-head h2,
@@ -45,6 +49,9 @@
 .admin-gamification-head button,
 .admin-gamification-tabs button,
 .admin-gamification-card button {
+  width: auto;
+  min-width: 0;
+  margin: 0;
   border: 0;
   border-radius: 14px;
   padding: 12px 16px;
@@ -56,6 +63,12 @@
 
 .admin-gamification-tabs {
   margin-bottom: 16px;
+  width: 100%;
+}
+
+.admin-gamification-tabs button {
+  flex: 1 1 0;
+  min-height: 54px;
 }
 
 .admin-gamification-tabs button.active {
@@ -67,6 +80,7 @@
   align-items: flex-start;
   display: grid;
   grid-template-columns: minmax(360px, 420px) minmax(0, 1fr);
+  width: 100%;
 }
 
 .admin-gamification-layout > div {
@@ -134,13 +148,20 @@
 
 .admin-gamification-row {
   align-items: center;
+  display: grid;
+  grid-template-columns: 42px minmax(160px, 1fr) 104px 116px;
   padding: 12px 0;
   border-bottom: 1px solid #edf2f7;
 }
 
 .admin-gamification-row span:nth-child(2),
 .admin-gamification-row > span:first-child:not(.admin-gamification-icon) {
-  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.admin-gamification-row button {
+  min-height: 40px;
+  padding: 9px 14px;
 }
 
 .admin-gamification-row strong,
@@ -211,5 +232,14 @@
   .admin-gamification-two {
     display: flex;
     flex-direction: column;
+  }
+
+  .admin-gamification-row {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr);
+  }
+
+  .admin-gamification-row button {
+    grid-column: span 1;
   }
 }
