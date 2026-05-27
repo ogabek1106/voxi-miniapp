@@ -2,6 +2,8 @@ window.VoxiFeedbackState = window.VoxiFeedbackState || {};
 
 (function () {
   const prefix = "voxi:feedback:";
+  const SKIPPED_REPEAT_AFTER = 5;
+  const SUBMITTED_REPEAT_AFTER = 15;
 
   function normalize(value) {
     return String(value ?? "")
@@ -28,9 +30,17 @@ window.VoxiFeedbackState = window.VoxiFeedbackState || {};
   VoxiFeedbackState.storageKey = function (options = {}) {
     const identity = VoxiFeedbackState.identity();
     const feature = normalize(options.featureType || "unknown");
-    const context = normalize(options.contextKey || options.contextLabel || "general");
+    const context = normalize(VoxiFeedbackState.pathKey(options));
     return `${prefix}${identity.local_key}:${feature}:${context}`;
   };
+
+  VoxiFeedbackState.pathKey = function (options = {}) {
+    return options.feedbackPath || options.contextLabel || options.contextKey || "general";
+  };
+
+  function normalizeStatus(value) {
+    return value === "skipped" ? "skipped" : (value === "submitted" ? "submitted" : null);
+  }
 
   function readRecord(key) {
     try {
@@ -38,8 +48,10 @@ window.VoxiFeedbackState = window.VoxiFeedbackState || {};
       if (!raw) return { handled: false, since: 0, round: 0 };
       if (raw === "1") return { handled: true, since: 0, round: 0 };
       const parsed = JSON.parse(raw);
+      const status = normalizeStatus(parsed?.status) || (parsed?.handled ? "submitted" : null);
       return {
-        handled: Boolean(parsed?.handled),
+        handled: Boolean(parsed?.handled || status),
+        status,
         since: Math.max(0, Number(parsed?.since || 0)),
         round: Math.max(0, Number(parsed?.round || 0)),
       };
@@ -52,6 +64,7 @@ window.VoxiFeedbackState = window.VoxiFeedbackState || {};
     try {
       localStorage.setItem(key, JSON.stringify({
         handled: Boolean(record.handled),
+        status: normalizeStatus(record.status),
         since: Math.max(0, Number(record.since || 0)),
         round: Math.max(0, Number(record.round || 0)),
       }));
@@ -63,7 +76,7 @@ window.VoxiFeedbackState = window.VoxiFeedbackState || {};
   VoxiFeedbackState.prepareRequest = function (options = {}) {
     const key = VoxiFeedbackState.storageKey(options);
     const record = readRecord(key);
-    const repeatAfter = Math.max(1, Number(options.repeatAfter || 10));
+    const repeatAfter = record.status === "skipped" ? SKIPPED_REPEAT_AFTER : SUBMITTED_REPEAT_AFTER;
 
     if (!record.handled) {
       return {
@@ -102,7 +115,12 @@ window.VoxiFeedbackState = window.VoxiFeedbackState || {};
   VoxiFeedbackState.markHandled = function (options = {}) {
     const key = options._feedbackStorageKey || VoxiFeedbackState.storageKey(options);
     const record = readRecord(key);
-    writeRecord(key, { handled: true, since: 0, round: record.round || 0 });
+    writeRecord(key, {
+      handled: true,
+      status: normalizeStatus(options.feedbackStatus) || "submitted",
+      since: 0,
+      round: record.round || 0,
+    });
   };
 
   VoxiFeedbackState.normalizeFeature = normalize;

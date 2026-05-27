@@ -23,7 +23,7 @@ window.VoxiFeedback = window.VoxiFeedback || {};
   }
 
   async function submit(options, response) {
-    VoxiFeedbackState.markHandled(options);
+    VoxiFeedbackState.markHandled({ ...options, feedbackStatus: response.status || "submitted" });
     try {
       await VoxiFeedbackApi.submit(payloadFor(options, response));
     } catch (error) {
