@@ -49,8 +49,7 @@ window.AdminGamificationLoader = window.AdminGamificationLoader || {};
       if (!file) return;
       try {
         const data = await AdminGamificationApi.uploadIcon(file);
-        const input = document.getElementById("gamification-badge-icon");
-        if (input) input.value = data?.url || "";
+        AdminGamificationUI.setIconPreview(data?.url || "");
       } catch (error) {
         console.error("Badge icon upload failed:", error);
         alert("Upload PNG/WebP up to 5MB.");

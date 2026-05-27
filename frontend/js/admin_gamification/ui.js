@@ -24,11 +24,20 @@ window.AdminGamificationUI = window.AdminGamificationUI || {};
     return document.getElementById("screen-mocks");
   }
 
+  function assetUrl(url) {
+    const value = String(url || "").trim();
+    if (!value) return "";
+    if (/^https?:\/\//i.test(value)) return value;
+    if (value.startsWith("/media/") && window.apiUrl) return window.apiUrl(value);
+    return value;
+  }
+
   function option(value, label, selected) {
     return `<option value="${escapeHtml(value ?? "")}" ${String(value ?? "") === String(selected ?? "") ? "selected" : ""}>${escapeHtml(label)}</option>`;
   }
 
   function badgeForm(editing = null) {
+    const iconUrl = assetUrl(editing?.icon_url);
     return `
       <form class="admin-gamification-card" id="admin-gamification-badge-form">
         <h3>${editing ? "Edit badge" : "Create badge"}</h3>
@@ -49,6 +58,9 @@ window.AdminGamificationUI = window.AdminGamificationUI || {};
         <label>Icon URL <input id="gamification-badge-icon" value="${escapeHtml(editing?.icon_url || "")}"></label>
         <div class="admin-gamification-upload">
           <small>PNG/WebP icons are automatically fitted to 512x512. Transparent background recommended, max 5MB.</small>
+          <div class="admin-gamification-icon-preview" id="gamification-badge-preview">
+            ${iconUrl ? `<img src="${escapeHtml(iconUrl)}" alt="">` : `<span>No icon uploaded</span>`}
+          </div>
           <input id="gamification-badge-upload" type="file" accept="image/png,image/webp">
         </div>
         <label class="admin-gamification-check">Active <input id="gamification-badge-active" type="checkbox" ${editing?.is_active === false ? "" : "checked"}></label>
@@ -86,21 +98,24 @@ window.AdminGamificationUI = window.AdminGamificationUI || {};
 
   function badgeList(badges) {
     if (!badges.length) return `<div class="admin-gamification-empty">No badges yet.</div>`;
-    return badges.map((badge) => `
-      <div class="admin-gamification-row">
-        <span class="admin-gamification-icon">${badge.icon_url ? `<img src="${escapeHtml(badge.icon_url)}" alt="">` : "🏅"}</span>
-        <span><strong>${escapeHtml(badge.name)}</strong><small>${escapeHtml(badge.code)} · ${escapeHtml(badge.unlock_condition_type)} ${badge.unlock_condition_value ?? ""}</small></span>
-        <button type="button" data-edit-badge="${Number(badge.id)}">Edit</button>
-        <button type="button" data-delete-badge="${Number(badge.id)}">Disable</button>
-      </div>
-    `).join("");
+    return badges.map((badge) => {
+      const iconUrl = assetUrl(badge.icon_url);
+      return `
+        <div class="admin-gamification-row">
+          <span class="admin-gamification-icon">${iconUrl ? `<img src="${escapeHtml(iconUrl)}" alt="">` : ""}</span>
+          <span><strong>${escapeHtml(badge.name)}</strong><small>${escapeHtml(badge.code)} - ${escapeHtml(badge.unlock_condition_type)} ${badge.unlock_condition_value ?? ""}</small></span>
+          <button type="button" data-edit-badge="${Number(badge.id)}">Edit</button>
+          <button type="button" data-delete-badge="${Number(badge.id)}">Disable</button>
+        </div>
+      `;
+    }).join("");
   }
 
   function rewardList(rewards) {
     if (!rewards.length) return `<div class="admin-gamification-empty">No monthly rewards yet.</div>`;
     return rewards.map((reward) => `
       <div class="admin-gamification-row">
-        <span><strong>${escapeHtml(reward.name)}</strong><small>${reward.month_length || "All"} months · day ${Number(reward.milestone_day)} · ${escapeHtml(reward.reward_type)}</small></span>
+        <span><strong>${escapeHtml(reward.name)}</strong><small>${reward.month_length || "All"} months - day ${Number(reward.milestone_day)} - ${escapeHtml(reward.reward_type)}</small></span>
         <button type="button" data-edit-reward="${Number(reward.id)}">Edit</button>
         <button type="button" data-delete-reward="${Number(reward.id)}">Disable</button>
       </div>
@@ -115,6 +130,7 @@ window.AdminGamificationUI = window.AdminGamificationUI || {};
     if (!host) return;
     const tab = state.tab || "badges";
     host.style.display = "block";
+    host.classList.add("admin-gamification-host");
     host.innerHTML = `
       <div class="admin-gamification-page">
         <div class="admin-gamification-head">
@@ -137,6 +153,16 @@ window.AdminGamificationUI = window.AdminGamificationUI || {};
         </div>
       </div>
     `;
+  };
+
+  AdminGamificationUI.setIconPreview = function (url) {
+    const input = document.getElementById("gamification-badge-icon");
+    const preview = document.getElementById("gamification-badge-preview");
+    if (input) input.value = url || "";
+    if (preview) {
+      const finalUrl = assetUrl(url);
+      preview.innerHTML = finalUrl ? `<img src="${escapeHtml(finalUrl)}" alt="">` : `<span>No icon uploaded</span>`;
+    }
   };
 
   AdminGamificationUI.collectBadge = function () {

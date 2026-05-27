@@ -18,17 +18,25 @@ window.GamificationUI = window.GamificationUI || {};
     return date.toLocaleString("en", { month: "long" });
   }
 
+  function assetUrl(url) {
+    const value = String(url || "").trim();
+    if (!value) return "";
+    if (/^https?:\/\//i.test(value)) return value;
+    if (value.startsWith("/media/") && window.apiUrl) return window.apiUrl(value);
+    return value;
+  }
+
   function iconMarkup(badge) {
-    const url = String(badge?.icon_url || "").trim();
+    const url = assetUrl(badge?.icon_url);
     if (url) return `<img src="${escapeHtml(url)}" alt="">`;
-    return `<span aria-hidden="true">F</span>`;
+    return "";
   }
 
   function streakIconMarkup(data) {
     const badge = data?.current_badge;
-    const url = String(badge?.icon_url || "").trim();
+    const url = assetUrl(badge?.icon_url);
     if (url) return `<img src="${escapeHtml(url)}" alt="" aria-hidden="true">`;
-    return `<span aria-hidden="true">F</span>`;
+    return "";
   }
 
   GamificationUI.load = async function () {

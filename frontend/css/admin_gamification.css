@@ -1,5 +1,15 @@
+#screen-mocks.admin-gamification-host {
+  width: 100%;
+  max-width: none;
+  height: auto;
+  min-height: 100%;
+  align-items: stretch;
+  text-align: left;
+}
+
 .admin-gamification-page {
-  max-width: 1180px;
+  width: min(1180px, calc(100vw - 64px));
+  max-width: none;
   margin: 0 auto;
   padding: 24px;
   color: #17212b;
@@ -55,10 +65,11 @@
 
 .admin-gamification-layout {
   align-items: flex-start;
+  display: grid;
+  grid-template-columns: minmax(360px, 420px) minmax(0, 1fr);
 }
 
 .admin-gamification-layout > div {
-  flex: 1 1 0;
   min-width: 0;
 }
 
@@ -147,7 +158,7 @@
   width: 42px;
   height: 42px;
   border-radius: 14px;
-  background: #eaf7ff;
+  background: #f5f9fc;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -168,9 +179,37 @@
   font-weight: 900;
 }
 
+.admin-gamification-icon-preview {
+  width: 84px;
+  height: 84px;
+  margin-top: 10px;
+  border-radius: 18px;
+  background: #f5f9fc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: #607080;
+  font-size: 12px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.admin-gamification-icon-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 @media (max-width: 760px) {
+  .admin-gamification-page {
+    width: min(100%, calc(100vw - 28px));
+    padding: 16px 0;
+  }
+
   .admin-gamification-layout,
   .admin-gamification-two {
+    display: flex;
     flex-direction: column;
   }
 }
