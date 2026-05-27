@@ -1,21 +1,38 @@
 .website-profile-title-group .website-profile-badge-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 8px;
-  padding: 6px 12px;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px;
+  margin-top: 0 !important;
+  padding: 0 !important;
   border-radius: 999px;
-  background: #eaf7ff;
-  color: #00a6e6;
-  font-size: 13px;
+  color: #00a6e6 !important;
+  background: transparent !important;
+  font-size: 16px !important;
   font-weight: 900;
 }
 
 .website-profile-title-group .website-profile-badge-pill img {
-  width: 20px;
-  height: 20px;
-  border-radius: 7px;
-  object-fit: cover;
+  width: 24px;
+  height: 24px;
+  border-radius: 0;
+  object-fit: contain;
+}
+
+.website-profile-title-group .website-profile-badge-pill > span {
+  min-width: 24px;
+  color: #f26f32;
+  text-align: center;
+}
+
+.website-profile-head {
+  align-items: start !important;
+}
+
+.website-profile-title-group {
+  min-height: 74px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
 }
 
 .website-profile-streak {
@@ -50,10 +67,19 @@
   align-items: center;
   justify-content: center;
   font-size: 24px;
+  color: #f26f32;
+  font-weight: 950;
 }
 
 .website-profile-streak.is-danger .website-profile-streak-icon {
   background: #ffe6e6;
+}
+
+.website-profile-streak-icon img {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  display: block;
 }
 
 .website-profile-streak-main strong {
@@ -96,10 +122,12 @@
   font-weight: 900;
 }
 
+.website-profile-action-chevron,
 .website-profile-streak-chevron {
-  color: #8da0b3;
-  font-size: 30px;
+  color: #17212b;
+  font-size: 20px;
   font-weight: 900;
+  line-height: 1;
 }
 
 .website-profile-button.has-gamification-danger {
@@ -234,8 +262,20 @@
 }
 
 .gamification-day small {
-  font-size: 13px;
   line-height: 1;
+}
+
+.gamification-reward-marker {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #f6b93b;
+  box-shadow: 0 0 0 4px rgba(246, 185, 59, 0.14);
+}
+
+.gamification-reward-marker.is-claimed {
+  background: #19a463;
+  box-shadow: 0 0 0 4px rgba(25, 164, 99, 0.13);
 }
 
 .gamification-reward-detail {
@@ -246,8 +286,7 @@
 }
 
 .gamification-reward-detail strong,
-.gamification-reward-detail span,
-.gamification-reward-detail em {
+.gamification-reward-detail span {
   display: block;
 }
 
@@ -257,20 +296,32 @@
   font-weight: 950;
 }
 
-.gamification-reward-detail span,
-.gamification-reward-detail em {
+.gamification-reward-detail span {
   margin-top: 5px;
   color: #607080;
   font-weight: 850;
   font-style: normal;
 }
 
-.gamification-reward-detail pre {
-  margin: 12px 0;
-  white-space: pre-wrap;
-  word-break: break-word;
-  color: #475569;
-  font-size: 12px;
+.gamification-reward-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.gamification-reward-items em,
+.gamification-claimed-label {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: #eaf7ff;
+  color: #1789c5;
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 900;
 }
 
 .gamification-reward-detail button {

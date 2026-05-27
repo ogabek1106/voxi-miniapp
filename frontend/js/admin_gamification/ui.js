@@ -48,7 +48,7 @@ window.AdminGamificationUI = window.AdminGamificationUI || {};
         <label>Condition value <input id="gamification-badge-value" type="number" value="${editing?.unlock_condition_value ?? ""}"></label>
         <label>Icon URL <input id="gamification-badge-icon" value="${escapeHtml(editing?.icon_url || "")}"></label>
         <div class="admin-gamification-upload">
-          <small>Recommended: 512x512 PNG/WebP, transparent background, max 1MB</small>
+          <small>PNG/WebP icons are automatically fitted to 512x512. Transparent background recommended, max 5MB.</small>
           <input id="gamification-badge-upload" type="file" accept="image/png,image/webp">
         </div>
         <label class="admin-gamification-check">Active <input id="gamification-badge-active" type="checkbox" ${editing?.is_active === false ? "" : "checked"}></label>

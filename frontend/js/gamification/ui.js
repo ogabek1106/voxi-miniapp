@@ -21,7 +21,14 @@ window.GamificationUI = window.GamificationUI || {};
   function iconMarkup(badge) {
     const url = String(badge?.icon_url || "").trim();
     if (url) return `<img src="${escapeHtml(url)}" alt="">`;
-    return `<span aria-hidden="true">🔥</span>`;
+    return `<span aria-hidden="true">F</span>`;
+  }
+
+  function streakIconMarkup(data) {
+    const badge = data?.current_badge;
+    const url = String(badge?.icon_url || "").trim();
+    if (url) return `<img src="${escapeHtml(url)}" alt="" aria-hidden="true">`;
+    return `<span aria-hidden="true">F</span>`;
   }
 
   GamificationUI.load = async function () {
@@ -43,7 +50,7 @@ window.GamificationUI = window.GamificationUI || {};
   GamificationUI.renderBadgePill = function (data) {
     const badge = data?.current_badge;
     if (!badge) {
-      return `<span class="website-profile-badge-pill"><span aria-hidden="true">✨</span> New learner</span>`;
+      return `<span class="website-profile-badge-pill"><span aria-hidden="true">New</span> New learner</span>`;
     }
     return `
       <span class="website-profile-badge-pill">
@@ -63,7 +70,7 @@ window.GamificationUI = window.GamificationUI || {};
     const next = monthly.next_reward;
     return `
       <button class="website-profile-streak ${danger ? "is-danger" : ""}" type="button" data-gamification-calendar="1">
-        <span class="website-profile-streak-icon" aria-hidden="true">🔥</span>
+        <span class="website-profile-streak-icon">${streakIconMarkup(data)}</span>
         <span class="website-profile-streak-main">
           <strong>Monthly Streak</strong>
           <small>${completed} / ${length} days secured</small>
@@ -73,7 +80,7 @@ window.GamificationUI = window.GamificationUI || {};
             ${next ? `<span>Next day ${Number(next.milestone_day || 0)}</span>` : ""}
           </span>
         </span>
-        <span class="website-profile-streak-chevron" aria-hidden="true">›</span>
+        <span class="website-profile-action-chevron" aria-hidden="true">&rsaquo;</span>
       </button>
     `;
   };
@@ -106,23 +113,42 @@ window.GamificationUI = window.GamificationUI || {};
       cells.push(`
         <button class="${classes}" type="button" data-reward-day="${day}" ${reward ? "" : "disabled"}>
           <span>${day}</span>
-          ${reward ? `<small>${reward.claimed ? "✓" : "🎁"}</small>` : ""}
+          ${reward ? `<small class="gamification-reward-marker ${reward.claimed ? "is-claimed" : ""}" aria-hidden="true"></small>` : ""}
         </button>
       `);
     }
     return cells.join("");
   }
 
+  function rewardItems(payload = {}, rewardType = "") {
+    const items = [];
+    if (payload.xp) items.push(`${Number(payload.xp)} XP`);
+    if (payload.xp_boost_percent) {
+      const hours = payload.xp_boost_hours ? ` for ${Number(payload.xp_boost_hours)}h` : "";
+      items.push(`${Number(payload.xp_boost_percent)}% XP boost${hours}`);
+    }
+    if (payload.vcoins) items.push(`${Number(payload.vcoins)} V-Coins`);
+    if (payload.freeze_cards) items.push(`${Number(payload.freeze_cards)} freeze card${Number(payload.freeze_cards) === 1 ? "" : "s"}`);
+    if (payload.free_block) items.push(`Free ${String(payload.free_block).replace(/_/g, " ")}`);
+    if (payload.badge_code) items.push(`Badge: ${String(payload.badge_code).replace(/_/g, " ")}`);
+    if (payload.vcoin_coupon_percent) items.push(`${Number(payload.vcoin_coupon_percent)}% V-Coin coupon`);
+    if (!items.length && rewardType) items.push(String(rewardType).replace(/_/g, " "));
+    return items;
+  }
+
   function renderRewardDetail(reward) {
-    if (!reward) return `<div class="gamification-reward-detail">Tap a gift day to see reward details.</div>`;
+    if (!reward) return `<div class="gamification-reward-detail">Tap a reward day to see reward details.</div>`;
     const payload = reward.reward_payload || {};
+    const items = rewardItems(payload, reward.reward_type);
     return `
       <div class="gamification-reward-detail">
         <strong>${escapeHtml(reward.name || "Reward")}</strong>
-        <span>${escapeHtml(reward.reward_type || "reward")}</span>
-        <pre>${escapeHtml(JSON.stringify(payload, null, 2))}</pre>
+        <span>Day ${Number(reward.milestone_day || 0)} reward</span>
+        <div class="gamification-reward-items">
+          ${items.map((item) => `<em>${escapeHtml(item)}</em>`).join("")}
+        </div>
         ${reward.claimable ? `<button type="button" data-claim-reward="${Number(reward.milestone_day)}">Claim</button>` : ""}
-        ${reward.claimed ? `<em>Claimed</em>` : ""}
+        ${reward.claimed ? `<em class="gamification-claimed-label">Claimed</em>` : ""}
       </div>
     `;
   }

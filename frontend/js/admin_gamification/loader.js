@@ -53,7 +53,7 @@ window.AdminGamificationLoader = window.AdminGamificationLoader || {};
         if (input) input.value = data?.url || "";
       } catch (error) {
         console.error("Badge icon upload failed:", error);
-        alert("Upload PNG/WebP up to 1MB.");
+        alert("Upload PNG/WebP up to 5MB.");
       }
     });
 

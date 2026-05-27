@@ -1,7 +1,9 @@
 from uuid import uuid4
 import os
+from io import BytesIO
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from PIL import Image, ImageOps
 from sqlalchemy.orm import Session
 
 from app.config import ADMIN_IDS
@@ -14,6 +16,8 @@ from app.services import gamification_service as service
 router = APIRouter(prefix="/admin/gamification", tags=["admin-gamification"])
 UPLOAD_DIR = "/data/media"
 ALLOWED_ICON_TYPES = {"image/png", "image/webp"}
+MAX_ICON_BYTES = 5 * 1024 * 1024
+ICON_SIZE = 512
 
 
 def require_admin(telegram_id: int):
@@ -109,13 +113,24 @@ async def upload_badge_icon(telegram_id: int, file: UploadFile = File(...)):
     if content_type not in ALLOWED_ICON_TYPES:
         raise HTTPException(status_code=400, detail="png_or_webp_required")
     content = await file.read()
-    if len(content) > 1024 * 1024:
+    if len(content) > MAX_ICON_BYTES:
         raise HTTPException(status_code=400, detail="file_too_large")
     ext = "webp" if content_type == "image/webp" else "png"
     os.makedirs(UPLOAD_DIR, exist_ok=True)
     filename = f"badge-{uuid4()}.{ext}"
-    with open(os.path.join(UPLOAD_DIR, filename), "wb") as handle:
-        handle.write(content)
+    try:
+        source = Image.open(BytesIO(content)).convert("RGBA")
+        source = ImageOps.contain(source, (ICON_SIZE, ICON_SIZE), method=Image.Resampling.LANCZOS)
+        canvas = Image.new("RGBA", (ICON_SIZE, ICON_SIZE), (255, 255, 255, 0))
+        offset = ((ICON_SIZE - source.width) // 2, (ICON_SIZE - source.height) // 2)
+        canvas.alpha_composite(source, offset)
+        save_path = os.path.join(UPLOAD_DIR, filename)
+        if ext == "webp":
+            canvas.save(save_path, format="WEBP", lossless=True, quality=95)
+        else:
+            canvas.save(save_path, format="PNG", optimize=True)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail="invalid_icon_image") from exc
     return {"ok": True, "url": f"/media/{filename}"}
 
 
@@ -160,4 +175,3 @@ def deactivate_monthly_reward(reward_id: int, telegram_id: int, db: Session = De
     db.add(row)
     db.commit()
     return {"ok": True}
-

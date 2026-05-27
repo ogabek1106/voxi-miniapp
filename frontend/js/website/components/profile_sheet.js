@@ -58,6 +58,8 @@ window.WebsiteProfileSheet = window.WebsiteProfileSheet || {};
           <div>Last score <strong>${lastScore}</strong></div>
         </div>
 
+        ${window.GamificationUI?.renderStreakCard?.(gamification) || ""}
+
         <button class="website-profile-wallet" data-vcoin-open="1">
           <span class="website-profile-wallet-icon">
             <img class="vcoin-icon" src="./assets/vcoin.png" alt="" aria-hidden="true">
@@ -68,8 +70,6 @@ window.WebsiteProfileSheet = window.WebsiteProfileSheet || {};
           </span>
           <span aria-hidden="true">›</span>
         </button>
-
-        ${window.GamificationUI?.renderStreakCard?.(gamification) || ""}
 
         <button class="website-profile-edit" id="website-profile-edit">Edit profile</button>
         <button class="website-profile-logout" id="website-profile-logout">Log out</button>
