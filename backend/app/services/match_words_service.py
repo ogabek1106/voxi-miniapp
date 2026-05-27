@@ -263,6 +263,10 @@ def finish_session(db: Session, session_id: int, payload) -> MatchWordsSession:
     db.refresh(session)
 
     earned = _award_match_words_xp(db, session, level_counts)
+    from app.services import gamification_service
+
+    gamification_service.record_activity_from_xp(db, session.user_id, session.telegram_id, "match_words", 0)
+    db.commit()
     if earned:
         session.xp_earned = int(session.xp_earned or 0) + earned
         db.add(session)

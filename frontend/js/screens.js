@@ -531,6 +531,7 @@ window.showAdminPanel = function () {
     <button onclick="showAdminWordShuffleStats()">Word Shuffle Stats</button>
     <button onclick="showAdminMatchWords()">Match Words</button>
     <button onclick="loadMatchWordsAdminAssets().then(() => showAdminMatchWordsStats())">Match Words Stats</button>
+    <button onclick="showAdminGamification()">Gamification</button>
     <button onclick="showAdminFeedbackRatings()">Feedback Ratings</button>
     <button onclick="showAdminVCoinPayments()">V-Coin Payments</button>
     <button onclick="showAdminPremiereSubscriptions()">Premiere Subscriptions</button>

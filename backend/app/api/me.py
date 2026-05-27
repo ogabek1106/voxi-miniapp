@@ -6,6 +6,7 @@ from app.deps import get_db
 from app.models import User, ReadingProgress, ReadingTest
 from app.config import ADMIN_IDS
 from app.api.mock_tests import _auto_submitted_at, _award_reading_xp, _finalize_progress, _is_time_up, _query_questions_for_test, _utcnow
+from app.services import gamification_service
 
 router = APIRouter()
 
@@ -74,12 +75,15 @@ def get_me(telegram_id: int, db: Session = Depends(get_db)):
             "score": score,
             "band": last.band_score
         }
+    gamification = gamification_service.build_user_gamification_payload(db, user.id)
+    db.commit()
     return {
         "name": user.name,
         "surname": user.surname,
         "v_coins": int(user.v_coins or 0),
         "is_admin": user.telegram_id in ADMIN_IDS,
-        "last_activity": last_activity
+        "last_activity": last_activity,
+        "gamification": gamification,
     }
 
 

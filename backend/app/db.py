@@ -20,6 +20,135 @@ SessionLocal = sessionmaker(
 Base = declarative_base()
 
 
+def ensure_gamification_schema():
+    with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS badges ("
+            "id SERIAL PRIMARY KEY, "
+            "code VARCHAR NOT NULL UNIQUE, "
+            "name VARCHAR NOT NULL, "
+            "description TEXT NULL, "
+            "type VARCHAR NOT NULL, "
+            "icon_url VARCHAR NULL, "
+            "unlock_condition_type VARCHAR NOT NULL, "
+            "unlock_condition_value INTEGER NULL, "
+            "is_active BOOLEAN NOT NULL DEFAULT TRUE, "
+            "sort_order INTEGER NOT NULL DEFAULT 0, "
+            "created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), "
+            "updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()"
+            ");"
+        ))
+        conn.execute(text("ALTER TABLE badges ADD COLUMN IF NOT EXISTS code VARCHAR;"))
+        conn.execute(text("ALTER TABLE badges ADD COLUMN IF NOT EXISTS name VARCHAR;"))
+        conn.execute(text("ALTER TABLE badges ADD COLUMN IF NOT EXISTS description TEXT;"))
+        conn.execute(text("ALTER TABLE badges ADD COLUMN IF NOT EXISTS type VARCHAR;"))
+        conn.execute(text("ALTER TABLE badges ADD COLUMN IF NOT EXISTS icon_url VARCHAR;"))
+        conn.execute(text("ALTER TABLE badges ADD COLUMN IF NOT EXISTS unlock_condition_type VARCHAR;"))
+        conn.execute(text("ALTER TABLE badges ADD COLUMN IF NOT EXISTS unlock_condition_value INTEGER;"))
+        conn.execute(text("ALTER TABLE badges ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT TRUE;"))
+        conn.execute(text("ALTER TABLE badges ADD COLUMN IF NOT EXISTS sort_order INTEGER NOT NULL DEFAULT 0;"))
+        conn.execute(text("ALTER TABLE badges ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text("ALTER TABLE badges ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS user_badges ("
+            "id SERIAL PRIMARY KEY, "
+            "user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, "
+            "badge_id INTEGER NOT NULL REFERENCES badges(id) ON DELETE CASCADE, "
+            "unlocked_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), "
+            "is_featured BOOLEAN NOT NULL DEFAULT FALSE, "
+            "UNIQUE(user_id, badge_id)"
+            ");"
+        ))
+        conn.execute(text("ALTER TABLE user_badges ADD COLUMN IF NOT EXISTS user_id INTEGER;"))
+        conn.execute(text("ALTER TABLE user_badges ADD COLUMN IF NOT EXISTS badge_id INTEGER;"))
+        conn.execute(text("ALTER TABLE user_badges ADD COLUMN IF NOT EXISTS unlocked_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text("ALTER TABLE user_badges ADD COLUMN IF NOT EXISTS is_featured BOOLEAN NOT NULL DEFAULT FALSE;"))
+
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS monthly_reward_rules ("
+            "id SERIAL PRIMARY KEY, "
+            "name VARCHAR NOT NULL, "
+            "month_length INTEGER NULL, "
+            "milestone_day INTEGER NOT NULL, "
+            "reward_type VARCHAR NOT NULL, "
+            "reward_payload JSONB NULL, "
+            "chest_type VARCHAR NULL, "
+            "is_active BOOLEAN NOT NULL DEFAULT TRUE, "
+            "sort_order INTEGER NOT NULL DEFAULT 0, "
+            "created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), "
+            "updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()"
+            ");"
+        ))
+        conn.execute(text("ALTER TABLE monthly_reward_rules ADD COLUMN IF NOT EXISTS name VARCHAR;"))
+        conn.execute(text("ALTER TABLE monthly_reward_rules ADD COLUMN IF NOT EXISTS month_length INTEGER;"))
+        conn.execute(text("ALTER TABLE monthly_reward_rules ADD COLUMN IF NOT EXISTS milestone_day INTEGER;"))
+        conn.execute(text("ALTER TABLE monthly_reward_rules ADD COLUMN IF NOT EXISTS reward_type VARCHAR;"))
+        conn.execute(text("ALTER TABLE monthly_reward_rules ADD COLUMN IF NOT EXISTS reward_payload JSONB;"))
+        conn.execute(text("ALTER TABLE monthly_reward_rules ADD COLUMN IF NOT EXISTS chest_type VARCHAR;"))
+        conn.execute(text("ALTER TABLE monthly_reward_rules ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT TRUE;"))
+        conn.execute(text("ALTER TABLE monthly_reward_rules ADD COLUMN IF NOT EXISTS sort_order INTEGER NOT NULL DEFAULT 0;"))
+        conn.execute(text("ALTER TABLE monthly_reward_rules ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text("ALTER TABLE monthly_reward_rules ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS user_monthly_streaks ("
+            "id SERIAL PRIMARY KEY, "
+            "user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, "
+            "year INTEGER NOT NULL, "
+            "month INTEGER NOT NULL, "
+            "completed_days JSONB NULL, "
+            "claimed_milestones JSONB NULL, "
+            "last_secured_date DATE NULL, "
+            "perfect_month_completed BOOLEAN NOT NULL DEFAULT FALSE, "
+            "created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), "
+            "updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), "
+            "UNIQUE(user_id, year, month)"
+            ");"
+        ))
+        conn.execute(text("ALTER TABLE user_monthly_streaks ADD COLUMN IF NOT EXISTS user_id INTEGER;"))
+        conn.execute(text("ALTER TABLE user_monthly_streaks ADD COLUMN IF NOT EXISTS year INTEGER;"))
+        conn.execute(text("ALTER TABLE user_monthly_streaks ADD COLUMN IF NOT EXISTS month INTEGER;"))
+        conn.execute(text("ALTER TABLE user_monthly_streaks ADD COLUMN IF NOT EXISTS completed_days JSONB;"))
+        conn.execute(text("ALTER TABLE user_monthly_streaks ADD COLUMN IF NOT EXISTS claimed_milestones JSONB;"))
+        conn.execute(text("ALTER TABLE user_monthly_streaks ADD COLUMN IF NOT EXISTS last_secured_date DATE;"))
+        conn.execute(text("ALTER TABLE user_monthly_streaks ADD COLUMN IF NOT EXISTS perfect_month_completed BOOLEAN NOT NULL DEFAULT FALSE;"))
+        conn.execute(text("ALTER TABLE user_monthly_streaks ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text("ALTER TABLE user_monthly_streaks ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS user_gamification_stats ("
+            "id SERIAL PRIMARY KEY, "
+            "user_id INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE, "
+            "total_xp INTEGER NOT NULL DEFAULT 0, "
+            "current_streak_days INTEGER NOT NULL DEFAULT 0, "
+            "longest_streak_days INTEGER NOT NULL DEFAULT 0, "
+            "freeze_cards INTEGER NOT NULL DEFAULT 0, "
+            "vocabulary_activities_completed INTEGER NOT NULL DEFAULT 0, "
+            "listening_tasks_completed INTEGER NOT NULL DEFAULT 0, "
+            "shadow_writings_completed INTEGER NOT NULL DEFAULT 0, "
+            "created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), "
+            "updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()"
+            ");"
+        ))
+        conn.execute(text("ALTER TABLE user_gamification_stats ADD COLUMN IF NOT EXISTS user_id INTEGER;"))
+        conn.execute(text("ALTER TABLE user_gamification_stats ADD COLUMN IF NOT EXISTS total_xp INTEGER NOT NULL DEFAULT 0;"))
+        conn.execute(text("ALTER TABLE user_gamification_stats ADD COLUMN IF NOT EXISTS current_streak_days INTEGER NOT NULL DEFAULT 0;"))
+        conn.execute(text("ALTER TABLE user_gamification_stats ADD COLUMN IF NOT EXISTS longest_streak_days INTEGER NOT NULL DEFAULT 0;"))
+        conn.execute(text("ALTER TABLE user_gamification_stats ADD COLUMN IF NOT EXISTS freeze_cards INTEGER NOT NULL DEFAULT 0;"))
+        conn.execute(text("ALTER TABLE user_gamification_stats ADD COLUMN IF NOT EXISTS vocabulary_activities_completed INTEGER NOT NULL DEFAULT 0;"))
+        conn.execute(text("ALTER TABLE user_gamification_stats ADD COLUMN IF NOT EXISTS listening_tasks_completed INTEGER NOT NULL DEFAULT 0;"))
+        conn.execute(text("ALTER TABLE user_gamification_stats ADD COLUMN IF NOT EXISTS shadow_writings_completed INTEGER NOT NULL DEFAULT 0;"))
+        conn.execute(text("ALTER TABLE user_gamification_stats ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text("ALTER TABLE user_gamification_stats ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+
+        conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uq_badges_code ON badges (code);"))
+        conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uq_user_badges_user_badge ON user_badges (user_id, badge_id);"))
+        conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uq_user_monthly_streak ON user_monthly_streaks (user_id, year, month);"))
+        conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uq_user_gamification_stats_user ON user_gamification_stats (user_id);"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_monthly_reward_rules_lookup ON monthly_reward_rules (is_active, month_length, milestone_day);"))
+
+
 def ensure_xp_schema():
     with engine.connect() as conn:
         conn.execute(text(

@@ -31,6 +31,7 @@ window.WebsiteProfileSheet = window.WebsiteProfileSheet || {};
     const vCoins = window.SharedUser?.getBalance(me) || 0;
     const lastScore = escapeHtml(window.SharedUser?.getLastScore(me) || "-");
     const lastActivityHtml = window.ProfileUI?.renderLastActivity(me?.last_activity) || "";
+    const gamification = me?.gamification || null;
 
     return `
       <div class="website-profile-card" role="dialog" aria-modal="true" aria-label="Profile">
@@ -46,7 +47,7 @@ window.WebsiteProfileSheet = window.WebsiteProfileSheet || {};
           </div>
           <div class="website-profile-title-group">
             <h2>${fullName}</h2>
-            <span>Beginner</span>
+            ${window.GamificationUI?.renderBadgePill?.(gamification) || ""}
           </div>
           <button class="website-profile-close" data-profile-close="1" aria-label="Close profile">Close</button>
         </div>
@@ -67,6 +68,8 @@ window.WebsiteProfileSheet = window.WebsiteProfileSheet || {};
           </span>
           <span aria-hidden="true">›</span>
         </button>
+
+        ${window.GamificationUI?.renderStreakCard?.(gamification) || ""}
 
         <button class="website-profile-edit" id="website-profile-edit">Edit profile</button>
         <button class="website-profile-logout" id="website-profile-logout">Log out</button>
@@ -102,7 +105,13 @@ window.WebsiteProfileSheet = window.WebsiteProfileSheet || {};
 
     try {
       const me = window.WebsiteAuthState.getUser() || await window.SharedUser.loadMe();
+      try {
+        me.gamification = await window.GamificationUI?.load?.();
+      } catch (_error) {
+        me.gamification = null;
+      }
       backdrop.innerHTML = renderProfile(me || {});
+      window.GamificationUI?.bindProfile?.(backdrop, me?.gamification);
       document.getElementById("website-profile-logout")?.addEventListener("click", async () => {
         const button = document.getElementById("website-profile-logout");
         if (button) {

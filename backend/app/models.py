@@ -1,5 +1,5 @@
 # backend/app/models.py
-from sqlalchemy import Column, Integer, String, BigInteger, Text, ForeignKey, JSON, Enum, Boolean, Float
+from sqlalchemy import Column, Integer, String, BigInteger, Text, ForeignKey, JSON, Enum, Boolean, Float, UniqueConstraint
 from sqlalchemy.orm import relationship
 import enum
 from .db import Base
@@ -60,6 +60,82 @@ class XPVisibilitySettings(Base):
     public_anon_code = Column(String, nullable=True, index=True)
     show_full_name = Column(Boolean, nullable=False, default=False)
     show_full_username = Column(Boolean, nullable=False, default=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+
+class Badge(Base):
+    __tablename__ = "badges"
+
+    id = Column(Integer, primary_key=True, index=True)
+    code = Column(String, unique=True, nullable=False, index=True)
+    name = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+    type = Column(String, nullable=False)
+    icon_url = Column(String, nullable=True)
+    unlock_condition_type = Column(String, nullable=False)
+    unlock_condition_value = Column(Integer, nullable=True)
+    is_active = Column(Boolean, nullable=False, default=True)
+    sort_order = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+
+class UserBadge(Base):
+    __tablename__ = "user_badges"
+    __table_args__ = (UniqueConstraint("user_id", "badge_id", name="uq_user_badges_user_badge"),)
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    badge_id = Column(Integer, ForeignKey("badges.id", ondelete="CASCADE"), nullable=False, index=True)
+    unlocked_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    is_featured = Column(Boolean, nullable=False, default=False)
+
+
+class MonthlyRewardRule(Base):
+    __tablename__ = "monthly_reward_rules"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    month_length = Column(Integer, nullable=True, index=True)
+    milestone_day = Column(Integer, nullable=False, index=True)
+    reward_type = Column(String, nullable=False)
+    reward_payload = Column(JSON, nullable=True)
+    chest_type = Column(String, nullable=True)
+    is_active = Column(Boolean, nullable=False, default=True)
+    sort_order = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+
+class UserMonthlyStreak(Base):
+    __tablename__ = "user_monthly_streaks"
+    __table_args__ = (UniqueConstraint("user_id", "year", "month", name="uq_user_monthly_streak"),)
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    year = Column(Integer, nullable=False, index=True)
+    month = Column(Integer, nullable=False, index=True)
+    completed_days = Column(JSON, nullable=True)
+    claimed_milestones = Column(JSON, nullable=True)
+    last_secured_date = Column(Date, nullable=True)
+    perfect_month_completed = Column(Boolean, nullable=False, default=False)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+
+class UserGamificationStats(Base):
+    __tablename__ = "user_gamification_stats"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), unique=True, nullable=False, index=True)
+    total_xp = Column(Integer, nullable=False, default=0)
+    current_streak_days = Column(Integer, nullable=False, default=0)
+    longest_streak_days = Column(Integer, nullable=False, default=0)
+    freeze_cards = Column(Integer, nullable=False, default=0)
+    vocabulary_activities_completed = Column(Integer, nullable=False, default=0)
+    listening_tasks_completed = Column(Integer, nullable=False, default=0)
+    shadow_writings_completed = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 

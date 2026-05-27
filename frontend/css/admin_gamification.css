@@ -1,0 +1,176 @@
+.admin-gamification-page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 24px;
+  color: #17212b;
+}
+
+.admin-gamification-head,
+.admin-gamification-tabs,
+.admin-gamification-layout,
+.admin-gamification-row,
+.admin-gamification-two {
+  display: flex;
+  gap: 14px;
+}
+
+.admin-gamification-head {
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.admin-gamification-head h2,
+.admin-gamification-card h3 {
+  margin: 0;
+  font-weight: 950;
+}
+
+.admin-gamification-head p {
+  margin: 6px 0 0;
+  color: #607080;
+  font-weight: 800;
+}
+
+.admin-gamification-head button,
+.admin-gamification-tabs button,
+.admin-gamification-card button {
+  border: 0;
+  border-radius: 14px;
+  padding: 12px 16px;
+  background: #eef2f7;
+  color: #17212b;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.admin-gamification-tabs {
+  margin-bottom: 16px;
+}
+
+.admin-gamification-tabs button.active {
+  background: #17212b;
+  color: #ffffff;
+}
+
+.admin-gamification-layout {
+  align-items: flex-start;
+}
+
+.admin-gamification-layout > div {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.admin-gamification-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 18px;
+  box-shadow: 0 18px 50px rgba(20, 40, 60, 0.08);
+}
+
+.admin-gamification-card label,
+.admin-gamification-upload small {
+  display: block;
+  margin-top: 12px;
+  color: #607080;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.admin-gamification-card input,
+.admin-gamification-card select,
+.admin-gamification-card textarea {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 6px;
+  border: 1px solid #d9e3ec;
+  border-radius: 14px;
+  padding: 10px 12px;
+  box-sizing: border-box;
+  color: #17212b;
+  font: inherit;
+  font-weight: 800;
+}
+
+.admin-gamification-card textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+.admin-gamification-two > label {
+  flex: 1 1 0;
+}
+
+.admin-gamification-check {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-gamification-check input {
+  width: auto;
+  min-height: 0;
+  margin: 0;
+}
+
+.admin-gamification-card > button[type="submit"] {
+  width: 100%;
+  margin-top: 16px;
+  background: #17212b;
+  color: #ffffff;
+}
+
+.admin-gamification-row {
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.admin-gamification-row span:nth-child(2),
+.admin-gamification-row > span:first-child:not(.admin-gamification-icon) {
+  flex: 1 1 auto;
+}
+
+.admin-gamification-row strong,
+.admin-gamification-row small {
+  display: block;
+}
+
+.admin-gamification-row small {
+  margin-top: 3px;
+  color: #607080;
+  font-size: 12px;
+}
+
+.admin-gamification-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: #eaf7ff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-gamification-icon img {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
+}
+
+.admin-gamification-empty {
+  padding: 18px;
+  border-radius: 16px;
+  background: #f5f9fc;
+  color: #607080;
+  font-weight: 900;
+}
+
+@media (max-width: 760px) {
+  .admin-gamification-layout,
+  .admin-gamification-two {
+    flex-direction: column;
+  }
+}

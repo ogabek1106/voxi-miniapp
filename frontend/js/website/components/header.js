@@ -135,6 +135,7 @@ window.WebsiteHeader = window.WebsiteHeader || {};
     document.querySelector("#website-header .voxi-notification-bell")?.addEventListener("click", () => window.VoxiNotifications?.toggle?.());
     window.VoxiNotificationsUI?.updateBells?.();
     window.XPUI?.refresh?.();
+    window.GamificationUI?.load?.();
   };
 
   window.WebsiteHeader.update = function (me) {

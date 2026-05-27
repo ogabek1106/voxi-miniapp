@@ -35,6 +35,8 @@ from app.api.admin_word_shuffle import router as admin_word_shuffle_router
 from app.api.word_shuffle import router as word_shuffle_router
 from app.api.admin_match_words import router as admin_match_words_router
 from app.api.match_words import router as match_words_router
+from app.api.admin_gamification import router as admin_gamification_router
+from app.api.gamification import router as gamification_router
 from app.api.activity import router as activity_router
 from app.api.notifications import router as notifications_router
 from app.api.feedback import router as feedback_router
@@ -66,6 +68,7 @@ from .db import (
     ensure_feedback_schema,
     ensure_premiere_schema,
     ensure_xp_schema,
+    ensure_gamification_schema,
 )
 from app.api.admin_upload import router as admin_upload_router
 from app.api.result_images import router as result_images_router
@@ -93,6 +96,7 @@ ensure_activity_schema()
 ensure_notification_schema()
 ensure_feedback_schema()
 ensure_xp_schema()
+ensure_gamification_schema()
 app = FastAPI(title="Voxi Mini App API")
 app.include_router(mock_list.router)
 app.include_router(admin_upload_router)
@@ -122,6 +126,8 @@ app.include_router(admin_word_shuffle_router)
 app.include_router(word_shuffle_router)
 app.include_router(admin_match_words_router)
 app.include_router(match_words_router)
+app.include_router(admin_gamification_router)
+app.include_router(gamification_router)
 app.include_router(activity_router)
 app.include_router(notifications_router)
 app.include_router(feedback_router)
@@ -178,9 +184,23 @@ async def reading_start_request_debug(request, call_next):
 
 
 Base.metadata.create_all(bind=engine)
+ensure_gamification_schema()
 ensure_premiere_schema()
 ensure_listening_instruction_schema()
 ensure_listening_progress_schema()
+
+
+def seed_gamification_defaults_on_startup():
+    db = SessionLocal()
+    try:
+        from app.services.gamification_service import seed_default_badges, seed_default_monthly_rewards
+        seed_default_badges(db)
+        seed_default_monthly_rewards(db)
+        print("[GAMIFICATION] defaults seeded", flush=True)
+    except Exception as exc:
+        print("[GAMIFICATION] seed skipped: " + str(exc), flush=True)
+    finally:
+        db.close()
 
 
 def backfill_xp_on_startup():
@@ -196,6 +216,7 @@ def backfill_xp_on_startup():
 
 
 backfill_xp_on_startup()
+seed_gamification_defaults_on_startup()
 
 @app.get("/")
 async def root():

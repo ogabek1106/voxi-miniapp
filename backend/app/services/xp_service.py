@@ -406,14 +406,15 @@ def serialize_settings(settings: XPVisibilitySettings) -> dict[str, Any]:
     }
 
 
-def _grant_bundle(db: Session, user_id: int | None, telegram_id: int | None, source_type: str, related_attempt_id: int | None, related_session_id: int | None, grants: list[tuple[int, str, dict[str, Any] | None]]):
+def _grant_bundle(db: Session, user_id: int | None, telegram_id: int | None, source_type: str, related_attempt_id: int | None, related_session_id: int | None, grants: list[tuple[int, str, dict[str, Any] | None]]) -> int:
+    created = 0
     for amount, reason, meta in grants:
         key_parts = [source_type, reason]
         if related_attempt_id:
             key_parts.append(f"attempt:{related_attempt_id}")
         if related_session_id:
             key_parts.append(f"session:{related_session_id}")
-        add_xp(
+        event = add_xp(
             db,
             user_id=user_id,
             telegram_id=telegram_id,
@@ -425,6 +426,9 @@ def _grant_bundle(db: Session, user_id: int | None, telegram_id: int | None, sou
             meta=meta,
             event_key=":".join(key_parts),
         )
+        if event:
+            created += 1
+    return created
 
 
 def award_shadow_writing_attempt(db: Session, attempt: ShadowWritingAttempt) -> None:
@@ -478,7 +482,12 @@ def award_shadow_writing_attempt(db: Session, attempt: ShadowWritingAttempt) -> 
             grants.append((5, "shadow_typed_700_chars", {"typed_chars": typed_chars}))
         elif typed_chars >= 300:
             grants.append((3, "shadow_typed_300_chars", {"typed_chars": typed_chars}))
-    _grant_bundle(db, None, attempt.telegram_id, "shadow_writing", attempt.id, None, grants)
+    created = _grant_bundle(db, None, attempt.telegram_id, "shadow_writing", attempt.id, None, grants)
+    from app.services import gamification_service
+
+    if created:
+        gamification_service.record_activity_from_xp(db, None, attempt.telegram_id, "shadow_writing", 0)
+        db.commit()
 
 
 def award_odd_one_out_attempt(db: Session, attempt: VocabularyOddOneOutAttempt) -> None:
@@ -516,7 +525,12 @@ def award_odd_one_out_attempt(db: Session, attempt: VocabularyOddOneOutAttempt) 
         grants.append((5, "odd_speed_under_5_sec", {"average_answer_time": avg_time}))
     elif avg_time and avg_time < 8:
         grants.append((3, "odd_speed_under_8_sec", {"average_answer_time": avg_time}))
-    _grant_bundle(db, attempt.user_id, attempt.telegram_id, "odd_one_out", attempt.id, None, grants)
+    created = _grant_bundle(db, attempt.user_id, attempt.telegram_id, "odd_one_out", attempt.id, None, grants)
+    from app.services import gamification_service
+
+    if created:
+        gamification_service.record_activity_from_xp(db, attempt.user_id, attempt.telegram_id, "odd_one_out", 0)
+        db.commit()
 
 
 def award_word_shuffle_session(db: Session, session: WordShuffleSession) -> None:
@@ -533,7 +547,12 @@ def award_word_shuffle_session(db: Session, session: WordShuffleSession) -> None
         if solved >= threshold:
             grants.append((amount, f"word_shuffle_session_{threshold}", {"solved_count": solved}))
             break
-    _grant_bundle(db, session.user_id, session.telegram_id, "word_shuffle", None, session.id, grants)
+    created = _grant_bundle(db, session.user_id, session.telegram_id, "word_shuffle", None, session.id, grants)
+    from app.services import gamification_service
+
+    if created:
+        gamification_service.record_activity_from_xp(db, session.user_id, session.telegram_id, "word_shuffle", 0)
+        db.commit()
 
 
 def _band_bonus(prefix: str, band: float | None, table: list[tuple[float, int]]) -> tuple[int, str, dict[str, Any]] | None:
@@ -551,7 +570,12 @@ def award_reading_completion(db: Session, progress: ReadingProgress) -> None:
     bonus = _band_bonus("reading", progress.band_score, [(8.0, 40), (7.0, 30), (6.0, 20), (5.0, 10)])
     if source == "single_mock" and bonus:
         grants.append(bonus)
-    _grant_bundle(db, progress.user_id, None, source, progress.id, None, grants)
+    created = _grant_bundle(db, progress.user_id, None, source, progress.id, None, grants)
+    from app.services import gamification_service
+
+    if created:
+        gamification_service.record_activity_from_xp(db, progress.user_id, None, source, 0)
+        db.commit()
 
 
 def award_listening_completion(db: Session, progress: ListeningProgress) -> None:
@@ -560,7 +584,13 @@ def award_listening_completion(db: Session, progress: ListeningProgress) -> None
     bonus = _band_bonus("listening", progress.band_score, [(8.0, 40), (7.0, 30), (6.0, 20), (5.0, 10)])
     if source == "single_mock" and bonus:
         grants.append(bonus)
-    _grant_bundle(db, None, progress.telegram_id, source, progress.id, None, grants)
+    created = _grant_bundle(db, None, progress.telegram_id, source, progress.id, None, grants)
+    from app.services import gamification_service
+
+    if created:
+        gamification_service.record_activity_from_xp(db, None, progress.telegram_id, source, 0)
+        gamification_service.record_listening_completion(db, None, progress.telegram_id)
+        db.commit()
 
 
 def award_writing_completion(db: Session, progress: WritingProgress) -> None:
@@ -574,7 +604,12 @@ def award_writing_completion(db: Session, progress: WritingProgress) -> None:
             grants.append((50, "writing_band_7", {"band": band}))
         elif float(band) >= 6:
             grants.append((20, "writing_band_6", {"band": band}))
-    _grant_bundle(db, None, progress.telegram_id, source, progress.id, None, grants)
+    created = _grant_bundle(db, None, progress.telegram_id, source, progress.id, None, grants)
+    from app.services import gamification_service
+
+    if created:
+        gamification_service.record_activity_from_xp(db, None, progress.telegram_id, source, 0)
+        db.commit()
 
 
 def award_speaking_completion(db: Session, progress: SpeakingProgress) -> None:
@@ -589,7 +624,12 @@ def award_speaking_completion(db: Session, progress: SpeakingProgress) -> None:
             grants.append((50, "speaking_band_7", {"band": band}))
         elif float(band) >= 6:
             grants.append((20, "speaking_band_6", {"band": band}))
-    _grant_bundle(db, None, progress.telegram_id, source, progress.id, None, grants)
+    created = _grant_bundle(db, None, progress.telegram_id, source, progress.id, None, grants)
+    from app.services import gamification_service
+
+    if created:
+        gamification_service.record_activity_from_xp(db, None, progress.telegram_id, source, 0)
+        db.commit()
 
 
 def award_full_mock_result(db: Session, result: FullMockResult) -> None:
@@ -604,4 +644,9 @@ def award_full_mock_result(db: Session, result: FullMockResult) -> None:
     band_bonus = _band_bonus("full_mock", result.overall_band, [(9.0, 400), (8.0, 200), (7.0, 120), (6.0, 70), (5.0, 40), (4.0, 20)])
     if band_bonus:
         grants.append(band_bonus)
-    _grant_bundle(db, None, result.telegram_id, "full_mock", result.id, None, grants)
+    created = _grant_bundle(db, None, result.telegram_id, "full_mock", result.id, None, grants)
+    from app.services import gamification_service
+
+    if created:
+        gamification_service.record_activity_from_xp(db, None, result.telegram_id, "full_mock", 0)
+        db.commit()
