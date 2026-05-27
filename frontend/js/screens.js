@@ -741,7 +741,6 @@ async function renderProfile() {
             <span>Edit profile</span>
           </button>
           <div class="profile-stat-row">
-            <div class="profile-stat-chip">Level <strong>Beginner</strong></div>
             <div class="profile-stat-chip">V-Coins <strong>${vCoins}</strong></div>
             <div class="profile-stat-chip">Last score <strong>${safeLastScore}</strong></div>
           </div>

@@ -53,7 +53,6 @@ window.WebsiteProfileSheet = window.WebsiteProfileSheet || {};
         </div>
 
         <div class="website-profile-stats">
-          <div>Level <strong>Beginner</strong></div>
           <div>V-Coins <strong>${vCoins}</strong></div>
           <div>Last score <strong>${lastScore}</strong></div>
         </div>

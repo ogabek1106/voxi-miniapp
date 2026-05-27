@@ -171,11 +171,8 @@ window.GamificationUI = window.GamificationUI || {};
     backdrop.innerHTML = `
       <div class="gamification-calendar-card" role="dialog" aria-modal="true" aria-label="Monthly streak calendar">
         <div class="gamification-calendar-head">
-          <div>
-            <h2>${monthName(monthly.month)} ${Number(monthly.year)}</h2>
-            <p>${Number(monthly.completed_count || 0)} / ${Number(monthly.month_length || 31)} days secured</p>
-          </div>
-          <button type="button" data-gamification-close="1">Close</button>
+          <h2>${monthName(monthly.month)} ${Number(monthly.year)} <span>${Number(monthly.completed_count || 0)} / ${Number(monthly.month_length || 31)} days secured</span></h2>
+          <button class="gamification-calendar-close" type="button" data-gamification-close="1" aria-label="Close calendar">X</button>
         </div>
         <div class="gamification-weekdays">
           <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
