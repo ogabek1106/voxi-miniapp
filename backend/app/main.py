@@ -36,6 +36,7 @@ from app.api.word_shuffle import router as word_shuffle_router
 from app.api.admin_match_words import router as admin_match_words_router
 from app.api.match_words import router as match_words_router
 from app.api.admin_gamification import router as admin_gamification_router
+from app.api.admin_content_engine import router as admin_content_engine_router
 from app.api.gamification import router as gamification_router
 from app.api.activity import router as activity_router
 from app.api.notifications import router as notifications_router
@@ -127,6 +128,7 @@ app.include_router(word_shuffle_router)
 app.include_router(admin_match_words_router)
 app.include_router(match_words_router)
 app.include_router(admin_gamification_router)
+app.include_router(admin_content_engine_router)
 app.include_router(gamification_router)
 app.include_router(activity_router)
 app.include_router(notifications_router)
