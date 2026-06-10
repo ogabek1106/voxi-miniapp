@@ -79,7 +79,13 @@ window.GamificationUI = window.GamificationUI || {};
     `;
   }
 
-  function rewardVisuals(reward) {
+  function badgeForCode(code, data = cached) {
+    const value = String(code || "").trim();
+    if (!value) return null;
+    return (data?.badges || []).find((badge) => String(badge?.code || "") === value) || null;
+  }
+
+  function rewardVisuals(reward, data = cached) {
     const payload = reward?.reward_payload || {};
     const visuals = [];
     if (payload.xp) {
@@ -137,11 +143,14 @@ window.GamificationUI = window.GamificationUI || {};
       });
     }
     if (payload.badge_code) {
+      const badge = badgeForCode(payload.badge_code, data);
+      const badgeName = badge?.name || String(payload.badge_code).replace(/_/g, " ");
+      const badgeIcon = assetUrl(badge?.icon_url);
       visuals.push({
         key: `badge-${payload.badge_code}`,
-        label: `Badge: ${String(payload.badge_code).replace(/_/g, " ")}`,
+        label: `Badge: ${badgeName}`,
         fallback: "BDG",
-        sources: [],
+        sources: badgeIcon ? [badgeIcon] : [],
       });
     }
     if (!visuals.length && reward?.reward_type) {
@@ -242,8 +251,8 @@ window.GamificationUI = window.GamificationUI || {};
     return rewardsForDay(rewards, day)[0] || null;
   }
 
-  function renderDayRewardIcons(rewards) {
-    const visuals = rewards.flatMap(rewardVisuals);
+  function renderDayRewardIcons(rewards, data = cached) {
+    const visuals = rewards.flatMap((reward) => rewardVisuals(reward, data));
     if (!visuals.length) return "";
     const visible = visuals.slice(0, 3);
     const extra = visuals.length - visible.length;
@@ -255,7 +264,7 @@ window.GamificationUI = window.GamificationUI || {};
     `;
   }
 
-  function renderCalendarGrid(monthly, selectedDay = 0) {
+  function renderCalendarGrid(monthly, selectedDay = 0, data = cached) {
     const year = Number(monthly?.year || new Date().getFullYear());
     const month = Number(monthly?.month || (new Date().getMonth() + 1));
     const length = Number(monthly?.month_length || 31);
@@ -286,7 +295,7 @@ window.GamificationUI = window.GamificationUI || {};
         <button class="${classes}" type="button" data-reward-day="${day}" ${rewards.length ? "" : "disabled"}>
           <span class="gamification-day-number">${day}</span>
           ${todayDay === day ? `<small class="gamification-today-badge">Today</small>` : ""}
-          ${renderDayRewardIcons(rewards)}
+          ${renderDayRewardIcons(rewards, data)}
           ${claimed ? `<small class="gamification-day-check" aria-hidden="true">✓</small>` : ""}
         </button>
       `);
@@ -310,16 +319,21 @@ window.GamificationUI = window.GamificationUI || {};
     return items;
   }
 
-  function renderRewardDetail(reward) {
-    if (!reward) return `<div class="gamification-reward-detail">Tap a reward day to see reward details.</div>`;
-    const visuals = rewardVisuals(reward);
-    const isChest = reward.chest_type || String(reward.reward_type || "").toLowerCase() === "chest";
+  function renderRewardDetail(rewards, data = cached) {
+    const rewardList = Array.isArray(rewards) ? rewards.filter(Boolean) : (rewards ? [rewards] : []);
+    if (!rewardList.length) return `<div class="gamification-reward-detail">Tap a reward day to see reward details.</div>`;
+    const day = Number(rewardList[0]?.milestone_day || 0);
+    const visuals = rewardList.flatMap((reward) => rewardVisuals(reward, data));
+    const isChest = rewardList.some((reward) => reward.chest_type || String(reward.reward_type || "").toLowerCase() === "chest");
+    const claimable = rewardList.some((reward) => reward.claimable);
+    const claimed = rewardList.length > 0 && rewardList.every((reward) => reward.claimed);
+    const title = isChest ? "Monthly Chest" : (rewardList.length > 1 ? `Day ${day} Rewards` : (rewardList[0]?.name || "Reward"));
     return `
       <div class="gamification-reward-detail ${isChest ? "is-monthly-chest" : ""}">
         <div class="gamification-reward-detail-main">
           <div>
-            <strong>${escapeHtml(reward.name || "Reward")}</strong>
-            <span>Day ${Number(reward.milestone_day || 0)} reward</span>
+            <strong>${escapeHtml(title)}</strong>
+            <span>Day ${day} reward${rewardList.length === 1 ? "" : "s"}</span>
           </div>
           ${isChest ? `<em class="gamification-chest-label">Monthly Chest</em>` : ""}
         </div>
@@ -331,8 +345,8 @@ window.GamificationUI = window.GamificationUI || {};
             </em>
           `).join("")}
         </div>
-        ${reward.claimable ? `<button type="button" data-claim-reward="${Number(reward.milestone_day)}">Claim</button>` : ""}
-        ${reward.claimed ? `<em class="gamification-claimed-label">Claimed</em>` : ""}
+        ${claimable ? `<button type="button" data-claim-reward="${day}">Claim</button>` : ""}
+        ${claimed ? `<em class="gamification-claimed-label">Claimed</em>` : ""}
       </div>
     `;
   }
@@ -360,6 +374,7 @@ window.GamificationUI = window.GamificationUI || {};
 
   GamificationUI.openCalendar = function (data = cached) {
     if (!data?.monthly) return;
+    cached = data || cached;
     if (document.getElementById("gamification-calendar-backdrop")) {
       document.getElementById("gamification-calendar-backdrop")?.remove();
       unlockCalendarScroll();
@@ -370,7 +385,8 @@ window.GamificationUI = window.GamificationUI || {};
     const today = new Date();
     const todayDay = today.getFullYear() === year && today.getMonth() + 1 === month ? today.getDate() : 0;
     let selectedDay = Number(monthly.next_reward?.milestone_day || todayDay || 0);
-    let selectedReward = rewardForDay(monthly.rewards, selectedDay) || monthly.next_reward || null;
+    let selectedRewards = rewardsForDay(monthly.rewards, selectedDay);
+    if (!selectedRewards.length && monthly.next_reward) selectedRewards = [monthly.next_reward];
     const backdrop = document.createElement("div");
     backdrop.id = "gamification-calendar-backdrop";
     backdrop.className = "gamification-calendar-backdrop";
@@ -387,9 +403,9 @@ window.GamificationUI = window.GamificationUI || {};
           <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
         </div>
         <div class="gamification-calendar-grid">
-          ${renderCalendarGrid(monthly, selectedDay)}
+          ${renderCalendarGrid(monthly, selectedDay, cached)}
         </div>
-        <div id="gamification-reward-host">${renderRewardDetail(selectedReward)}</div>
+        <div id="gamification-reward-host">${renderRewardDetail(selectedRewards, cached)}</div>
       </div>
     `;
     lockCalendarScroll();
@@ -406,10 +422,10 @@ window.GamificationUI = window.GamificationUI || {};
       const rewardButton = event.target.closest("[data-reward-day]");
       if (rewardButton) {
         const day = Number(rewardButton.dataset.rewardDay);
-        const reward = rewardForDay(monthly.rewards, day);
+        const rewards = rewardsForDay(monthly.rewards, day);
         selectedDay = day;
         const host = document.getElementById("gamification-reward-host");
-        if (host) host.innerHTML = renderRewardDetail(reward);
+        if (host) host.innerHTML = renderRewardDetail(rewards, cached);
         backdrop.querySelectorAll(".gamification-day.is-selected").forEach((button) => button.classList.remove("is-selected"));
         rewardButton.classList.add("is-selected");
         host?.querySelectorAll(".gamification-reward-icon img").forEach((img) => {
