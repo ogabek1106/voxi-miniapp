@@ -58,6 +58,7 @@ window.GamificationUI = window.GamificationUI || {};
     }
     if (kind === "vcoin_coupon") return [rewardIconAsset("vcoin-coupon-purple-ticket.png")];
     if (kind === "vcoins") return ["assets/vcoin.png"];
+    if (kind === "freeze_card") return [rewardIconAsset("freeze-card.png")];
     return [];
   }
 
@@ -131,7 +132,7 @@ window.GamificationUI = window.GamificationUI || {};
         key: `freeze-${count}`,
         label: `${count} freeze card${count === 1 ? "" : "s"}`,
         fallback: "FR",
-        sources: [],
+        sources: rewardIconCandidates("freeze_card", count),
       });
     }
     if (payload.free_block) {
