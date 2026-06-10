@@ -373,6 +373,29 @@ window.GamificationUI = window.GamificationUI || {};
     document.body.style.overflow = previousBodyOverflow;
   }
 
+  function bindMagnifier(root) {
+    const targets = root.querySelectorAll(".gamification-day:not(:disabled), .gamification-reward-items em");
+    targets.forEach((target) => {
+      if (target.dataset.magnifierBound === "1") return;
+      target.dataset.magnifierBound = "1";
+      target.addEventListener("pointermove", (event) => {
+        if (event.pointerType && event.pointerType !== "mouse") return;
+        const rect = target.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+        const x = ((event.clientX - rect.left) / rect.width - 0.5).toFixed(3);
+        const y = ((event.clientY - rect.top) / rect.height - 0.5).toFixed(3);
+        target.classList.add("is-magnifying");
+        target.style.setProperty("--lens-x", x);
+        target.style.setProperty("--lens-y", y);
+      });
+      target.addEventListener("pointerleave", () => {
+        target.classList.remove("is-magnifying");
+        target.style.removeProperty("--lens-x");
+        target.style.removeProperty("--lens-y");
+      });
+    });
+  }
+
   GamificationUI.openCalendar = function (data = cached) {
     if (!data?.monthly) return;
     cached = data || cached;
@@ -414,6 +437,7 @@ window.GamificationUI = window.GamificationUI || {};
     backdrop.querySelectorAll(".gamification-reward-icon img").forEach((img) => {
       img.addEventListener("error", () => GamificationUI.tryRewardIcon(img));
     });
+    bindMagnifier(backdrop);
     backdrop.addEventListener("click", async (event) => {
       if (event.target === backdrop || event.target.closest("[data-gamification-close='1']")) {
         backdrop.remove();
@@ -432,6 +456,7 @@ window.GamificationUI = window.GamificationUI || {};
         host?.querySelectorAll(".gamification-reward-icon img").forEach((img) => {
           img.addEventListener("error", () => GamificationUI.tryRewardIcon(img));
         });
+        bindMagnifier(backdrop);
         return;
       }
       const claimButton = event.target.closest("[data-claim-reward]");
