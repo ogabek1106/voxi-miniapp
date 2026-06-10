@@ -47,7 +47,7 @@ body #screen-home .home-card:hover::before {
   overflow: hidden;
   background: #ffffff;
   box-shadow: 0 8px 24px rgba(20, 40, 60, 0.08);
-  animation: shadowWritingHeartbeat 4.8s ease-in-out infinite;
+  animation: none;
   transition: box-shadow 180ms ease;
 }
 
@@ -270,7 +270,7 @@ body #screen-home .home-card:hover::before {
   bottom: auto !important;
   left: auto !important;
   z-index: 10 !important;
-  display: inline-flex;
+  display: none;
   align-items: center;
   justify-content: center;
   padding: 6px 12px;
