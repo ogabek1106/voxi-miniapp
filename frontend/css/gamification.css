@@ -155,19 +155,23 @@
   justify-content: center;
   padding: 18px;
   box-sizing: border-box;
+  overflow: hidden;
+  overscroll-behavior: contain;
 }
 
 .gamification-calendar-card {
   width: min(760px, 100%);
-  height: min(92vh, 780px);
+  height: min(92dvh, 780px);
+  max-height: 780px;
   overflow: hidden;
   border-radius: 30px;
   background: #ffffff;
   box-shadow: 0 24px 70px rgba(20, 40, 60, 0.26);
-  padding: 18px;
+  padding: 16px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
+  touch-action: manipulation;
 }
 
 .gamification-calendar-head {
@@ -175,8 +179,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 42px;
+  min-height: 56px;
   padding-right: 52px;
+  flex: 0 0 auto;
 }
 
 .gamification-calendar-head h2 {
@@ -188,17 +193,39 @@
   white-space: nowrap;
 }
 
-.gamification-calendar-head h2 span {
-  margin-left: 10px;
-  color: #607080;
-  font-size: clamp(14px, 2.6vw, 18px);
-  font-weight: 900;
-}
-
 .gamification-calendar-head p {
   margin: 6px 0 0;
   color: #607080;
   font-weight: 850;
+}
+
+.gamification-calendar-progress {
+  margin-top: 9px;
+  width: min(360px, calc(100vw - 112px));
+}
+
+.gamification-calendar-progress span {
+  display: block;
+  color: #607080;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.gamification-calendar-progress div {
+  position: relative;
+  height: 8px;
+  margin-top: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #eaf1f8;
+}
+
+.gamification-calendar-progress i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #00baff, #19a463, #f6b93b);
+  transition: width 260ms ease;
 }
 
 .gamification-calendar-close,
@@ -234,7 +261,7 @@
 }
 
 .gamification-weekdays {
-  margin-top: 12px;
+  margin-top: 10px;
   color: #8a99a8;
   font-size: 12px;
   font-weight: 900;
@@ -245,7 +272,7 @@
   flex: 1 1 auto;
   min-height: 0;
   margin-top: 6px;
-  grid-template-rows: repeat(6, minmax(42px, 1fr));
+  grid-template-rows: repeat(6, minmax(46px, 1fr));
 }
 
 .gamification-calendar-empty,
@@ -255,20 +282,30 @@
 }
 
 .gamification-day {
-  border: 0;
+  position: relative;
+  border: 1px solid transparent;
   background: #f5f9fc;
   color: #607080;
   font-weight: 950;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 3px;
+  justify-content: flex-start;
+  gap: 4px;
   min-width: 0;
+  padding: 7px 4px 5px;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(20, 40, 60, 0.02);
+  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease, border-color 180ms ease, opacity 180ms ease;
 }
 
 .gamification-day:disabled {
   cursor: default;
+}
+
+.gamification-day:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(20, 40, 60, 0.12);
 }
 
 .gamification-day.is-complete {
@@ -277,7 +314,8 @@
 }
 
 .gamification-day.is-today {
-  box-shadow: inset 0 0 0 2px #00baff;
+  border-color: rgba(0, 186, 255, 0.72);
+  box-shadow: inset 0 0 0 1px rgba(0, 186, 255, 0.34);
 }
 
 .gamification-day.is-claimable {
@@ -286,66 +324,217 @@
 }
 
 .gamification-day.is-claimed {
-  background: #ecfdf3;
+  background: #edf9f2;
   color: #19a463;
+  opacity: 0.68;
 }
 
-.gamification-day small {
+.gamification-day.is-selected {
+  z-index: 2;
+  transform: translateY(-2px) scale(1.025);
+  border-color: rgba(0, 132, 255, 0.62);
+  background: linear-gradient(180deg, #eaf6ff, #f8fcff);
+  box-shadow: 0 12px 26px rgba(0, 132, 255, 0.20), inset 0 0 0 1px rgba(0, 132, 255, 0.15);
+  color: #075a9c;
+}
+
+.gamification-day.is-milestone {
+  border-color: rgba(246, 185, 59, 0.42);
+  box-shadow: inset 0 0 0 1px rgba(246, 185, 59, 0.10);
+}
+
+.gamification-day.is-selected.is-milestone {
+  border-color: rgba(0, 132, 255, 0.68);
+}
+
+.gamification-day-number {
+  display: block;
+  min-height: 17px;
+  font-size: 14px;
+  line-height: 1;
+  text-align: center;
+}
+
+.gamification-today-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  max-width: calc(100% - 8px);
+  padding: 2px 5px;
+  border-radius: 999px;
+  background: #00baff;
+  color: #ffffff;
+  font-size: 8px;
+  font-weight: 950;
+  line-height: 1;
+  box-shadow: 0 0 0 0 rgba(0, 186, 255, 0.24);
+  animation: gamificationTodayPulse 2.4s ease-out infinite;
+}
+
+.gamification-day-rewards {
+  width: 100%;
+  min-height: 24px;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 0 2px;
+  box-sizing: border-box;
+}
+
+.gamification-reward-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  overflow: hidden;
+  box-sizing: border-box;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: inset 0 0 0 1px rgba(20, 40, 60, 0.06);
+  line-height: 0;
+  transition: transform 180ms ease, filter 180ms ease;
+}
+
+.gamification-day:hover .gamification-reward-icon,
+.gamification-day.is-selected .gamification-reward-icon {
+  transform: scale(1.06);
+}
+
+.gamification-reward-icon img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: auto;
+}
+
+.gamification-reward-icon.is-missing-image img {
+  display: none;
+}
+
+.gamification-reward-fallback {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: #1789c5;
+  font-size: 9px;
+  font-weight: 950;
   line-height: 1;
 }
 
-.gamification-reward-marker {
-  width: 7px;
-  height: 7px;
-  border-radius: 999px;
-  background: #f6b93b;
-  box-shadow: 0 0 0 4px rgba(246, 185, 59, 0.14);
+.gamification-reward-icon.is-missing-image .gamification-reward-fallback {
+  display: inline-flex;
 }
 
-.gamification-reward-marker.is-claimed {
+.gamification-reward-icon.is-day-icon {
+  width: 100%;
+  max-width: 22px;
+  aspect-ratio: 1;
+  justify-self: center;
+}
+
+.gamification-day-extra {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: center;
+  width: 100%;
+  max-width: 22px;
+  aspect-ratio: 1;
+  border-radius: 999px;
+  background: rgba(23, 33, 43, 0.08);
+  color: #17212b;
+  font-size: 9px;
+  font-weight: 950;
+}
+
+.gamification-day-check {
+  position: absolute;
+  left: 5px;
+  bottom: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
   background: #19a463;
-  box-shadow: 0 0 0 4px rgba(25, 164, 99, 0.13);
+  color: #ffffff;
+  font-size: 10px;
+  line-height: 1;
 }
 
 .gamification-reward-detail {
   flex: 0 0 auto;
-  margin-top: 12px;
+  margin-top: 10px;
   padding: 12px;
   border-radius: 20px;
-  background: #f5f9fc;
+  background: linear-gradient(180deg, #f5f9fc, #ffffff);
+  box-shadow: inset 0 0 0 1px rgba(20, 40, 60, 0.05);
+  overflow: hidden;
 }
 
-.gamification-reward-detail strong,
-.gamification-reward-detail span {
-  display: block;
+.gamification-reward-detail.is-monthly-chest {
+  background: linear-gradient(135deg, #fff8df, #ffffff 58%, #eef8ff);
+  box-shadow: inset 0 0 0 1px rgba(246, 185, 59, 0.22), 0 10px 24px rgba(246, 185, 59, 0.12);
+}
+
+.gamification-reward-detail-main {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
 }
 
 .gamification-reward-detail strong {
+  display: block;
   color: #17212b;
   font-size: 16px;
   font-weight: 950;
 }
 
-.gamification-reward-detail span {
+.gamification-reward-detail-main span {
+  display: block;
   margin-top: 5px;
   color: #607080;
   font-weight: 850;
   font-style: normal;
 }
 
+.gamification-chest-label {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: rgba(246, 185, 59, 0.18);
+  color: #a16207;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
 .gamification-reward-items {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 8px;
+  gap: 7px;
+  margin-top: 10px;
 }
 
 .gamification-reward-items em,
 .gamification-claimed-label {
   display: inline-flex;
   align-items: center;
-  min-height: 30px;
-  padding: 0 10px;
+  gap: 7px;
+  min-height: 34px;
+  padding: 4px 10px 4px 5px;
   border-radius: 999px;
   background: #eaf7ff;
   color: #1789c5;
@@ -354,7 +543,130 @@
   font-weight: 900;
 }
 
+.gamification-reward-items em span {
+  min-width: 0;
+}
+
+.gamification-reward-icon.is-detail-icon {
+  width: 28px;
+  height: 28px;
+}
+
+.gamification-reward-icon.is-chest-icon {
+  width: 36px;
+  height: 36px;
+}
+
+.gamification-reward-detail.is-monthly-chest .gamification-reward-items em {
+  min-height: 44px;
+  background: rgba(255, 255, 255, 0.82);
+  color: #7c4a03;
+  box-shadow: inset 0 0 0 1px rgba(246, 185, 59, 0.16);
+}
+
 .gamification-reward-detail button {
+  margin-top: 10px;
   background: #17212b;
   color: #ffffff;
+}
+
+.gamification-reward-detail .gamification-claimed-label {
+  margin-top: 10px;
+  padding: 0 11px;
+  background: #ecfdf3;
+  color: #19a463;
+}
+
+@keyframes gamificationTodayPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(0, 186, 255, 0.24);
+  }
+  55% {
+    box-shadow: 0 0 0 5px rgba(0, 186, 255, 0);
+  }
+}
+
+@media (max-width: 560px) {
+  .gamification-calendar-backdrop {
+    padding: 10px;
+  }
+
+  .gamification-calendar-card {
+    height: min(94dvh, 720px);
+    border-radius: 24px;
+    padding: 12px;
+  }
+
+  .gamification-calendar-head {
+    min-height: 52px;
+  }
+
+  .gamification-weekdays,
+  .gamification-calendar-grid {
+    gap: 4px;
+  }
+
+  .gamification-calendar-grid {
+    grid-template-rows: repeat(6, minmax(43px, 1fr));
+  }
+
+  .gamification-day {
+    border-radius: 11px;
+    padding: 6px 1px 4px;
+    gap: 3px;
+  }
+
+  .gamification-day-number {
+    font-size: 12px;
+  }
+
+  .gamification-today-badge {
+    top: 3px;
+    right: 3px;
+    padding: 2px 4px;
+    font-size: 7px;
+  }
+
+  .gamification-day-check {
+    width: 12px;
+    height: 12px;
+    font-size: 8px;
+  }
+
+  .gamification-reward-detail {
+    margin-top: 8px;
+    padding: 10px;
+  }
+
+  .gamification-reward-items {
+    gap: 6px;
+  }
+
+  .gamification-reward-items em {
+    min-height: 30px;
+    font-size: 12px;
+  }
+}
+
+@media (hover: none) {
+  .gamification-day:not(:disabled):hover {
+    transform: none;
+    box-shadow: inset 0 0 0 1px rgba(20, 40, 60, 0.02);
+  }
+
+  .gamification-day.is-selected {
+    transform: scale(1.015);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gamification-calendar-progress i,
+  .gamification-day,
+  .gamification-reward-icon {
+    transition: none;
+  }
+
+  .gamification-today-badge {
+    animation: none;
+  }
 }
