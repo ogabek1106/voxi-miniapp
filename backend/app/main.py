@@ -209,6 +209,18 @@ def seed_gamification_defaults_on_startup():
         db.close()
 
 
+def seed_learning_plan_defaults_on_startup():
+    db = SessionLocal()
+    try:
+        from app.services.learning_service import ensure_default_plan
+        ensure_default_plan(db)
+        print("[LEARNING_PLAN] defaults seeded", flush=True)
+    except Exception as exc:
+        print("[LEARNING_PLAN] seed skipped: " + str(exc), flush=True)
+    finally:
+        db.close()
+
+
 def backfill_xp_on_startup():
     db = SessionLocal()
     try:
@@ -223,6 +235,7 @@ def backfill_xp_on_startup():
 
 backfill_xp_on_startup()
 seed_gamification_defaults_on_startup()
+seed_learning_plan_defaults_on_startup()
 
 @app.get("/")
 async def root():

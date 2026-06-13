@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.config import ADMIN_IDS
 from app.deps import get_db
-from app.models_learning import LearningDay, LearningDayBlock, LearningMonth
+from app.models_learning import LearningDay, LearningDayBlock
 from app.schemas.learning import LearningBlockIn, LearningBlockReorderIn, LearningDayIn, LearningMonthIn
 from app.services import learning_service as service
 
@@ -37,16 +37,8 @@ def list_months(telegram_id: int, db: Session = Depends(get_db)):
 @router.post("/months")
 def create_month(payload: LearningMonthIn, telegram_id: int, db: Session = Depends(get_db)):
     require_admin(telegram_id)
-    row = LearningMonth(
-        month_number=clean_int(payload.month_number),
-        title=clean_text(payload.title),
-        description=clean_text(payload.description),
-        status=clean_text(payload.status) or "draft",
-    )
-    db.add(row)
-    db.commit()
-    db.refresh(row)
-    return {"ok": True, "month": service.month_payload(row)}
+    _ = payload, db
+    raise HTTPException(status_code=405, detail="months_are_fixed")
 
 
 @router.get("/months/{month_id}")
@@ -64,7 +56,6 @@ def update_month(month_id: int, payload: LearningMonthIn, telegram_id: int, db: 
     row = service.get_month(db, month_id)
     if not row:
         raise HTTPException(status_code=404, detail="month_not_found")
-    row.month_number = clean_int(payload.month_number)
     row.title = clean_text(payload.title)
     row.description = clean_text(payload.description)
     row.status = clean_text(payload.status) or "draft"
@@ -77,12 +68,8 @@ def update_month(month_id: int, payload: LearningMonthIn, telegram_id: int, db: 
 @router.delete("/months/{month_id}")
 def delete_month(month_id: int, telegram_id: int, db: Session = Depends(get_db)):
     require_admin(telegram_id)
-    row = service.get_month(db, month_id)
-    if not row:
-        raise HTTPException(status_code=404, detail="month_not_found")
-    db.delete(row)
-    db.commit()
-    return {"ok": True}
+    _ = month_id, db
+    raise HTTPException(status_code=405, detail="months_are_fixed")
 
 
 @router.get("/months/{month_id}/days")

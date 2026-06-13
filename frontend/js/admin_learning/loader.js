@@ -97,17 +97,6 @@ window.AdminLearningLoader = window.AdminLearningLoader || {};
   }
 
   function bind() {
-    document.getElementById("admin-learning-month-form")?.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      try {
-        await AdminLearningApi.createMonth(AdminLearningMonths.collect());
-        await showMonths();
-      } catch (error) {
-        console.error("Learning month save failed:", error);
-        alert("Could not save month.");
-      }
-    });
-
     document.querySelectorAll("[data-open-month]").forEach((button) => {
       button.addEventListener("click", () => showDays(button.dataset.openMonth));
     });
@@ -117,14 +106,6 @@ window.AdminLearningLoader = window.AdminLearningLoader || {};
         const payload = AdminLearningMonths.promptEdit(AdminLearningMonths.find(state.months, button.dataset.editMonth));
         if (!payload) return;
         await AdminLearningApi.updateMonth(button.dataset.editMonth, payload);
-        await showMonths();
-      });
-    });
-
-    document.querySelectorAll("[data-delete-month]").forEach((button) => {
-      button.addEventListener("click", async () => {
-        if (!confirm("Delete this month and its days?")) return;
-        await AdminLearningApi.deleteMonth(button.dataset.deleteMonth);
         await showMonths();
       });
     });

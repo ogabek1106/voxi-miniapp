@@ -244,6 +244,34 @@ def ensure_learning_schema():
         conn.execute(text("CREATE INDEX IF NOT EXISTS ix_learning_months_number ON learning_months (month_number);"))
         conn.execute(text("CREATE INDEX IF NOT EXISTS ix_learning_days_month_number ON learning_days (month_id, day_number);"))
         conn.execute(text("CREATE INDEX IF NOT EXISTS ix_learning_day_blocks_day_order ON learning_day_blocks (day_id, sort_order);"))
+        conn.execute(text(
+            "DO $$ "
+            "BEGIN "
+            "IF NOT EXISTS ("
+            "SELECT month_number FROM learning_months "
+            "WHERE month_number IS NOT NULL "
+            "GROUP BY month_number HAVING COUNT(*) > 1"
+            ") THEN "
+            "CREATE UNIQUE INDEX IF NOT EXISTS uq_learning_months_month_number "
+            "ON learning_months (month_number) WHERE month_number IS NOT NULL; "
+            "END IF; "
+            "END "
+            "$$;"
+        ))
+        conn.execute(text(
+            "DO $$ "
+            "BEGIN "
+            "IF NOT EXISTS ("
+            "SELECT month_id, day_number FROM learning_days "
+            "WHERE day_number IS NOT NULL "
+            "GROUP BY month_id, day_number HAVING COUNT(*) > 1"
+            ") THEN "
+            "CREATE UNIQUE INDEX IF NOT EXISTS uq_learning_days_month_day "
+            "ON learning_days (month_id, day_number) WHERE day_number IS NOT NULL; "
+            "END IF; "
+            "END "
+            "$$;"
+        ))
 
 
 def ensure_xp_schema():
