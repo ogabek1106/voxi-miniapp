@@ -36,6 +36,7 @@ from app.api.word_shuffle import router as word_shuffle_router
 from app.api.admin_match_words import router as admin_match_words_router
 from app.api.match_words import router as match_words_router
 from app.api.admin_gamification import router as admin_gamification_router
+from app.api.admin_learning import router as admin_learning_router
 from app.api.admin_content_engine import router as admin_content_engine_router
 from app.api.gamification import router as gamification_router
 from app.api.activity import router as activity_router
@@ -70,6 +71,7 @@ from .db import (
     ensure_premiere_schema,
     ensure_xp_schema,
     ensure_gamification_schema,
+    ensure_learning_schema,
 )
 from app.api.admin_upload import router as admin_upload_router
 from app.api.result_images import router as result_images_router
@@ -98,6 +100,7 @@ ensure_notification_schema()
 ensure_feedback_schema()
 ensure_xp_schema()
 ensure_gamification_schema()
+ensure_learning_schema()
 app = FastAPI(title="Voxi Mini App API")
 app.include_router(mock_list.router)
 app.include_router(admin_upload_router)
@@ -128,6 +131,7 @@ app.include_router(word_shuffle_router)
 app.include_router(admin_match_words_router)
 app.include_router(match_words_router)
 app.include_router(admin_gamification_router)
+app.include_router(admin_learning_router)
 app.include_router(admin_content_engine_router)
 app.include_router(gamification_router)
 app.include_router(activity_router)

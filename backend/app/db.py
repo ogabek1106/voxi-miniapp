@@ -149,6 +149,103 @@ def ensure_gamification_schema():
         conn.execute(text("CREATE INDEX IF NOT EXISTS ix_monthly_reward_rules_lookup ON monthly_reward_rules (is_active, month_length, milestone_day);"))
 
 
+def ensure_learning_schema():
+    with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS learning_months ("
+            "id SERIAL PRIMARY KEY, "
+            "month_number INTEGER NULL, "
+            "title VARCHAR NULL, "
+            "description TEXT NULL, "
+            "status VARCHAR NULL DEFAULT 'draft', "
+            "created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), "
+            "updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()"
+            ");"
+        ))
+        conn.execute(text("ALTER TABLE learning_months ADD COLUMN IF NOT EXISTS month_number INTEGER;"))
+        conn.execute(text("ALTER TABLE learning_months ADD COLUMN IF NOT EXISTS title VARCHAR;"))
+        conn.execute(text("ALTER TABLE learning_months ADD COLUMN IF NOT EXISTS description TEXT;"))
+        conn.execute(text("ALTER TABLE learning_months ADD COLUMN IF NOT EXISTS status VARCHAR DEFAULT 'draft';"))
+        conn.execute(text("ALTER TABLE learning_months ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text("ALTER TABLE learning_months ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS learning_days ("
+            "id SERIAL PRIMARY KEY, "
+            "month_id INTEGER NOT NULL REFERENCES learning_months(id) ON DELETE CASCADE, "
+            "day_number INTEGER NULL, "
+            "title VARCHAR NULL, "
+            "subtitle TEXT NULL, "
+            "status VARCHAR NULL DEFAULT 'draft', "
+            "estimated_minutes INTEGER NULL, "
+            "xp_reward INTEGER NULL, "
+            "created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), "
+            "updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()"
+            ");"
+        ))
+        conn.execute(text("ALTER TABLE learning_days ADD COLUMN IF NOT EXISTS month_id INTEGER;"))
+        conn.execute(text("ALTER TABLE learning_days ADD COLUMN IF NOT EXISTS day_number INTEGER;"))
+        conn.execute(text("ALTER TABLE learning_days ADD COLUMN IF NOT EXISTS title VARCHAR;"))
+        conn.execute(text("ALTER TABLE learning_days ADD COLUMN IF NOT EXISTS subtitle TEXT;"))
+        conn.execute(text("ALTER TABLE learning_days ADD COLUMN IF NOT EXISTS status VARCHAR DEFAULT 'draft';"))
+        conn.execute(text("ALTER TABLE learning_days ADD COLUMN IF NOT EXISTS estimated_minutes INTEGER;"))
+        conn.execute(text("ALTER TABLE learning_days ADD COLUMN IF NOT EXISTS xp_reward INTEGER;"))
+        conn.execute(text("ALTER TABLE learning_days ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text("ALTER TABLE learning_days ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text(
+            "DO $$ "
+            "BEGIN "
+            "IF NOT EXISTS ("
+            "SELECT 1 FROM information_schema.table_constraints "
+            "WHERE constraint_name = 'learning_days_month_id_fkey'"
+            ") THEN "
+            "ALTER TABLE learning_days "
+            "ADD CONSTRAINT learning_days_month_id_fkey "
+            "FOREIGN KEY (month_id) REFERENCES learning_months(id) ON DELETE CASCADE; "
+            "END IF; "
+            "END "
+            "$$;"
+        ))
+
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS learning_day_blocks ("
+            "id SERIAL PRIMARY KEY, "
+            "day_id INTEGER NOT NULL REFERENCES learning_days(id) ON DELETE CASCADE, "
+            "block_type VARCHAR NULL, "
+            "sort_order INTEGER NOT NULL DEFAULT 0, "
+            "content_json JSONB NULL, "
+            "is_required BOOLEAN NOT NULL DEFAULT FALSE, "
+            "created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), "
+            "updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()"
+            ");"
+        ))
+        conn.execute(text("ALTER TABLE learning_day_blocks ADD COLUMN IF NOT EXISTS day_id INTEGER;"))
+        conn.execute(text("ALTER TABLE learning_day_blocks ADD COLUMN IF NOT EXISTS block_type VARCHAR;"))
+        conn.execute(text("ALTER TABLE learning_day_blocks ADD COLUMN IF NOT EXISTS sort_order INTEGER NOT NULL DEFAULT 0;"))
+        conn.execute(text("ALTER TABLE learning_day_blocks ADD COLUMN IF NOT EXISTS content_json JSONB;"))
+        conn.execute(text("ALTER TABLE learning_day_blocks ADD COLUMN IF NOT EXISTS is_required BOOLEAN NOT NULL DEFAULT FALSE;"))
+        conn.execute(text("ALTER TABLE learning_day_blocks ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text("ALTER TABLE learning_day_blocks ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text(
+            "DO $$ "
+            "BEGIN "
+            "IF NOT EXISTS ("
+            "SELECT 1 FROM information_schema.table_constraints "
+            "WHERE constraint_name = 'learning_day_blocks_day_id_fkey'"
+            ") THEN "
+            "ALTER TABLE learning_day_blocks "
+            "ADD CONSTRAINT learning_day_blocks_day_id_fkey "
+            "FOREIGN KEY (day_id) REFERENCES learning_days(id) ON DELETE CASCADE; "
+            "END IF; "
+            "END "
+            "$$;"
+        ))
+
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_learning_months_number ON learning_months (month_number);"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_learning_days_month_number ON learning_days (month_id, day_number);"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_learning_day_blocks_day_order ON learning_day_blocks (day_id, sort_order);"))
+
+
 def ensure_xp_schema():
     with engine.connect() as conn:
         conn.execute(text(

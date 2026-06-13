@@ -1,0 +1,305 @@
+#screen-mocks.container.admin-learning-host {
+  width: 100% !important;
+  max-width: none !important;
+  height: auto !important;
+  min-height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  text-align: left !important;
+  align-items: stretch !important;
+}
+
+.admin-learning-page {
+  width: min(1120px, calc(100vw - 96px));
+  margin: 0 auto;
+  padding: 48px 0 40px;
+  color: #17212b;
+  box-sizing: border-box;
+}
+
+.admin-learning-head,
+.admin-learning-head-actions,
+.admin-learning-actions,
+.admin-learning-block-actions,
+.admin-learning-meta,
+.admin-learning-preview-nav {
+  display: flex;
+  gap: 10px;
+}
+
+.admin-learning-head {
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.admin-learning-head h2,
+.admin-learning-card h3,
+.admin-learning-preview-screen h3 {
+  margin: 0;
+  font-weight: 950;
+}
+
+.admin-learning-head p,
+.admin-learning-card p,
+.admin-learning-block-row small,
+.admin-learning-day p {
+  margin: 6px 0 0;
+  color: #607080;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.admin-learning-kicker,
+.admin-learning-day-number {
+  color: #00a6e6;
+  font-size: 12px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.admin-learning-card {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 16px 42px rgba(20, 40, 60, 0.08);
+  box-sizing: border-box;
+}
+
+.admin-learning-form {
+  margin-bottom: 16px;
+}
+
+.admin-learning-form-grid,
+.admin-learning-editor-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.admin-learning-editor-grid {
+  align-items: flex-start;
+}
+
+.admin-learning-card label {
+  display: block;
+  margin-top: 12px;
+  color: #607080;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.admin-learning-card input,
+.admin-learning-card select,
+.admin-learning-card textarea {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 6px;
+  border: 1px solid #d9e3ec;
+  border-radius: 12px;
+  padding: 10px 12px;
+  box-sizing: border-box;
+  color: #17212b;
+  font: inherit;
+  font-weight: 800;
+  background: #ffffff;
+}
+
+.admin-learning-card textarea {
+  min-height: 86px;
+  resize: vertical;
+}
+
+.admin-learning-head button,
+.admin-learning-card button,
+.admin-learning-actions button,
+.admin-learning-preview-nav button {
+  width: auto;
+  min-width: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 12px;
+  padding: 11px 14px;
+  background: #eef2f7;
+  color: #17212b;
+  box-shadow: none;
+  font-weight: 900;
+}
+
+.admin-learning-card button[type="submit"],
+.admin-learning-actions button:first-child,
+.admin-learning-preview-nav button:last-child {
+  background: #17212b;
+  color: #ffffff;
+}
+
+.admin-learning-grid,
+.admin-learning-day-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.admin-learning-day-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.admin-learning-item,
+.admin-learning-day {
+  display: flex;
+  min-height: 190px;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.admin-learning-item h3,
+.admin-learning-day h3 {
+  margin: 6px 0 0;
+  font-size: 18px;
+  line-height: 1.2;
+}
+
+.admin-learning-meta {
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.admin-learning-meta span {
+  border-radius: 999px;
+  background: #f5f9fc;
+  padding: 7px 10px;
+  color: #607080;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.admin-learning-actions,
+.admin-learning-block-actions {
+  flex-wrap: wrap;
+}
+
+.admin-learning-empty {
+  grid-column: 1 / -1;
+  padding: 18px;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #607080;
+  font-weight: 900;
+  box-shadow: 0 16px 42px rgba(20, 40, 60, 0.06);
+}
+
+.admin-learning-check {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-learning-check input {
+  width: auto;
+  min-height: 0;
+  margin: 0;
+}
+
+.admin-learning-block-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.admin-learning-block-row strong,
+.admin-learning-block-row small {
+  display: block;
+}
+
+.admin-learning-block-actions button {
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.admin-learning-preview-shell {
+  width: min(420px, 100%);
+  margin: 0 auto;
+}
+
+.admin-learning-preview-screen {
+  min-height: 420px;
+  border-radius: 24px;
+  background: #ffffff;
+  box-shadow: 0 16px 42px rgba(20, 40, 60, 0.08);
+  padding: 28px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+  text-align: left;
+}
+
+.admin-learning-preview-screen p,
+.admin-learning-preview-screen li {
+  color: #607080;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.admin-learning-preview-options,
+.admin-learning-preview-pairs {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-learning-preview-options div,
+.admin-learning-preview-pairs div {
+  padding: 12px;
+  border-radius: 12px;
+  background: #f5f9fc;
+  color: #17212b;
+  font-weight: 900;
+}
+
+.admin-learning-preview-pairs div {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.admin-learning-preview-nav {
+  margin-top: 14px;
+}
+
+.admin-learning-preview-nav button {
+  flex: 1 1 0;
+  min-height: 48px;
+}
+
+.admin-learning-preview-nav button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+@media (max-width: 860px) {
+  .admin-learning-page {
+    width: min(100%, calc(100vw - 28px));
+    padding: 16px 0;
+  }
+
+  .admin-learning-head,
+  .admin-learning-editor-grid,
+  .admin-learning-form-grid {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .admin-learning-grid,
+  .admin-learning-day-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-learning-block-row {
+    grid-template-columns: 1fr;
+  }
+}

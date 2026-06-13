@@ -120,6 +120,7 @@ function hideAllScreens() {
   if (screenMocks) screenMocks.classList.remove("vocab-ooo-host");
   if (screenMocks) screenMocks.classList.remove("admin-live-host");
   if (screenMocks) screenMocks.classList.remove("admin-content-engine-host");
+  if (screenMocks) screenMocks.classList.remove("admin-learning-host");
   document.body.classList.remove("vocab-ooo-active");
   document.body.classList.remove("match-words-active");
   document.documentElement.classList.remove("match-words-active");
@@ -534,6 +535,7 @@ window.showAdminPanel = function () {
     <button onclick="showAdminMatchWords()">Match Words</button>
     <button onclick="loadMatchWordsAdminAssets().then(() => showAdminMatchWordsStats())">Match Words Stats</button>
     <button onclick="showAdminGamification()">Gamification</button>
+    <button onclick="showAdminLearningPlan()">Learning Plan</button>
     <button onclick="showAdminFeedbackRatings()">Feedback Ratings</button>
     <button onclick="showAdminContentEngine()">Voxi Content Engine</button>
     <button onclick="showAdminVCoinPayments()">V-Coin Payments</button>
