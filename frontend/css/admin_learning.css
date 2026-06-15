@@ -110,7 +110,132 @@
   resize: vertical;
 }
 
+.admin-learning-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.admin-learning-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  margin: -8px 0 2px;
+  padding: 10px 0;
+  background: rgba(245, 249, 252, 0.94);
+  backdrop-filter: blur(14px);
+}
+
+.admin-learning-sticky-grid {
+  display: grid;
+  grid-template-columns: 96px 150px minmax(92px, auto) minmax(128px, auto) minmax(132px, auto);
+  gap: 10px;
+  align-items: end;
+}
+
+.admin-learning-sticky label {
+  margin: 0;
+  color: #607080;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.admin-learning-sticky input,
+.admin-learning-sticky select {
+  width: 100%;
+  min-height: 42px;
+  margin-top: 5px;
+  border: 1px solid #d9e3ec;
+  border-radius: 12px;
+  padding: 9px 10px;
+  box-sizing: border-box;
+  color: #17212b;
+  font: inherit;
+  font-weight: 900;
+  background: #ffffff;
+}
+
+.admin-learning-section {
+  width: 100%;
+}
+
+.admin-learning-section-head {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  margin-bottom: 4px;
+}
+
+.admin-learning-section-head > span {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: rgba(0, 186, 255, 0.12);
+  color: #00a6e6;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 950;
+}
+
+.admin-learning-section-head p {
+  margin: 4px 0 0;
+  color: #607080;
+  font-weight: 800;
+}
+
+.admin-learning-helper {
+  display: block;
+  margin-top: 5px;
+  color: #8a98a6;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.admin-learning-add-game {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  margin-top: 10px;
+}
+
+.admin-learning-games {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.admin-learning-game-card {
+  border: 1px solid #edf2f7;
+  border-radius: 16px;
+  padding: 14px;
+  background: #fbfdff;
+}
+
+.admin-learning-game-head {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.admin-learning-game-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.admin-learning-game-fields {
+  margin-top: 6px;
+}
+
 .admin-learning-head button,
+.admin-learning-sticky button,
 .admin-learning-card button,
 .admin-learning-actions button,
 .admin-learning-preview-nav button {
@@ -127,6 +252,7 @@
 }
 
 .admin-learning-card button[type="submit"],
+.admin-learning-sticky button[type="submit"],
 .admin-learning-actions button:first-child,
 .admin-learning-preview-nav button:last-child {
   background: #17212b;
@@ -288,8 +414,11 @@
   }
 
   .admin-learning-head,
+  .admin-learning-sticky-grid,
   .admin-learning-editor-grid,
-  .admin-learning-form-grid {
+  .admin-learning-form-grid,
+  .admin-learning-add-game,
+  .admin-learning-game-head {
     display: flex;
     flex-direction: column;
   }

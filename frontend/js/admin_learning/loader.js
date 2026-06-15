@@ -83,16 +83,47 @@ window.AdminLearningLoader = window.AdminLearningLoader || {};
       .map((block) => Number(block.id));
   }
 
+  function orderedGameBlockIds(blocks) {
+    const gameTypes = new Set(["multiple_choice", "word_shuffle", "match_words", "odd_one_out", "fill_gap"]);
+    return [...(blocks || [])]
+      .filter((block) => gameTypes.has(block.block_type))
+      .sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0) || Number(a.id) - Number(b.id))
+      .map((block) => Number(block.id));
+  }
+
   async function moveBlock(blockId, direction) {
-    const ids = orderedBlockIds(state.currentDay?.blocks);
-    const index = ids.indexOf(Number(blockId));
+    const gameIds = orderedGameBlockIds(state.currentDay?.blocks);
+    const index = gameIds.indexOf(Number(blockId));
     if (index < 0) return;
     const nextIndex = direction === "up" ? index - 1 : index + 1;
-    if (nextIndex < 0 || nextIndex >= ids.length) return;
-    const tmp = ids[index];
-    ids[index] = ids[nextIndex];
-    ids[nextIndex] = tmp;
+    if (nextIndex < 0 || nextIndex >= gameIds.length) return;
+    const tmp = gameIds[index];
+    gameIds[index] = gameIds[nextIndex];
+    gameIds[nextIndex] = tmp;
+    const sortedBlocks = [...(state.currentDay?.blocks || [])]
+      .sort((a, b) => Number(a.sort_order || 0) - Number(b.sort_order || 0) || Number(a.id) - Number(b.id));
+    const beforeGames = sortedBlocks
+      .filter((block) => ["intro", "explanation", "vocabulary"].includes(block.block_type))
+      .map((block) => Number(block.id));
+    const completion = sortedBlocks
+      .filter((block) => block.block_type === "completion")
+      .map((block) => Number(block.id));
+    const otherIds = sortedBlocks
+      .map((block) => Number(block.id))
+      .filter((id) => !beforeGames.includes(id) && !gameIds.includes(id) && !completion.includes(id));
+    const ids = [...beforeGames, ...gameIds, ...completion, ...otherIds];
     await AdminLearningApi.reorderBlocks(state.currentDay.id, ids);
+    await refreshEditor();
+  }
+
+  async function saveDayContent() {
+    await AdminLearningApi.updateDay(state.currentDay.id, AdminLearningDayEditor.collectDay());
+    const sectionBlocks = AdminLearningDayEditor.collectStructuredBlocks(state.currentDay);
+    const games = AdminLearningDayEditor.collectGames();
+    for (const block of [...sectionBlocks, ...games]) {
+      if (block.id) await AdminLearningApi.updateBlock(block.id, block);
+      else await AdminLearningApi.createBlock(state.currentDay.id, block);
+    }
     await refreshEditor();
   }
 
@@ -132,32 +163,33 @@ window.AdminLearningLoader = window.AdminLearningLoader || {};
 
     document.querySelector("[data-learning-back-days]")?.addEventListener("click", () => showDays(state.currentMonth.id));
 
-    document.getElementById("admin-learning-day-info-form")?.addEventListener("submit", async (event) => {
+    document.getElementById("admin-learning-day-content-form")?.addEventListener("submit", async (event) => {
       event.preventDefault();
-      await AdminLearningApi.updateDay(state.currentDay.id, AdminLearningDayEditor.collect());
+      try {
+        await saveDayContent();
+      } catch (error) {
+        console.error("Learning day save failed:", error);
+        alert("Could not save day content.");
+      }
+    });
+
+    document.querySelector("[data-add-learning-game]")?.addEventListener("click", async () => {
+      const type = document.getElementById("learning-new-game-type")?.value || "multiple_choice";
+      await AdminLearningApi.createBlock(state.currentDay.id, {
+        block_type: type,
+        sort_order: 40 + (state.currentDay?.blocks || []).length,
+        content_json: {},
+        is_required: false,
+      });
       await refreshEditor();
     });
 
-    document.getElementById("learning-block-type")?.addEventListener("change", AdminLearningBlockEditor.renderFieldsForSelectedType);
-
-    document.getElementById("admin-learning-block-form")?.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      const payload = AdminLearningBlockEditor.collect();
-      if (payload.id) await AdminLearningApi.updateBlock(payload.id, payload);
-      else await AdminLearningApi.createBlock(state.currentDay.id, payload);
-      state.editingBlock = null;
-      await refreshEditor();
-    });
-
-    document.querySelector("[data-cancel-block-edit]")?.addEventListener("click", () => {
-      state.editingBlock = null;
-      render();
-    });
-
-    document.querySelectorAll("[data-edit-block]").forEach((button) => {
-      button.addEventListener("click", () => {
-        state.editingBlock = AdminLearningBlockEditor.find(state.currentDay?.blocks, button.dataset.editBlock);
-        render();
+    document.querySelectorAll("[data-game-type-select]").forEach((select) => {
+      select.addEventListener("change", () => {
+        const card = select.closest("[data-game-index]");
+        const fields = card?.querySelector(".admin-learning-game-fields");
+        const index = Number(card?.dataset?.gameIndex || 0);
+        if (fields) fields.innerHTML = AdminLearningDayEditor.renderGameFields(select.value, index, {});
       });
     });
 

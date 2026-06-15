@@ -43,6 +43,28 @@ window.AdminLearningPreview = window.AdminLearningPreview || {};
         </div>
       `;
     }
+    if (type === "odd_one_out") {
+      return `
+        <h3>${escapeHtml(content.prompt || "Odd one out")}</h3>
+        <div class="admin-learning-preview-options">
+          ${(content.options || []).map((item, index) => `<div>${index + 1}. ${escapeHtml(item)}</div>`).join("") || `<div>No options yet.</div>`}
+        </div>
+        ${content.explanation ? `<p>${escapeHtml(content.explanation)}</p>` : ""}
+      `;
+    }
+    if (type === "fill_gap") {
+      return `
+        <h3>Fill the gap</h3>
+        <p>${escapeHtml(content.sentence || "No sentence yet.")}</p>
+        ${content.hint ? `<p>${escapeHtml(content.hint)}</p>` : ""}
+      `;
+    }
+    if (type === "vocabulary") {
+      return `
+        <h3>Vocabulary</h3>
+        <p>${escapeHtml(content.words_text || "No vocabulary yet.")}</p>
+      `;
+    }
     if (type === "completion") {
       return `
         <h3>${escapeHtml(content.title || "Complete")}</h3>
