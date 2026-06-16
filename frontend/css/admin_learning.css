@@ -9,6 +9,10 @@
   align-items: stretch !important;
 }
 
+body.view-website {
+  --admin-learning-sticky-top: 60px;
+}
+
 .admin-learning-page {
   width: min(1120px, calc(100vw - 96px));
   margin: 0 auto;
@@ -118,8 +122,8 @@
 
 .admin-learning-sticky {
   position: sticky;
-  top: 0;
-  z-index: 5;
+  top: var(--admin-learning-sticky-top, 0px);
+  z-index: 850;
   margin: 0 0 4px;
   padding: 12px 0 14px;
   background: #f5f9fc;
@@ -158,7 +162,7 @@
 
 .admin-learning-section {
   width: 100%;
-  scroll-margin-top: 104px;
+  scroll-margin-top: calc(var(--admin-learning-sticky-top, 0px) + 104px);
 }
 
 .admin-learning-section-head {
@@ -410,6 +414,10 @@
 }
 
 @media (max-width: 860px) {
+  body.view-website {
+    --admin-learning-sticky-top: var(--website-header-height, 72px);
+  }
+
   .admin-learning-page {
     width: min(100%, calc(100vw - 28px));
     padding: 16px 0;
