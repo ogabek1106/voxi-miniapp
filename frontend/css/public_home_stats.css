@@ -156,7 +156,7 @@
 
 .public-stats-tooltip {
   position: absolute;
-  bottom: calc(100% + 8px);
+  top: 8px;
   transform: translateX(-50%);
   display: none;
   padding: 5px 8px;
@@ -220,6 +220,36 @@
   #screen-home .public-stats-label {
     display: none;
   }
+}
+
+body.view-miniapp #screen-home .public-stats-chart,
+body.mobile-browser-view #screen-home .public-stats-chart {
+  padding-bottom: 14px;
+}
+
+body.view-miniapp #screen-home .public-stats-chart-inner,
+body.mobile-browser-view #screen-home .public-stats-chart-inner {
+  min-width: 100%;
+  grid-template-columns: 20px minmax(0, 1fr);
+  column-gap: 3px;
+}
+
+body.view-miniapp #screen-home .public-stats-y-axis span,
+body.mobile-browser-view #screen-home .public-stats-y-axis span {
+  right: 3px;
+  font-size: 8px;
+}
+
+body.view-miniapp #screen-home .public-stats-bar-item,
+body.mobile-browser-view #screen-home .public-stats-bar-item {
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body.view-miniapp #screen-home .public-stats-label,
+body.mobile-browser-view #screen-home .public-stats-label {
+  display: none;
 }
 
 @media (max-width: 380px) {
