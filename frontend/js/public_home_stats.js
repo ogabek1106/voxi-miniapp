@@ -93,12 +93,14 @@ window.PublicHomeStats = window.PublicHomeStats || {};
     const plotRect = plot.getBoundingClientRect();
     const barRect = barEl.getBoundingClientRect();
     const fillRect = barEl.querySelector(".public-stats-bar-fill")?.getBoundingClientRect() || barRect;
-    const left = Math.max(18, Math.min(plotRect.width - 18, barRect.left + (barRect.width / 2) - plotRect.left));
+    const center = barRect.left + (barRect.width / 2) - plotRect.left;
     const top = Math.max(8, Math.min(plotRect.height - 30, fillRect.top - plotRect.top - 26));
     tooltip.textContent = barEl.dataset.publicStatLabel || "";
-    tooltip.style.left = `${left}px`;
     tooltip.style.top = `${top}px`;
     tooltip.classList.add("is-visible");
+    const tooltipWidth = tooltip.offsetWidth || 0;
+    const left = Math.max(0, Math.min(plotRect.width - tooltipWidth, center - (tooltipWidth / 2)));
+    tooltip.style.left = `${left}px`;
     window.clearTimeout(tooltipTimer);
     tooltipTimer = window.setTimeout(() => hideTooltip(chartEl), 2200);
   }

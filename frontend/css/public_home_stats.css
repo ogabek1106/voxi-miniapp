@@ -157,7 +157,6 @@
 .public-stats-tooltip {
   position: absolute;
   top: 8px;
-  transform: translateX(-50%);
   display: none;
   padding: 5px 8px;
   border-radius: 6px;
@@ -202,12 +201,12 @@
 
   #screen-home .public-stats-chart-inner {
     min-width: 100%;
-    grid-template-columns: 20px minmax(0, 1fr);
-    column-gap: 3px;
+    grid-template-columns: 12px minmax(0, 1fr);
+    column-gap: 1px;
   }
 
   #screen-home .public-stats-y-axis span {
-    right: 3px;
+    right: 2px;
     font-size: 8px;
   }
 
@@ -230,13 +229,13 @@ body.mobile-browser-view #screen-home .public-stats-chart {
 body.view-miniapp #screen-home .public-stats-chart-inner,
 body.mobile-browser-view #screen-home .public-stats-chart-inner {
   min-width: 100%;
-  grid-template-columns: 20px minmax(0, 1fr);
-  column-gap: 3px;
+  grid-template-columns: 12px minmax(0, 1fr);
+  column-gap: 1px;
 }
 
 body.view-miniapp #screen-home .public-stats-y-axis span,
 body.mobile-browser-view #screen-home .public-stats-y-axis span {
-  right: 3px;
+  right: 2px;
   font-size: 8px;
 }
 
@@ -280,8 +279,8 @@ body.mobile-browser-view #screen-home .public-stats-label {
 
   #screen-home .public-stats-chart-inner {
     min-width: 100%;
-    grid-template-columns: 18px minmax(0, 1fr);
-    column-gap: 2px;
+    grid-template-columns: 11px minmax(0, 1fr);
+    column-gap: 1px;
   }
 
   #screen-home .public-stats-bars {
