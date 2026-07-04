@@ -2157,6 +2157,21 @@ def ensure_activity_schema():
         conn.execute(text("ALTER TABLE feature_usage_counters ADD COLUMN IF NOT EXISTS usage_date DATE;"))
         conn.execute(text("ALTER TABLE feature_usage_counters ADD COLUMN IF NOT EXISTS count INTEGER NOT NULL DEFAULT 0;"))
         conn.execute(text("ALTER TABLE feature_usage_counters ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS public_stats_total_boost_state ("
+            "id INTEGER PRIMARY KEY, "
+            "growth_offset INTEGER NOT NULL DEFAULT 0, "
+            "last_growth_at TIMESTAMPTZ NULL, "
+            "next_growth_at TIMESTAMPTZ NULL, "
+            "last_increment_amount INTEGER NOT NULL DEFAULT 0, "
+            "updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()"
+            ");"
+        ))
+        conn.execute(text("ALTER TABLE public_stats_total_boost_state ADD COLUMN IF NOT EXISTS growth_offset INTEGER NOT NULL DEFAULT 0;"))
+        conn.execute(text("ALTER TABLE public_stats_total_boost_state ADD COLUMN IF NOT EXISTS last_growth_at TIMESTAMPTZ;"))
+        conn.execute(text("ALTER TABLE public_stats_total_boost_state ADD COLUMN IF NOT EXISTS next_growth_at TIMESTAMPTZ;"))
+        conn.execute(text("ALTER TABLE public_stats_total_boost_state ADD COLUMN IF NOT EXISTS last_increment_amount INTEGER NOT NULL DEFAULT 0;"))
+        conn.execute(text("ALTER TABLE public_stats_total_boost_state ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
 
         conn.execute(text("CREATE INDEX IF NOT EXISTS ix_app_activity_sessions_last_seen ON app_activity_sessions (last_seen);"))
         conn.execute(text("CREATE INDEX IF NOT EXISTS ix_app_activity_sessions_telegram_id ON app_activity_sessions (telegram_id);"))

@@ -4,7 +4,7 @@ import random
 import threading
 from zoneinfo import ZoneInfo
 
-from sqlalchemy import func
+from sqlalchemy import func, text
 from sqlalchemy.orm import Session
 
 from app.models import (
@@ -65,6 +65,12 @@ PUBLIC_STATS_BOOST_MAX_INTERVAL_SECONDS = max(
     _env_int("PUBLIC_STATS_BOOST_MAX_INTERVAL_SECONDS", 300),
 )
 PUBLIC_STATS_BOOST_TIMEZONE = os.getenv("PUBLIC_STATS_BOOST_TIMEZONE", "Asia/Tashkent") or "Asia/Tashkent"
+PUBLIC_TOTAL_BOOST_ENABLED = os.getenv("PUBLIC_TOTAL_BOOST_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+PUBLIC_TOTAL_BOOST_MIN_DAYS = max(1, _env_int("PUBLIC_TOTAL_BOOST_MIN_DAYS", 2))
+PUBLIC_TOTAL_BOOST_MAX_DAYS = max(PUBLIC_TOTAL_BOOST_MIN_DAYS, _env_int("PUBLIC_TOTAL_BOOST_MAX_DAYS", 4))
+PUBLIC_TOTAL_BOOST_MIN_INCREMENT = max(0, _env_int("PUBLIC_TOTAL_BOOST_MIN_INCREMENT", 2))
+PUBLIC_TOTAL_BOOST_MAX_INCREMENT = max(PUBLIC_TOTAL_BOOST_MIN_INCREMENT, _env_int("PUBLIC_TOTAL_BOOST_MAX_INCREMENT", 8))
+PUBLIC_TOTAL_BOOST_TIMEZONE = os.getenv("PUBLIC_TOTAL_BOOST_TIMEZONE", "Asia/Tashkent") or "Asia/Tashkent"
 PUBLIC_STATS_BOOST_PROFILE = [
     ((0, 6), (0, 4)),
     ((6, 8), (2, 8)),
@@ -229,12 +235,98 @@ def build_public_stats(db: Session) -> dict:
     if PUBLIC_STATS_BOOST_ENABLED:
         categories = _apply_public_stats_boost(categories, now)
 
+    real_total_learners = db.query(User).count()
+    public_total_learners = _public_total_explorers(db, real_total_learners, now)
+
     return {
         "live_users": sum(item["value"] for item in categories),
-        "total_learners": db.query(User).count(),
+        "total_learners": public_total_learners,
         "categories": categories,
         "generated_at": now.isoformat(),
     }
+
+
+def _public_total_explorers(db: Session, real_total: int, now: datetime) -> int:
+    if not PUBLIC_TOTAL_BOOST_ENABLED:
+        return real_total
+    row = _ensure_public_total_boost_state(db, now)
+    next_growth_at = _as_utc(row["next_growth_at"])
+    if next_growth_at and now >= next_growth_at:
+        increment = _public_total_growth_increment(_to_public_total_tz(now))
+        growth_offset = max(0, int(row["growth_offset"] or 0)) + increment
+        db.execute(
+            text(
+                "UPDATE public_stats_total_boost_state "
+                "SET growth_offset = :growth_offset, "
+                "last_growth_at = :last_growth_at, "
+                "next_growth_at = :next_growth_at, "
+                "last_increment_amount = :last_increment_amount, "
+                "updated_at = :updated_at "
+                "WHERE id = 1"
+            ),
+            {
+                "growth_offset": growth_offset,
+                "last_growth_at": now,
+                "next_growth_at": _next_public_total_growth_at(now),
+                "last_increment_amount": increment,
+                "updated_at": now,
+            },
+        )
+        db.commit()
+        return real_total + growth_offset
+    return real_total + max(0, int(row["growth_offset"] or 0))
+
+
+def _ensure_public_total_boost_state(db: Session, now: datetime):
+    row = db.execute(text("SELECT * FROM public_stats_total_boost_state WHERE id = 1")).mappings().first()
+    if row:
+        return row
+    db.execute(
+        text(
+            "INSERT INTO public_stats_total_boost_state "
+            "(id, growth_offset, last_growth_at, next_growth_at, last_increment_amount, updated_at) "
+            "VALUES (1, 0, NULL, :next_growth_at, 0, :updated_at)"
+        ),
+        {
+            "next_growth_at": _next_public_total_growth_at(now),
+            "updated_at": now,
+        },
+    )
+    db.commit()
+    return db.execute(text("SELECT * FROM public_stats_total_boost_state WHERE id = 1")).mappings().first()
+
+
+def _public_total_growth_increment(tashkent_now: datetime) -> int:
+    weekday = tashkent_now.weekday()
+    if weekday <= 2:
+        low, high = max(PUBLIC_TOTAL_BOOST_MIN_INCREMENT, 2), min(PUBLIC_TOTAL_BOOST_MAX_INCREMENT, 5)
+    elif weekday <= 5:
+        low, high = max(PUBLIC_TOTAL_BOOST_MIN_INCREMENT, 4), PUBLIC_TOTAL_BOOST_MAX_INCREMENT
+    else:
+        low, high = 0, min(PUBLIC_TOTAL_BOOST_MAX_INCREMENT, 3)
+    if high < low:
+        low, high = PUBLIC_TOTAL_BOOST_MIN_INCREMENT, PUBLIC_TOTAL_BOOST_MAX_INCREMENT
+    return random.randint(low, high)
+
+
+def _next_public_total_growth_at(now: datetime) -> datetime:
+    days = random.randint(PUBLIC_TOTAL_BOOST_MIN_DAYS, PUBLIC_TOTAL_BOOST_MAX_DAYS)
+    tashkent_then = _to_public_total_tz(now) + timedelta(days=days)
+    scheduled = tashkent_then.replace(
+        hour=random.randint(9, 21),
+        minute=random.randint(0, 59),
+        second=0,
+        microsecond=0,
+    )
+    return scheduled.astimezone(timezone.utc)
+
+
+def _to_public_total_tz(value: datetime) -> datetime:
+    try:
+        tz = ZoneInfo(PUBLIC_TOTAL_BOOST_TIMEZONE)
+    except Exception:
+        tz = ZoneInfo("Asia/Tashkent")
+    return _as_utc(value).astimezone(tz)
 
 
 def _apply_public_stats_boost(categories: list[dict], now: datetime) -> list[dict]:
