@@ -24,6 +24,26 @@ window.PublicHomeStats = window.PublicHomeStats || {};
     return Math.max(8, Math.round((Number(value) / max) * 100));
   }
 
+  function ensureBars(chartEl, categories) {
+    const keys = categories.map((item) => String(item?.key || "")).join("|");
+    if (chartEl.dataset.keys === keys) return;
+    chartEl.dataset.keys = keys;
+    chartEl.innerHTML = categories.map((item) => {
+      const key = String(item?.key || "");
+      const label = String(item?.label || "");
+      const color = COLORS[key] || "#00baff";
+      return `
+        <div class="public-stats-bar-item" data-public-stat-key="${key}" style="--public-stat-color:${color}">
+          <span class="public-stats-value">0</span>
+          <span class="public-stats-bar-track" aria-hidden="true">
+            <span class="public-stats-bar-fill" style="height:0%"></span>
+          </span>
+          <span class="public-stats-label">${label}</span>
+        </div>
+      `;
+    }).join("");
+  }
+
   function render(data) {
     const root = document.getElementById("publicHomeStats");
     if (!root) return;
@@ -31,7 +51,6 @@ window.PublicHomeStats = window.PublicHomeStats || {};
     const categories = Array.isArray(data?.categories) ? data.categories : [];
     const max = Math.max(0, ...categories.map((item) => Number(item?.value || 0)));
     const liveUsers = Number(data?.live_users || 0);
-    root.classList.toggle("is-empty", max === 0);
 
     const liveEl = root.querySelector("[data-public-stat='live-users']");
     const totalEl = root.querySelector("[data-public-stat='total-learners']");
@@ -40,21 +59,17 @@ window.PublicHomeStats = window.PublicHomeStats || {};
     if (totalEl) totalEl.textContent = number(data?.total_learners || 0);
     if (!chartEl) return;
 
-    chartEl.innerHTML = categories.map((item) => {
+    ensureBars(chartEl, categories);
+    categories.forEach((item) => {
       const key = String(item?.key || "");
-      const label = String(item?.label || "");
       const value = Number(item?.value || 0);
-      const color = COLORS[key] || "#00baff";
-      return `
-        <div class="public-stats-bar-item" style="--public-stat-color:${color}">
-          <span class="public-stats-value">${value > 0 ? number(value) : ""}</span>
-          <span class="public-stats-bar-track" aria-hidden="true">
-            <span class="public-stats-bar-fill" style="height:${barHeight(value, max)}%"></span>
-          </span>
-          <span class="public-stats-label">${label}</span>
-        </div>
-      `;
-    }).join("");
+      const itemEl = chartEl.querySelector(`[data-public-stat-key="${key}"]`);
+      if (!itemEl) return;
+      const valueEl = itemEl.querySelector(".public-stats-value");
+      const fillEl = itemEl.querySelector(".public-stats-bar-fill");
+      if (valueEl) valueEl.textContent = number(value);
+      if (fillEl) fillEl.style.height = `${barHeight(value, max)}%`;
+    });
   }
 
   async function load() {
