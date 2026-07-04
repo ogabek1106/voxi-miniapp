@@ -48,6 +48,7 @@
   <link rel="stylesheet" href="css/xp.css?v=4">
   <link rel="stylesheet" href="css/shadow_writing_card.css?v=7">
   <link rel="stylesheet" href="css/premiere.css?v=8">
+  <link rel="stylesheet" href="css/public_home_stats.css?v=1">
   <link rel="icon" type="image/png" href="./assets/favicon.png">
   <link rel="apple-touch-icon" href="./assets/favicon.png">
   <title>EBAI Academy | IELTS Practice Platform</title>
@@ -1869,6 +1870,27 @@
               </svg>
             </div>
 
+            <section class="public-stats-widget" id="publicHomeStats" aria-label="Learning activity right now">
+              <div class="public-stats-head">
+                <div>
+                  <h3 class="public-stats-title">🌍 Learning Right Now</h3>
+                  <p class="public-stats-subtitle">See where everyone is practicing.</p>
+                </div>
+                <div class="public-stats-totals" aria-label="Platform stats">
+                  <div class="public-stats-total">
+                    <span class="public-stats-total-label">👀 Here right now</span>
+                    <span class="public-stats-total-value" data-public-stat="live-users">0</span>
+                  </div>
+                  <div class="public-stats-total">
+                    <span class="public-stats-total-label">🚀 Total learners</span>
+                    <span class="public-stats-total-value" data-public-stat="total-learners">0</span>
+                  </div>
+                </div>
+              </div>
+              <div class="public-stats-chart" data-public-stat="chart"></div>
+              <div class="public-stats-empty">No one is practicing at the moment. Be today's first learner! 🚀</div>
+            </section>
+
           </div>
 
           <div class="home-admin-actions" id="home-admin-actions">
@@ -2175,6 +2197,7 @@
   <script src="./js/premiere/ui.js?v=15"></script>
   <script src="./js/premiere/loader.js?v=4"></script>
   <script src="./js/activity/heartbeat.js?v=2"></script>
+  <script src="./js/public_home_stats.js?v=1"></script>
   <script src="./js/gamification/api.js?v=1"></script>
   <script src="./js/gamification/ui.js?v=1"></script>
   <script src="./js/app.js?v=9"></script>

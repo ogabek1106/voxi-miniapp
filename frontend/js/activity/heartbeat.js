@@ -69,6 +69,9 @@ window.VoxiActivity = window.VoxiActivity || {};
   }
 
   function visiblePage() {
+    if (window.MockFlow?.active && window.__activeExamPart) return "ielts_mock_test";
+    if (window.UserReading?.__sessionMode === "full_mock" && window.__activeExamPart) return "ielts_mock_test";
+    if (window.UserListening?.__sessionMode === "full_mock" && window.__activeExamPart) return "ielts_mock_test";
     if (document.body?.classList.contains("word-shuffle-active")) return "word_shuffle";
     if (document.body?.classList.contains("match-words-active")) return "match_words";
     if (document.body?.classList.contains("word-merge-active")) return "word_merge";
@@ -88,7 +91,8 @@ window.VoxiActivity = window.VoxiActivity || {};
 
   async function send() {
     if (document.visibilityState === "hidden") return;
-    const page = currentPage || visiblePage();
+    const visible = visiblePage();
+    const page = visible === "ielts_mock_test" ? visible : (currentPage || visible);
     try {
       await apiPost("/activity/heartbeat", {
         session_key: sessionKey(),

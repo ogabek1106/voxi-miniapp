@@ -24,3 +24,8 @@ def heartbeat(payload: ActivityHeartbeatIn, db: Session = Depends(get_db)):
 def live_dashboard(telegram_id: int, db: Session = Depends(get_db)):
     require_admin(telegram_id)
     return {"ok": True, **activity_service.build_dashboard(db)}
+
+
+@router.get("/activity/public-stats")
+def public_stats(db: Session = Depends(get_db)):
+    return {"ok": True, **activity_service.build_public_stats(db)}

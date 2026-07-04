@@ -17,6 +17,34 @@ from app.models import (
 ONLINE_SECONDS = 90
 IDLE_SECONDS = 300
 GAME_FEATURES = {"word_shuffle", "word_merge", "odd_one_out", "shadow_writing", "match_words"}
+PUBLIC_ACTIVITY_CATEGORIES = [
+    {"key": "shadow_writing", "label": "Shadow Writing"},
+    {"key": "odd_one_out", "label": "Odd One Out"},
+    {"key": "word_shuffle", "label": "Word Shuffle"},
+    {"key": "match_words", "label": "Match Words"},
+    {"key": "ielts_mock_test", "label": "IELTS Mock Test"},
+    {"key": "listening_test", "label": "Listening"},
+    {"key": "reading_test", "label": "Reading"},
+    {"key": "writing_test", "label": "Writing"},
+    {"key": "speaking_test", "label": "Speaking"},
+]
+PUBLIC_ACTIVITY_ALIASES = {
+    "shadow_writing": "shadow_writing",
+    "odd_one_out": "odd_one_out",
+    "word_shuffle": "word_shuffle",
+    "match_words": "match_words",
+    "ielts_mock_test": "ielts_mock_test",
+    "full_mock": "ielts_mock_test",
+    "full_mock_test": "ielts_mock_test",
+    "reading_test": "reading_test",
+    "reading": "reading_test",
+    "writing_test": "writing_test",
+    "writing": "writing_test",
+    "speaking_test": "speaking_test",
+    "speaking": "speaking_test",
+    "listening_test": "listening_test",
+    "listening": "listening_test",
+}
 
 
 def record_heartbeat(db: Session, payload) -> AppActivitySession:
@@ -112,6 +140,49 @@ def build_dashboard(db: Session) -> dict:
     }
 
 
+def build_public_stats(db: Session) -> dict:
+    now = _utcnow()
+    online_cutoff = now - timedelta(seconds=ONLINE_SECONDS)
+    sessions = (
+        db.query(AppActivitySession)
+        .filter(AppActivitySession.last_seen >= online_cutoff)
+        .all()
+    )
+    latest_by_person = {}
+
+    for session in sessions:
+        identity = _public_identity(session)
+        if not identity:
+            continue
+        last_seen = _as_utc(session.last_seen) or datetime.min.replace(tzinfo=timezone.utc)
+        previous = latest_by_person.get(identity)
+        previous_seen = _as_utc(previous.last_seen) if previous else None
+        if not previous or not previous_seen or last_seen >= previous_seen:
+            latest_by_person[identity] = session
+
+    counts = {item["key"]: 0 for item in PUBLIC_ACTIVITY_CATEGORIES}
+    for session in latest_by_person.values():
+        category = PUBLIC_ACTIVITY_ALIASES.get(_normalize_feature(session.current_page))
+        if category in counts:
+            counts[category] += 1
+
+    categories = [
+        {
+            "key": item["key"],
+            "label": item["label"],
+            "value": counts[item["key"]],
+        }
+        for item in PUBLIC_ACTIVITY_CATEGORIES
+    ]
+
+    return {
+        "live_users": sum(item["value"] for item in categories),
+        "total_learners": db.query(User).count(),
+        "categories": categories,
+        "generated_at": now.isoformat(),
+    }
+
+
 def _normalize_feature(value: str | None) -> str:
     value = str(value or "unknown").strip().lower().replace("-", "_").replace(" ", "_")
     return value[:80] or "unknown"
@@ -139,6 +210,16 @@ def _count_by_device(sessions: list[AppActivitySession], device_type: str) -> in
 
 def _distinct_count(sessions: list[AppActivitySession], attr: str) -> int:
     return len({getattr(session, attr) for session in sessions if getattr(session, attr)})
+
+
+def _public_identity(session: AppActivitySession) -> str:
+    if session.user_id:
+        return f"user:{session.user_id}"
+    if session.telegram_id:
+        return f"telegram:{session.telegram_id}"
+    if session.visitor_key:
+        return f"visitor:{session.visitor_key}"
+    return f"session:{session.session_key}"
 
 
 def _returning_visitors_today(sessions: list[AppActivitySession], today_start: datetime) -> int:
