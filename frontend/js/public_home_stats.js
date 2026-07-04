@@ -20,7 +20,7 @@ window.PublicHomeStats = window.PublicHomeStats || {};
   }
 
   function barHeight(value, max) {
-    if (!value || !max) return 0;
+    if (!value || !max) return 6;
     return Math.max(8, Math.round((Number(value) / max) * 100));
   }
 
@@ -36,7 +36,7 @@ window.PublicHomeStats = window.PublicHomeStats || {};
         <div class="public-stats-bar-item" data-public-stat-key="${key}" style="--public-stat-color:${color}">
           <span class="public-stats-value">0</span>
           <span class="public-stats-bar-track" aria-hidden="true">
-            <span class="public-stats-bar-fill" style="height:0%"></span>
+            <span class="public-stats-bar-fill" style="height:6%"></span>
           </span>
           <span class="public-stats-label">${label}</span>
         </div>

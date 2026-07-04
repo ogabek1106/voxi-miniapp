@@ -62,14 +62,12 @@
 
 #screen-home .public-stats-chart {
   position: relative;
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
   align-items: end;
-  justify-content: center;
-  gap: 4px;
-  width: 320px;
-  max-width: 100%;
+  gap: 3px;
+  width: 100%;
   min-height: 120px;
-  margin: 0 auto;
   padding: 0 0 2px;
 }
 
@@ -86,8 +84,7 @@
 #screen-home .public-stats-bar-item {
   position: relative;
   z-index: 1;
-  width: 32px;
-  flex: 0 0 32px;
+  min-width: 0;
   display: grid;
   grid-template-rows: 18px 72px 30px;
   align-items: end;
@@ -103,7 +100,7 @@
 }
 
 #screen-home .public-stats-bar-track {
-  width: 16px;
+  width: calc(100% - 4px);
   height: 72px;
   border-radius: 999px;
   background: rgba(220, 231, 240, 0.58);
@@ -114,6 +111,7 @@
 
 #screen-home .public-stats-bar-fill {
   width: 100%;
+  min-height: 4px;
   border-radius: 999px 999px 7px 7px;
   background: var(--public-stat-color, #00baff);
   transition: height 320ms ease;
@@ -152,10 +150,15 @@
   }
 
   #screen-home .public-stats-chart {
-    gap: 3px;
+    gap: 2px;
   }
 
   #screen-home .public-stats-bar-item {
-    width: 30px;
+    grid-template-rows: 18px 68px 32px;
+  }
+
+  #screen-home .public-stats-bar-track {
+    width: calc(100% - 3px);
+    height: 68px;
   }
 }
