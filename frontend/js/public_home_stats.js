@@ -14,6 +14,8 @@ window.PublicHomeStats = window.PublicHomeStats || {};
     speaking_test: "#ec4899",
   };
   const SCALE_STEPS = [50, 100, 250, 500, 1000, 2500, 5000];
+  const ZERO_BAR_HEIGHT = 2;
+  const MIN_ACTIVE_BAR_HEIGHT = 9;
   let timer = null;
 
   function number(value) {
@@ -30,8 +32,8 @@ window.PublicHomeStats = window.PublicHomeStats || {};
   }
 
   function barHeight(value, max) {
-    if (!value) return 4;
-    return Math.min(100, Math.max(4, Math.round((Number(value) / max) * 100)));
+    if (!value) return ZERO_BAR_HEIGHT;
+    return Math.min(100, Math.max(MIN_ACTIVE_BAR_HEIGHT, Math.round((Number(value) / max) * 100)));
   }
 
   function ensureBars(chartEl, categories) {
@@ -44,7 +46,7 @@ window.PublicHomeStats = window.PublicHomeStats || {};
       const color = COLORS[key] || "#00baff";
       return `
         <div class="public-stats-bar-item" data-public-stat-key="${key}" style="--public-stat-color:${color}">
-          <span class="public-stats-bar-fill" style="height:4%"></span>
+          <span class="public-stats-bar-fill" style="height:${ZERO_BAR_HEIGHT}%"></span>
           <span class="public-stats-label">${label}</span>
         </div>
       `;
