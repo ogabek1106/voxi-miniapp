@@ -154,6 +154,68 @@
   overflow-wrap: anywhere;
 }
 
+.public-stats-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%);
+  display: none;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: rgba(23, 33, 43, 0.92);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.public-stats-tooltip.is-visible {
+  display: block;
+}
+
+@media (max-width: 640px) {
+  #screen-home .public-stats-totals {
+    align-items: center;
+    gap: 18px;
+    flex-wrap: nowrap;
+  }
+
+  #screen-home .public-stats-total {
+    gap: 5px;
+    min-width: 0;
+    white-space: nowrap;
+  }
+
+  #screen-home .public-stats-total-label {
+    font-size: 16px;
+  }
+
+  #screen-home .public-stats-total-value {
+    font-size: 21px;
+  }
+
+  #screen-home .public-stats-chart {
+    padding-bottom: 14px;
+  }
+
+  #screen-home .public-stats-chart-inner {
+    min-width: 100%;
+    grid-template-columns: 26px minmax(0, 1fr);
+    column-gap: 5px;
+  }
+
+  #screen-home .public-stats-y-axis span {
+    right: 5px;
+    font-size: 8px;
+  }
+
+  #screen-home .public-stats-label {
+    display: none;
+  }
+}
+
 @media (max-width: 380px) {
   #screen-home .public-stats-widget {
     margin-top: 20px;
@@ -165,23 +227,23 @@
   }
 
   #screen-home .public-stats-totals {
-    gap: 22px;
+    gap: 10px;
   }
 
   #screen-home .public-stats-total {
-    gap: 5px;
+    gap: 4px;
   }
 
   #screen-home .public-stats-total-value {
-    font-size: 29px;
+    font-size: 18px;
   }
 
   #screen-home .public-stats-total-label {
-    font-size: 24px;
+    font-size: 13px;
   }
 
   #screen-home .public-stats-chart-inner {
-    min-width: 430px;
+    min-width: 100%;
   }
 
   #screen-home .public-stats-bars {

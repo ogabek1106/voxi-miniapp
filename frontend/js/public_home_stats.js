@@ -17,6 +17,7 @@ window.PublicHomeStats = window.PublicHomeStats || {};
   const ZERO_BAR_HEIGHT = 2;
   const MIN_ACTIVE_BAR_HEIGHT = 9;
   let timer = null;
+  let tooltipTimer = null;
 
   function number(value) {
     return Number(value || 0).toLocaleString();
@@ -45,7 +46,7 @@ window.PublicHomeStats = window.PublicHomeStats || {};
       const label = String(item?.label || "");
       const color = COLORS[key] || "#00baff";
       return `
-        <div class="public-stats-bar-item" data-public-stat-key="${key}" style="--public-stat-color:${color}">
+        <div class="public-stats-bar-item" data-public-stat-key="${key}" data-public-stat-label="${label}" style="--public-stat-color:${color}">
           <span class="public-stats-bar-fill" style="height:${ZERO_BAR_HEIGHT}%"></span>
           <span class="public-stats-label">${label}</span>
         </div>
@@ -64,9 +65,48 @@ window.PublicHomeStats = window.PublicHomeStats || {};
           <span class="public-stats-gridline" style="bottom:50%"></span>
           <span class="public-stats-x-axis" aria-hidden="true"></span>
           <div class="public-stats-bars">${bars}</div>
+          <div class="public-stats-tooltip" data-public-stat-tooltip></div>
         </div>
       </div>
     `;
+    bindTooltip(chartEl);
+  }
+
+  function isCompactStatsView() {
+    return window.matchMedia?.("(max-width: 640px)")?.matches;
+  }
+
+  function hideTooltip(chartEl) {
+    const tooltip = chartEl?.querySelector("[data-public-stat-tooltip]");
+    if (!tooltip) return;
+    tooltip.classList.remove("is-visible");
+  }
+
+  function showTooltip(chartEl, barEl) {
+    if (!isCompactStatsView()) return;
+    const tooltip = chartEl.querySelector("[data-public-stat-tooltip]");
+    const plot = chartEl.querySelector(".public-stats-plot");
+    if (!tooltip || !plot || !barEl) return;
+    const plotRect = plot.getBoundingClientRect();
+    const barRect = barEl.getBoundingClientRect();
+    const left = Math.max(18, Math.min(plotRect.width - 18, barRect.left + (barRect.width / 2) - plotRect.left));
+    tooltip.textContent = barEl.dataset.publicStatLabel || "";
+    tooltip.style.left = `${left}px`;
+    tooltip.classList.add("is-visible");
+    window.clearTimeout(tooltipTimer);
+    tooltipTimer = window.setTimeout(() => hideTooltip(chartEl), 2200);
+  }
+
+  function bindTooltip(chartEl) {
+    if (chartEl.dataset.tooltipBound === "1") return;
+    chartEl.dataset.tooltipBound = "1";
+    chartEl.addEventListener("click", (event) => {
+      const barEl = event.target?.closest?.(".public-stats-bar-item");
+      if (!barEl || !chartEl.contains(barEl)) return;
+      event.stopPropagation();
+      showTooltip(chartEl, barEl);
+    });
+    document.addEventListener("click", () => hideTooltip(chartEl));
   }
 
   function render(data) {
