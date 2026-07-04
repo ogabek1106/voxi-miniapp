@@ -1,4 +1,8 @@
 from datetime import date, datetime, timezone, timedelta
+import os
+import random
+import threading
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -44,6 +48,54 @@ PUBLIC_ACTIVITY_ALIASES = {
     "speaking": "speaking_test",
     "listening_test": "listening_test",
     "listening": "listening_test",
+}
+
+
+def _env_int(name: str, default: int) -> int:
+    try:
+        return int(os.getenv(name, str(default)) or default)
+    except (TypeError, ValueError):
+        return default
+
+
+PUBLIC_STATS_BOOST_ENABLED = os.getenv("PUBLIC_STATS_BOOST_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+PUBLIC_STATS_BOOST_MIN_INTERVAL_SECONDS = max(120, _env_int("PUBLIC_STATS_BOOST_MIN_INTERVAL_SECONDS", 120))
+PUBLIC_STATS_BOOST_MAX_INTERVAL_SECONDS = max(
+    PUBLIC_STATS_BOOST_MIN_INTERVAL_SECONDS,
+    _env_int("PUBLIC_STATS_BOOST_MAX_INTERVAL_SECONDS", 300),
+)
+PUBLIC_STATS_BOOST_TIMEZONE = os.getenv("PUBLIC_STATS_BOOST_TIMEZONE", "Asia/Tashkent") or "Asia/Tashkent"
+PUBLIC_STATS_BOOST_PROFILE = [
+    ((0, 6), (0, 4)),
+    ((6, 8), (2, 8)),
+    ((8, 12), (8, 18)),
+    ((12, 14), (15, 25)),
+    ((14, 17), (10, 20)),
+    ((17, 22), (18, 35)),
+    ((22, 24), (5, 15)),
+]
+PUBLIC_STATS_FEATURE_WEIGHTS = {
+    "ielts_mock_test": 24,
+    "reading_test": 18,
+    "listening_test": 14,
+    "word_shuffle": 12,
+    "match_words": 11,
+    "odd_one_out": 8,
+    "shadow_writing": 8,
+    "writing_test": 6,
+    "speaking_test": 5,
+}
+_PUBLIC_STATS_BOOST_LOCK = threading.Lock()
+_PUBLIC_STATS_BOOST_STATE = {
+    "sessions": [],
+    "target": 0,
+    "target_period": None,
+    "target_refresh_at": None,
+    "next_update_at": None,
+    "last_update_at": None,
+    "direction": 0,
+    "daily_variation_date": None,
+    "daily_variation": 1.0,
 }
 
 
@@ -174,6 +226,8 @@ def build_public_stats(db: Session) -> dict:
         }
         for item in PUBLIC_ACTIVITY_CATEGORIES
     ]
+    if PUBLIC_STATS_BOOST_ENABLED:
+        categories = _apply_public_stats_boost(categories, now)
 
     return {
         "live_users": sum(item["value"] for item in categories),
@@ -181,6 +235,151 @@ def build_public_stats(db: Session) -> dict:
         "categories": categories,
         "generated_at": now.isoformat(),
     }
+
+
+def _apply_public_stats_boost(categories: list[dict], now: datetime) -> list[dict]:
+    real_counts = {item["key"]: int(item["value"] or 0) for item in categories}
+    real_total = sum(real_counts.values())
+    with _PUBLIC_STATS_BOOST_LOCK:
+        _advance_public_stats_boost(real_total, now)
+        simulated_counts = {item["key"]: 0 for item in PUBLIC_ACTIVITY_CATEGORIES}
+        for session in _PUBLIC_STATS_BOOST_STATE["sessions"]:
+            feature = session.get("feature")
+            if feature in simulated_counts:
+                simulated_counts[feature] += 1
+
+    return [
+        {
+            **item,
+            "value": real_counts[item["key"]] + simulated_counts.get(item["key"], 0),
+        }
+        for item in categories
+    ]
+
+
+def _advance_public_stats_boost(real_total: int, now: datetime) -> None:
+    state = _PUBLIC_STATS_BOOST_STATE
+    if state["next_update_at"] and now < state["next_update_at"]:
+        return
+
+    tashkent_now = _to_public_stats_tz(now)
+    period_key, target_range = _public_stats_period(tashkent_now)
+    _ensure_public_stats_daily_variation(tashkent_now)
+
+    target_refresh_due = not state["target_refresh_at"] or now >= state["target_refresh_at"]
+    if state["target_period"] != period_key or target_refresh_due:
+        state["target"] = _pick_public_stats_target(target_range, state["daily_variation"])
+        state["target_period"] = period_key
+        state["target_refresh_at"] = now + timedelta(minutes=random.randint(20, 45))
+
+    sessions = state["sessions"]
+    desired_simulated = max(0, int(state["target"] or 0) - int(real_total or 0))
+    current_simulated = len(sessions)
+    delta = desired_simulated - current_simulated
+    expired_indexes = [
+        index
+        for index, session in enumerate(sessions)
+        if _as_utc(session.get("expires_at")) and _as_utc(session.get("expires_at")) <= now
+    ]
+
+    if delta > 0:
+        add_count = min(delta, _public_stats_step_size(delta))
+        sessions.extend(_new_public_stats_session(now) for _ in range(add_count))
+        state["direction"] = 1 if add_count else state["direction"]
+    elif delta < 0 or expired_indexes:
+        remove_count = min(abs(delta) if delta < 0 else len(expired_indexes), _public_stats_step_size(delta or -len(expired_indexes)))
+        _remove_public_stats_sessions(sessions, expired_indexes, remove_count)
+        state["direction"] = -1 if remove_count else state["direction"]
+    else:
+        state["direction"] = 0
+
+    state["last_update_at"] = now
+    state["next_update_at"] = now + timedelta(seconds=random.randint(
+        PUBLIC_STATS_BOOST_MIN_INTERVAL_SECONDS,
+        PUBLIC_STATS_BOOST_MAX_INTERVAL_SECONDS,
+    ))
+
+
+def _to_public_stats_tz(value: datetime) -> datetime:
+    try:
+        tz = ZoneInfo(PUBLIC_STATS_BOOST_TIMEZONE)
+    except Exception:
+        tz = ZoneInfo("Asia/Tashkent")
+    return _as_utc(value).astimezone(tz)
+
+
+def _public_stats_period(value: datetime) -> tuple[str, tuple[int, int]]:
+    hour = int(value.hour)
+    for (start_hour, end_hour), target_range in PUBLIC_STATS_BOOST_PROFILE:
+        if start_hour <= hour < end_hour:
+            return f"{start_hour:02d}-{end_hour:02d}", target_range
+    return "00-06", (0, 4)
+
+
+def _ensure_public_stats_daily_variation(tashkent_now: datetime) -> None:
+    state = _PUBLIC_STATS_BOOST_STATE
+    today = tashkent_now.date().isoformat()
+    if state["daily_variation_date"] == today:
+        return
+    rng = random.Random(f"public-stats:{today}")
+    state["daily_variation_date"] = today
+    state["daily_variation"] = rng.uniform(0.85, 1.15)
+    state["target_refresh_at"] = None
+
+
+def _pick_public_stats_target(target_range: tuple[int, int], variation: float) -> int:
+    low, high = target_range
+    varied_low = max(0, int(round(low * variation)))
+    varied_high = max(varied_low, int(round(high * variation)))
+    return random.randint(varied_low, varied_high)
+
+
+def _public_stats_step_size(delta: int) -> int:
+    magnitude = abs(int(delta or 0))
+    if magnitude <= 0:
+        return 0
+    if magnitude == 1:
+        return 1
+    if magnitude <= 4:
+        return min(2, magnitude)
+    return min(magnitude, 3 if random.random() < 0.18 else 2)
+
+
+def _new_public_stats_session(now: datetime) -> dict:
+    lifetime_minutes = random.randint(10, 20) if random.random() < 0.16 else random.randint(2, 10)
+    return {
+        "id": f"display_{int(now.timestamp())}_{random.randint(100000, 999999)}",
+        "feature": _weighted_public_stats_feature(),
+        "created_at": now,
+        "expires_at": now + timedelta(minutes=lifetime_minutes),
+    }
+
+
+def _weighted_public_stats_feature() -> str:
+    keys = [item["key"] for item in PUBLIC_ACTIVITY_CATEGORIES]
+    weights = [PUBLIC_STATS_FEATURE_WEIGHTS.get(key, 1) for key in keys]
+    return random.choices(keys, weights=weights, k=1)[0]
+
+
+def _remove_public_stats_sessions(sessions: list[dict], expired_indexes: list[int], remove_count: int) -> None:
+    if remove_count <= 0 or not sessions:
+        return
+    remove_indexes = []
+    for index in expired_indexes:
+        if index not in remove_indexes:
+            remove_indexes.append(index)
+        if len(remove_indexes) >= remove_count:
+            break
+    while len(remove_indexes) < remove_count and len(remove_indexes) < len(sessions):
+        oldest_index = min(
+            (index for index in range(len(sessions)) if index not in remove_indexes),
+            key=lambda index: _as_utc(sessions[index].get("expires_at")) or datetime.max.replace(tzinfo=timezone.utc),
+        )
+        remove_indexes.append(oldest_index)
+
+    for index in sorted(remove_indexes, reverse=True):
+        if 0 <= index < len(sessions):
+            sessions.pop(index)
 
 
 def _normalize_feature(value: str | None) -> str:
