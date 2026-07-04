@@ -202,13 +202,19 @@
 
   #screen-home .public-stats-chart-inner {
     min-width: 100%;
-    grid-template-columns: 26px minmax(0, 1fr);
-    column-gap: 5px;
+    grid-template-columns: 20px minmax(0, 1fr);
+    column-gap: 3px;
   }
 
   #screen-home .public-stats-y-axis span {
-    right: 5px;
+    right: 3px;
     font-size: 8px;
+  }
+
+  #screen-home .public-stats-bar-item {
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
 
   #screen-home .public-stats-label {
@@ -244,6 +250,8 @@
 
   #screen-home .public-stats-chart-inner {
     min-width: 100%;
+    grid-template-columns: 18px minmax(0, 1fr);
+    column-gap: 2px;
   }
 
   #screen-home .public-stats-bars {

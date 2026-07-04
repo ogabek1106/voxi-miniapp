@@ -100,12 +100,14 @@ window.PublicHomeStats = window.PublicHomeStats || {};
   function bindTooltip(chartEl) {
     if (chartEl.dataset.tooltipBound === "1") return;
     chartEl.dataset.tooltipBound = "1";
-    chartEl.addEventListener("click", (event) => {
+    const handleBarTap = (event) => {
       const barEl = event.target?.closest?.(".public-stats-bar-item");
       if (!barEl || !chartEl.contains(barEl)) return;
       event.stopPropagation();
       showTooltip(chartEl, barEl);
-    });
+    };
+    chartEl.addEventListener("pointerup", handleBarTap);
+    chartEl.addEventListener("click", handleBarTap);
     document.addEventListener("click", () => hideTooltip(chartEl));
   }
 
