@@ -13,35 +13,54 @@ window.PublicHomeStats = window.PublicHomeStats || {};
     writing_test: "#f97316",
     speaking_test: "#ec4899",
   };
+  const CHART_MAX = 1000;
   let timer = null;
 
   function number(value) {
     return Number(value || 0).toLocaleString();
   }
 
-  function barHeight(value, max) {
-    if (!value || !max) return 6;
-    return Math.max(8, Math.round((Number(value) / max) * 100));
+  function barHeight(value) {
+    if (!value) return 4;
+    return Math.min(100, Math.max(4, Math.round((Number(value) / CHART_MAX) * 100)));
   }
 
   function ensureBars(chartEl, categories) {
     const keys = categories.map((item) => String(item?.key || "")).join("|");
     if (chartEl.dataset.keys === keys) return;
     chartEl.dataset.keys = keys;
-    chartEl.innerHTML = categories.map((item) => {
+    const bars = categories.map((item) => {
       const key = String(item?.key || "");
       const label = String(item?.label || "");
       const color = COLORS[key] || "#00baff";
       return `
         <div class="public-stats-bar-item" data-public-stat-key="${key}" style="--public-stat-color:${color}">
           <span class="public-stats-value">0</span>
-          <span class="public-stats-bar-track" aria-hidden="true">
-            <span class="public-stats-bar-fill" style="height:6%"></span>
-          </span>
+          <span class="public-stats-bar-fill" style="height:4%"></span>
           <span class="public-stats-label">${label}</span>
         </div>
       `;
     }).join("");
+
+    chartEl.innerHTML = `
+      <div class="public-stats-chart-inner">
+        <div class="public-stats-y-axis" aria-hidden="true">
+          <span style="bottom:100%">1000</span>
+          <span style="bottom:50%">500</span>
+          <span style="bottom:10%">100</span>
+          <span style="bottom:5%">50</span>
+          <span style="bottom:0%">0</span>
+        </div>
+        <div class="public-stats-plot">
+          <span class="public-stats-gridline" style="bottom:100%"></span>
+          <span class="public-stats-gridline" style="bottom:50%"></span>
+          <span class="public-stats-gridline" style="bottom:10%"></span>
+          <span class="public-stats-gridline" style="bottom:5%"></span>
+          <span class="public-stats-x-axis" aria-hidden="true"></span>
+          <div class="public-stats-bars">${bars}</div>
+        </div>
+      </div>
+    `;
   }
 
   function render(data) {
@@ -49,7 +68,6 @@ window.PublicHomeStats = window.PublicHomeStats || {};
     if (!root) return;
 
     const categories = Array.isArray(data?.categories) ? data.categories : [];
-    const max = Math.max(0, ...categories.map((item) => Number(item?.value || 0)));
     const liveUsers = Number(data?.live_users || 0);
 
     const liveEl = root.querySelector("[data-public-stat='live-users']");
@@ -67,8 +85,10 @@ window.PublicHomeStats = window.PublicHomeStats || {};
       if (!itemEl) return;
       const valueEl = itemEl.querySelector(".public-stats-value");
       const fillEl = itemEl.querySelector(".public-stats-bar-fill");
+      const height = barHeight(value);
+      itemEl.style.setProperty("--public-stat-height", `${height}%`);
       if (valueEl) valueEl.textContent = number(value);
-      if (fillEl) fillEl.style.height = `${barHeight(value, max)}%`;
+      if (fillEl) fillEl.style.height = `${height}%`;
     });
   }
 
