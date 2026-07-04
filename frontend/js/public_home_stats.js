@@ -13,16 +13,25 @@ window.PublicHomeStats = window.PublicHomeStats || {};
     writing_test: "#f97316",
     speaking_test: "#ec4899",
   };
-  const CHART_MAX = 1000;
+  const SCALE_STEPS = [50, 100, 250, 500, 1000, 2500, 5000];
   let timer = null;
 
   function number(value) {
     return Number(value || 0).toLocaleString();
   }
 
-  function barHeight(value) {
+  function chartMax(values) {
+    const highest = Math.max(0, ...values.map((value) => Number(value || 0)));
+    return SCALE_STEPS.find((step) => highest <= step) || Math.ceil(highest / 5000) * 5000;
+  }
+
+  function scaleTicks(max) {
+    return [max, Math.round(max / 2), Math.round(max / 10), Math.round(max / 20), 0];
+  }
+
+  function barHeight(value, max) {
     if (!value) return 4;
-    return Math.min(100, Math.max(4, Math.round((Number(value) / CHART_MAX) * 100)));
+    return Math.min(100, Math.max(4, Math.round((Number(value) / max) * 100)));
   }
 
   function ensureBars(chartEl, categories) {
@@ -45,11 +54,11 @@ window.PublicHomeStats = window.PublicHomeStats || {};
     chartEl.innerHTML = `
       <div class="public-stats-chart-inner">
         <div class="public-stats-y-axis" aria-hidden="true">
-          <span style="bottom:100%">1000</span>
-          <span style="bottom:50%">500</span>
-          <span style="bottom:10%">100</span>
-          <span style="bottom:5%">50</span>
-          <span style="bottom:0%">0</span>
+          <span data-public-stat-tick="0" style="bottom:100%">0</span>
+          <span data-public-stat-tick="1" style="bottom:50%">0</span>
+          <span data-public-stat-tick="2" style="bottom:10%">0</span>
+          <span data-public-stat-tick="3" style="bottom:5%">0</span>
+          <span data-public-stat-tick="4" style="bottom:0%">0</span>
         </div>
         <div class="public-stats-plot">
           <span class="public-stats-gridline" style="bottom:100%"></span>
@@ -78,6 +87,12 @@ window.PublicHomeStats = window.PublicHomeStats || {};
     if (!chartEl) return;
 
     ensureBars(chartEl, categories);
+    const values = categories.map((item) => Number(item?.value || 0));
+    const max = chartMax(values);
+    scaleTicks(max).forEach((tick, index) => {
+      const tickEl = chartEl.querySelector(`[data-public-stat-tick="${index}"]`);
+      if (tickEl) tickEl.textContent = number(tick);
+    });
     categories.forEach((item) => {
       const key = String(item?.key || "");
       const value = Number(item?.value || 0);
@@ -85,7 +100,7 @@ window.PublicHomeStats = window.PublicHomeStats || {};
       if (!itemEl) return;
       const valueEl = itemEl.querySelector(".public-stats-value");
       const fillEl = itemEl.querySelector(".public-stats-bar-fill");
-      const height = barHeight(value);
+      const height = barHeight(value, max);
       itemEl.style.setProperty("--public-stat-height", `${height}%`);
       if (valueEl) valueEl.textContent = number(value);
       if (fillEl) fillEl.style.height = `${height}%`;
