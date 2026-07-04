@@ -196,17 +196,20 @@
   }
 
   #screen-home .public-stats-chart {
+    overflow: visible;
     padding-bottom: 14px;
   }
 
   #screen-home .public-stats-chart-inner {
+    width: 100%;
     min-width: 100%;
-    grid-template-columns: 12px minmax(0, 1fr);
-    column-gap: 1px;
+    grid-template-columns: 28px minmax(0, 1fr);
+    column-gap: 4px;
+    transform: translateX(-16px);
   }
 
   #screen-home .public-stats-y-axis span {
-    right: 2px;
+    right: 6px;
     font-size: 8px;
   }
 
@@ -223,19 +226,22 @@
 
 body.view-miniapp #screen-home .public-stats-chart,
 body.mobile-browser-view #screen-home .public-stats-chart {
+  overflow: visible;
   padding-bottom: 14px;
 }
 
 body.view-miniapp #screen-home .public-stats-chart-inner,
 body.mobile-browser-view #screen-home .public-stats-chart-inner {
+  width: 100%;
   min-width: 100%;
-  grid-template-columns: 12px minmax(0, 1fr);
-  column-gap: 1px;
+  grid-template-columns: 28px minmax(0, 1fr);
+  column-gap: 4px;
+  transform: translateX(-16px);
 }
 
 body.view-miniapp #screen-home .public-stats-y-axis span,
 body.mobile-browser-view #screen-home .public-stats-y-axis span {
-  right: 2px;
+  right: 6px;
   font-size: 8px;
 }
 
@@ -278,9 +284,11 @@ body.mobile-browser-view #screen-home .public-stats-label {
   }
 
   #screen-home .public-stats-chart-inner {
+    width: 100%;
     min-width: 100%;
-    grid-template-columns: 11px minmax(0, 1fr);
-    column-gap: 1px;
+    grid-template-columns: 26px minmax(0, 1fr);
+    column-gap: 3px;
+    transform: translateX(-14.5px);
   }
 
   #screen-home .public-stats-bars {
