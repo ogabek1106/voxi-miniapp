@@ -42,9 +42,9 @@
 
 #screen-home .public-stats-total-label {
   color: #17212b;
-  font-size: 14px;
+  font-size: 27px;
   font-weight: 900;
-  line-height: 1.15;
+  line-height: 1;
 }
 
 #screen-home .public-stats-total-value {
@@ -81,7 +81,6 @@
 #screen-home .public-stats-y-axis span {
   position: absolute;
   right: 7px;
-  transform: translateY(50%);
   color: #607080;
   font-size: 9px;
   font-weight: 800;
@@ -132,18 +131,6 @@
   justify-content: center;
 }
 
-#screen-home .public-stats-value {
-  position: absolute;
-  left: 50%;
-  bottom: calc(var(--public-stat-height, 4%) + 4px);
-  transform: translateX(-50%);
-  color: #17212b;
-  font-size: 11px;
-  font-weight: 900;
-  line-height: 1;
-  transition: bottom 320ms ease;
-}
-
 #screen-home .public-stats-bar-fill {
   width: 100%;
   min-height: 4px;
@@ -187,6 +174,10 @@
 
   #screen-home .public-stats-total-value {
     font-size: 29px;
+  }
+
+  #screen-home .public-stats-total-label {
+    font-size: 24px;
   }
 
   #screen-home .public-stats-chart-inner {

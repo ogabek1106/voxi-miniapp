@@ -26,7 +26,7 @@ window.PublicHomeStats = window.PublicHomeStats || {};
   }
 
   function scaleTicks(max) {
-    return [max, Math.round(max / 2), Math.round(max / 10), Math.round(max / 20), 0];
+    return [max, Math.round(max / 2), 0];
   }
 
   function barHeight(value, max) {
@@ -44,7 +44,6 @@ window.PublicHomeStats = window.PublicHomeStats || {};
       const color = COLORS[key] || "#00baff";
       return `
         <div class="public-stats-bar-item" data-public-stat-key="${key}" style="--public-stat-color:${color}">
-          <span class="public-stats-value">0</span>
           <span class="public-stats-bar-fill" style="height:4%"></span>
           <span class="public-stats-label">${label}</span>
         </div>
@@ -54,17 +53,13 @@ window.PublicHomeStats = window.PublicHomeStats || {};
     chartEl.innerHTML = `
       <div class="public-stats-chart-inner">
         <div class="public-stats-y-axis" aria-hidden="true">
-          <span data-public-stat-tick="0" style="bottom:100%">0</span>
-          <span data-public-stat-tick="1" style="bottom:50%">0</span>
-          <span data-public-stat-tick="2" style="bottom:10%">0</span>
-          <span data-public-stat-tick="3" style="bottom:5%">0</span>
-          <span data-public-stat-tick="4" style="bottom:0%">0</span>
+          <span data-public-stat-tick="0" style="top:0; transform:translateY(0)">0</span>
+          <span data-public-stat-tick="1" style="top:50%; transform:translateY(-50%)">0</span>
+          <span data-public-stat-tick="2" style="top:100%; transform:translateY(-100%)">0</span>
         </div>
         <div class="public-stats-plot">
           <span class="public-stats-gridline" style="bottom:100%"></span>
           <span class="public-stats-gridline" style="bottom:50%"></span>
-          <span class="public-stats-gridline" style="bottom:10%"></span>
-          <span class="public-stats-gridline" style="bottom:5%"></span>
           <span class="public-stats-x-axis" aria-hidden="true"></span>
           <div class="public-stats-bars">${bars}</div>
         </div>
@@ -98,11 +93,9 @@ window.PublicHomeStats = window.PublicHomeStats || {};
       const value = Number(item?.value || 0);
       const itemEl = chartEl.querySelector(`[data-public-stat-key="${key}"]`);
       if (!itemEl) return;
-      const valueEl = itemEl.querySelector(".public-stats-value");
       const fillEl = itemEl.querySelector(".public-stats-bar-fill");
       const height = barHeight(value, max);
       itemEl.style.setProperty("--public-stat-height", `${height}%`);
-      if (valueEl) valueEl.textContent = number(value);
       if (fillEl) fillEl.style.height = `${height}%`;
     });
   }
