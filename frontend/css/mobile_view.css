@@ -231,6 +231,12 @@ body.mobile-browser-view .website-header.is-compact #website-profile-name {
   display: none;
 }
 
+@supports (-webkit-touch-callout: none) {
+  body.mobile-browser-view .website-profile-card {
+    padding-top: max(68px, calc(18px + env(safe-area-inset-top, 0px)));
+  }
+}
+
 body.mobile-browser-view .website-footer {
   position: static !important;
   inset: auto !important;
