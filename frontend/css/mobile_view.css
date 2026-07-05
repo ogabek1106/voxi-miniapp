@@ -95,7 +95,7 @@ body.mobile-browser-view .website-header {
 body.mobile-browser-view .website-brand {
   gap: 0;
   flex: 0 0 auto;
-  min-width: 36px;
+  min-width: 52px;
 }
 
 body.mobile-browser-view .website-brand-logo {
@@ -103,8 +103,8 @@ body.mobile-browser-view .website-brand-logo {
   visibility: visible !important;
   opacity: 1 !important;
   flex: 0 0 auto;
-  height: 30px;
-  max-width: 38px;
+  height: 42px;
+  max-width: 54px;
 }
 
 body.mobile-browser-view .website-brand-text {
@@ -124,12 +124,12 @@ body.mobile-browser-view .website-header.is-compact {
 body.mobile-browser-view .website-header.is-compact .website-brand {
   gap: 0;
   flex: 0 0 auto;
-  min-width: 36px;
+  min-width: 46px;
 }
 
 body.mobile-browser-view .website-header.is-compact .website-brand-logo {
-  height: 28px;
-  max-width: 36px;
+  height: 36px;
+  max-width: 48px;
 }
 
 body.mobile-browser-view .website-header.is-compact .website-brand-text {
