@@ -233,7 +233,7 @@ body.mobile-browser-view .website-header.is-compact #website-profile-name {
 
 @supports (-webkit-touch-callout: none) {
   body.mobile-browser-view .website-profile-card {
-    padding-top: max(68px, calc(18px + env(safe-area-inset-top, 0px)));
+    padding-top: max(112px, calc(64px + env(safe-area-inset-top, 0px)));
   }
 }
 
