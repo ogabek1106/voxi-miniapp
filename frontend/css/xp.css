@@ -44,6 +44,8 @@ body.mobile-browser-view #screen-home .home-xp {
   inset: 0;
   z-index: 10005;
   background: rgba(17,24,39,0.28);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: flex-end;
   justify-content: center;

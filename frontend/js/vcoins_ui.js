@@ -55,6 +55,8 @@ window.VCoinUI = window.VCoinUI || {};
         inset: 0;
         z-index: 10004;
         background: rgba(17,24,39,0.28);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
         display: flex;
         align-items: flex-end;
         justify-content: center;
