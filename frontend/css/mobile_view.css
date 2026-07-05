@@ -288,7 +288,7 @@ body.mobile-browser-view .website-profile-close::before {
 
 @supports (-webkit-touch-callout: none) {
   body.mobile-browser-view .website-profile-close {
-    top: max(64px, calc(18px + env(safe-area-inset-top, 0px)));
+    top: max(96px, calc(50px + env(safe-area-inset-top, 0px)));
   }
 }
 
