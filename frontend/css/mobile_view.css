@@ -279,11 +279,17 @@ body.mobile-browser-view .website-profile-close {
 }
 
 body.mobile-browser-view .website-profile-close::before {
-  content: "×";
+  content: "\00d7";
   color: #17212B;
   font-size: 28px;
   font-weight: 800;
   line-height: 1;
+}
+
+@supports (-webkit-touch-callout: none) {
+  body.mobile-browser-view .website-profile-close {
+    top: max(64px, calc(18px + env(safe-area-inset-top, 0px)));
+  }
 }
 
 body.mobile-browser-view .website-profile-stats {
