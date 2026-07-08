@@ -69,10 +69,6 @@ window.WebsiteLayout = window.WebsiteLayout || {};
 
     const miniGoHome = window.goHome;
     window.goHome = function () {
-      console.log("[VERIFY] HOME requested");
-      console.log("[VERIFY] Caller:", "WebsiteLayout.goHome wrapper");
-      console.log("[VERIFY] Reason:", isWebsite() ? "website home renderer invoked" : "mini app passthrough");
-      console.trace("[VERIFY] WebsiteLayout HOME call stack");
       if (!isWebsite()) {
         if (typeof miniGoHome === "function") miniGoHome();
         return;
