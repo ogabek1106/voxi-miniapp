@@ -41,7 +41,15 @@ window.VoxiNotifications = window.VoxiNotifications || {};
   function mountMiniBell() {
     const header = document.querySelector("#screen-home .home-header");
     const balance = header?.querySelector(".home-balance");
-    if (!header || !balance || header.querySelector(".voxi-notification-bell")) return;
+    if (!header || !balance) {
+      console.warn("[Notifications] Mini bell mount skipped: home header or balance target is missing.");
+      return;
+    }
+    if (balance.parentNode !== header) {
+      console.warn("[Notifications] Mini bell mount skipped: balance target is not a direct child of the home header.");
+      return;
+    }
+    if (header.querySelector(".voxi-notification-bell")) return;
     const wrap = document.createElement("div");
     wrap.className = "home-notification-slot";
     header.insertBefore(wrap, balance);
@@ -49,7 +57,11 @@ window.VoxiNotifications = window.VoxiNotifications || {};
   }
 
   VoxiNotifications.init = function () {
-    mountMiniBell();
+    try {
+      mountMiniBell();
+    } catch (error) {
+      console.warn("[Notifications] Mini bell mount skipped after error:", error);
+    }
     VoxiNotificationsUI.updateBells();
     refresh();
     if (!refreshTimer) {
