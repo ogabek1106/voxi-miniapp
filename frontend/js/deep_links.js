@@ -2,16 +2,19 @@ window.VoxiDeepLinks = window.VoxiDeepLinks || {};
 
 (function () {
   const handlers = {
-    "odd-one-out": () => window.showVocabularyOddOneOutEntry?.(),
-    "shadow-writing": () => window.showShadowWritingEntry?.(),
-    "word-shuffle": () => window.showWordShuffleEntry?.(),
-    "match-words": () => window.showMatchWordsEntry?.(),
-    "ielts-mock-test": () => window.showMocksEntry?.(),
-    premiere: () => window.PremiereUi?.openGrantedPremiere?.(),
-    reading: () => window.showReadingEntry?.(),
-    listening: () => window.showListeningEntry?.(),
-    writing: () => window.showWritingEntry?.(),
-    speaking: () => window.showSpeakingEntry?.()
+    "odd-one-out": "showVocabularyOddOneOutEntry",
+    "shadow-writing": "showShadowWritingEntry",
+    "word-shuffle": "showWordShuffleEntry",
+    "match-words": "showMatchWordsEntry",
+    "ielts-mock-test": "showMocksEntry",
+    reading: "showReadingEntry",
+    listening: "showListeningEntry",
+    writing: "showWritingEntry",
+    speaking: "showSpeakingEntry"
+  };
+
+  const customHandlers = {
+    premiere: () => window.PremiereUi?.openGrantedPremiere?.()
   };
 
   function normalize(value) {
@@ -19,21 +22,48 @@ window.VoxiDeepLinks = window.VoxiDeepLinks || {};
   }
 
   VoxiDeepLinks.isSupported = function (value) {
-    return Boolean(handlers[normalize(value)]);
+    const key = normalize(value);
+    return Boolean(handlers[key] || customHandlers[key]);
   };
 
-  VoxiDeepLinks.open = function (value) {
+  function openOnce(value) {
     const key = normalize(value);
-    const handler = handlers[key];
-    if (!handler) return false;
-    window.setTimeout(() => handler(), 0);
+    if (handlers[key]) {
+      if (typeof window.navigateToFeature === "function") {
+        window.navigateToFeature(key);
+        return true;
+      }
+      const handler = window[handlers[key]];
+      if (typeof handler !== "function") return false;
+      handler();
+      return true;
+    }
+    const customHandler = customHandlers[key];
+    if (!customHandler) return false;
+    customHandler();
+    return true;
+  }
+
+  VoxiDeepLinks.open = function (value, options = {}) {
+    const key = normalize(value);
+    if (!VoxiDeepLinks.isSupported(key)) return false;
+    const attempts = Number(options.attempts || 12);
+    const delayMs = Number(options.delayMs || 150);
+
+    function tryOpen(remaining) {
+      if (openOnce(key)) return;
+      if (remaining <= 0) return;
+      window.setTimeout(() => tryOpen(remaining - 1), delayMs);
+    }
+
+    window.setTimeout(() => tryOpen(attempts), 0);
     return true;
   };
 
   VoxiDeepLinks.extractOpenValue = function (urlOrValue) {
     const raw = String(urlOrValue || "").trim();
     if (!raw) return "";
-    if (handlers[normalize(raw)]) return normalize(raw);
+    if (VoxiDeepLinks.isSupported(raw)) return normalize(raw);
 
     try {
       const parsed = new URL(raw, window.location.origin);
