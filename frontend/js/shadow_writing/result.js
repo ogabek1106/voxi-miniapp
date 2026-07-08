@@ -60,10 +60,10 @@ window.ShadowWritingResult = window.ShadowWritingResult || {};
     return `
       <section class="shadow-completion-panel">
         <div class="shadow-completion-head">
-          <span class="shadow-completion-check" aria-hidden="true">✓</span>
+          <span class="shadow-completion-check" aria-hidden="true">&#10003;</span>
           <div>
             <h3>Shadow Writing Completed</h3>
-            <p>${isGuest ? "Nice work. Create an account to keep your progress." : "Good work. Your result has been saved."}</p>
+            <p>${isGuest ? "Your result is ready." : "Good work. Your result has been saved."}</p>
           </div>
         </div>
         ${ShadowWritingResult.renderStats(result)}

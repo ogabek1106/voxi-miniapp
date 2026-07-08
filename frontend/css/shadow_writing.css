@@ -2,18 +2,21 @@
   width: 100%;
   min-height: 100%;
   box-sizing: border-box;
-  padding: 12px 0 28px;
+  padding: 10px 0 30px;
   text-align: left;
   color: #17212B;
   font-family: "Nunito", "Inter", system-ui, sans-serif;
 }
 
 #screen-mocks.container.shadow-writing-host {
-  max-width: min(1320px, calc(100vw - 32px));
+  width: min(82vw, 1440px);
+  max-width: calc(100vw - 40px);
 }
 
 .shadow-writing-head {
-  margin: 2px 0 12px;
+  position: relative;
+  margin: 0 0 10px;
+  padding-right: 150px;
   text-align: left;
 }
 
@@ -27,7 +30,7 @@
 
 .shadow-writing-head p,
 .shadow-muted {
-  margin: 7px 0 0;
+  margin: 4px 0 0;
   color: #667584;
   font-size: 14px;
   font-weight: 650;
@@ -35,8 +38,8 @@
 
 .shadow-writing-head strong {
   display: block;
-  margin-top: 8px;
-  font-size: 17px;
+  margin-top: 6px;
+  font-size: 18px;
   line-height: 1.25;
   font-weight: 900;
   color: #17212B;
@@ -53,15 +56,15 @@
 }
 
 .shadow-essay-card {
-  padding: 28px 30px;
+  padding: 30px 34px;
   cursor: text;
 }
 
 .shadow-target {
-  min-height: 50vh;
+  min-height: clamp(420px, 54vh, 640px);
   font-family: "Nunito", "Inter", system-ui, sans-serif;
   font-size: 22px;
-  line-height: 2;
+  line-height: 1.95;
   font-weight: 700;
   letter-spacing: 0.01em;
   white-space: pre-wrap;
@@ -100,8 +103,12 @@
 
 .shadow-writing-actions {
   display: flex;
+  justify-content: flex-end;
   gap: 10px;
-  margin-top: 14px;
+  margin-top: 0;
+  position: absolute;
+  top: 0;
+  right: 0;
 }
 
 .shadow-primary-btn,
@@ -128,6 +135,7 @@
 .shadow-finish-btn {
   background: #fee2e2;
   color: #b91c1c;
+  box-shadow: 0 8px 20px rgba(185, 28, 28, 0.08);
 }
 
 .shadow-stats-wrap {
@@ -135,7 +143,7 @@
 }
 
 .shadow-completion-wrap {
-  margin-top: 16px;
+  margin-top: 18px;
 }
 
 .shadow-completion-panel,
@@ -147,7 +155,7 @@
 }
 
 .shadow-completion-panel {
-  padding: 20px;
+  padding: 22px;
 }
 
 .shadow-completion-head {
@@ -155,7 +163,8 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  margin-bottom: 16px;
+  margin: 0 auto 16px;
+  max-width: 620px;
   text-align: left;
 }
 
@@ -208,11 +217,11 @@
 .shadow-result-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 8px;
+  gap: 10px;
 }
 
 .shadow-result-card {
-  padding: 10px 12px;
+  padding: 12px 14px;
 }
 
 .shadow-result-card span {
@@ -236,13 +245,13 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 10px;
-  margin-top: 18px;
+  margin-top: 20px;
 }
 
 .shadow-writing-finish-actions {
   display: flex;
   justify-content: flex-end;
-  margin-top: 14px;
+  margin-top: 12px;
 }
 
 .shadow-history-list {
@@ -374,7 +383,7 @@
 
 @media (min-width: 720px) {
   .shadow-writing-screen {
-    max-width: 1320px;
+    max-width: none;
     margin: 0 auto;
   }
 
@@ -390,32 +399,54 @@
 }
 
 @media (max-width: 540px) {
+  #screen-mocks.container.shadow-writing-host {
+    width: calc(100vw - 18px);
+    max-width: calc(100vw - 18px);
+  }
+
   .shadow-writing-screen {
-    padding: 8px 0 24px;
+    padding: 6px 0 22px;
+  }
+
+  .shadow-writing-head {
+    margin-bottom: 8px;
+    padding-right: 0;
   }
 
   .shadow-writing-head h2 {
     font-size: 26px;
   }
 
+  .shadow-writing-head strong {
+    margin-top: 5px;
+    font-size: 16px;
+  }
+
+  .shadow-writing-head p {
+    font-size: 13px;
+  }
+
+  .shadow-writing-actions {
+    position: static;
+    display: flex;
+    justify-content: flex-start;
+    margin-top: 10px;
+  }
+
   .shadow-essay-card {
-    padding: 18px;
+    padding: 18px 16px;
     border-radius: 22px;
   }
 
   .shadow-target {
-    min-height: 55vh;
+    min-height: 52vh;
     font-size: 17px;
-    line-height: 2;
-  }
-
-  .shadow-writing-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    line-height: 1.95;
   }
 
   .shadow-result-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
   }
 
   .shadow-writing-result-actions {
@@ -424,11 +455,13 @@
   }
 
   .shadow-completion-panel {
-    padding: 18px;
+    padding: 16px;
+    border-radius: 22px;
   }
 
   .shadow-completion-head {
     justify-content: flex-start;
+    margin-bottom: 14px;
   }
 
   .shadow-completion-head h3 {
@@ -438,6 +471,13 @@
   .shadow-writing-finish-actions {
     display: grid;
     grid-template-columns: 1fr;
+  }
+
+  .shadow-primary-btn,
+  .shadow-secondary-btn,
+  .shadow-finish-btn,
+  .shadow-tertiary-btn {
+    width: 100%;
   }
 
   .shadow-limit-actions {

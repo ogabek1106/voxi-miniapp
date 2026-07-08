@@ -23,7 +23,6 @@ window.ShadowWritingUI = window.ShadowWritingUI || {};
           <strong>${title}</strong>
           ${meta ? `<p>${meta}</p>` : ""}
           <div class="shadow-writing-actions">
-            ${isGuest ? "" : `<button class="shadow-secondary-btn" onclick="ShadowWritingTyping.cleanup(); ShadowWritingHistory.show()">History</button>`}
             <button class="shadow-secondary-btn" onclick="ShadowWritingLoader.exit()">Back</button>
           </div>
         </div>
@@ -53,12 +52,12 @@ window.ShadowWritingUI = window.ShadowWritingUI || {};
       guestUsage = ShadowWritingLoader.recordGuestCompletion?.();
     } else {
       try {
-      const payload = {
-        attempt_id: state.attemptId,
-        essay_id: essay.id,
-        ...stats,
-      };
-      await ShadowWritingApi.completeAttempt(payload);
+        const payload = {
+          attempt_id: state.attemptId,
+          essay_id: essay.id,
+          ...stats,
+        };
+        await ShadowWritingApi.completeAttempt(payload);
       } catch (error) {
         console.error("Shadow Writing complete error:", error);
       }
@@ -91,8 +90,8 @@ window.ShadowWritingUI = window.ShadowWritingUI || {};
     backdrop.className = "shadow-limit-backdrop";
     backdrop.innerHTML = `
       <section class="shadow-limit-card" role="dialog" aria-modal="true" aria-labelledby="shadow-limit-title">
-        <button class="shadow-limit-close" type="button" data-shadow-limit-close="1" aria-label="Close">×</button>
-        <div class="shadow-limit-mark" aria-hidden="true">✦</div>
+        <button class="shadow-limit-close" type="button" data-shadow-limit-close="1" aria-label="Close">&times;</button>
+        <div class="shadow-limit-mark" aria-hidden="true">*</div>
         <h2 id="shadow-limit-title">Today's free practice is complete</h2>
         <p>You have used your 3 free Shadow Writing essays for this 24-hour period. Create an account to keep practicing without limits.</p>
         <ul>
