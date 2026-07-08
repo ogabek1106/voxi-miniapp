@@ -9,7 +9,18 @@ router = APIRouter(prefix="/shadow-writing", tags=["shadow-writing"])
 
 
 @router.get("/next")
-def get_next_shadow_writing(telegram_id: int, db: Session = Depends(get_db)):
+def get_next_shadow_writing(telegram_id: int | None = None, db: Session = Depends(get_db)):
+    if telegram_id is None:
+        essay = service.get_guest_essay(db)
+        if not essay:
+            raise HTTPException(status_code=404, detail="no_shadow_writing_essays")
+        return {
+            "ok": True,
+            "attempt_id": None,
+            "is_guest": True,
+            "essay": service.serialize_essay(essay),
+        }
+
     attempt = service.start_next_attempt(db, telegram_id)
     if not attempt:
         raise HTTPException(status_code=404, detail="no_shadow_writing_essays")

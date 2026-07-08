@@ -9,10 +9,14 @@ window.ShadowWritingApi = window.ShadowWritingApi || {};
     return window.getTelegramId?.() || null;
   }
 
+  ShadowWritingApi.isGuest = function () {
+    return !telegramId();
+  };
+
   ShadowWritingApi.getNext = async function () {
     const id = telegramId();
-    if (!id) throw new Error("telegram_id_required");
-    return apiGet(`/shadow-writing/next?telegram_id=${encodeURIComponent(id)}`);
+    const suffix = id ? `?telegram_id=${encodeURIComponent(id)}` : "";
+    return apiGet(`/shadow-writing/next${suffix}`);
   };
 
   ShadowWritingApi.completeAttempt = async function (payload) {

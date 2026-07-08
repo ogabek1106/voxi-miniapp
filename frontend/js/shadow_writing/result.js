@@ -28,6 +28,53 @@ window.ShadowWritingResult = window.ShadowWritingResult || {};
     `;
   };
 
+  ShadowWritingResult.renderCompletion = function (result, options = {}) {
+    const isGuest = Boolean(options.isGuest);
+    const usage = options.guestUsage || {};
+    const guestCanContinue = !usage.limitReached;
+    const guestInvite = `
+      <div class="shadow-guest-invite">
+        <p>Create a free account to:</p>
+        <ul>
+          <li>Save your practice history</li>
+          <li>Earn XP & Coins</li>
+          <li>Track your improvement</li>
+        </ul>
+      </div>
+    `;
+    const signedActions = `
+      <button class="shadow-primary-btn" onclick="ShadowWritingLoader.start()">Next Essay</button>
+      <button class="shadow-secondary-btn" onclick="ShadowWritingHistory.show()">History</button>
+      <button class="shadow-secondary-btn" onclick="ShadowWritingLoader.exit()">Exit</button>
+    `;
+    const guestActions = `
+      <button class="shadow-primary-btn" onclick="window.WebsiteAuthModal?.open('signup')">Create Account</button>
+      <button class="shadow-secondary-btn" onclick="window.WebsiteAuthModal?.open('login')">Log In</button>
+      ${
+        guestCanContinue
+          ? `<button class="shadow-tertiary-btn" onclick="ShadowWritingLoader.start()">Next Essay</button>`
+          : `<p class="shadow-limit-note">Today's free practice limit has been reached.</p>`
+      }
+    `;
+
+    return `
+      <section class="shadow-completion-panel">
+        <div class="shadow-completion-head">
+          <span class="shadow-completion-check" aria-hidden="true">✓</span>
+          <div>
+            <h3>Shadow Writing Completed</h3>
+            <p>${isGuest ? "Nice work. Create an account to keep your progress." : "Good work. Your result has been saved."}</p>
+          </div>
+        </div>
+        ${ShadowWritingResult.renderStats(result)}
+        ${isGuest ? guestInvite : ""}
+        <div class="shadow-writing-result-actions">
+          ${isGuest ? guestActions : signedActions}
+        </div>
+      </section>
+    `;
+  };
+
   ShadowWritingResult.render = function (result) {
     return ShadowWritingResult.renderStats(result);
   };

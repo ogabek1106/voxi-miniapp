@@ -7,6 +7,7 @@ window.ShadowWritingState = window.ShadowWritingState || {};
     startedAt: null,
     completed: false,
     result: null,
+    isGuest: false,
   };
 
   ShadowWritingState.get = function () {
@@ -24,5 +25,6 @@ window.ShadowWritingState = window.ShadowWritingState || {};
     state.startedAt = null;
     state.completed = false;
     state.result = null;
+    state.isGuest = false;
   };
 })();

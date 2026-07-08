@@ -54,6 +54,13 @@ def list_essays(db: Session) -> list[ShadowWritingEssay]:
     return db.query(ShadowWritingEssay).order_by(ShadowWritingEssay.id.desc()).all()
 
 
+def get_guest_essay(db: Session) -> ShadowWritingEssay | None:
+    essays = db.query(ShadowWritingEssay).order_by(ShadowWritingEssay.id.asc()).all()
+    if not essays:
+        return None
+    return random.choice(essays)
+
+
 def delete_essay(db: Session, essay_id: int) -> bool:
     essay = db.query(ShadowWritingEssay).filter(ShadowWritingEssay.id == essay_id).first()
     if not essay:
