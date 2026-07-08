@@ -1,6 +1,4 @@
 // frontend/js/app.js
-console.log("[BOOT] Application started");
-
 const tg = window.AppViewMode?.isMiniApp?.() ? window.Telegram?.WebApp : null;
 const FORCE_LIGHT_THEME = true;
 
@@ -251,18 +249,23 @@ function markAppReady() {
   }, 180);
 }
 
+function resolveInitialScreen() {
+  const handledDeepLink = Boolean(window.VoxiDeepLinks?.handleCurrentUrl?.());
+  if (handledDeepLink) return true;
+
+  const restoredRoute = Boolean(window.VoxiRouter?.restoreInitialRoute?.());
+  if (restoredRoute) return true;
+
+  window.renderHomePage?.();
+  return false;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("[BOOT] DOMContentLoaded");
   if (window.AppViewMode?.isWebsite?.()) {
-    console.log("[BOOT] Website mode detected");
-    console.log("[BOOT] Calling WebsiteLayout.init()");
     window.WebsiteLayout?.init?.();
     markAppReady();
     window.VoxiNotifications?.init?.();
-    console.log("[BOOT] Calling VoxiRouter.restoreInitialRoute()");
-    window.VoxiRouter?.restoreInitialRoute?.();
-    console.log("[BOOT] Calling VoxiDeepLinks.handleCurrentUrl()");
-    window.VoxiDeepLinks?.handleCurrentUrl?.();
+    resolveInitialScreen();
 
     document.addEventListener("visibilitychange", () => {
       if (!document.hidden) {
@@ -277,17 +280,11 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  console.log("[BOOT] Mini App mode detected");
-  console.trace("[ROUTER] Navigate to Home");
-  goHome();
   renderHomeIdentity();
   loadMe();
   markAppReady();
   window.VoxiNotifications?.init?.();
-  console.log("[BOOT] Calling VoxiRouter.restoreInitialRoute()");
-  window.VoxiRouter?.restoreInitialRoute?.();
-  console.log("[BOOT] Calling VoxiDeepLinks.handleCurrentUrl()");
-  window.VoxiDeepLinks?.handleCurrentUrl?.();
+  resolveInitialScreen();
 
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) {
