@@ -83,7 +83,13 @@ window.VoxiRouter.restoreInitialRoute = function () {
   const page = routeKey(params.get("page"));
   const open = routeKey(params.get("open"));
   if (!page) {
-    if (open) return false;
+    if (open) {
+      if (FEATURE_ROUTES[open]) {
+        history.replaceState({ page: open }, "", routeUrl(open));
+        return window.openFeatureByRoute(open);
+      }
+      return false;
+    }
     history.replaceState({}, "", "/");
     window.renderHomePage();
     return false;
