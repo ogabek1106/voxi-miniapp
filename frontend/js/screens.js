@@ -47,20 +47,44 @@ function routeUrl(page) {
   return key ? `/?page=${encodeURIComponent(key)}` : "/";
 }
 
+function logNavigation(functionName, requested, calledFrom) {
+  console.log("[NAVIGATION]\nFunction:\n" + functionName + "\nRequested:\n" + (requested || "") + "\nCalled from:\n" + (calledFrom || "unknown"));
+}
+
+function traceRoute(key) {
+  if (key === "shadow-writing") {
+    console.trace("[ROUTER] Navigate to Shadow Writing");
+    return;
+  }
+  if (key === "home") {
+    console.trace("[ROUTER] Navigate to Home");
+    return;
+  }
+  console.trace("[ROUTER] Navigate to:", key);
+}
+
 window.openFeatureByRoute = function (page) {
   const key = routeKey(page);
+  logNavigation("openFeatureByRoute()", key, "screens.js");
   const handler = FEATURE_ROUTES[key];
   if (!handler) {
+    console.log("[ROUTER] Unknown route, falling back to Home:", key);
+    traceRoute("home");
     window.goHome?.();
     return false;
   }
+  console.log("[ROUTER] Navigate to:", key);
+  traceRoute(key);
   handler();
   return true;
 };
 
 window.navigateToFeature = function (page) {
   const key = routeKey(page);
+  logNavigation("navigateToFeature()", key, "screens.js");
   if (!FEATURE_ROUTES[key]) {
+    console.log("[ROUTER] Unknown feature, falling back to Home:", key);
+    traceRoute("home");
     window.goHome?.();
     return false;
   }
@@ -69,10 +93,14 @@ window.navigateToFeature = function (page) {
 };
 
 window.renderHomePage = function () {
+  console.log("[HOME] Render Home");
+  logNavigation("renderHomePage()", "home", "screens.js");
+  traceRoute("home");
   window.goHome?.();
 };
 
 window.navigateToHome = function () {
+  logNavigation("navigateToHome()", "home", "screens.js");
   history.pushState({}, "", "/");
   window.renderHomePage();
 };
@@ -82,18 +110,24 @@ window.VoxiRouter.restoreInitialRoute = function () {
   const params = new URLSearchParams(window.location.search);
   const page = routeKey(params.get("page"));
   const open = routeKey(params.get("open"));
+  console.log("[ROUTER] restoreInitialRoute started");
+  console.log("[ROUTER] Initial query parameters:", { page, open });
   if (!page) {
     if (open) {
       if (FEATURE_ROUTES[open]) {
+        console.log("[ROUTER] Initial open parameter is supported:", open);
         history.replaceState({ page: open }, "", routeUrl(open));
         return window.openFeatureByRoute(open);
       }
+      console.log("[ROUTER] Initial open parameter ignored because route is unsupported:", open);
       return false;
     }
+    console.log("[ROUTER] No initial route found; rendering Home");
     history.replaceState({}, "", "/");
     window.renderHomePage();
     return false;
   }
+  console.log("[ROUTER] Initial page parameter is supported:", page);
   history.replaceState({ page }, "", routeUrl(page));
   return window.openFeatureByRoute(page);
 };
@@ -101,6 +135,7 @@ window.VoxiRouter.restoreInitialRoute = function () {
 window.addEventListener("popstate", () => {
   const params = new URLSearchParams(window.location.search);
   const page = routeKey(params.get("page"));
+  console.log("[ROUTER] popstate:", { page });
   if (!page) {
     window.renderHomePage();
     return;
@@ -139,6 +174,9 @@ function setBottomNavVisible(visible) {
   nav.style.display = visible ? "flex" : "none";
 }
 window.goHome = function () {
+  console.log("[HOME] Render Home");
+  logNavigation("goHome()", "home", "screens.js");
+  traceRoute("home");
   hideAllScreens();
   showAnnouncement();
   if (screenHome) screenHome.style.display = "block";

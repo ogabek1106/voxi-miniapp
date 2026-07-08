@@ -69,6 +69,8 @@ window.WebsiteLayout = window.WebsiteLayout || {};
 
     const miniGoHome = window.goHome;
     window.goHome = function () {
+      console.log("[NAVIGATION]\nFunction:\nWebsiteLayout.goHomeWrapper()\nRequested:\nhome\nCalled from:\nwebsite_layout.js");
+      console.trace("[ROUTER] Navigate to Home");
       if (!isWebsite()) {
         if (typeof miniGoHome === "function") miniGoHome();
         return;
@@ -94,6 +96,8 @@ window.WebsiteLayout = window.WebsiteLayout || {};
       const original = window[name];
       if (typeof original !== "function") return;
       window[name] = function (...args) {
+        console.log("[NAVIGATION]\nFunction:\nWebsiteLayout.wrapNavigation(" + name + ")\nRequested:\n" + name + "\nCalled from:\nwebsite_layout.js");
+        if (name === "showShadowWritingEntry") console.trace("[ROUTER] Navigate to Shadow Writing");
         removeWebsiteHome();
         hideHomeFooter();
         const result = original.apply(this, args);
@@ -109,11 +113,14 @@ window.WebsiteLayout = window.WebsiteLayout || {};
 
   window.WebsiteLayout.init = function () {
     if (!isWebsite()) return;
+    console.log("[BOOT] WebsiteLayout.init() started");
 
     document.body.classList.add("view-website");
     document.body.classList.remove("view-miniapp");
     window.WebsiteHeader?.mount();
     wrapNavigation();
+    console.log("[BOOT] WebsiteLayout.init() calling goHome()");
+    console.trace("[ROUTER] Navigate to Home");
     window.goHome?.();
     hideMiniAppOnlyElements();
     syncFooterVisibility();

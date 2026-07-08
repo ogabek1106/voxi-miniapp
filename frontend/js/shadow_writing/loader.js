@@ -48,6 +48,8 @@ window.ShadowWritingLoader = window.ShadowWritingLoader || {};
   };
 
   function prepareScreen() {
+    console.log("[SHADOW WRITING] Render");
+    console.trace("[ROUTER] Navigate to Shadow Writing");
     if (typeof hideAllScreens === "function") hideAllScreens();
     if (typeof hideAnnouncement === "function") hideAnnouncement();
     if (typeof setBottomNavVisible === "function") setBottomNavVisible(false);
@@ -61,17 +63,29 @@ window.ShadowWritingLoader = window.ShadowWritingLoader || {};
   }
 
   ShadowWritingLoader.start = async function () {
+    console.log("[SHADOW WRITING] Loader start");
     const isGuest = ShadowWritingApi.isGuest?.();
+    console.log("[SHADOW WRITING] Guest mode:", Boolean(isGuest));
     if (isGuest && guestUsage().limitReached) {
+      console.log("[SHADOW WRITING] Guest limit reached before start");
       ShadowWritingUI.showGuestLimitDialog();
       return;
     }
 
     const screen = prepareScreen();
-    if (!screen) return;
+    if (!screen) {
+      console.log("[SHADOW WRITING] Render aborted because screen-mocks is missing");
+      return;
+    }
 
     try {
+      console.log("[SHADOW WRITING] Requesting next essay");
       const data = await ShadowWritingApi.getNext();
+      console.log("[SHADOW WRITING] Next essay response received:", {
+        hasAttemptId: Boolean(data?.attempt_id),
+        hasEssay: Boolean(data?.essay),
+        isGuest: Boolean(data?.is_guest || isGuest)
+      });
       const attempt = {
         attempt_id: data?.attempt_id,
         essay: data?.essay,
@@ -91,8 +105,10 @@ window.ShadowWritingLoader = window.ShadowWritingLoader || {};
         mobileInput: document.getElementById("shadow-writing-input"),
         onComplete: ShadowWritingUI.showResult,
       });
+      console.log("[SHADOW WRITING] Typing UI bound");
     } catch (error) {
       console.error("Shadow Writing start error:", error);
+      console.log("[SHADOW WRITING] Render error state");
       const message = error?.message === "telegram_id_required"
         ? "Please log in to use Shadow Writing."
         : "No Shadow Writing essay is available yet.";
@@ -106,6 +122,7 @@ window.ShadowWritingLoader = window.ShadowWritingLoader || {};
   };
 
   ShadowWritingLoader.exit = function () {
+    console.log("[NAVIGATION]\nFunction:\nShadowWritingLoader.exit()\nRequested:\nhome\nCalled from:\nshadow_writing/loader.js");
     const state = ShadowWritingState.get();
     ShadowWritingTyping.cleanup();
     if (typeof goHome === "function") goHome();
@@ -119,5 +136,7 @@ window.ShadowWritingLoader = window.ShadowWritingLoader || {};
 })();
 
 window.showShadowWritingEntry = function () {
+  console.log("[NAVIGATION]\nFunction:\nshowShadowWritingEntry()\nRequested:\nshadow-writing\nCalled from:\nshadow_writing/loader.js");
+  console.trace("[ROUTER] Navigate to Shadow Writing");
   ShadowWritingLoader.start();
 };
