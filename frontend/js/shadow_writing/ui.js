@@ -27,6 +27,13 @@ window.ShadowWritingUI = window.ShadowWritingUI || {};
           </div>
         </div>
 
+        <div class="shadow-progress-wrap" aria-label="Shadow Writing progress">
+          <div class="shadow-progress-track">
+            <div id="shadow-writing-progress-fill" class="shadow-progress-fill"></div>
+          </div>
+          <span id="shadow-writing-progress-label" class="shadow-progress-label">0%</span>
+        </div>
+
         <div class="shadow-essay-card" onclick="document.getElementById('shadow-writing-input')?.focus({ preventScroll: true })">
           <div id="shadow-writing-target" class="shadow-target" aria-label="Essay text"></div>
         </div>
@@ -66,6 +73,7 @@ window.ShadowWritingUI = window.ShadowWritingUI || {};
     const completionEl = document.getElementById("shadow-writing-completion");
     const topActions = document.querySelector(".shadow-writing-head .shadow-writing-actions");
     const finishActions = document.getElementById("shadow-writing-finish-actions");
+    const progressEl = document.querySelector(".shadow-progress-wrap");
 
     if (completionEl) {
       completionEl.innerHTML = ShadowWritingResult.renderCompletion(stats, { isGuest, guestUsage });
@@ -73,6 +81,7 @@ window.ShadowWritingUI = window.ShadowWritingUI || {};
     }
     if (topActions) topActions.remove();
     if (finishActions) finishActions.remove();
+    if (progressEl) progressEl.remove();
     if (!isGuest) {
       window.VoxiFeedback?.requestFeedback?.({
         featureType: "shadow_writing",

@@ -77,6 +77,12 @@ window.ShadowWritingTyping = window.ShadowWritingTyping || {};
 
     function rerender() {
       output.innerHTML = renderTarget(targetText, typedChars);
+      const total = targetChars.length || 1;
+      const percent = Math.min(100, Math.round((typedChars.length / total) * 100));
+      const fill = document.getElementById("shadow-writing-progress-fill");
+      const label = document.getElementById("shadow-writing-progress-label");
+      if (fill) fill.style.width = `${percent}%`;
+      if (label) label.textContent = `${percent}%`;
     }
 
     function completeIfReady() {
@@ -92,6 +98,10 @@ window.ShadowWritingTyping = window.ShadowWritingTyping || {};
       completed = true;
       if (mobileInput) mobileInput.disabled = true;
       output.innerHTML = renderTarget(targetText, typedChars, { markRemainingWrong: true });
+      const fill = document.getElementById("shadow-writing-progress-fill");
+      const label = document.getElementById("shadow-writing-progress-label");
+      if (fill) fill.style.width = "100%";
+      if (label) label.textContent = "100%";
       const stats = calculate(targetText, typedChars, ShadowWritingState.get().startedAt, { forceFinish: true });
       ShadowWritingTyping.cleanup();
       window.setTimeout(() => onComplete?.(stats), 120);

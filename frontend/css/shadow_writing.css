@@ -60,6 +60,37 @@
   cursor: text;
 }
 
+.shadow-progress-wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0 10px;
+}
+
+.shadow-progress-track {
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(102, 117, 132, 0.16);
+}
+
+.shadow-progress-fill {
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: #00baff;
+  transition: width 0.18s ease;
+}
+
+.shadow-progress-label {
+  min-width: 36px;
+  text-align: right;
+  color: #667584;
+  font-size: 12px;
+  font-weight: 850;
+}
+
 .shadow-target {
   min-height: clamp(420px, 54vh, 640px);
   font-family: "Nunito", "Inter", system-ui, sans-serif;
@@ -160,12 +191,13 @@
 
 .shadow-completion-head {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
   margin: 0 auto 16px;
   max-width: 620px;
-  text-align: left;
+  text-align: center;
 }
 
 .shadow-completion-check {
@@ -188,8 +220,6 @@
   font-weight: 950;
 }
 
-.shadow-completion-head p,
-.shadow-guest-invite p,
 .shadow-limit-card p,
 .shadow-limit-note {
   margin: 5px 0 0;
@@ -198,13 +228,6 @@
   font-weight: 750;
 }
 
-.shadow-guest-invite {
-  max-width: 460px;
-  margin: 16px auto 0;
-  text-align: left;
-}
-
-.shadow-guest-invite ul,
 .shadow-limit-card ul {
   margin: 8px 0 0;
   padding-left: 20px;
@@ -240,12 +263,22 @@
 }
 
 .shadow-writing-result-actions {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   justify-content: center;
   align-items: center;
-  flex-wrap: wrap;
   gap: 10px;
+  width: min(100%, 560px);
+  margin-left: auto;
+  margin-right: auto;
   margin-top: 20px;
+}
+
+.shadow-writing-result-actions .shadow-primary-btn,
+.shadow-writing-result-actions .shadow-secondary-btn,
+.shadow-writing-result-actions .shadow-tertiary-btn {
+  width: 100%;
+  min-width: 0;
 }
 
 .shadow-writing-finish-actions {
@@ -438,6 +471,15 @@
     border-radius: 22px;
   }
 
+  .shadow-progress-wrap {
+    gap: 8px;
+    margin: 10px 0 8px;
+  }
+
+  .shadow-progress-track {
+    height: 5px;
+  }
+
   .shadow-target {
     min-height: 52vh;
     font-size: 17px;
@@ -460,7 +502,6 @@
   }
 
   .shadow-completion-head {
-    justify-content: flex-start;
     margin-bottom: 14px;
   }
 
