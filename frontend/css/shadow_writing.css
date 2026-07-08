@@ -187,6 +187,14 @@
 
 .shadow-completion-panel {
   padding: 22px;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.32s ease, transform 0.32s ease;
+}
+
+.shadow-completion-panel--revealed {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .shadow-completion-head {
@@ -244,22 +252,56 @@
 }
 
 .shadow-result-card {
-  padding: 12px 14px;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  align-items: center;
+  min-height: 112px;
+  padding: 13px 12px;
+  text-align: center;
 }
 
-.shadow-result-card span {
+.shadow-result-label {
   display: block;
   color: #667584;
   font-size: 11px;
   font-weight: 900;
+  line-height: 1.1;
+  opacity: 1;
+  transition: opacity 0.24s ease;
 }
 
-.shadow-result-card strong {
+.shadow-result-value {
   display: block;
-  margin-top: 3px;
-  font-size: 16px;
+  margin-top: 4px;
+  color: #17212B;
+  font-size: clamp(28px, 2.8vw, 42px);
+  line-height: 1;
   font-weight: 950;
   white-space: nowrap;
+}
+
+.shadow-result-unit {
+  display: block;
+  min-height: 15px;
+  margin-top: 3px;
+  color: #667584;
+  font-size: 11px;
+  font-weight: 950;
+  line-height: 1;
+  opacity: 1;
+  transition: opacity 0.18s ease;
+}
+
+.shadow-result-card--pending .shadow-result-label,
+.shadow-result-card--pending .shadow-result-value,
+.shadow-result-card--pending .shadow-result-unit {
+  opacity: 0;
+}
+
+.shadow-result-card--active .shadow-result-value,
+.shadow-result-label--visible,
+.shadow-result-unit--visible {
+  opacity: 1;
 }
 
 .shadow-writing-result-actions {
@@ -272,6 +314,15 @@
   margin-left: auto;
   margin-right: auto;
   margin-top: 20px;
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.24s ease, transform 0.24s ease;
+}
+
+.shadow-writing-result-actions--hidden {
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(8px);
 }
 
 .shadow-writing-result-actions .shadow-primary-btn,
@@ -487,8 +538,23 @@
   }
 
   .shadow-result-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 8px;
+  }
+
+  .shadow-result-card {
+    min-height: 86px;
+    padding: 9px 5px;
+    border-radius: 18px;
+  }
+
+  .shadow-result-label,
+  .shadow-result-unit {
+    font-size: 9px;
+  }
+
+  .shadow-result-value {
+    font-size: clamp(19px, 7vw, 27px);
   }
 
   .shadow-writing-result-actions {

@@ -78,6 +78,7 @@ window.ShadowWritingUI = window.ShadowWritingUI || {};
     if (completionEl) {
       completionEl.innerHTML = ShadowWritingResult.renderCompletion(stats, { isGuest, guestUsage });
       completionEl.hidden = false;
+      ShadowWritingResult.revealCompletion?.(completionEl);
     }
     if (topActions) topActions.remove();
     if (finishActions) finishActions.remove();
