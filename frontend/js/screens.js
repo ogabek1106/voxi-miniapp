@@ -38,6 +38,19 @@ const FEATURE_ROUTES = {
   profile: () => window.goProfile?.(),
 };
 
+const FEATURE_HANDLER_NAMES = {
+  "ielts-mock-test": "showMocksEntry",
+  reading: "showReadingEntry",
+  listening: "showListeningEntry",
+  writing: "showWritingEntry",
+  speaking: "showSpeakingEntry",
+  "shadow-writing": "showShadowWritingEntry",
+  "odd-one-out": "showVocabularyOddOneOutEntry",
+  "word-shuffle": "showWordShuffleEntry",
+  "match-words": "showMatchWordsEntry",
+  profile: "goProfile",
+};
+
 function routeKey(value) {
   return String(value || "").trim().toLowerCase();
 }
@@ -51,28 +64,55 @@ window.openFeatureByRoute = function (page) {
   const key = routeKey(page);
   const handler = FEATURE_ROUTES[key];
   if (!handler) {
+    console.log("[VERIFY] Feature open failed.");
+    console.log("[VERIFY] Reason:", `openFeatureByRoute cannot find feature "${key}"`);
+    console.log("[VERIFY] HOME requested");
+    console.log("[VERIFY] Caller:", "openFeatureByRoute()");
+    console.log("[VERIFY] Reason:", "unknown route fallback");
     window.goHome?.();
     return false;
   }
+  console.log("[VERIFY] Opening feature...");
   handler();
   return true;
 };
 
 window.navigateToFeature = function (page) {
   const key = routeKey(page);
-  if (!FEATURE_ROUTES[key]) {
+  const found = Boolean(FEATURE_ROUTES[key]);
+  const loaderName = FEATURE_HANDLER_NAMES[key];
+  const loaderExists = loaderName ? typeof window[loaderName] === "function" : false;
+  console.log("[VERIFY] Feature requested:", key);
+  console.log("[VERIFY] Feature found:", found);
+  console.log("[VERIFY] Loader exists:", loaderExists);
+  if (!found) {
+    console.log("[VERIFY] Feature open failed.");
+    console.log("[VERIFY] Reason:", `navigateToFeature cannot find feature "${key}"`);
+    console.log("[VERIFY] HOME requested");
+    console.log("[VERIFY] Caller:", "navigateToFeature()");
+    console.log("[VERIFY] Reason:", "unknown feature fallback");
     window.goHome?.();
     return false;
+  }
+  if (!loaderExists) {
+    console.log("[VERIFY] Feature may fail.");
+    console.log("[VERIFY] Reason:", `loader "${loaderName}" is not available on window`);
   }
   history.pushState({ page: key }, "", routeUrl(key));
   return window.openFeatureByRoute(key);
 };
 
 window.renderHomePage = function () {
+  console.log("[VERIFY] HOME requested");
+  console.log("[VERIFY] Caller:", "renderHomePage()");
+  console.log("[VERIFY] Reason:", "renderHomePage invoked");
   window.goHome?.();
 };
 
 window.navigateToHome = function () {
+  console.log("[VERIFY] HOME requested");
+  console.log("[VERIFY] Caller:", "navigateToHome()");
+  console.log("[VERIFY] Reason:", "explicit home navigation");
   history.pushState({}, "", "/");
   window.renderHomePage();
 };
@@ -85,6 +125,7 @@ window.VoxiRouter.restoreInitialRoute = function () {
     history.replaceState({}, "", "/");
     return false;
   }
+  console.log("[VERIFY] Router restored page:", page);
   history.replaceState({ page }, "", routeUrl(page));
   return window.openFeatureByRoute(page);
 };
@@ -93,6 +134,9 @@ window.addEventListener("popstate", () => {
   const params = new URLSearchParams(window.location.search);
   const page = routeKey(params.get("page"));
   if (!page) {
+    console.log("[VERIFY] HOME requested");
+    console.log("[VERIFY] Caller:", "popstate");
+    console.log("[VERIFY] Reason:", "history entry has no page parameter");
     window.renderHomePage();
     return;
   }
@@ -130,6 +174,10 @@ function setBottomNavVisible(visible) {
   nav.style.display = visible ? "flex" : "none";
 }
 window.goHome = function () {
+  console.log("[VERIFY] HOME requested");
+  console.log("[VERIFY] Caller:", "window.goHome()");
+  console.log("[VERIFY] Reason:", "central home renderer invoked");
+  console.trace("[VERIFY] HOME call stack");
   hideAllScreens();
   showAnnouncement();
   if (screenHome) screenHome.style.display = "block";

@@ -61,6 +61,7 @@ window.ShadowWritingLoader = window.ShadowWritingLoader || {};
   }
 
   ShadowWritingLoader.start = async function () {
+    console.log("[VERIFY] Shadow Writing loader entered.");
     const isGuest = ShadowWritingApi.isGuest?.();
     if (isGuest && guestUsage().limitReached) {
       ShadowWritingUI.showGuestLimitDialog();

@@ -250,12 +250,23 @@ function markAppReady() {
 }
 
 function resolveInitialScreen() {
+  const startupUrl = new URL(window.location.href);
+  console.log("[VERIFY] Current URL:", window.location.href);
+  console.log("[VERIFY] window.location.search:", window.location.search);
+  console.log("[VERIFY] Parsed parameters:", {
+    open: startupUrl.searchParams.get("open"),
+    page: startupUrl.searchParams.get("page")
+  });
+
   const handledDeepLink = Boolean(window.VoxiDeepLinks?.handleCurrentUrl?.());
   if (handledDeepLink) return true;
 
   const restoredRoute = Boolean(window.VoxiRouter?.restoreInitialRoute?.());
   if (restoredRoute) return true;
 
+  console.log("[VERIFY] HOME requested");
+  console.log("[VERIFY] Caller:", "resolveInitialScreen()");
+  console.log("[VERIFY] Reason:", "no deep link, no restored route, no explicit startup destination");
   window.renderHomePage?.();
   return false;
 }
