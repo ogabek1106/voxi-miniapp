@@ -61,7 +61,9 @@ window.ShadowWritingLoader = window.ShadowWritingLoader || {};
   }
 
   ShadowWritingLoader.start = async function () {
-    const isGuest = ShadowWritingApi.isGuest?.();
+    const isGuest = typeof ShadowWritingApi.resolveIsGuest === "function"
+      ? await ShadowWritingApi.resolveIsGuest()
+      : ShadowWritingApi.isGuest?.();
     if (isGuest && guestUsage().limitReached) {
       ShadowWritingUI.showGuestLimitDialog();
       return;
@@ -82,7 +84,7 @@ window.ShadowWritingLoader = window.ShadowWritingLoader || {};
         startedAt: Date.now(),
         completed: false,
         result: null,
-        isGuest: Boolean(data?.is_guest || isGuest),
+        isGuest: Boolean(isGuest),
       });
       screen.innerHTML = ShadowWritingUI.renderPractice(attempt);
       ShadowWritingTyping.bind({
