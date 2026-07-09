@@ -64,8 +64,9 @@ window.ShadowWritingResult = window.ShadowWritingResult || {};
   ShadowWritingResult.renderCompletion = function (result, options = {}) {
     const isGuest = Boolean(options.isGuest);
     const signedActions = `
-      <button class="shadow-primary-btn" onclick="ShadowWritingLoader.start()">Next Essay</button>
+      <button class="shadow-secondary-btn" onclick="ShadowWritingLoader.exit()">Back</button>
       <button class="shadow-secondary-btn" onclick="ShadowWritingHistory.show()">History</button>
+      <button class="shadow-primary-btn" onclick="ShadowWritingLoader.start()">Next Essay</button>
     `;
     const guestActions = `
       <button class="shadow-primary-btn" onclick="ShadowWritingLoader.start()">Next Essay</button>
