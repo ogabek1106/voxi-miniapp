@@ -53,7 +53,9 @@ window.ShadowWritingUI = window.ShadowWritingUI || {};
     const screen = document.getElementById("screen-mocks");
     const state = ShadowWritingState.get();
     const essay = state.essay || {};
-    const isGuest = Boolean(state.isGuest);
+    const isGuest = typeof ShadowWritingApi.isGuest === "function"
+      ? Boolean(ShadowWritingApi.isGuest())
+      : Boolean(state.isGuest);
     let guestUsage = null;
     if (isGuest) {
       guestUsage = ShadowWritingLoader.recordGuestCompletion?.();
@@ -69,7 +71,7 @@ window.ShadowWritingUI = window.ShadowWritingUI || {};
         console.error("Shadow Writing complete error:", error);
       }
     }
-    ShadowWritingState.set({ completed: true, result: stats });
+    ShadowWritingState.set({ completed: true, result: stats, isGuest });
     const completionEl = document.getElementById("shadow-writing-completion");
     const topActions = document.querySelector(".shadow-writing-head .shadow-writing-actions");
     const finishActions = document.getElementById("shadow-writing-finish-actions");

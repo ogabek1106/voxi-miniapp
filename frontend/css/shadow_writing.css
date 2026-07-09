@@ -319,6 +319,11 @@
   transition: opacity 0.24s ease, transform 0.24s ease;
 }
 
+.shadow-writing-result-actions--signed {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: min(100%, 380px);
+}
+
 .shadow-writing-result-actions--hidden {
   pointer-events: none;
   opacity: 0;
@@ -560,6 +565,11 @@
   .shadow-writing-result-actions {
     display: grid;
     grid-template-columns: 1fr;
+  }
+
+  .shadow-writing-result-actions--signed {
+    grid-template-columns: 1fr;
+    width: min(100%, 380px);
   }
 
   .shadow-completion-panel {

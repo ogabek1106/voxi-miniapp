@@ -66,7 +66,6 @@ window.ShadowWritingResult = window.ShadowWritingResult || {};
     const signedActions = `
       <button class="shadow-primary-btn" onclick="ShadowWritingLoader.start()">Next Essay</button>
       <button class="shadow-secondary-btn" onclick="ShadowWritingHistory.show()">History</button>
-      <button class="shadow-secondary-btn" onclick="ShadowWritingLoader.exit()">Exit</button>
     `;
     const guestActions = `
       <button class="shadow-primary-btn" onclick="ShadowWritingLoader.start()">Next Essay</button>
@@ -83,7 +82,7 @@ window.ShadowWritingResult = window.ShadowWritingResult || {};
           </div>
         </div>
         ${ShadowWritingResult.renderStats(result, { animated: true })}
-        <div class="shadow-writing-result-actions shadow-writing-result-actions--hidden">
+        <div class="shadow-writing-result-actions shadow-writing-result-actions--${isGuest ? "guest" : "signed"} shadow-writing-result-actions--hidden">
           ${isGuest ? guestActions : signedActions}
         </div>
       </section>
