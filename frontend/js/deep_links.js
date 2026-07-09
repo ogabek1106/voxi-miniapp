@@ -21,6 +21,15 @@ window.VoxiDeepLinks = window.VoxiDeepLinks || {};
     return String(value || "").trim().toLowerCase();
   }
 
+  function consumeOpenParameter() {
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("open");
+      const search = url.searchParams.toString();
+      history.replaceState(history.state || {}, "", `${url.pathname}${search ? `?${search}` : ""}${url.hash || ""}`);
+    } catch (_) {}
+  }
+
   VoxiDeepLinks.isSupported = function (value) {
     const key = normalize(value);
     return Boolean(handlers[key] || customHandlers[key]);
@@ -32,18 +41,22 @@ window.VoxiDeepLinks = window.VoxiDeepLinks || {};
 
     if (handlers[key]) {
       if (typeof window.navigateToFeature === "function") {
-        return window.navigateToFeature(key);
+        const opened = window.navigateToFeature(key);
+        if (opened) consumeOpenParameter();
+        return opened;
       }
 
       const handler = window[handlers[key]];
       if (typeof handler !== "function") return false;
       handler();
+      consumeOpenParameter();
       return true;
     }
 
     const customHandler = customHandlers[key];
     if (!customHandler) return false;
     customHandler();
+    consumeOpenParameter();
     return true;
   };
 

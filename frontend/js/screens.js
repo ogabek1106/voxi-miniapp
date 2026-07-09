@@ -44,7 +44,13 @@ function routeKey(value) {
 
 function routeUrl(page) {
   const key = routeKey(page);
-  return key ? `/?page=${encodeURIComponent(key)}` : "/";
+  const url = new URL(window.location.href);
+  url.pathname = "/";
+  url.searchParams.delete("open");
+  url.searchParams.delete("page");
+  if (key) url.searchParams.set("page", key);
+  const search = url.searchParams.toString();
+  return `${url.pathname}${search ? `?${search}` : ""}`;
 }
 
 window.openFeatureByRoute = function (page) {
@@ -130,6 +136,7 @@ function setBottomNavVisible(visible) {
   nav.style.display = visible ? "flex" : "none";
 }
 window.goHome = function () {
+  history.replaceState({}, "", routeUrl(""));
   hideAllScreens();
   showAnnouncement();
   if (screenHome) screenHome.style.display = "block";
