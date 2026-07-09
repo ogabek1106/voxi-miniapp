@@ -10,8 +10,50 @@ window.ShadowWritingTyping = window.ShadowWritingTyping || {};
       .replace(/'/g, "&#039;");
   }
 
+  function normalizeTargetText(value) {
+    return String(value || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  }
+
+  function isWhitespace(char) {
+    return /\s/.test(String(char || ""));
+  }
+
+  function paragraphBreakRunEnd(chars, index) {
+    if (!isWhitespace(chars[index])) return index;
+    let end = index;
+    let hasLineBreak = false;
+    while (end < chars.length && isWhitespace(chars[end])) {
+      if (chars[end] === "\n" || chars[end] === "\r") hasLineBreak = true;
+      end += 1;
+    }
+    return hasLineBreak ? end : index;
+  }
+
+  function paragraphBreakIndexSet(chars) {
+    const skipped = new Set();
+    let index = 0;
+    while (index < chars.length) {
+      const end = paragraphBreakRunEnd(chars, index);
+      if (end > index) {
+        for (let cursor = index; cursor < end; cursor += 1) skipped.add(cursor);
+        index = end;
+      } else {
+        index += 1;
+      }
+    }
+    return skipped;
+  }
+
+  function visibleTypedCount(typedLength, skippedIndexes) {
+    let count = 0;
+    for (let index = 0; index < typedLength; index += 1) {
+      if (!skippedIndexes.has(index)) count += 1;
+    }
+    return count;
+  }
+
   function renderTarget(text, typed, options = {}) {
-    const chars = Array.from(String(text || ""));
+    const chars = Array.from(normalizeTargetText(text));
     const typedChars = Array.isArray(typed) ? typed : Array.from(String(typed || ""));
     return chars.map((char, index) => {
       const typedChar = typedChars[index];
@@ -30,14 +72,16 @@ window.ShadowWritingTyping = window.ShadowWritingTyping || {};
   }
 
   function calculate(text, typed, startedAt, options = {}) {
-    const targetChars = Array.from(String(text || ""));
+    const targetChars = Array.from(normalizeTargetText(text));
     const typedChars = (Array.isArray(typed) ? typed : Array.from(String(typed || ""))).slice(0, targetChars.length);
+    const skippedIndexes = paragraphBreakIndexSet(targetChars);
     let mistakes = 0;
     typedChars.forEach((char, index) => {
+      if (skippedIndexes.has(index)) return;
       if (char !== targetChars[index]) mistakes += 1;
     });
-    const totalChars = targetChars.length;
-    const typedCount = typedChars.length;
+    const totalChars = Math.max(0, targetChars.length - skippedIndexes.size);
+    const typedCount = visibleTypedCount(typedChars.length, skippedIndexes);
     const wrongTypedCount = mistakes;
     const untypedCount = Math.max(0, totalChars - typedCount);
     const correct = Math.max(0, typedCount - wrongTypedCount);
@@ -65,8 +109,10 @@ window.ShadowWritingTyping = window.ShadowWritingTyping || {};
   ShadowWritingTyping.bind = function ({ essay, output, mobileInput, onComplete }) {
     if (!essay || !output) return;
     ShadowWritingTyping.cleanup();
-    const targetText = String(essay.text || "");
+    const targetText = normalizeTargetText(essay.text);
     const targetChars = Array.from(targetText);
+    const skippedIndexes = paragraphBreakIndexSet(targetChars);
+    const visibleTotal = Math.max(0, targetChars.length - skippedIndexes.size);
     const typedChars = [];
     let completed = false;
 
@@ -77,12 +123,25 @@ window.ShadowWritingTyping = window.ShadowWritingTyping || {};
 
     function rerender() {
       output.innerHTML = renderTarget(targetText, typedChars);
-      const total = targetChars.length || 1;
-      const percent = Math.min(100, Math.round((typedChars.length / total) * 100));
+      const total = visibleTotal || 1;
+      const percent = Math.min(100, Math.round((visibleTypedCount(typedChars.length, skippedIndexes) / total) * 100));
       const fill = document.getElementById("shadow-writing-progress-fill");
       const label = document.getElementById("shadow-writing-progress-label");
       if (fill) fill.style.width = `${percent}%`;
       if (label) label.textContent = `${percent}%`;
+    }
+
+    function skipParagraphBreaks() {
+      let changed = false;
+      while (typedChars.length < targetChars.length) {
+        const end = paragraphBreakRunEnd(targetChars, typedChars.length);
+        if (end <= typedChars.length) break;
+        while (typedChars.length < end) {
+          typedChars.push(targetChars[typedChars.length]);
+          changed = true;
+        }
+      }
+      return changed;
     }
 
     function completeIfReady() {
@@ -97,6 +156,7 @@ window.ShadowWritingTyping = window.ShadowWritingTyping || {};
       if (completed) return;
       completed = true;
       if (mobileInput) mobileInput.disabled = true;
+      skipParagraphBreaks();
       output.innerHTML = renderTarget(targetText, typedChars, { markRemainingWrong: true });
       const fill = document.getElementById("shadow-writing-progress-fill");
       const label = document.getElementById("shadow-writing-progress-label");
@@ -109,7 +169,17 @@ window.ShadowWritingTyping = window.ShadowWritingTyping || {};
 
     function addChar(char) {
       if (completed || typedChars.length >= targetChars.length) return;
-      typedChars.push(char);
+      skipParagraphBreaks();
+      if (completed || typedChars.length >= targetChars.length) return;
+      const normalizedChar = char === "\r" ? "\n" : char;
+      if (normalizedChar === "\n") {
+        skipParagraphBreaks();
+        rerender();
+        completeIfReady();
+        return;
+      }
+      typedChars.push(normalizedChar);
+      skipParagraphBreaks();
       rerender();
       completeIfReady();
     }
@@ -152,7 +222,9 @@ window.ShadowWritingTyping = window.ShadowWritingTyping || {};
 
       if (key === "Enter") {
         event.preventDefault();
-        addChar("\n");
+        skipParagraphBreaks();
+        rerender();
+        completeIfReady();
         return;
       }
 
@@ -168,6 +240,7 @@ window.ShadowWritingTyping = window.ShadowWritingTyping || {};
       }
     }
 
+    skipParagraphBreaks();
     rerender();
     output.tabIndex = 0;
     output.addEventListener("click", focusMobileInput);
