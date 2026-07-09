@@ -40,7 +40,8 @@ window.ShadowWritingUI = window.ShadowWritingUI || {};
 
         <div id="shadow-writing-completion" class="shadow-completion-wrap" hidden></div>
 
-        <div id="shadow-writing-finish-actions" class="shadow-writing-finish-actions">
+        <div id="shadow-writing-finish-actions" class="shadow-writing-finish-actions ${isGuest ? "shadow-writing-finish-actions--guest" : ""}">
+          ${isGuest ? "" : `<button class="shadow-secondary-btn" onclick="ShadowWritingHistory.show()">History</button>`}
           <button class="shadow-finish-btn" onclick="ShadowWritingTyping.finishNow()">Finish Now</button>
         </div>
 

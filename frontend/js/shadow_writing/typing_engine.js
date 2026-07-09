@@ -186,6 +186,7 @@ window.ShadowWritingTyping = window.ShadowWritingTyping || {};
 
     function handleKeydown(event) {
       if (completed) return;
+      if (window.ShadowWritingHistory?.isOpen?.()) return;
 
       const key = event.key || "";
       const lowerKey = key.toLowerCase();
@@ -259,6 +260,10 @@ window.ShadowWritingTyping = window.ShadowWritingTyping || {};
       mobileInput.value = "";
       mobileInput.disabled = false;
       mobileInput.addEventListener("beforeinput", (event) => {
+        if (window.ShadowWritingHistory?.isOpen?.()) {
+          event.preventDefault();
+          return;
+        }
         if (event.inputType && event.inputType !== "insertText" && event.inputType !== "insertLineBreak") {
           event.preventDefault();
         }
@@ -266,6 +271,10 @@ window.ShadowWritingTyping = window.ShadowWritingTyping || {};
       mobileInput.addEventListener("paste", (event) => event.preventDefault());
       mobileInput.addEventListener("cut", (event) => event.preventDefault());
       mobileInput.addEventListener("input", () => {
+        if (window.ShadowWritingHistory?.isOpen?.()) {
+          mobileInput.value = "";
+          return;
+        }
         const value = mobileInput.value || "";
         if (!value) return;
         Array.from(value).forEach((char) => addChar(char));

@@ -1,6 +1,18 @@
 window.ShadowWritingHistory = window.ShadowWritingHistory || {};
 
 (function () {
+  function existingOverlay() {
+    return document.getElementById("shadow-writing-history-overlay");
+  }
+
+  function renderShell(content) {
+    return `
+      <div class="shadow-history-overlay-inner">
+        ${content}
+      </div>
+    `;
+  }
+
   function formatDate(value) {
     if (!value) return "";
     const date = new Date(value);
@@ -31,16 +43,34 @@ window.ShadowWritingHistory = window.ShadowWritingHistory || {};
     `;
   }
 
+  ShadowWritingHistory.isOpen = function () {
+    return Boolean(existingOverlay());
+  };
+
+  ShadowWritingHistory.back = function () {
+    existingOverlay()?.remove();
+  };
+
   ShadowWritingHistory.show = async function () {
+    if (ShadowWritingApi.isGuest?.()) return;
     const screen = document.getElementById("screen-mocks");
     if (!screen) return;
     screen.classList.add("shadow-writing-host");
-    screen.innerHTML = `<div class="shadow-writing-screen"><p class="shadow-muted">Loading history...</p></div>`;
+    existingOverlay()?.remove();
+    const overlay = document.createElement("div");
+    overlay.id = "shadow-writing-history-overlay";
+    overlay.className = "shadow-history-overlay";
+    overlay.innerHTML = renderShell(`
+      <div class="shadow-writing-screen">
+        <p class="shadow-muted">Loading history...</p>
+      </div>
+    `);
+    screen.appendChild(overlay);
 
     try {
       const data = await ShadowWritingApi.history();
       const items = Array.isArray(data?.history) ? data.history : [];
-      screen.innerHTML = `
+      overlay.innerHTML = renderShell(`
         <div class="shadow-writing-screen">
           <div class="shadow-writing-head">
             <h2>Shadow Writing History</h2>
@@ -49,17 +79,17 @@ window.ShadowWritingHistory = window.ShadowWritingHistory || {};
           <div class="shadow-history-list">
             ${items.length ? items.map(renderItem).join("") : `<div class="shadow-empty">No history yet.</div>`}
           </div>
-          <button class="shadow-secondary-btn" onclick="ShadowWritingLoader.start()">Back</button>
+          <button class="shadow-secondary-btn" onclick="ShadowWritingHistory.back()">Back</button>
         </div>
-      `;
+      `);
     } catch (error) {
       console.error("Shadow Writing history error:", error);
-      screen.innerHTML = `
+      overlay.innerHTML = renderShell(`
         <div class="shadow-writing-screen">
           <div class="shadow-empty">Could not load history.</div>
-          <button class="shadow-secondary-btn" onclick="ShadowWritingLoader.start()">Back</button>
+          <button class="shadow-secondary-btn" onclick="ShadowWritingHistory.back()">Back</button>
         </div>
-      `;
+      `);
     }
   };
 })();

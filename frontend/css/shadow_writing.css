@@ -339,8 +339,14 @@
 
 .shadow-writing-finish-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
   margin-top: 12px;
+}
+
+.shadow-writing-finish-actions--guest {
+  justify-content: flex-end;
 }
 
 .shadow-history-list {
@@ -348,6 +354,21 @@
   flex-direction: column;
   gap: 10px;
   margin-bottom: 28px;
+}
+
+.shadow-history-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  overflow-y: auto;
+  background: #f3f8fc;
+  padding: 18px 20px 34px;
+}
+
+.shadow-history-overlay-inner {
+  width: min(82vw, 1440px);
+  max-width: calc(100vw - 40px);
+  margin: 0 auto;
 }
 
 .shadow-history-item {
@@ -587,7 +608,20 @@
 
   .shadow-writing-finish-actions {
     display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .shadow-writing-finish-actions--guest {
     grid-template-columns: 1fr;
+  }
+
+  .shadow-history-overlay {
+    padding: 14px 12px 28px;
+  }
+
+  .shadow-history-overlay-inner {
+    width: 100%;
+    max-width: none;
   }
 
   .shadow-primary-btn,
