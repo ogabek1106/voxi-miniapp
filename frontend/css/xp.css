@@ -41,12 +41,17 @@ body.view-miniapp #screen-home .home-xp {
   border-radius: 17px;
   gap: 0;
   box-sizing: border-box;
+  align-items: center;
 }
 
 .home-xp-label,
 .website-xp-label {
   color: #f59e0b;
   letter-spacing: 0;
+}
+
+body.view-miniapp #screen-home .home-xp-label {
+  transform: translateY(-2px);
 }
 
 .xp-sheet-backdrop {
