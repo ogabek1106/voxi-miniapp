@@ -39,20 +39,16 @@ window.VoxiNotifications = window.VoxiNotifications || {};
   }
 
   function mountMiniBell() {
-    const header = document.querySelector("#screen-home .home-header");
-    const balance = header?.querySelector(".home-balance");
-    if (!header || !balance) {
-      console.warn("[Notifications] Mini bell mount skipped: home header or balance target is missing.");
+    if (!window.AppViewMode?.isMiniApp?.()) return;
+    const rewardRow = document.querySelector("#screen-home .home-reward-row");
+    if (!rewardRow) {
+      console.warn("[Notifications] Mini bell mount skipped: home reward row is missing.");
       return;
     }
-    if (balance.parentNode !== header) {
-      console.warn("[Notifications] Mini bell mount skipped: balance target is not a direct child of the home header.");
-      return;
-    }
-    if (header.querySelector(".voxi-notification-bell")) return;
+    if (rewardRow.querySelector(".voxi-notification-bell")) return;
     const wrap = document.createElement("div");
     wrap.className = "home-notification-slot";
-    header.insertBefore(wrap, balance);
+    rewardRow.appendChild(wrap);
     VoxiNotificationsUI.mountBell(wrap);
   }
 

@@ -98,7 +98,24 @@ body.mobile-browser-view #screen-home .home-header {
   gap: 8px;
 }
 
-body.view-miniapp #screen-home .home-notification-slot .voxi-notification-bell,
+body.view-miniapp #screen-home .home-reward-row {
+  display: inline-grid;
+  grid-template-columns: repeat(3, 46px);
+  align-items: center;
+  gap: 8px;
+}
+
+body.view-miniapp #screen-home .home-notification-slot {
+  width: 46px;
+  height: 46px;
+}
+
+body.view-miniapp #screen-home .home-notification-slot .voxi-notification-bell {
+  width: 46px;
+  height: 46px;
+  border-radius: 17px;
+}
+
 body.mobile-browser-view #screen-home .home-notification-slot .voxi-notification-bell {
   width: 40px;
   height: 40px;
@@ -111,6 +128,37 @@ body.mobile-browser-view #screen-home .home-balance {
   height: 40px;
   padding: 8px 10px;
   gap: 6px;
+}
+
+body.view-miniapp #screen-home .home-balance,
+body.view-miniapp #screen-home .home-xp {
+  width: 46px;
+  min-width: 46px;
+  height: 46px;
+  padding: 0;
+  border-radius: 17px;
+  gap: 0;
+  box-sizing: border-box;
+}
+
+body.view-miniapp #screen-home .home-balance .vcoin-icon {
+  width: 25px;
+  height: 25px;
+}
+
+body.view-miniapp #screen-home #home-balance-value,
+body.view-miniapp #screen-home #home-xp-value {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+body.view-miniapp #screen-home .home-xp-label {
+  font-size: 17px;
+  line-height: 1;
 }
 
 .voxi-notification-drawer {

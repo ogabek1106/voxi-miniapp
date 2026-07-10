@@ -33,6 +33,16 @@ body.mobile-browser-view #screen-home .home-xp {
   gap: 6px;
 }
 
+body.view-miniapp #screen-home .home-xp {
+  width: 46px;
+  min-width: 46px;
+  height: 46px;
+  padding: 0;
+  border-radius: 17px;
+  gap: 0;
+  box-sizing: border-box;
+}
+
 .home-xp-label,
 .website-xp-label {
   color: #f59e0b;
