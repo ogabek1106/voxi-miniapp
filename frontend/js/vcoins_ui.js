@@ -355,6 +355,7 @@ window.VCoinUI = window.VCoinUI || {};
 
   function closeSheet() {
     document.getElementById("vcoin-sheet-backdrop")?.remove();
+    document.body.classList.remove("reward-vcoin-open");
   }
 
   function bindSheetDragToClose(sheet) {
@@ -523,6 +524,7 @@ window.VCoinUI = window.VCoinUI || {};
   window.VCoinUI.openPurchaseSheet = async function () {
     ensureStyles();
     closeSheet();
+    document.body.classList.add("reward-vcoin-open");
 
     const backdrop = document.createElement("div");
     backdrop.id = "vcoin-sheet-backdrop";
@@ -632,6 +634,7 @@ window.VCoinUI = window.VCoinUI || {};
   window.VCoinUI.openBalanceSheet = async function () {
     ensureStyles();
     closeSheet();
+    document.body.classList.add("reward-vcoin-open");
 
     const backdrop = document.createElement("div");
     backdrop.id = "vcoin-sheet-backdrop";
@@ -701,6 +704,7 @@ window.VCoinUI = window.VCoinUI || {};
   window.VCoinUI.showInsufficient = function ({ required, balance, serviceName }) {
     ensureStyles();
     closeSheet();
+    document.body.classList.add("reward-vcoin-open");
 
     const backdrop = document.createElement("div");
     backdrop.id = "vcoin-sheet-backdrop";

@@ -74,6 +74,7 @@ window.VoxiNotifications = window.VoxiNotifications || {};
   VoxiNotifications.open = function () {
     VoxiNotificationsState.set({ isOpen: true });
     document.body.classList.add("notifications-open");
+    document.body.classList.add("reward-notifications-open");
     VoxiNotificationsUI.renderDrawer();
     VoxiNotificationsUI.updateBells();
   };
@@ -81,6 +82,7 @@ window.VoxiNotifications = window.VoxiNotifications || {};
   VoxiNotifications.close = function () {
     VoxiNotificationsState.set({ isOpen: false });
     document.body.classList.remove("notifications-open");
+    document.body.classList.remove("reward-notifications-open");
     clearVisibleReadTimers();
     document.getElementById("voxi-notification-drawer")?.remove();
     VoxiNotificationsUI.updateBells();

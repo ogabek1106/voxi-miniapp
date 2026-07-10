@@ -101,6 +101,7 @@ window.XPUI = window.XPUI || {};
   function close() {
     const root = document.getElementById("xp-sheet-root");
     if (root) root.innerHTML = "";
+    document.body.classList.remove("reward-xp-open");
   }
 
   function renderHistory() {
@@ -204,6 +205,7 @@ window.XPUI = window.XPUI || {};
   }
 
   async function open() {
+    document.body.classList.add("reward-xp-open");
     try {
       await Promise.all([loadMe(), loadSettings()]);
     } catch (_) {

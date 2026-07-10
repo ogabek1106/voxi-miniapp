@@ -150,6 +150,17 @@ body.view-miniapp #screen-home .home-xp {
   margin: 0;
 }
 
+body.view-miniapp.reward-vcoin-open #screen-home .home-balance,
+body.view-miniapp.reward-xp-open #screen-home .home-xp,
+body.view-miniapp.reward-notifications-open #screen-home .home-notification-slot {
+  position: relative;
+  z-index: 100006;
+}
+
+body.view-miniapp.reward-notifications-open #screen-home .home-notification-slot .voxi-notification-bell {
+  z-index: 100006;
+}
+
 body.view-miniapp #screen-home .home-balance .vcoin-icon {
   width: 25px;
   height: 25px;
