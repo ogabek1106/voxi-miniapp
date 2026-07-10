@@ -81,6 +81,10 @@ body.notifications-open #screen-home .home-header {
   z-index: 100000;
 }
 
+body.view-miniapp.notifications-open #screen-home .home-header {
+  z-index: auto;
+}
+
 #screen-home .home-notification-slot {
   margin-left: 0;
   display: inline-flex;
