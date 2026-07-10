@@ -37,12 +37,15 @@ body.view-miniapp #screen-home .home-xp {
   width: 46px;
   min-width: 46px;
   height: 46px;
+  min-height: 46px;
   padding: 0;
   border-radius: 17px;
   gap: 0;
   box-sizing: border-box;
   align-items: center;
-  transform: translateY(-4px);
+  align-self: stretch;
+  justify-self: stretch;
+  margin: 0;
 }
 
 .home-xp-label,
@@ -52,7 +55,7 @@ body.view-miniapp #screen-home .home-xp {
 }
 
 body.view-miniapp #screen-home .home-xp-label {
-  transform: translateY(-2px);
+  transform: none;
 }
 
 .xp-sheet-backdrop {

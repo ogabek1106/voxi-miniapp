@@ -101,19 +101,24 @@ body.mobile-browser-view #screen-home .home-header {
 body.view-miniapp #screen-home .home-reward-row {
   display: inline-grid;
   grid-template-columns: repeat(3, 46px);
-  align-items: center;
+  grid-auto-rows: 46px;
+  align-items: stretch;
+  justify-items: stretch;
   gap: 8px;
 }
 
 body.view-miniapp #screen-home .home-notification-slot {
   width: 46px;
   height: 46px;
+  align-self: stretch;
+  justify-self: stretch;
 }
 
 body.view-miniapp #screen-home .home-notification-slot .voxi-notification-bell {
   width: 46px;
   height: 46px;
   border-radius: 17px;
+  display: flex;
 }
 
 body.mobile-browser-view #screen-home .home-notification-slot .voxi-notification-bell {
@@ -135,10 +140,14 @@ body.view-miniapp #screen-home .home-xp {
   width: 46px;
   min-width: 46px;
   height: 46px;
+  min-height: 46px;
   padding: 0;
   border-radius: 17px;
   gap: 0;
   box-sizing: border-box;
+  align-self: stretch;
+  justify-self: stretch;
+  margin: 0;
 }
 
 body.view-miniapp #screen-home .home-balance .vcoin-icon {
