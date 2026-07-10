@@ -42,6 +42,7 @@ body.view-miniapp #screen-home .home-xp {
   gap: 0;
   box-sizing: border-box;
   align-items: center;
+  transform: translateY(-8px);
 }
 
 .home-xp-label,
