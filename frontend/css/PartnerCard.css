@@ -1,0 +1,140 @@
+#screen-home .partner-card-mount {
+  grid-column: 1 / -1;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+#screen-home .partners-section {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+}
+
+#screen-home .partners-section-list {
+  width: min(100%, 420px);
+  display: flex;
+  justify-content: center;
+}
+
+#screen-home .partner-card {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  min-height: 250px;
+  box-sizing: border-box;
+  border-radius: 24px;
+  background: #FFFFFF;
+  box-shadow: 0 8px 24px rgba(20,40,60,0.08);
+  padding: 34px 24px 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+#screen-home .partner-card-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  height: 30px;
+  padding: 0 11px;
+  border-radius: 999px;
+  background: rgba(0,186,255,0.10);
+  color: #17212B;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+#screen-home .partner-card-logo {
+  width: 88px;
+  height: 88px;
+  border-radius: 24px;
+  background: rgba(0,186,255,0.12);
+  color: #00BAFF;
+  box-shadow: 0 8px 24px rgba(20,40,60,0.08);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+#screen-home .partner-card-copy {
+  max-width: 310px;
+  min-width: 0;
+  margin-top: 18px;
+}
+
+#screen-home .partner-card-name {
+  margin: 0;
+  color: #17212B;
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1.18;
+}
+
+#screen-home .partner-card-description {
+  margin: 8px 0 0;
+  color: #607080;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+#screen-home .partner-card-button {
+  width: 100%;
+  max-width: 240px;
+  height: 50px;
+  margin: 20px 0 0;
+  padding: 0 18px;
+  border-radius: 18px;
+  border: 0;
+  background: #00BAFF;
+  color: #FFFFFF;
+  box-shadow: 0 8px 24px rgba(20,40,60,0.08);
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+#screen-home .partner-card-button:active {
+  transform: scale(0.98);
+}
+
+@media (max-width: 640px) {
+  #screen-home .partners-section-list {
+    width: 100%;
+  }
+
+  #screen-home .partner-card {
+    min-height: 246px;
+    padding: 34px 20px 20px;
+  }
+
+  #screen-home .partner-card-logo {
+    width: 78px;
+    height: 78px;
+    border-radius: 22px;
+    font-size: 25px;
+  }
+
+  #screen-home .partner-card-name {
+    font-size: 20px;
+  }
+
+  #screen-home .partner-card-description {
+    font-size: 14px;
+  }
+}
