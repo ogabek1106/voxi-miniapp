@@ -5,8 +5,9 @@ window.PartnerCard = window.PartnerCard || {};
     {
       id: "yandex-browser",
       name: "Yandex Browser",
-      logoText: "YB",
-      description: "Fast and secure browser for studying, Telegram Mini Apps, and everyday browsing.",
+      logoSrc: "./assets/yandex-browser-logo.svg",
+      logoAlt: "Yandex Browser logo",
+      description: "Fast, secure, and modern browser for everyday browsing.",
       ctaLabel: "Download Browser",
       referralUrl: "https://browser.yandex.com/"
     }
@@ -36,7 +37,9 @@ window.PartnerCard = window.PartnerCard || {};
     return `
       <article class="partner-card" data-partner-id="${escapeHtml(partner.id)}">
         <span class="partner-card-badge" aria-label="Partner">🤝 Partner</span>
-        <div class="partner-card-logo" aria-hidden="true">${escapeHtml(partner.logoText)}</div>
+        <div class="partner-card-logo">
+          <img src="${escapeHtml(partner.logoSrc)}" alt="${escapeHtml(partner.logoAlt || partner.name)}">
+        </div>
         <div class="partner-card-copy">
           <h3 class="partner-card-name">${escapeHtml(partner.name)}</h3>
           <p class="partner-card-description">${escapeHtml(partner.description)}</p>
