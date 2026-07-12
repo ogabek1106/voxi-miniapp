@@ -507,6 +507,14 @@ window.VCoinUI = window.VCoinUI || {};
     return data?.payment || null;
   }
 
+  async function createPaymeCheckout(telegramId, coins, promoCode) {
+    return await apiPost("/payments/payme/vcoins/checkout", {
+      telegram_id: Number(telegramId),
+      coins: Number(coins || 0),
+      promo_code: promoCode || null
+    });
+  }
+
   function renderQuote(quote, fallbackRate) {
     const rate = Number(quote?.exchange_rate_uzs || fallbackRate || 5000);
     const coins = Number(quote?.coins || DEFAULT_PURCHASE_AMOUNT);
@@ -553,7 +561,7 @@ window.VCoinUI = window.VCoinUI || {};
         <div class="vcoin-history-section"></div>
 
         <div class="vcoin-sheet-actions">
-          <button class="vcoin-buy-btn" id="vcoin-create-payment-btn">Continue in Telegram</button>
+          <button class="vcoin-buy-btn" id="vcoin-create-payment-btn">Pay with Payme</button>
           <button class="vcoin-cancel-btn" id="vcoin-back-to-wallet-btn">Back</button>
         </div>
       </div>
@@ -612,9 +620,9 @@ window.VCoinUI = window.VCoinUI || {};
       if (button) button.disabled = true;
       try {
         const coins = Number(amountInput?.value || DEFAULT_PURCHASE_AMOUNT);
-        const payment = await createPaymentIntent(id, coins, appliedPromo);
-        if (!payment?.bot_link) throw new Error("missing_bot_link");
-        window.open(payment.bot_link, "_blank", "noopener");
+        const checkout = await createPaymeCheckout(id, coins, appliedPromo);
+        if (!checkout?.checkout_url) throw new Error("missing_checkout_url");
+        window.open(checkout.checkout_url, "_blank", "noopener");
       } catch (error) {
         alert("Could not create payment. Please try again.");
       } finally {

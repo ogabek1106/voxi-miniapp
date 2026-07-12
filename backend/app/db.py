@@ -1396,6 +1396,294 @@ def ensure_vcoin_schema():
         ))
 
 
+def ensure_payme_schema():
+    with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS payment_orders ("
+            "id SERIAL PRIMARY KEY, "
+            "order_ref VARCHAR(48) NOT NULL, "
+            "user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE RESTRICT, "
+            "telegram_id BIGINT NOT NULL, "
+            "product_type VARCHAR(32) NOT NULL, "
+            "product_data JSON NOT NULL, "
+            "quote_snapshot JSON NOT NULL, "
+            "amount_tiyin BIGINT NOT NULL, "
+            "currency VARCHAR(3) NOT NULL DEFAULT 'UZS', "
+            "payment_provider VARCHAR(32) NOT NULL DEFAULT 'payme', "
+            "status VARCHAR(32) NOT NULL DEFAULT 'pending', "
+            "fulfillment_status VARCHAR(32) NOT NULL DEFAULT 'not_started', "
+            "fulfillment_ledger_id INTEGER NULL REFERENCES coin_ledger(id) ON DELETE RESTRICT, "
+            "fulfillment_error TEXT NULL, "
+            "payment_completed_at TIMESTAMPTZ NULL, "
+            "fulfilled_at TIMESTAMPTZ NULL, "
+            "cancelled_at TIMESTAMPTZ NULL, "
+            "expires_at TIMESTAMPTZ NOT NULL, "
+            "created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), "
+            "updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()"
+            ");"
+        ))
+        conn.execute(text("ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS order_ref VARCHAR(48);"))
+        conn.execute(text("ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS user_id INTEGER;"))
+        conn.execute(text("ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS telegram_id BIGINT;"))
+        conn.execute(text("ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS product_type VARCHAR(32);"))
+        conn.execute(text("ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS product_data JSON;"))
+        conn.execute(text("ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS quote_snapshot JSON;"))
+        conn.execute(text("ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS amount_tiyin BIGINT;"))
+        conn.execute(text("ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS currency VARCHAR(3) NOT NULL DEFAULT 'UZS';"))
+        conn.execute(text("ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS payment_provider VARCHAR(32) NOT NULL DEFAULT 'payme';"))
+        conn.execute(text("ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS status VARCHAR(32) NOT NULL DEFAULT 'pending';"))
+        conn.execute(text("ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS fulfillment_status VARCHAR(32) NOT NULL DEFAULT 'not_started';"))
+        conn.execute(text("ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS fulfillment_ledger_id INTEGER;"))
+        conn.execute(text("ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS fulfillment_error TEXT;"))
+        conn.execute(text("ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS payment_completed_at TIMESTAMPTZ;"))
+        conn.execute(text("ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS fulfilled_at TIMESTAMPTZ;"))
+        conn.execute(text("ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS cancelled_at TIMESTAMPTZ;"))
+        conn.execute(text("ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ;"))
+        conn.execute(text("ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text("ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uq_payment_orders_order_ref ON payment_orders (order_ref);"))
+        conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uq_payment_orders_fulfillment_ledger_id ON payment_orders (fulfillment_ledger_id) WHERE fulfillment_ledger_id IS NOT NULL;"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_payment_orders_order_ref ON payment_orders (order_ref);"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_payment_orders_user_id ON payment_orders (user_id);"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_payment_orders_telegram_id ON payment_orders (telegram_id);"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_payment_orders_product_type ON payment_orders (product_type);"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_payment_orders_payment_provider ON payment_orders (payment_provider);"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_payment_orders_status ON payment_orders (status);"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_payment_orders_fulfillment_status ON payment_orders (fulfillment_status);"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_payment_orders_expires_at ON payment_orders (expires_at);"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_payment_orders_user_status ON payment_orders (user_id, status);"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_payment_orders_product_status ON payment_orders (product_type, status);"))
+        conn.execute(text(
+            "DO $$ "
+            "BEGIN "
+            "IF NOT EXISTS ("
+            "SELECT 1 FROM information_schema.table_constraints "
+            "WHERE constraint_name = 'payment_orders_user_id_fkey'"
+            ") THEN "
+            "ALTER TABLE payment_orders ADD CONSTRAINT payment_orders_user_id_fkey "
+            "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT; "
+            "END IF; "
+            "END "
+            "$$;"
+        ))
+        conn.execute(text(
+            "DO $$ "
+            "BEGIN "
+            "IF NOT EXISTS ("
+            "SELECT 1 FROM information_schema.table_constraints "
+            "WHERE constraint_name = 'payment_orders_fulfillment_ledger_id_fkey'"
+            ") THEN "
+            "ALTER TABLE payment_orders ADD CONSTRAINT payment_orders_fulfillment_ledger_id_fkey "
+            "FOREIGN KEY (fulfillment_ledger_id) REFERENCES coin_ledger(id) ON DELETE RESTRICT; "
+            "END IF; "
+            "END "
+            "$$;"
+        ))
+        conn.execute(text(
+            "DO $$ "
+            "BEGIN "
+            "IF NOT EXISTS ("
+            "SELECT 1 FROM information_schema.table_constraints "
+            "WHERE constraint_name = 'ck_payment_orders_amount_positive'"
+            ") THEN "
+            "ALTER TABLE payment_orders ADD CONSTRAINT ck_payment_orders_amount_positive "
+            "CHECK (amount_tiyin > 0); "
+            "END IF; "
+            "END "
+            "$$;"
+        ))
+        conn.execute(text(
+            "DO $$ "
+            "BEGIN "
+            "IF NOT EXISTS ("
+            "SELECT 1 FROM information_schema.table_constraints "
+            "WHERE constraint_name = 'ck_payment_orders_product_type_not_empty'"
+            ") THEN "
+            "ALTER TABLE payment_orders ADD CONSTRAINT ck_payment_orders_product_type_not_empty "
+            "CHECK (product_type <> ''); "
+            "END IF; "
+            "END "
+            "$$;"
+        ))
+        conn.execute(text(
+            "DO $$ "
+            "BEGIN "
+            "IF NOT EXISTS ("
+            "SELECT 1 FROM information_schema.table_constraints "
+            "WHERE constraint_name = 'ck_payment_orders_currency_uzs'"
+            ") THEN "
+            "ALTER TABLE payment_orders ADD CONSTRAINT ck_payment_orders_currency_uzs "
+            "CHECK (currency = 'UZS'); "
+            "END IF; "
+            "END "
+            "$$;"
+        ))
+        conn.execute(text(
+            "DO $$ "
+            "BEGIN "
+            "IF NOT EXISTS ("
+            "SELECT 1 FROM information_schema.table_constraints "
+            "WHERE constraint_name = 'ck_payment_orders_status'"
+            ") THEN "
+            "ALTER TABLE payment_orders ADD CONSTRAINT ck_payment_orders_status "
+            "CHECK (status IN ('pending', 'paid', 'fulfilled', 'cancelled', 'expired', 'fulfillment_failed')); "
+            "END IF; "
+            "END "
+            "$$;"
+        ))
+        conn.execute(text(
+            "DO $$ "
+            "BEGIN "
+            "IF NOT EXISTS ("
+            "SELECT 1 FROM information_schema.table_constraints "
+            "WHERE constraint_name = 'ck_payment_orders_fulfillment_status'"
+            ") THEN "
+            "ALTER TABLE payment_orders ADD CONSTRAINT ck_payment_orders_fulfillment_status "
+            "CHECK (fulfillment_status IN ('not_started', 'processing', 'fulfilled', 'failed')); "
+            "END IF; "
+            "END "
+            "$$;"
+        ))
+
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS payme_transactions ("
+            "id SERIAL PRIMARY KEY, "
+            "payme_transaction_id VARCHAR(24) NOT NULL, "
+            "order_id INTEGER NOT NULL REFERENCES payment_orders(id) ON DELETE RESTRICT, "
+            "payme_time_ms BIGINT NOT NULL, "
+            "amount_tiyin BIGINT NOT NULL, "
+            "state INTEGER NOT NULL DEFAULT 1, "
+            "reason INTEGER NULL, "
+            "create_time_ms BIGINT NOT NULL, "
+            "perform_time_ms BIGINT NOT NULL DEFAULT 0, "
+            "cancel_time_ms BIGINT NOT NULL DEFAULT 0, "
+            "account JSON NOT NULL, "
+            "raw_create_request JSON NULL, "
+            "raw_perform_request JSON NULL, "
+            "raw_cancel_request JSON NULL, "
+            "raw_check_request JSON NULL, "
+            "created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), "
+            "updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()"
+            ");"
+        ))
+        conn.execute(text("ALTER TABLE payme_transactions ADD COLUMN IF NOT EXISTS payme_transaction_id VARCHAR(24);"))
+        conn.execute(text("ALTER TABLE payme_transactions ADD COLUMN IF NOT EXISTS order_id INTEGER;"))
+        conn.execute(text("ALTER TABLE payme_transactions ADD COLUMN IF NOT EXISTS payme_time_ms BIGINT;"))
+        conn.execute(text("ALTER TABLE payme_transactions ADD COLUMN IF NOT EXISTS amount_tiyin BIGINT;"))
+        conn.execute(text("ALTER TABLE payme_transactions ADD COLUMN IF NOT EXISTS state INTEGER NOT NULL DEFAULT 1;"))
+        conn.execute(text("ALTER TABLE payme_transactions ADD COLUMN IF NOT EXISTS reason INTEGER;"))
+        conn.execute(text("ALTER TABLE payme_transactions ADD COLUMN IF NOT EXISTS create_time_ms BIGINT;"))
+        conn.execute(text("ALTER TABLE payme_transactions ADD COLUMN IF NOT EXISTS perform_time_ms BIGINT NOT NULL DEFAULT 0;"))
+        conn.execute(text("ALTER TABLE payme_transactions ADD COLUMN IF NOT EXISTS cancel_time_ms BIGINT NOT NULL DEFAULT 0;"))
+        conn.execute(text("ALTER TABLE payme_transactions ADD COLUMN IF NOT EXISTS account JSON;"))
+        conn.execute(text("ALTER TABLE payme_transactions ADD COLUMN IF NOT EXISTS raw_create_request JSON;"))
+        conn.execute(text("ALTER TABLE payme_transactions ADD COLUMN IF NOT EXISTS raw_perform_request JSON;"))
+        conn.execute(text("ALTER TABLE payme_transactions ADD COLUMN IF NOT EXISTS raw_cancel_request JSON;"))
+        conn.execute(text("ALTER TABLE payme_transactions ADD COLUMN IF NOT EXISTS raw_check_request JSON;"))
+        conn.execute(text("ALTER TABLE payme_transactions ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text("ALTER TABLE payme_transactions ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uq_payme_transactions_payme_id ON payme_transactions (payme_transaction_id);"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_payme_transactions_payme_transaction_id ON payme_transactions (payme_transaction_id);"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_payme_transactions_order_id ON payme_transactions (order_id);"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_payme_transactions_payme_time_ms ON payme_transactions (payme_time_ms);"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_payme_transactions_state ON payme_transactions (state);"))
+        conn.execute(text(
+            "CREATE UNIQUE INDEX IF NOT EXISTS uq_payme_transactions_one_active_per_order "
+            "ON payme_transactions (order_id) WHERE state IN (1, 2);"
+        ))
+        conn.execute(text(
+            "DO $$ "
+            "BEGIN "
+            "IF NOT EXISTS ("
+            "SELECT 1 FROM information_schema.table_constraints "
+            "WHERE constraint_name = 'payme_transactions_order_id_fkey'"
+            ") THEN "
+            "ALTER TABLE payme_transactions ADD CONSTRAINT payme_transactions_order_id_fkey "
+            "FOREIGN KEY (order_id) REFERENCES payment_orders(id) ON DELETE RESTRICT; "
+            "END IF; "
+            "END "
+            "$$;"
+        ))
+        conn.execute(text(
+            "DO $$ "
+            "BEGIN "
+            "IF NOT EXISTS ("
+            "SELECT 1 FROM information_schema.table_constraints "
+            "WHERE constraint_name = 'ck_payme_transactions_payme_id_len'"
+            ") THEN "
+            "ALTER TABLE payme_transactions ADD CONSTRAINT ck_payme_transactions_payme_id_len "
+            "CHECK (char_length(payme_transaction_id) = 24); "
+            "END IF; "
+            "END "
+            "$$;"
+        ))
+        conn.execute(text(
+            "DO $$ "
+            "BEGIN "
+            "IF NOT EXISTS ("
+            "SELECT 1 FROM information_schema.table_constraints "
+            "WHERE constraint_name = 'ck_payme_transactions_amount_positive'"
+            ") THEN "
+            "ALTER TABLE payme_transactions ADD CONSTRAINT ck_payme_transactions_amount_positive "
+            "CHECK (amount_tiyin > 0); "
+            "END IF; "
+            "END "
+            "$$;"
+        ))
+        conn.execute(text(
+            "DO $$ "
+            "BEGIN "
+            "IF NOT EXISTS ("
+            "SELECT 1 FROM information_schema.table_constraints "
+            "WHERE constraint_name = 'ck_payme_transactions_state'"
+            ") THEN "
+            "ALTER TABLE payme_transactions ADD CONSTRAINT ck_payme_transactions_state "
+            "CHECK (state IN (1, 2, -1, -2)); "
+            "END IF; "
+            "END "
+            "$$;"
+        ))
+        conn.execute(text(
+            "DO $$ "
+            "BEGIN "
+            "IF NOT EXISTS ("
+            "SELECT 1 FROM information_schema.table_constraints "
+            "WHERE constraint_name = 'ck_payme_transactions_create_time_positive'"
+            ") THEN "
+            "ALTER TABLE payme_transactions ADD CONSTRAINT ck_payme_transactions_create_time_positive "
+            "CHECK (create_time_ms > 0); "
+            "END IF; "
+            "END "
+            "$$;"
+        ))
+        conn.execute(text(
+            "DO $$ "
+            "BEGIN "
+            "IF NOT EXISTS ("
+            "SELECT 1 FROM information_schema.table_constraints "
+            "WHERE constraint_name = 'ck_payme_transactions_perform_time_nonnegative'"
+            ") THEN "
+            "ALTER TABLE payme_transactions ADD CONSTRAINT ck_payme_transactions_perform_time_nonnegative "
+            "CHECK (perform_time_ms >= 0); "
+            "END IF; "
+            "END "
+            "$$;"
+        ))
+        conn.execute(text(
+            "DO $$ "
+            "BEGIN "
+            "IF NOT EXISTS ("
+            "SELECT 1 FROM information_schema.table_constraints "
+            "WHERE constraint_name = 'ck_payme_transactions_cancel_time_nonnegative'"
+            ") THEN "
+            "ALTER TABLE payme_transactions ADD CONSTRAINT ck_payme_transactions_cancel_time_nonnegative "
+            "CHECK (cancel_time_ms >= 0); "
+            "END IF; "
+            "END "
+            "$$;"
+        ))
+
+
 def ensure_user_auth_schema():
     with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
         conn.execute(text(

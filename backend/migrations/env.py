@@ -10,6 +10,7 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from app.models import Base
+from app import models_payments  # noqa: F401
 
 config = context.config
 
