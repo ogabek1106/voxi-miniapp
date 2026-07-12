@@ -622,6 +622,10 @@ window.VCoinUI = window.VCoinUI || {};
         const coins = Number(amountInput?.value || DEFAULT_PURCHASE_AMOUNT);
         const checkout = await createPaymeCheckout(id, coins, appliedPromo);
         if (!checkout?.checkout_url) throw new Error("missing_checkout_url");
+        if (window.PAYME_TEST_MODE && window.PaymeTestUI?.open) {
+          await window.PaymeTestUI.open({ checkout, telegramId: id });
+          return;
+        }
         window.open(checkout.checkout_url, "_blank", "noopener");
       } catch (error) {
         alert("Could not create payment. Please try again.");

@@ -13,3 +13,13 @@ class VCoinPaymeCheckoutRequest(BaseModel):
     telegram_id: int
     coins: int
     promo_code: Optional[str] = None
+
+
+class PaymeTestSimulateRequest(BaseModel):
+    telegram_id: int
+    action: str
+    order_ref: str
+    amount_tiyin: int
+    transaction_id: str
+    payme_time_ms: int
+    reason: Optional[int] = 1

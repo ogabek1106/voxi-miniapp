@@ -525,6 +525,21 @@ PAYME_METHODS = {
 }
 
 
+PAYME_TEST_ACTIONS = {
+    "check",
+    "create",
+    "perform",
+    "cancel",
+    "check_transaction",
+    "get_statement",
+    "wrong_amount",
+    "missing_order",
+    "invalid_auth",
+    "unknown_method",
+    "insufficient_balance",
+}
+
+
 def dispatch_payme_method(db: Session, payload: dict[str, Any]) -> dict[str, Any]:
     request_id = payload.get("id") if isinstance(payload, dict) else None
     method = payload.get("method") if isinstance(payload, dict) else None
@@ -537,6 +552,99 @@ def dispatch_payme_method(db: Session, payload: dict[str, Any]) -> dict[str, Any
         if db.is_active:
             db.rollback()
         return jsonrpc_error(request_id, exc)
+
+
+def _test_body(request_id: int, method: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
+    return {
+        "jsonrpc": "2.0",
+        "id": request_id,
+        "method": method,
+        "params": params or {},
+    }
+
+
+def _simulate_one(db: Session, body: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "request": sanitize_raw_request(body),
+        "response": dispatch_payme_method(db, body),
+    }
+
+
+def simulate_payme_test_action(db: Session, payload: dict[str, Any]) -> dict[str, Any]:
+    action = str(payload.get("action") or "").strip()
+    if action not in PAYME_TEST_ACTIONS:
+        raise HTTPException(status_code=422, detail="unsupported_payme_test_action")
+
+    order_ref = str(payload.get("order_ref") or "").strip()
+    transaction_id = str(payload.get("transaction_id") or "").strip()
+    try:
+        amount_tiyin = int(payload.get("amount_tiyin"))
+        payme_time_ms = int(payload.get("payme_time_ms"))
+    except Exception:
+        raise HTTPException(status_code=422, detail="invalid_payme_test_payload")
+    reason = payload.get("reason")
+    try:
+        reason = int(reason) if reason is not None else 1
+    except Exception:
+        reason = 1
+
+    if not order_ref or len(transaction_id) != 24 or amount_tiyin <= 0 or payme_time_ms <= 0:
+        raise HTTPException(status_code=422, detail="invalid_payme_test_payload")
+
+    account_order_ref = f"missing-{order_ref}" if action == "missing_order" else order_ref
+    request_amount = amount_tiyin + 100 if action == "wrong_amount" else amount_tiyin
+
+    check_body = _test_body(1, "CheckPerformTransaction", {
+        "amount": request_amount,
+        "account": {"order_id": account_order_ref},
+    })
+    create_body = _test_body(2, "CreateTransaction", {
+        "id": transaction_id,
+        "time": payme_time_ms,
+        "amount": request_amount,
+        "account": {"order_id": account_order_ref},
+    })
+    perform_body = _test_body(3, "PerformTransaction", {"id": transaction_id})
+    cancel_body = _test_body(4, "CancelTransaction", {"id": transaction_id, "reason": reason})
+    check_transaction_body = _test_body(5, "CheckTransaction", {"id": transaction_id})
+    statement_body = _test_body(6, "GetStatement", {
+        "from": payme_time_ms - 60000,
+        "to": current_millis() + 60000,
+    })
+
+    if action == "invalid_auth":
+        return {
+            "action": action,
+            "steps": [{
+                "request": sanitize_raw_request(check_body),
+                "response": jsonrpc_error(check_body.get("id"), access_denied_error()),
+            }],
+        }
+    if action == "unknown_method":
+        return {"action": action, "steps": [_simulate_one(db, _test_body(1, "UnknownMethod", {}))]}
+    if action in {"check", "wrong_amount", "missing_order"}:
+        return {"action": action, "steps": [_simulate_one(db, check_body)]}
+    if action == "create":
+        return {"action": action, "steps": [_simulate_one(db, create_body)]}
+    if action == "perform":
+        return {"action": action, "steps": [_simulate_one(db, perform_body)]}
+    if action == "cancel":
+        return {"action": action, "steps": [_simulate_one(db, cancel_body)]}
+    if action == "check_transaction":
+        return {"action": action, "steps": [_simulate_one(db, check_transaction_body)]}
+    if action == "get_statement":
+        return {"action": action, "steps": [_simulate_one(db, statement_body)]}
+    if action == "insufficient_balance":
+        return {
+            "action": action,
+            "steps": [
+                _simulate_one(db, check_body),
+                _simulate_one(db, create_body),
+            ],
+            "message": "Payment failed: insufficient card balance. PerformTransaction was not sent.",
+        }
+
+    raise HTTPException(status_code=422, detail="unsupported_payme_test_action")
 
 
 def generate_order_ref(db: Session) -> str:
