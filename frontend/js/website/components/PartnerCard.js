@@ -5,11 +5,11 @@ window.PartnerCard = window.PartnerCard || {};
     {
       id: "yandex-browser",
       name: "Yandex Browser",
-      logoSrc: "./assets/yandex-browser-logo.svg",
+      logoSrc: "./assets/yandex-browser-logo.png",
       logoAlt: "Yandex Browser logo",
       description: "Fast, secure, and modern browser for everyday browsing.",
       ctaLabel: "Download Browser",
-      referralUrl: "https://browser.yandex.com/"
+      referralUrl: "https://redirect.appmetrica.yandex.com/serve/174043448125444738?partner_id=831050&appmetrica_js_redirect=0&clid=15188160&banerid=1315188161&full=0"
     }
   ];
 
