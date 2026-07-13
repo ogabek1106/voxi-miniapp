@@ -665,6 +665,10 @@ window.VCoinUI = window.VCoinUI || {};
         const coins = Number(amountInput?.value || DEFAULT_PURCHASE_AMOUNT);
         const checkout = await createClickCheckout(id, coins, appliedPromo);
         if (!checkout?.checkout_url) throw new Error("missing_checkout_url");
+        if (window.CLICK_TEST_MODE && window.ClickTestUI?.open) {
+          await window.ClickTestUI.open({ checkout, telegramId: id });
+          return;
+        }
         window.open(checkout.checkout_url, "_blank", "noopener");
       } catch (error) {
         alert("Could not create Click payment. Please try again.");

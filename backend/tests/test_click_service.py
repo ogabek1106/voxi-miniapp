@@ -7,6 +7,10 @@ os.environ.setdefault("CLICK_SERVICE_ID", "456")
 os.environ.setdefault("CLICK_SECRET_KEY", "click-secret")
 os.environ.setdefault("CLICK_CHECKOUT_BASE_URL", "https://my.click.uz/services/pay/")
 os.environ.setdefault("CLICK_RETURN_URL", "https://example.test/click-return")
+os.environ.setdefault("CLICK_TEST_MODE", "false")
+os.environ.setdefault("CLICK_TEST_MERCHANT_ID", "test_merchant")
+os.environ.setdefault("CLICK_TEST_SERVICE_ID", "106870")
+os.environ.setdefault("CLICK_TEST_SECRET_KEY", "test_secret")
 
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
@@ -230,6 +234,60 @@ def test_checkout_returns_safe_public_data():
     assert "merchant_id=123" in result["checkout_url"]
     assert "service_id=456" in result["checkout_url"]
     assert f"transaction_param={result['order_ref']}" in result["checkout_url"]
+
+
+def test_checkout_uses_test_variables_when_click_test_mode(monkeypatch):
+    db = _db()
+    monkeypatch.setattr(click_service, "CLICK_TEST_MODE", True)
+    monkeypatch.setattr(click_service, "CLICK_TEST_MERCHANT_ID", "test_merchant")
+    monkeypatch.setattr(click_service, "CLICK_TEST_SERVICE_ID", "106870")
+    result = click_service.create_vcoin_checkout_order(db, telegram_id=1001, coins=1)
+    assert "merchant_id=test_merchant" in result["checkout_url"]
+    assert "service_id=106870" in result["checkout_url"]
+    assert "secret" not in result["checkout_url"].lower()
+
+
+def _simulate_payload(order, action="full_success", click_trans_id=321001, click_paydoc_id=654001):
+    return {
+        "telegram_id": 1001,
+        "action": action,
+        "order_ref": order.order_ref,
+        "amount_tiyin": int(order.amount_tiyin),
+        "click_trans_id": click_trans_id,
+        "click_paydoc_id": click_paydoc_id,
+    }
+
+
+def test_simulate_click_full_success_and_duplicate_complete(monkeypatch):
+    db = _db()
+    monkeypatch.setattr(click_service, "CLICK_TEST_MODE", True)
+    order = _order(db, coins=4)
+    result = click_service.simulate_click_test_action(db, _simulate_payload(order, "duplicate_complete"))
+    assert result["steps"][-1]["response"]["error"] == 0
+    assert result["steps"][0]["request"]["sign_string"] == "<backend-generated>"
+    user = db.query(User).filter(User.id == 1).first()
+    assert user.v_coins == 4
+    assert db.query(CoinLedger).count() == 1
+
+
+def test_simulate_click_invalid_signature(monkeypatch):
+    db = _db()
+    monkeypatch.setattr(click_service, "CLICK_TEST_MODE", True)
+    order = _order(db)
+    result = click_service.simulate_click_test_action(db, _simulate_payload(order, "invalid_signature"))
+    assert result["steps"][-1]["response"]["error"] == -1
+    assert db.query(CoinLedger).count() == 0
+
+
+def test_simulate_click_cancelled_complete_does_not_add_vcoins(monkeypatch):
+    db = _db()
+    monkeypatch.setattr(click_service, "CLICK_TEST_MODE", True)
+    order = _order(db, coins=5)
+    result = click_service.simulate_click_test_action(db, _simulate_payload(order, "cancelled_complete"))
+    user = db.query(User).filter(User.id == 1).first()
+    assert result["steps"][-1]["response"]["error"] == -9
+    assert user.v_coins == 0
+    assert db.query(CoinLedger).count() == 0
 
 
 def test_balance_and_coinledger_updated_exactly_once():

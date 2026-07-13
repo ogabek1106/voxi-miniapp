@@ -1,9 +1,15 @@
-from fastapi import APIRouter, Depends, Form
+from fastapi import APIRouter, Depends, Form, HTTPException
 from sqlalchemy.orm import Session
 
+from app.config import ADMIN_IDS, CLICK_TEST_MODE
 from app.deps import get_db
-from app.schemas.click import VCoinClickCheckoutRequest
-from app.services.click_service import create_vcoin_checkout_order, handle_complete, handle_prepare
+from app.schemas.click import ClickTestSimulateRequest, VCoinClickCheckoutRequest
+from app.services.click_service import (
+    create_vcoin_checkout_order,
+    handle_complete,
+    handle_prepare,
+    simulate_click_test_action,
+)
 
 
 router = APIRouter(prefix="/payments/click", tags=["click"])
@@ -52,3 +58,12 @@ def create_vcoin_click_checkout(payload: VCoinClickCheckoutRequest, db: Session 
         coins=payload.coins,
         promo_code=payload.promo_code,
     )
+
+
+@router.post("/test/simulate")
+def simulate_click_test(payload: ClickTestSimulateRequest, db: Session = Depends(get_db)):
+    if not CLICK_TEST_MODE:
+        raise HTTPException(status_code=404, detail="click_test_mode_disabled")
+    if int(payload.telegram_id or 0) not in ADMIN_IDS:
+        raise HTTPException(status_code=403, detail="admin_only")
+    return simulate_click_test_action(db, payload.model_dump())

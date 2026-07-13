@@ -19,6 +19,10 @@ from app.config import (
     CLICK_RETURN_URL,
     CLICK_SECRET_KEY,
     CLICK_SERVICE_ID,
+    CLICK_TEST_MERCHANT_ID,
+    CLICK_TEST_MODE,
+    CLICK_TEST_SECRET_KEY,
+    CLICK_TEST_SERVICE_ID,
 )
 from app.models import User
 from app.models_click import ClickTransaction
@@ -52,6 +56,23 @@ CLICK_ERROR_NOTES = {
     CLICK_FAILED_TO_UPDATE_USER: "Failed to update user",
     CLICK_ERROR_IN_REQUEST: "Error in request from click",
     CLICK_TRANSACTION_CANCELLED: "Transaction cancelled",
+}
+
+CLICK_TEST_ACTIONS = {
+    "prepare",
+    "complete",
+    "full_success",
+    "duplicate_prepare",
+    "duplicate_complete",
+    "invalid_signature",
+    "wrong_amount",
+    "missing_order",
+    "cancelled_complete",
+    "failed_complete",
+    "complete_without_prepare",
+    "wrong_action_prepare",
+    "wrong_action_complete",
+    "wrong_service",
 }
 
 
@@ -120,13 +141,31 @@ def _clean(value: Any) -> str:
     return str(value or "").strip()
 
 
+def _active_merchant_id() -> str:
+    if CLICK_TEST_MODE and CLICK_TEST_MERCHANT_ID:
+        return CLICK_TEST_MERCHANT_ID
+    return CLICK_MERCHANT_ID
+
+
+def _active_service_id() -> str:
+    if CLICK_TEST_MODE and CLICK_TEST_SERVICE_ID:
+        return CLICK_TEST_SERVICE_ID
+    return CLICK_SERVICE_ID
+
+
 def _configured_service_id() -> int:
-    if not CLICK_SERVICE_ID:
+    service_id = _active_service_id()
+    if not service_id:
         raise ClickError(CLICK_ERROR_IN_REQUEST)
-    return _safe_int(CLICK_SERVICE_ID)
+    return _safe_int(service_id)
 
 
-def _required_secret() -> str:
+def _secret_for_service_id(service_id: Any) -> str:
+    cleaned = _clean(service_id)
+    if CLICK_TEST_MODE and CLICK_TEST_SERVICE_ID and cleaned == _clean(CLICK_TEST_SERVICE_ID):
+        if not CLICK_TEST_SECRET_KEY:
+            raise ClickError(CLICK_SIGN_CHECK_FAILED)
+        return CLICK_TEST_SECRET_KEY
     if not CLICK_SECRET_KEY:
         raise ClickError(CLICK_SIGN_CHECK_FAILED)
     return CLICK_SECRET_KEY
@@ -136,7 +175,7 @@ def sign_prepare(fields: dict[str, Any]) -> str:
     raw = (
         f"{_clean(fields.get('click_trans_id'))}"
         f"{_clean(fields.get('service_id'))}"
-        f"{_required_secret()}"
+        f"{_secret_for_service_id(fields.get('service_id'))}"
         f"{_clean(fields.get('merchant_trans_id'))}"
         f"{_clean(fields.get('amount'))}"
         f"{_clean(fields.get('action'))}"
@@ -149,7 +188,7 @@ def sign_complete(fields: dict[str, Any]) -> str:
     raw = (
         f"{_clean(fields.get('click_trans_id'))}"
         f"{_clean(fields.get('service_id'))}"
-        f"{_required_secret()}"
+        f"{_secret_for_service_id(fields.get('service_id'))}"
         f"{_clean(fields.get('merchant_trans_id'))}"
         f"{_clean(fields.get('merchant_prepare_id'))}"
         f"{_clean(fields.get('amount'))}"
@@ -533,17 +572,19 @@ def generate_order_ref(db: Session) -> str:
 
 
 def build_checkout_url(order_ref: str, amount_tiyin: int) -> str:
-    if not CLICK_MERCHANT_ID:
+    merchant_id = _active_merchant_id()
+    service_id = _active_service_id()
+    if not merchant_id:
         raise HTTPException(status_code=503, detail="click_merchant_id_not_configured")
-    if not CLICK_SERVICE_ID:
+    if not service_id:
         raise HTTPException(status_code=503, detail="click_service_id_not_configured")
     if not CLICK_CHECKOUT_BASE_URL:
         raise HTTPException(status_code=503, detail="click_checkout_base_url_not_configured")
 
     amount = (Decimal(int(amount_tiyin)) / Decimal("100")).quantize(Decimal("0.01"))
     params = {
-        "service_id": CLICK_SERVICE_ID,
-        "merchant_id": CLICK_MERCHANT_ID,
+        "service_id": service_id,
+        "merchant_id": merchant_id,
         "amount": format(amount, ".2f"),
         "transaction_param": order_ref,
     }
@@ -614,3 +655,164 @@ def create_vcoin_checkout_order(
         "checkout_url": build_checkout_url(order.order_ref, int(order.amount_tiyin)),
         "expires_at": order.expires_at.isoformat(),
     }
+
+
+def _format_amount_tiyin(amount_tiyin: int) -> str:
+    return format((Decimal(int(amount_tiyin)) / Decimal("100")).quantize(Decimal("0.01")), ".2f")
+
+
+def _test_sign_time() -> str:
+    return utcnow().strftime("%Y-%m-%d %H:%M:%S")
+
+
+def _safe_test_request(fields: dict[str, Any]) -> dict[str, Any]:
+    request = _sanitize_callback(fields)
+    if "sign_string" in request:
+        request["sign_string"] = "<backend-generated>"
+    return request
+
+
+def _test_prepare_fields(payload: dict[str, Any], **overrides) -> dict[str, Any]:
+    amount_tiyin = int(payload.get("amount_tiyin") or 0)
+    fields = {
+        "click_trans_id": str(int(payload.get("click_trans_id") or 0)),
+        "service_id": _active_service_id(),
+        "click_paydoc_id": str(int(payload.get("click_paydoc_id") or 0)),
+        "merchant_trans_id": _clean(payload.get("order_ref")),
+        "amount": _format_amount_tiyin(amount_tiyin),
+        "action": "0",
+        "error": "0",
+        "error_note": "Success",
+        "sign_time": _test_sign_time(),
+    }
+    fields.update({key: str(value) for key, value in overrides.items()})
+    fields["sign_string"] = sign_prepare(fields)
+    return fields
+
+
+def _test_complete_fields(payload: dict[str, Any], merchant_prepare_id: int, **overrides) -> dict[str, Any]:
+    amount_tiyin = int(payload.get("amount_tiyin") or 0)
+    fields = {
+        "click_trans_id": str(int(payload.get("click_trans_id") or 0)),
+        "service_id": _active_service_id(),
+        "click_paydoc_id": str(int(payload.get("click_paydoc_id") or 0)),
+        "merchant_trans_id": _clean(payload.get("order_ref")),
+        "merchant_prepare_id": str(int(merchant_prepare_id or 0)),
+        "amount": _format_amount_tiyin(amount_tiyin),
+        "action": "1",
+        "error": "0",
+        "error_note": "Success",
+        "sign_time": _test_sign_time(),
+    }
+    fields.update({key: str(value) for key, value in overrides.items()})
+    fields["sign_string"] = sign_complete(fields)
+    return fields
+
+
+def _simulate_step(db: Session, kind: str, fields: dict[str, Any]) -> dict[str, Any]:
+    response = handle_prepare(db, fields) if kind == "prepare" else handle_complete(db, fields)
+    return {
+        "request": _safe_test_request(fields),
+        "response": response,
+    }
+
+
+def _existing_prepare_id(db: Session, payload: dict[str, Any]) -> int | None:
+    tx = (
+        db.query(ClickTransaction)
+        .filter(ClickTransaction.click_trans_id == int(payload.get("click_trans_id") or 0))
+        .order_by(ClickTransaction.id.desc())
+        .first()
+    )
+    return int(tx.merchant_prepare_id or tx.id) if tx else None
+
+
+def _simulate_prepare(db: Session, payload: dict[str, Any], **overrides) -> dict[str, Any]:
+    return _simulate_step(db, "prepare", _test_prepare_fields(payload, **overrides))
+
+
+def _simulate_complete(db: Session, payload: dict[str, Any], merchant_prepare_id: int | None = None, **overrides) -> dict[str, Any]:
+    prepare_id = merchant_prepare_id if merchant_prepare_id is not None else _existing_prepare_id(db, payload)
+    return _simulate_step(db, "complete", _test_complete_fields(payload, int(prepare_id or 999999), **overrides))
+
+
+def simulate_click_test_action(db: Session, payload: dict[str, Any]) -> dict[str, Any]:
+    action = _clean(payload.get("action"))
+    if action not in CLICK_TEST_ACTIONS:
+        raise HTTPException(status_code=422, detail="unsupported_click_test_action")
+
+    order_ref = _clean(payload.get("order_ref"))
+    try:
+        amount_tiyin = int(payload.get("amount_tiyin"))
+        click_trans_id = int(payload.get("click_trans_id"))
+        click_paydoc_id = int(payload.get("click_paydoc_id"))
+    except Exception:
+        raise HTTPException(status_code=422, detail="invalid_click_test_payload")
+    if not order_ref or amount_tiyin <= 0 or click_trans_id <= 0 or click_paydoc_id <= 0:
+        raise HTTPException(status_code=422, detail="invalid_click_test_payload")
+
+    body = {
+        "order_ref": order_ref,
+        "amount_tiyin": amount_tiyin,
+        "click_trans_id": click_trans_id,
+        "click_paydoc_id": click_paydoc_id,
+    }
+
+    steps: list[dict[str, Any]] = []
+    if action == "prepare":
+        steps.append(_simulate_prepare(db, body))
+    elif action == "complete":
+        steps.append(_simulate_complete(db, body))
+    elif action == "full_success":
+        steps.append(_simulate_prepare(db, body))
+        steps.append(_simulate_complete(db, body, steps[-1]["response"].get("merchant_prepare_id")))
+    elif action == "duplicate_prepare":
+        steps.append(_simulate_prepare(db, body))
+        steps.append(_simulate_prepare(db, body))
+    elif action == "duplicate_complete":
+        steps.append(_simulate_prepare(db, body))
+        prepare_id = steps[-1]["response"].get("merchant_prepare_id")
+        steps.append(_simulate_complete(db, body, prepare_id))
+        steps.append(_simulate_complete(db, body, prepare_id))
+    elif action == "invalid_signature":
+        fields = _test_prepare_fields(body)
+        fields["sign_string"] = "invalid"
+        steps.append(_simulate_step(db, "prepare", fields))
+    elif action == "wrong_amount":
+        wrong = dict(body, amount_tiyin=amount_tiyin + 100)
+        steps.append(_simulate_prepare(db, wrong))
+    elif action == "missing_order":
+        missing = dict(body, order_ref=f"missing-{order_ref}")
+        steps.append(_simulate_prepare(db, missing))
+    elif action == "cancelled_complete":
+        steps.append(_simulate_prepare(db, body))
+        steps.append(_simulate_complete(
+            db,
+            body,
+            steps[-1]["response"].get("merchant_prepare_id"),
+            error="-9",
+            error_note=CLICK_ERROR_NOTES[CLICK_TRANSACTION_CANCELLED],
+        ))
+    elif action == "failed_complete":
+        steps.append(_simulate_prepare(db, body))
+        steps.append(_simulate_complete(
+            db,
+            body,
+            steps[-1]["response"].get("merchant_prepare_id"),
+            error="-5017",
+            error_note="Payment failed",
+        ))
+    elif action == "complete_without_prepare":
+        steps.append(_simulate_complete(db, body, 999999))
+    elif action == "wrong_action_prepare":
+        steps.append(_simulate_prepare(db, body, action="2"))
+    elif action == "wrong_action_complete":
+        steps.append(_simulate_prepare(db, body))
+        steps.append(_simulate_complete(db, body, steps[-1]["response"].get("merchant_prepare_id"), action="2"))
+    elif action == "wrong_service":
+        wrong_service = str(_configured_service_id() + 1)
+        fields = _test_prepare_fields(body)
+        fields["service_id"] = wrong_service
+        steps.append(_simulate_step(db, "prepare", fields))
+
+    return {"action": action, "steps": steps}
