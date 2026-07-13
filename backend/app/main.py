@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.db import SessionLocal, engine
 from app.models import Base, User
 from app import models_payments  # noqa: F401
+from app import models_click  # noqa: F401
 from app.deps import get_db
 from pydantic import BaseModel
 from fastapi.staticfiles import StaticFiles
@@ -49,6 +50,7 @@ from app.api.xp import router as xp_router
 from app.api.auth import router as auth_router
 from app.api.auth_google import router as auth_google_router
 from app.api.payme import router as payme_router
+from app.api.click import router as click_router
 from .db import (
     ensure_reading_progress_columns,
     ensure_mock_pack_column,
@@ -61,6 +63,7 @@ from .db import (
     ensure_full_mock_results_schema,
     ensure_vcoin_schema,
     ensure_payme_schema,
+    ensure_click_schema,
     ensure_announcement_schema,
     ensure_user_auth_schema,
     ensure_shadow_writing_schema,
@@ -92,6 +95,7 @@ ensure_speaking_schema()
 ensure_full_mock_results_schema()
 ensure_vcoin_schema()
 ensure_payme_schema()
+ensure_click_schema()
 ensure_user_auth_schema()
 ensure_announcement_schema()
 ensure_shadow_writing_schema()
@@ -147,6 +151,7 @@ app.include_router(xp_router)
 app.include_router(auth_router)
 app.include_router(auth_google_router)
 app.include_router(payme_router)
+app.include_router(click_router)
 app.mount("/media", StaticFiles(directory="/data/media"), name="media")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 # ✅ CORS FIX (required for Telegram Mini App)

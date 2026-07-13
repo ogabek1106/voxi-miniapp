@@ -311,7 +311,7 @@ window.VCoinUI = window.VCoinUI || {};
 
       .vcoin-sheet-actions {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr 1fr 1fr;
         gap: 10px;
         margin-top: 14px;
         padding-top: 12px;
@@ -324,6 +324,12 @@ window.VCoinUI = window.VCoinUI || {};
         min-height: 0;
         overflow: hidden;
         margin-top: 14px;
+      }
+
+      @media (max-width: 380px) {
+        .vcoin-sheet-actions {
+          grid-template-columns: 1fr;
+        }
       }
 
       .vcoin-sheet button,
@@ -343,6 +349,11 @@ window.VCoinUI = window.VCoinUI || {};
         display: inline-flex;
         align-items: center;
         justify-content: center;
+      }
+
+      .vcoin-click-btn {
+        background: #eef8ff !important;
+        color: #008fc4 !important;
       }
 
       .vcoin-cancel-btn {
@@ -515,6 +526,14 @@ window.VCoinUI = window.VCoinUI || {};
     });
   }
 
+  async function createClickCheckout(telegramId, coins, promoCode) {
+    return await apiPost("/payments/click/vcoins/checkout", {
+      telegram_id: Number(telegramId),
+      coins: Number(coins || 0),
+      promo_code: promoCode || null
+    });
+  }
+
   function renderQuote(quote, fallbackRate) {
     const rate = Number(quote?.exchange_rate_uzs || fallbackRate || 5000);
     const coins = Number(quote?.coins || DEFAULT_PURCHASE_AMOUNT);
@@ -562,6 +581,7 @@ window.VCoinUI = window.VCoinUI || {};
 
         <div class="vcoin-sheet-actions">
           <button class="vcoin-buy-btn" id="vcoin-create-payment-btn">Pay with Payme</button>
+          <button class="vcoin-buy-btn vcoin-click-btn" id="vcoin-create-click-payment-btn">Pay with Click</button>
           <button class="vcoin-cancel-btn" id="vcoin-back-to-wallet-btn">Back</button>
         </div>
       </div>
@@ -629,6 +649,25 @@ window.VCoinUI = window.VCoinUI || {};
         window.open(checkout.checkout_url, "_blank", "noopener");
       } catch (error) {
         alert("Could not create payment. Please try again.");
+      } finally {
+        if (button) button.disabled = false;
+      }
+    });
+    document.getElementById("vcoin-create-click-payment-btn")?.addEventListener("click", async () => {
+      const id = await resolveTelegramId();
+      if (!id) {
+        alert("Please log in with Telegram before buying V-Coins.");
+        return;
+      }
+      const button = document.getElementById("vcoin-create-click-payment-btn");
+      if (button) button.disabled = true;
+      try {
+        const coins = Number(amountInput?.value || DEFAULT_PURCHASE_AMOUNT);
+        const checkout = await createClickCheckout(id, coins, appliedPromo);
+        if (!checkout?.checkout_url) throw new Error("missing_checkout_url");
+        window.open(checkout.checkout_url, "_blank", "noopener");
+      } catch (error) {
+        alert("Could not create Click payment. Please try again.");
       } finally {
         if (button) button.disabled = false;
       }

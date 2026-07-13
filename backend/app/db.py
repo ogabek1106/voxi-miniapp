@@ -1684,6 +1684,119 @@ def ensure_payme_schema():
         ))
 
 
+def ensure_click_schema():
+    with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+        conn.execute(text(
+            "CREATE TABLE IF NOT EXISTS click_transactions ("
+            "id SERIAL PRIMARY KEY, "
+            "click_trans_id BIGINT NOT NULL, "
+            "service_id INTEGER NOT NULL, "
+            "click_paydoc_id BIGINT NOT NULL, "
+            "merchant_trans_id VARCHAR(48) NOT NULL, "
+            "merchant_prepare_id INTEGER NULL, "
+            "merchant_confirm_id INTEGER NULL, "
+            "order_id INTEGER NOT NULL REFERENCES payment_orders(id) ON DELETE RESTRICT, "
+            "amount NUMERIC(18, 2) NOT NULL, "
+            "amount_tiyin BIGINT NOT NULL, "
+            "action INTEGER NOT NULL DEFAULT 0, "
+            "state VARCHAR(32) NOT NULL DEFAULT 'prepared', "
+            "error INTEGER NOT NULL DEFAULT 0, "
+            "error_note VARCHAR(255) NOT NULL DEFAULT 'Success', "
+            "sign_time VARCHAR(32) NOT NULL, "
+            "raw_prepare_request JSON NULL, "
+            "raw_complete_request JSON NULL, "
+            "failure_reason TEXT NULL, "
+            "prepared_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), "
+            "completed_at TIMESTAMPTZ NULL, "
+            "cancelled_at TIMESTAMPTZ NULL, "
+            "created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), "
+            "updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()"
+            ");"
+        ))
+        conn.execute(text("ALTER TABLE click_transactions ADD COLUMN IF NOT EXISTS click_trans_id BIGINT;"))
+        conn.execute(text("ALTER TABLE click_transactions ADD COLUMN IF NOT EXISTS service_id INTEGER;"))
+        conn.execute(text("ALTER TABLE click_transactions ADD COLUMN IF NOT EXISTS click_paydoc_id BIGINT;"))
+        conn.execute(text("ALTER TABLE click_transactions ADD COLUMN IF NOT EXISTS merchant_trans_id VARCHAR(48);"))
+        conn.execute(text("ALTER TABLE click_transactions ADD COLUMN IF NOT EXISTS merchant_prepare_id INTEGER;"))
+        conn.execute(text("ALTER TABLE click_transactions ADD COLUMN IF NOT EXISTS merchant_confirm_id INTEGER;"))
+        conn.execute(text("ALTER TABLE click_transactions ADD COLUMN IF NOT EXISTS order_id INTEGER;"))
+        conn.execute(text("ALTER TABLE click_transactions ADD COLUMN IF NOT EXISTS amount NUMERIC(18, 2);"))
+        conn.execute(text("ALTER TABLE click_transactions ADD COLUMN IF NOT EXISTS amount_tiyin BIGINT;"))
+        conn.execute(text("ALTER TABLE click_transactions ADD COLUMN IF NOT EXISTS action INTEGER NOT NULL DEFAULT 0;"))
+        conn.execute(text("ALTER TABLE click_transactions ADD COLUMN IF NOT EXISTS state VARCHAR(32) NOT NULL DEFAULT 'prepared';"))
+        conn.execute(text("ALTER TABLE click_transactions ADD COLUMN IF NOT EXISTS error INTEGER NOT NULL DEFAULT 0;"))
+        conn.execute(text("ALTER TABLE click_transactions ADD COLUMN IF NOT EXISTS error_note VARCHAR(255) NOT NULL DEFAULT 'Success';"))
+        conn.execute(text("ALTER TABLE click_transactions ADD COLUMN IF NOT EXISTS sign_time VARCHAR(32);"))
+        conn.execute(text("ALTER TABLE click_transactions ADD COLUMN IF NOT EXISTS raw_prepare_request JSON;"))
+        conn.execute(text("ALTER TABLE click_transactions ADD COLUMN IF NOT EXISTS raw_complete_request JSON;"))
+        conn.execute(text("ALTER TABLE click_transactions ADD COLUMN IF NOT EXISTS failure_reason TEXT;"))
+        conn.execute(text("ALTER TABLE click_transactions ADD COLUMN IF NOT EXISTS prepared_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text("ALTER TABLE click_transactions ADD COLUMN IF NOT EXISTS completed_at TIMESTAMPTZ;"))
+        conn.execute(text("ALTER TABLE click_transactions ADD COLUMN IF NOT EXISTS cancelled_at TIMESTAMPTZ;"))
+        conn.execute(text("ALTER TABLE click_transactions ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text("ALTER TABLE click_transactions ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();"))
+        conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uq_click_transactions_click_trans_id ON click_transactions (click_trans_id);"))
+        conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uq_click_transactions_click_paydoc_id ON click_transactions (click_paydoc_id);"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_click_transactions_service_id ON click_transactions (service_id);"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_click_transactions_order_id ON click_transactions (order_id);"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_click_transactions_merchant_trans_id ON click_transactions (merchant_trans_id);"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_click_transactions_merchant_prepare_id ON click_transactions (merchant_prepare_id);"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_click_transactions_state ON click_transactions (state);"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_click_transactions_order_state ON click_transactions (order_id, state);"))
+        conn.execute(text(
+            "DO $$ "
+            "BEGIN "
+            "IF NOT EXISTS ("
+            "SELECT 1 FROM information_schema.table_constraints "
+            "WHERE constraint_name = 'click_transactions_order_id_fkey'"
+            ") THEN "
+            "ALTER TABLE click_transactions ADD CONSTRAINT click_transactions_order_id_fkey "
+            "FOREIGN KEY (order_id) REFERENCES payment_orders(id) ON DELETE RESTRICT; "
+            "END IF; "
+            "END "
+            "$$;"
+        ))
+        conn.execute(text(
+            "DO $$ "
+            "BEGIN "
+            "IF NOT EXISTS ("
+            "SELECT 1 FROM information_schema.table_constraints "
+            "WHERE constraint_name = 'ck_click_transactions_amount_positive'"
+            ") THEN "
+            "ALTER TABLE click_transactions ADD CONSTRAINT ck_click_transactions_amount_positive "
+            "CHECK (amount_tiyin > 0); "
+            "END IF; "
+            "END "
+            "$$;"
+        ))
+        conn.execute(text(
+            "DO $$ "
+            "BEGIN "
+            "IF NOT EXISTS ("
+            "SELECT 1 FROM information_schema.table_constraints "
+            "WHERE constraint_name = 'ck_click_transactions_action'"
+            ") THEN "
+            "ALTER TABLE click_transactions ADD CONSTRAINT ck_click_transactions_action "
+            "CHECK (action IN (0, 1)); "
+            "END IF; "
+            "END "
+            "$$;"
+        ))
+        conn.execute(text(
+            "DO $$ "
+            "BEGIN "
+            "IF NOT EXISTS ("
+            "SELECT 1 FROM information_schema.table_constraints "
+            "WHERE constraint_name = 'ck_click_transactions_state'"
+            ") THEN "
+            "ALTER TABLE click_transactions ADD CONSTRAINT ck_click_transactions_state "
+            "CHECK (state IN ('prepared', 'completed', 'cancelled', 'failed')); "
+            "END IF; "
+            "END "
+            "$$;"
+        ))
+
+
 def ensure_user_auth_schema():
     with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
         conn.execute(text(
