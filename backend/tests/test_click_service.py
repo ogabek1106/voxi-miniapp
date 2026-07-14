@@ -228,12 +228,21 @@ def test_checkout_requires_merchant_id(monkeypatch):
 def test_checkout_returns_safe_public_data():
     db = _db()
     result = click_service.create_vcoin_checkout_order(db, telegram_id=1001, coins=2)
-    assert set(result) == {"order_ref", "amount", "checkout_url", "expires_at"}
+    assert set(result) == {"order_ref", "amount", "checkout_url", "expires_at", "click_payment"}
     assert result["amount"] == "10000.00"
     assert "secret" not in result["checkout_url"].lower()
     assert "merchant_id=123" in result["checkout_url"]
     assert "service_id=456" in result["checkout_url"]
     assert f"transaction_param={result['order_ref']}" in result["checkout_url"]
+    assert result["click_payment"] == {
+        "service_id": "456",
+        "merchant_id": "123",
+        "amount": "10000.00",
+        "transaction_param": result["order_ref"],
+        "card_type": "uzcard_humo",
+    }
+    assert "secret" not in str(result).lower()
+    assert db.query(PaymentOrder).count() == 1
 
 
 def test_checkout_uses_test_variables_when_click_test_mode(monkeypatch):

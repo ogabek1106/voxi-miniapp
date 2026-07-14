@@ -51,6 +51,7 @@ from app.api.auth import router as auth_router
 from app.api.auth_google import router as auth_google_router
 from app.api.payme import router as payme_router
 from app.api.click import router as click_router
+from app.api.payment_orders import router as payment_orders_router
 from app.api.admin_transactions import router as admin_transactions_router
 from .db import (
     ensure_reading_progress_columns,
@@ -153,6 +154,7 @@ app.include_router(auth_router)
 app.include_router(auth_google_router)
 app.include_router(payme_router)
 app.include_router(click_router)
+app.include_router(payment_orders_router)
 app.include_router(admin_transactions_router)
 app.mount("/media", StaticFiles(directory="/data/media"), name="media")
 app.mount("/static", StaticFiles(directory="static"), name="static")

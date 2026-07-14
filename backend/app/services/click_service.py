@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 from app.config import (
     CLICK_CHECKOUT_BASE_URL,
     CLICK_MERCHANT_ID,
+    CLICK_MERCHANT_USER_ID,
     CLICK_RETURN_URL,
     CLICK_SECRET_KEY,
     CLICK_SERVICE_ID,
@@ -595,6 +596,28 @@ def build_checkout_url(order_ref: str, amount_tiyin: int) -> str:
     return f"{base_url}{separator}{urlencode(params)}"
 
 
+def build_public_payment_params(order_ref: str, amount_tiyin: int) -> dict[str, Any]:
+    merchant_id = _active_merchant_id()
+    service_id = _active_service_id()
+    if not merchant_id:
+        raise HTTPException(status_code=503, detail="click_merchant_id_not_configured")
+    if not service_id:
+        raise HTTPException(status_code=503, detail="click_service_id_not_configured")
+
+    amount = (Decimal(int(amount_tiyin)) / Decimal("100")).quantize(Decimal("0.01"))
+    params: dict[str, Any] = {
+        "service_id": service_id,
+        "merchant_id": merchant_id,
+        "amount": format(amount, ".2f"),
+        "transaction_param": order_ref,
+        "card_type": "uzcard_humo",
+    }
+    merchant_user_id = _clean(CLICK_MERCHANT_USER_ID)
+    if merchant_user_id:
+        params["merchant_user_id"] = merchant_user_id
+    return params
+
+
 def create_vcoin_checkout_order(
     db: Session,
     *,
@@ -655,6 +678,7 @@ def create_vcoin_checkout_order(
         "amount": format(Decimal(int(order.amount_tiyin)) / Decimal("100"), ".2f"),
         "checkout_url": build_checkout_url(order.order_ref, int(order.amount_tiyin)),
         "expires_at": order.expires_at.isoformat(),
+        "click_payment": build_public_payment_params(order.order_ref, int(order.amount_tiyin)),
     }
 
 

@@ -18,6 +18,7 @@ PAYME_TEST_MODE = os.getenv("PAYME_TEST_MODE", "false").strip().lower() in {"1",
 CLICK_MERCHANT_ID = os.getenv("CLICK_MERCHANT_ID", "").strip()
 CLICK_SERVICE_ID = os.getenv("CLICK_SERVICE_ID", "").strip()
 CLICK_SECRET_KEY = os.getenv("CLICK_SECRET_KEY", "").strip()
+CLICK_MERCHANT_USER_ID = os.getenv("CLICK_MERCHANT_USER_ID", "").strip()
 CLICK_CHECKOUT_BASE_URL = os.getenv("CLICK_CHECKOUT_BASE_URL", "https://my.click.uz/services/pay/").strip()
 CLICK_RETURN_URL = os.getenv("CLICK_RETURN_URL", "").strip()
 CLICK_TEST_MODE = os.getenv("CLICK_TEST_MODE", "false").strip().lower() in {"1", "true", "yes", "on"}
