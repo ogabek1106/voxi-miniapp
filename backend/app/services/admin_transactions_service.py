@@ -19,6 +19,7 @@ PAID_ORDER_STATUSES = {"paid", "fulfilled"}
 SUCCESSFUL_MANUAL_STATUSES = {"admin_confirmed"}
 FAILED_ORDER_STATUSES = {"cancelled", "expired", "fulfillment_failed"}
 FAILED_MANUAL_STATUSES = {"admin_rejected", "duplicate_suspected", "expired", "refunded"}
+GATEWAY_PROVIDERS = {"click", "payme"}
 SECRET_KEYS = {
     "secret",
     "secret_key",
@@ -159,10 +160,12 @@ def transactions_summary(db: Session, filters: TransactionFilters) -> dict[str, 
     for row in rows:
         amount = int(row["amount"]["tiyin"] or 0)
         paid = _row_is_paid(row)
+        gateway = _row_is_gateway(row)
+        gateway_paid = gateway and paid
         created_at = _parse_iso(row.get("created_at"))
         paid_at = _parse_iso(row.get("paid_at"))
         metric_time = paid_at or created_at
-        if paid:
+        if gateway_paid:
             summary["successful_revenue_tiyin"] += amount
             provider_key = f"{row.get('provider')}_revenue_tiyin"
             if provider_key in summary:
@@ -177,9 +180,11 @@ def transactions_summary(db: Session, filters: TransactionFilters) -> dict[str, 
                 summary["last_7_days_successful_revenue_tiyin"] += amount
             if metric_time and metric_time >= now - timedelta(days=30):
                 summary["last_30_days_successful_revenue_tiyin"] += amount
-        elif row.get("order_status") in {"pending", "duplicate_suspected"}:
+        elif row.get("provider") == "manual" and paid:
+            summary["manual_revenue_tiyin"] += amount
+        elif gateway and row.get("order_status") in {"pending", "duplicate_suspected"}:
             summary["pending_amount_tiyin"] += amount
-        if row.get("order_status") in FAILED_ORDER_STATUSES or row.get("provider_state") in FAILED_MANUAL_STATUSES:
+        if gateway and row.get("order_status") in FAILED_ORDER_STATUSES:
             summary["failed_cancelled_count"] += 1
         if row.get("fulfillment_status") == "fulfilled":
             summary["fulfilled_count"] += 1
@@ -485,6 +490,10 @@ def _row_is_paid(row: dict[str, Any]) -> bool:
     if row.get("provider") == "manual":
         return row.get("provider_state") in SUCCESSFUL_MANUAL_STATUSES
     return row.get("order_status") in PAID_ORDER_STATUSES
+
+
+def _row_is_gateway(row: dict[str, Any]) -> bool:
+    return row.get("provider") in GATEWAY_PROVIDERS
 
 
 def _latest_payme_for_order(db: Session, order_id: int) -> PaymeTransaction | None:

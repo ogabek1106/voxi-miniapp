@@ -84,9 +84,10 @@ def _order(db, *, ref, provider="payme", product="vcoin", status="pending", fulf
     return order
 
 
-def _payme(db, order, state=2):
+def _payme(db, order, state=2, suffix=""):
+    suffix_digit = str(suffix or "0")[-1]
     tx = PaymeTransaction(
-        payme_transaction_id=f"payme{order.id:019d}"[:24],
+        payme_transaction_id=f"payme{order.id:018d}{suffix_digit}",
         order_id=order.id,
         payme_time_ms=1000000 + order.id,
         amount_tiyin=order.amount_tiyin,
@@ -147,16 +148,16 @@ def _ledger(db, order):
     return ledger
 
 
-def _manual(db, *, status="admin_confirmed", product="vcoin"):
+def _manual(db, *, status="admin_confirmed", product="vcoin", token=None, amount=50000):
     payment = PaymentRequest(
         telegram_id=1002,
         user_id=2,
         email="two@example.com",
         package_code="premiere-pack" if product == "premiere" else "vcoin-pack",
-        expected_price="50000",
+        expected_price=str(amount),
         coins_to_add=10,
-        payment_token=f"MANUAL-{product.upper()}",
-        final_amount=50000,
+        payment_token=token or f"MANUAL-{product.upper()}",
+        final_amount=amount,
         status=status,
         confirmed_at=datetime.now(timezone.utc) if status == "admin_confirmed" else None,
         raw_payload={"product_type": product, "authorization": "hide"},
@@ -211,6 +212,40 @@ def test_summary_counts_paid_once_and_excludes_cancelled_revenue():
     assert summary["payme_revenue_tiyin"] == 3000000
     assert summary["failed_cancelled_count"] == 1
     assert summary["fulfilled_count"] == 1
+
+
+def test_summary_uses_gateway_revenue_and_separate_manual_approved_value():
+    db = _db()
+    click = _order(db, ref="click-paid", provider="click", product="vcoin", status="fulfilled", fulfillment="fulfilled", amount=2000000)
+    _click(db, click)
+    _ledger(db, click)
+    payme = _order(db, ref="payme-paid", provider="payme", product="course", status="paid", amount=3000000)
+    _payme(db, payme)
+    _payme(db, payme, suffix="1")
+    _manual(db, product="vcoin", token="MANUAL-APPROVED", amount=50000)
+    _manual(db, product="premiere", token="MANUAL-PENDING", amount=80000, status="pending")
+    cancelled = _order(db, ref="cancelled-click", provider="click", status="cancelled", amount=7000000)
+    _click(db, cancelled, state="cancelled")
+    pending = _order(db, ref="pending-payme", provider="payme", status="pending", amount=9000000)
+    _payme(db, pending, state=1)
+
+    summary = transactions_summary(db, _filters())["summary"]
+    assert summary["total_count"] == 6
+    assert summary["successful_revenue_tiyin"] == 5000000
+    assert summary["click_revenue_tiyin"] == 2000000
+    assert summary["payme_revenue_tiyin"] == 3000000
+    assert summary["manual_revenue_tiyin"] == 5000000
+    assert summary["pending_amount_tiyin"] == 9000000
+    assert summary["failed_cancelled_count"] == 1
+    assert summary["fulfilled_count"] == 2
+    assert summary["vcoin_sales_tiyin"] == 2000000
+    assert summary["other_product_sales_tiyin"] == 3000000
+    assert summary["today_successful_revenue_tiyin"] == 5000000
+    assert summary["last_7_days_successful_revenue_tiyin"] == 5000000
+    assert summary["last_30_days_successful_revenue_tiyin"] == 5000000
+
+    manual_rows = list_transactions(db, _filters(provider="manual"))["items"]
+    assert {row["order_ref"] for row in manual_rows} == {"MANUAL-APPROVED", "MANUAL-PENDING"}
 
 
 def test_detail_response_for_payme_and_no_secret_leakage():

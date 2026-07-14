@@ -110,13 +110,13 @@ window.AdminTransactionsUI = window.AdminTransactionsUI || {};
   function renderSummary(summary = {}) {
     const cards = [
       ["Total transactions", summary.total_count || 0],
-      ["Paid revenue", AdminTransactionsUI.formatMoney((summary.successful_revenue_tiyin || 0) / 100)],
-      ["Pending amount", AdminTransactionsUI.formatMoney((summary.pending_amount_tiyin || 0) / 100)],
+      ["Online revenue", AdminTransactionsUI.formatMoney((summary.successful_revenue_tiyin || 0) / 100)],
+      ["Pending online amount", AdminTransactionsUI.formatMoney((summary.pending_amount_tiyin || 0) / 100)],
       ["Failed / cancelled", summary.failed_cancelled_count || 0],
       ["Fulfilled", summary.fulfilled_count || 0],
       ["Click revenue", AdminTransactionsUI.formatMoney((summary.click_revenue_tiyin || 0) / 100)],
       ["Payme revenue", AdminTransactionsUI.formatMoney((summary.payme_revenue_tiyin || 0) / 100)],
-      ["Manual revenue", AdminTransactionsUI.formatMoney((summary.manual_revenue_tiyin || 0) / 100)],
+      ["Manual approved value", AdminTransactionsUI.formatMoney((summary.manual_revenue_tiyin || 0) / 100)],
       ["V-Coin sales", AdminTransactionsUI.formatMoney((summary.vcoin_sales_tiyin || 0) / 100)],
       ["Other product sales", AdminTransactionsUI.formatMoney((summary.other_product_sales_tiyin || 0) / 100)],
       ["Today paid", AdminTransactionsUI.formatMoney((summary.today_successful_revenue_tiyin || 0) / 100)],
