@@ -109,7 +109,7 @@ window.AdminTransactionsUI = window.AdminTransactionsUI || {};
 
   function renderSummary(summary = {}) {
     const cards = [
-      ["Total transactions", summary.total_count || 0],
+      ["Successful transactions", summary.total_count || 0],
       ["Online revenue", AdminTransactionsUI.formatMoney((summary.successful_revenue_tiyin || 0) / 100)],
       ["Pending online amount", AdminTransactionsUI.formatMoney((summary.pending_amount_tiyin || 0) / 100)],
       ["Failed / cancelled", summary.failed_cancelled_count || 0],

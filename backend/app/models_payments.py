@@ -38,8 +38,13 @@ class PaymentOrder(Base):
             "fulfillment_status IN ('not_started', 'processing', 'fulfilled', 'failed')",
             name="ck_payment_orders_fulfillment_status",
         ),
+        CheckConstraint(
+            "environment IN ('production', 'test')",
+            name="ck_payment_orders_environment",
+        ),
         Index("ix_payment_orders_user_status", "user_id", "status"),
         Index("ix_payment_orders_product_status", "product_type", "status"),
+        Index("ix_payment_orders_environment_provider_status", "environment", "payment_provider", "status"),
     )
 
     id = Column(Integer, primary_key=True, index=True)
@@ -52,6 +57,7 @@ class PaymentOrder(Base):
     amount_tiyin = Column(BigInteger, nullable=False)
     currency = Column(String(3), nullable=False, default="UZS")
     payment_provider = Column(String(32), nullable=False, default="payme", index=True)
+    environment = Column(String(16), nullable=False, default="production", index=True)
     status = Column(String(32), nullable=False, default="pending", index=True)
     fulfillment_status = Column(String(32), nullable=False, default="not_started", index=True)
     fulfillment_ledger_id = Column(

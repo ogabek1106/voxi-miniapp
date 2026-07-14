@@ -140,6 +140,21 @@ def test_duplicate_perform_transaction_does_not_add_vcoins_twice():
     assert ledger_count == 1
 
 
+def test_simulate_payme_marks_order_as_test():
+    db = _db()
+    order = _order(db, coins=2)
+    result = payme_service.simulate_payme_test_action(db, {
+        "action": "create",
+        "order_ref": order.order_ref,
+        "transaction_id": "abcdefghijklmnopqrstuvwx",
+        "amount_tiyin": int(order.amount_tiyin),
+        "payme_time_ms": 1000,
+    })
+    db.refresh(order)
+    assert result["steps"][0]["response"]["result"]["state"] == 1
+    assert order.environment == "test"
+
+
 def test_cancel_before_perform_gives_state_minus_one():
     db = _db()
     _order(db)

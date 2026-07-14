@@ -640,6 +640,7 @@ def create_vcoin_checkout_order(
         amount_tiyin=amount_tiyin,
         currency="UZS",
         payment_provider="click",
+        environment="production",
         status="pending",
         fulfillment_status="not_started",
         expires_at=now + timedelta(hours=ORDER_EXPIRY_HOURS),
@@ -727,6 +728,15 @@ def _existing_prepare_id(db: Session, payload: dict[str, Any]) -> int | None:
     return int(tx.merchant_prepare_id or tx.id) if tx else None
 
 
+def _mark_order_test_environment(db: Session, order_ref: str) -> None:
+    order = db.query(PaymentOrder).filter(PaymentOrder.order_ref == order_ref).first()
+    if order and getattr(order, "environment", None) != "test":
+        order.environment = "test"
+        order.updated_at = utcnow()
+        db.add(order)
+        db.commit()
+
+
 def _simulate_prepare(db: Session, payload: dict[str, Any], **overrides) -> dict[str, Any]:
     return _simulate_step(db, "prepare", _test_prepare_fields(payload, **overrides))
 
@@ -757,6 +767,7 @@ def simulate_click_test_action(db: Session, payload: dict[str, Any]) -> dict[str
         "click_trans_id": click_trans_id,
         "click_paydoc_id": click_paydoc_id,
     }
+    _mark_order_test_environment(db, order_ref)
 
     steps: list[dict[str, Any]] = []
     if action == "prepare":

@@ -143,7 +143,7 @@ def transactions_summary(db: Session, filters: TransactionFilters) -> dict[str, 
     now = datetime.now(timezone.utc)
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     summary = {
-        "total_count": len(rows),
+        "total_count": 0,
         "successful_revenue_tiyin": 0,
         "pending_amount_tiyin": 0,
         "failed_cancelled_count": 0,
@@ -159,13 +159,13 @@ def transactions_summary(db: Session, filters: TransactionFilters) -> dict[str, 
     }
     for row in rows:
         amount = int(row["amount"]["tiyin"] or 0)
-        paid = _row_is_paid(row)
         gateway = _row_is_gateway(row)
-        gateway_paid = gateway and paid
+        gateway_success = _row_is_successful_production_gateway(row)
         created_at = _parse_iso(row.get("created_at"))
         paid_at = _parse_iso(row.get("paid_at"))
         metric_time = paid_at or created_at
-        if gateway_paid:
+        if gateway_success:
+            summary["total_count"] += 1
             summary["successful_revenue_tiyin"] += amount
             provider_key = f"{row.get('provider')}_revenue_tiyin"
             if provider_key in summary:
@@ -180,13 +180,13 @@ def transactions_summary(db: Session, filters: TransactionFilters) -> dict[str, 
                 summary["last_7_days_successful_revenue_tiyin"] += amount
             if metric_time and metric_time >= now - timedelta(days=30):
                 summary["last_30_days_successful_revenue_tiyin"] += amount
-        elif row.get("provider") == "manual" and paid:
+        elif row.get("provider") == "manual" and _row_is_paid(row):
             summary["manual_revenue_tiyin"] += amount
-        elif gateway and row.get("order_status") in {"pending", "duplicate_suspected"}:
+        elif gateway and _row_is_production(row) and row.get("order_status") in {"pending", "duplicate_suspected"}:
             summary["pending_amount_tiyin"] += amount
-        if gateway and row.get("order_status") in FAILED_ORDER_STATUSES:
+        if gateway and _row_is_production(row) and row.get("order_status") in FAILED_ORDER_STATUSES:
             summary["failed_cancelled_count"] += 1
-        if row.get("fulfillment_status") == "fulfilled":
+        if gateway_success:
             summary["fulfilled_count"] += 1
     return {"ok": True, "summary": summary}
 
@@ -211,6 +211,7 @@ def get_transaction_detail(db: Session, order_ref: str, filters: TransactionFilt
                     "id": order.id,
                     "order_ref": order.order_ref,
                     "payment_provider": order.payment_provider,
+                    "environment": _clean(getattr(order, "environment", None)) or "production",
                     "product_type": order.product_type,
                     "product_data": order.product_data,
                     "quote_snapshot": order.quote_snapshot,
@@ -382,6 +383,7 @@ def _normalize_order(order: PaymentOrder, user: User | None, payme: PaymeTransac
         "order_id": order.id,
         "order_ref": order.order_ref,
         "provider": provider,
+        "environment": _clean(getattr(order, "environment", None)) or "production",
         "provider_transaction_id": provider_id,
         "provider_state": provider_state,
         "product_type": product_type,
@@ -398,7 +400,7 @@ def _normalize_order(order: PaymentOrder, user: User | None, payme: PaymeTransac
         "cancelled_at": _iso(order.cancelled_at),
         "expires_at": _iso(order.expires_at),
         "payment_age_seconds": _duration_seconds(order.created_at, order.payment_completed_at or order.cancelled_at or order.fulfilled_at),
-        "source": source,
+        "source": _clean(getattr(order, "environment", None)) or source,
         "fulfillment_ledger_id": order.fulfillment_ledger_id,
         "vcoins_granted": ledger.delta if ledger else _product_coins(order.product_data),
     }
@@ -494,6 +496,30 @@ def _row_is_paid(row: dict[str, Any]) -> bool:
 
 def _row_is_gateway(row: dict[str, Any]) -> bool:
     return row.get("provider") in GATEWAY_PROVIDERS
+
+
+def _row_is_production(row: dict[str, Any]) -> bool:
+    return (row.get("environment") or row.get("source") or "production") == "production"
+
+
+def _row_provider_confirms_success(row: dict[str, Any]) -> bool:
+    provider = row.get("provider")
+    state = str(row.get("provider_state") or "").lower()
+    if provider == "click":
+        return state == "completed"
+    if provider == "payme":
+        return state == "performed"
+    return False
+
+
+def _row_is_successful_production_gateway(row: dict[str, Any]) -> bool:
+    return (
+        _row_is_gateway(row)
+        and _row_is_production(row)
+        and row.get("order_status") == "fulfilled"
+        and row.get("fulfillment_status") == "fulfilled"
+        and _row_provider_confirms_success(row)
+    )
 
 
 def _latest_payme_for_order(db: Session, order_id: int) -> PaymeTransaction | None:

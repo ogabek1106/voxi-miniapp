@@ -20,6 +20,15 @@ SessionLocal = sessionmaker(
 Base = declarative_base()
 
 
+def _admin_id_sql_list() -> str | None:
+    ids: list[str] = []
+    for raw in (os.getenv("ADMIN_IDS") or "").split(","):
+        cleaned = raw.strip()
+        if cleaned.isdigit():
+            ids.append(cleaned)
+    return ", ".join(ids) if ids else None
+
+
 def ensure_gamification_schema():
     with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
         conn.execute(text(
@@ -1410,6 +1419,7 @@ def ensure_payme_schema():
             "amount_tiyin BIGINT NOT NULL, "
             "currency VARCHAR(3) NOT NULL DEFAULT 'UZS', "
             "payment_provider VARCHAR(32) NOT NULL DEFAULT 'payme', "
+            "environment VARCHAR(16) NOT NULL DEFAULT 'production', "
             "status VARCHAR(32) NOT NULL DEFAULT 'pending', "
             "fulfillment_status VARCHAR(32) NOT NULL DEFAULT 'not_started', "
             "fulfillment_ledger_id INTEGER NULL REFERENCES coin_ledger(id) ON DELETE RESTRICT, "
@@ -1431,6 +1441,7 @@ def ensure_payme_schema():
         conn.execute(text("ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS amount_tiyin BIGINT;"))
         conn.execute(text("ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS currency VARCHAR(3) NOT NULL DEFAULT 'UZS';"))
         conn.execute(text("ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS payment_provider VARCHAR(32) NOT NULL DEFAULT 'payme';"))
+        conn.execute(text("ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS environment VARCHAR(16) NOT NULL DEFAULT 'production';"))
         conn.execute(text("ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS status VARCHAR(32) NOT NULL DEFAULT 'pending';"))
         conn.execute(text("ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS fulfillment_status VARCHAR(32) NOT NULL DEFAULT 'not_started';"))
         conn.execute(text("ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS fulfillment_ledger_id INTEGER;"))
@@ -1448,11 +1459,13 @@ def ensure_payme_schema():
         conn.execute(text("CREATE INDEX IF NOT EXISTS ix_payment_orders_telegram_id ON payment_orders (telegram_id);"))
         conn.execute(text("CREATE INDEX IF NOT EXISTS ix_payment_orders_product_type ON payment_orders (product_type);"))
         conn.execute(text("CREATE INDEX IF NOT EXISTS ix_payment_orders_payment_provider ON payment_orders (payment_provider);"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_payment_orders_environment ON payment_orders (environment);"))
         conn.execute(text("CREATE INDEX IF NOT EXISTS ix_payment_orders_status ON payment_orders (status);"))
         conn.execute(text("CREATE INDEX IF NOT EXISTS ix_payment_orders_fulfillment_status ON payment_orders (fulfillment_status);"))
         conn.execute(text("CREATE INDEX IF NOT EXISTS ix_payment_orders_expires_at ON payment_orders (expires_at);"))
         conn.execute(text("CREATE INDEX IF NOT EXISTS ix_payment_orders_user_status ON payment_orders (user_id, status);"))
         conn.execute(text("CREATE INDEX IF NOT EXISTS ix_payment_orders_product_status ON payment_orders (product_type, status);"))
+        conn.execute(text("CREATE INDEX IF NOT EXISTS ix_payment_orders_environment_provider_status ON payment_orders (environment, payment_provider, status);"))
         conn.execute(text(
             "DO $$ "
             "BEGIN "
@@ -1544,7 +1557,19 @@ def ensure_payme_schema():
             "END "
             "$$;"
         ))
-
+        conn.execute(text(
+            "DO $$ "
+            "BEGIN "
+            "IF NOT EXISTS ("
+            "SELECT 1 FROM information_schema.table_constraints "
+            "WHERE constraint_name = 'ck_payment_orders_environment'"
+            ") THEN "
+            "ALTER TABLE payment_orders ADD CONSTRAINT ck_payment_orders_environment "
+            "CHECK (environment IN ('production', 'test')); "
+            "END IF; "
+            "END "
+            "$$;"
+        ))
         conn.execute(text(
             "CREATE TABLE IF NOT EXISTS payme_transactions ("
             "id SERIAL PRIMARY KEY, "
@@ -1682,6 +1707,21 @@ def ensure_payme_schema():
             "END "
             "$$;"
         ))
+        admin_ids = _admin_id_sql_list()
+        if admin_ids:
+            conn.execute(text(
+                "UPDATE payment_orders po "
+                "SET environment = 'test' "
+                "WHERE po.environment <> 'test' "
+                "AND po.payment_provider = 'payme' "
+                "AND po.telegram_id IN (" + admin_ids + ") "
+                "AND EXISTS ("
+                "SELECT 1 FROM payme_transactions pt "
+                "WHERE pt.order_id = po.id "
+                "AND pt.state = 2 "
+                "AND pt.payme_transaction_id ~ '^[a-z0-9]{24}$'"
+                ");"
+            ))
 
 
 def ensure_click_schema():
@@ -1795,6 +1835,35 @@ def ensure_click_schema():
             "END "
             "$$;"
         ))
+        conn.execute(text(
+            "UPDATE payment_orders po "
+            "SET environment = 'test' "
+            "WHERE po.environment <> 'test' "
+            "AND po.payment_provider = 'click' "
+            "AND EXISTS ("
+            "SELECT 1 FROM click_transactions ct "
+            "WHERE ct.order_id = po.id "
+            "AND ("
+            "ct.raw_prepare_request::text ILIKE '%<backend-generated>%' "
+            "OR ct.raw_complete_request::text ILIKE '%<backend-generated>%'"
+            ")"
+            ");"
+        ))
+        admin_ids = _admin_id_sql_list()
+        if admin_ids:
+            conn.execute(text(
+                "UPDATE payment_orders po "
+                "SET environment = 'test' "
+                "WHERE po.environment <> 'test' "
+                "AND po.payment_provider = 'click' "
+                "AND po.telegram_id IN (" + admin_ids + ") "
+                "AND EXISTS ("
+                "SELECT 1 FROM click_transactions ct "
+                "WHERE ct.order_id = po.id "
+                "AND ct.state = 'completed' "
+                "AND ct.click_trans_id BETWEEN 100000000 AND 999999999"
+                ");"
+            ))
 
 
 def ensure_user_auth_schema():

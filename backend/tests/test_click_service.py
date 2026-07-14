@@ -266,7 +266,9 @@ def test_simulate_click_full_success_and_duplicate_complete(monkeypatch):
     assert result["steps"][-1]["response"]["error"] == 0
     assert result["steps"][0]["request"]["sign_string"] == "<backend-generated>"
     user = db.query(User).filter(User.id == 1).first()
+    db.refresh(order)
     assert user.v_coins == 4
+    assert order.environment == "test"
     assert db.query(CoinLedger).count() == 1
 
 

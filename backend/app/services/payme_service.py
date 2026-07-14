@@ -570,6 +570,15 @@ def _simulate_one(db: Session, body: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _mark_order_test_environment(db: Session, order_ref: str) -> None:
+    order = db.query(PaymentOrder).filter(PaymentOrder.order_ref == order_ref).first()
+    if order and getattr(order, "environment", None) != "test":
+        order.environment = "test"
+        order.updated_at = utcnow()
+        db.add(order)
+        db.commit()
+
+
 def simulate_payme_test_action(db: Session, payload: dict[str, Any]) -> dict[str, Any]:
     action = str(payload.get("action") or "").strip()
     if action not in PAYME_TEST_ACTIONS:
@@ -591,6 +600,7 @@ def simulate_payme_test_action(db: Session, payload: dict[str, Any]) -> dict[str
     if not order_ref or len(transaction_id) != 24 or amount_tiyin <= 0 or payme_time_ms <= 0:
         raise HTTPException(status_code=422, detail="invalid_payme_test_payload")
 
+    _mark_order_test_environment(db, order_ref)
     account_order_ref = f"missing-{order_ref}" if action == "missing_order" else order_ref
     request_amount = amount_tiyin + 100 if action == "wrong_amount" else amount_tiyin
 
@@ -713,6 +723,7 @@ def create_vcoin_checkout_order(
         amount_tiyin=amount_tiyin,
         currency="UZS",
         payment_provider="payme",
+        environment="production",
         status="pending",
         fulfillment_status="not_started",
         expires_at=now + timedelta(hours=ORDER_EXPIRY_HOURS),

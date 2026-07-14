@@ -57,7 +57,7 @@ def _filters(**overrides):
     return parse_filters(payload)
 
 
-def _order(db, *, ref, provider="payme", product="vcoin", status="pending", fulfillment="not_started", amount=1000000, user_id=1, telegram_id=1001, created_offset=0):
+def _order(db, *, ref, provider="payme", product="vcoin", status="pending", fulfillment="not_started", amount=1000000, user_id=1, telegram_id=1001, created_offset=0, environment="production"):
     now = datetime.now(timezone.utc) + timedelta(minutes=created_offset)
     order = PaymentOrder(
         order_ref=ref,
@@ -69,6 +69,7 @@ def _order(db, *, ref, provider="payme", product="vcoin", status="pending", fulf
         amount_tiyin=amount,
         currency="UZS",
         payment_provider=provider,
+        environment=environment,
         status=status,
         fulfillment_status=fulfillment,
         payment_completed_at=now + timedelta(minutes=2) if status in {"paid", "fulfilled"} else None,
@@ -208,18 +209,19 @@ def test_summary_counts_paid_once_and_excludes_cancelled_revenue():
     cancelled = _order(db, ref="cancelled", provider="payme", status="cancelled", amount=7000000)
     _payme(db, cancelled, state=-1)
     summary = transactions_summary(db, _filters())["summary"]
+    assert summary["total_count"] == 1
     assert summary["successful_revenue_tiyin"] == 3000000
     assert summary["payme_revenue_tiyin"] == 3000000
     assert summary["failed_cancelled_count"] == 1
     assert summary["fulfilled_count"] == 1
 
 
-def test_summary_uses_gateway_revenue_and_separate_manual_approved_value():
+def test_summary_uses_only_successful_production_gateway_orders():
     db = _db()
     click = _order(db, ref="click-paid", provider="click", product="vcoin", status="fulfilled", fulfillment="fulfilled", amount=2000000)
     _click(db, click)
     _ledger(db, click)
-    payme = _order(db, ref="payme-paid", provider="payme", product="course", status="paid", amount=3000000)
+    payme = _order(db, ref="payme-paid", provider="payme", product="course", status="fulfilled", fulfillment="fulfilled", amount=3000000)
     _payme(db, payme)
     _payme(db, payme, suffix="1")
     _manual(db, product="vcoin", token="MANUAL-APPROVED", amount=50000)
@@ -228,15 +230,23 @@ def test_summary_uses_gateway_revenue_and_separate_manual_approved_value():
     _click(db, cancelled, state="cancelled")
     pending = _order(db, ref="pending-payme", provider="payme", status="pending", amount=9000000)
     _payme(db, pending, state=1)
+    test_click = _order(db, ref="test-click", provider="click", product="vcoin", status="fulfilled", fulfillment="fulfilled", amount=1100000, environment="test")
+    _click(db, test_click)
+    test_payme = _order(db, ref="test-payme", provider="payme", product="course", status="fulfilled", fulfillment="fulfilled", amount=1200000, environment="test")
+    _payme(db, test_payme)
+    paid_unfulfilled = _order(db, ref="paid-unfulfilled", provider="click", status="paid", fulfillment="not_started", amount=1300000)
+    _click(db, paid_unfulfilled)
+    expired = _order(db, ref="expired-payme", provider="payme", status="expired", amount=1400000)
+    _payme(db, expired, state=-1)
 
     summary = transactions_summary(db, _filters())["summary"]
-    assert summary["total_count"] == 6
+    assert summary["total_count"] == 2
     assert summary["successful_revenue_tiyin"] == 5000000
     assert summary["click_revenue_tiyin"] == 2000000
     assert summary["payme_revenue_tiyin"] == 3000000
     assert summary["manual_revenue_tiyin"] == 5000000
     assert summary["pending_amount_tiyin"] == 9000000
-    assert summary["failed_cancelled_count"] == 1
+    assert summary["failed_cancelled_count"] == 2
     assert summary["fulfilled_count"] == 2
     assert summary["vcoin_sales_tiyin"] == 2000000
     assert summary["other_product_sales_tiyin"] == 3000000
@@ -246,6 +256,8 @@ def test_summary_uses_gateway_revenue_and_separate_manual_approved_value():
 
     manual_rows = list_transactions(db, _filters(provider="manual"))["items"]
     assert {row["order_ref"] for row in manual_rows} == {"MANUAL-APPROVED", "MANUAL-PENDING"}
+    all_refs = {row["order_ref"] for row in list_transactions(db, _filters(page_size=100))["items"]}
+    assert {"click-paid", "payme-paid", "test-click", "test-payme", "MANUAL-APPROVED"}.issubset(all_refs)
 
 
 def test_detail_response_for_payme_and_no_secret_leakage():
