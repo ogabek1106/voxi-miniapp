@@ -542,6 +542,7 @@ window.showAdminPanel = function () {
     <button onclick="showAdminLearningPlan()">Learning Plan</button>
     <button onclick="showAdminFeedbackRatings()">Feedback Ratings</button>
     <button onclick="showAdminContentEngine()">Voxi Content Engine</button>
+    <button onclick="showAdminTransactions()">Transactions</button>
     <button onclick="showAdminVCoinPayments()">V-Coin Payments</button>
     <button onclick="showAdminPremiereSubscriptions()">Premiere Subscriptions</button>
     <button onclick="showAdminNotifications()">Notifications</button>
