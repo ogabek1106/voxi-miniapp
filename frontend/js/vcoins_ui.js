@@ -426,7 +426,7 @@ window.VCoinUI = window.VCoinUI || {};
     document.body.classList.remove("reward-vcoin-open");
   }
 
-  function bindSheetDragToClose(sheet) {
+  function bindSheetDragToClose(sheet, canClose) {
     const handle = sheet?.querySelector(".vcoin-sheet-handle");
     if (!handle) return;
 
@@ -451,6 +451,7 @@ window.VCoinUI = window.VCoinUI || {};
       const deltaY = event.clientY - startY;
       sheet.style.transform = "";
       if (deltaY > 44) {
+        if (typeof canClose === "function" && !canClose()) return;
         closeSheet();
       }
     }
@@ -600,6 +601,83 @@ window.VCoinUI = window.VCoinUI || {};
   }
 
   let clickCheckoutScriptPromise = null;
+  const CLICK_CARD_ATTEMPT_STORAGE_KEY = "voxi_click_card_attempt";
+  const CLICK_CARD_PENDING_STATES = new Set(["creating_order", "widget_open", "pending_confirmation"]);
+  let activeClickCardAttempt = null;
+  let clickCardPollTimer = null;
+  let clickCardPollToken = 0;
+
+  function isClickCardAttemptPending(attempt = activeClickCardAttempt) {
+    return Boolean(attempt?.order_ref && CLICK_CARD_PENDING_STATES.has(attempt.state));
+  }
+
+  function safeClickPaymentParams(params, cardType) {
+    if (!params?.service_id || !params?.merchant_id || !params?.transaction_param) return null;
+    return {
+      service_id: params.service_id,
+      merchant_id: params.merchant_id,
+      amount: params.amount,
+      transaction_param: params.transaction_param,
+      ...(params.merchant_user_id ? { merchant_user_id: params.merchant_user_id } : {}),
+      card_type: cardType
+    };
+  }
+
+  function persistClickCardAttempt() {
+    try {
+      if (!activeClickCardAttempt?.order_ref) {
+        window.sessionStorage?.removeItem(CLICK_CARD_ATTEMPT_STORAGE_KEY);
+        return;
+      }
+      const stored = {
+        order_ref: activeClickCardAttempt.order_ref,
+        amount: activeClickCardAttempt.amount,
+        card_type: activeClickCardAttempt.card_type,
+        created_at: activeClickCardAttempt.created_at,
+        click_payment: activeClickCardAttempt.click_payment
+      };
+      window.sessionStorage?.setItem(CLICK_CARD_ATTEMPT_STORAGE_KEY, JSON.stringify(stored));
+    } catch (_) {}
+  }
+
+  function clearClickCardAttempt() {
+    activeClickCardAttempt = null;
+    stopClickCardPolling();
+    try {
+      window.sessionStorage?.removeItem(CLICK_CARD_ATTEMPT_STORAGE_KEY);
+    } catch (_) {}
+  }
+
+  function restoreClickCardAttempt() {
+    try {
+      const stored = JSON.parse(window.sessionStorage?.getItem(CLICK_CARD_ATTEMPT_STORAGE_KEY) || "null");
+      if (!stored?.order_ref || (stored.card_type !== "uzcard" && stored.card_type !== "humo")) return null;
+      if (!stored.click_payment?.service_id || !stored.click_payment?.merchant_id || !stored.click_payment?.transaction_param) return null;
+      activeClickCardAttempt = {
+        order_ref: stored.order_ref,
+        amount: stored.amount,
+        card_type: stored.card_type,
+        created_at: stored.created_at || new Date().toISOString(),
+        click_payment: stored.click_payment,
+        state: "pending_confirmation",
+        widget_open: false,
+        latest_status: null
+      };
+      return activeClickCardAttempt;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function stopClickCardPolling() {
+    clickCardPollToken += 1;
+    if (clickCardPollTimer) {
+      window.clearTimeout(clickCardPollTimer);
+      clickCardPollTimer = null;
+    }
+  }
+
+  window.addEventListener("pagehide", stopClickCardPolling);
 
   function loadClickCheckoutScript() {
     if (typeof window.createPaymentRequest === "function") return Promise.resolve(window.createPaymentRequest);
@@ -753,6 +831,18 @@ window.VCoinUI = window.VCoinUI || {};
     return await fetchOrderStatus(orderRef, telegramId);
   }
 
+  function isOrderFulfilled(status) {
+    return status?.status === "fulfilled" && status?.fulfillment_status === "fulfilled";
+  }
+
+  function isOrderTerminal(status) {
+    return isOrderFulfilled(status)
+      || status?.status === "cancelled"
+      || status?.status === "expired"
+      || status?.status === "failed"
+      || status?.fulfillment_status === "failed";
+  }
+
   function renderQuote(quote, fallbackRate) {
     const rate = Number(quote?.exchange_rate_uzs || fallbackRate || 5000);
     const coins = Number(quote?.coins || DEFAULT_PURCHASE_AMOUNT);
@@ -808,10 +898,21 @@ window.VCoinUI = window.VCoinUI || {};
     `;
 
     backdrop.addEventListener("click", (event) => {
-      if (event.target === backdrop) closeSheet();
+      if (event.target !== backdrop) return;
+      if (isClickCardAttemptPending()) {
+        event.preventDefault();
+        event.stopPropagation();
+        renderClickPendingPanel("Payment is still pending. You can resume or check again.");
+        return;
+      }
+      closeSheet();
     });
     document.body.appendChild(backdrop);
-    bindSheetDragToClose(backdrop.querySelector(".vcoin-sheet"));
+    bindSheetDragToClose(backdrop.querySelector(".vcoin-sheet"), () => {
+      if (!isClickCardAttemptPending()) return true;
+      renderClickPendingPanel("Payment is still pending. You can resume or check again.");
+      return false;
+    });
 
     let appliedPromo = "";
     let currentQuote = null;
@@ -820,6 +921,209 @@ window.VCoinUI = window.VCoinUI || {};
     let clickCheckoutPending = false;
     const amountInput = document.getElementById("vcoin-buy-amount");
     const quoteBox = document.getElementById("vcoin-quote-box");
+
+    function renderClickPendingPanel(message) {
+      const fallback = document.getElementById("vcoin-payment-fallback");
+      if (!fallback || !activeClickCardAttempt?.order_ref) return;
+      const cardLabel = activeClickCardAttempt.card_type === "humo" ? "Humo" : "Uzcard";
+      fallback.innerHTML = `
+        <div class="vcoin-click-choice">
+          <strong>Payment is still pending</strong>
+          <div class="vcoin-payment-status">${escapeHtml(message || "You can resume this Click payment or check its status.")}</div>
+          <div class="vcoin-muted">Order ${escapeHtml(activeClickCardAttempt.order_ref)} · ${escapeHtml(cardLabel)}</div>
+          <div class="vcoin-click-choice-row">
+            <button type="button" class="vcoin-click-option" id="vcoin-click-resume-btn">Resume payment<span>Reopen the same Click payment.</span></button>
+            <button type="button" class="vcoin-click-option" id="vcoin-click-check-btn">Check payment status<span>Ask the backend for confirmation.</span></button>
+            <button type="button" class="vcoin-click-option" id="vcoin-click-new-attempt-btn">Start a new payment attempt<span>The old order may remain pending until expiry.</span></button>
+          </div>
+        </div>
+      `;
+      clickCheckoutPending = false;
+      setClickChoiceDisabled(false);
+      document.getElementById("vcoin-click-resume-btn")?.addEventListener("click", resumeActiveClickCardPayment);
+      document.getElementById("vcoin-click-check-btn")?.addEventListener("click", checkActiveClickCardPayment);
+      document.getElementById("vcoin-click-new-attempt-btn")?.addEventListener("click", () => {
+        clearClickCardAttempt();
+        clickCheckoutPending = false;
+        setClickChoiceDisabled(false);
+        showClickChoice();
+      });
+    }
+
+    async function handleClickStatusResult(status, messageWhenPending) {
+      if (isOrderFulfilled(status)) {
+        await refreshBalanceAfterPayment();
+        clearClickCardAttempt();
+        clickCheckoutPending = false;
+        setClickChoiceDisabled(false);
+        showPaymentStatus("V-Coins added successfully.");
+        window.setTimeout(closeSheet, 900);
+        return true;
+      }
+      if (isOrderTerminal(status)) {
+        const label = status?.status === "expired" ? "expired" : "was not completed";
+        clearClickCardAttempt();
+        clickCheckoutPending = false;
+        setClickChoiceDisabled(false);
+        showPaymentStatus(`Click payment ${label}. Please start a new attempt.`, true);
+        return true;
+      }
+      if (activeClickCardAttempt) {
+        activeClickCardAttempt.state = "pending_confirmation";
+        activeClickCardAttempt.widget_open = false;
+        persistClickCardAttempt();
+      }
+      renderClickPendingPanel(messageWhenPending || "Payment is still pending. You can resume or check again.");
+      return false;
+    }
+
+    function beginClickCardPolling(telegramId, timeoutMs = 45000) {
+      if (!activeClickCardAttempt?.order_ref || clickCardPollTimer) return;
+      const token = ++clickCardPollToken;
+      const startedAt = Date.now();
+      const poll = async () => {
+        if (token !== clickCardPollToken || !activeClickCardAttempt?.order_ref) return;
+        try {
+          const status = await fetchOrderStatus(activeClickCardAttempt.order_ref, telegramId);
+          if (isOrderTerminal(status)) {
+            if (await handleClickStatusResult(status, "Payment is still pending. You can resume or check again.")) return;
+          } else if (!activeClickCardAttempt?.widget_open) {
+            await handleClickStatusResult(status, "Payment is still pending. You can resume or check again.");
+          }
+        } catch (_) {
+          if (!activeClickCardAttempt?.widget_open) {
+            renderClickPendingPanel("Could not check payment status. You can resume or try again.");
+          }
+        }
+        if (Date.now() - startedAt >= timeoutMs) {
+          clickCardPollTimer = null;
+          renderClickPendingPanel("Payment is still pending. You can resume or check again.");
+          return;
+        }
+        clickCardPollTimer = window.setTimeout(poll, 3000);
+      };
+      clickCardPollTimer = window.setTimeout(poll, 2000);
+    }
+
+    function markClickWidgetClosed(telegramId) {
+      if (!activeClickCardAttempt?.widget_open) return;
+      activeClickCardAttempt.state = "pending_confirmation";
+      activeClickCardAttempt.widget_open = false;
+      persistClickCardAttempt();
+      clickCheckoutPending = false;
+      setClickChoiceDisabled(false);
+      renderClickPendingPanel("Payment is still pending. You can resume or check again.");
+      beginClickCardPolling(telegramId);
+    }
+
+    function watchClickWidgetClose(telegramId) {
+      window.setTimeout(() => {
+        if (!activeClickCardAttempt?.widget_open) return;
+        if (!document.querySelector(".payment_app")) {
+          markClickWidgetClosed(telegramId);
+          return;
+        }
+        const observer = new MutationObserver(() => {
+          if (activeClickCardAttempt?.widget_open && !document.querySelector(".payment_app")) {
+            observer.disconnect();
+            markClickWidgetClosed(telegramId);
+          }
+        });
+        observer.observe(document.body, { childList: true });
+      }, 250);
+    }
+
+    async function openClickCardWidgetForAttempt(telegramId) {
+      if (!activeClickCardAttempt?.click_payment) throw new Error("missing_click_payment_params");
+      clickCheckoutPending = true;
+      setClickChoiceDisabled(true);
+      activeClickCardAttempt.state = "widget_open";
+      activeClickCardAttempt.widget_open = true;
+      persistClickCardAttempt();
+      const createPaymentRequest = await loadClickCheckoutScript();
+      showPaymentStatus("Opening Click card payment...");
+      createPaymentRequest(activeClickCardAttempt.click_payment, async (result) => {
+        if (!activeClickCardAttempt?.order_ref) return;
+        const orderRef = activeClickCardAttempt.order_ref;
+        const status = Number(typeof result === "object" ? result?.status : result);
+        activeClickCardAttempt.widget_open = false;
+        clickCheckoutPending = false;
+        setClickChoiceDisabled(false);
+        if (status < 0) {
+          activeClickCardAttempt.state = "pending_confirmation";
+          persistClickCardAttempt();
+          renderClickPendingPanel("Click payment was not completed. You can resume or start a new attempt.");
+          beginClickCardPolling(telegramId, 15000);
+          return;
+        }
+        if (status === 2) {
+          activeClickCardAttempt.state = "pending_confirmation";
+          persistClickCardAttempt();
+          showPaymentStatus("Payment successful. Confirming V-Coin fulfillment...");
+          const finalStatus = await waitForFulfillment(orderRef, telegramId);
+          await handleClickStatusResult(finalStatus, "Payment received. V-Coin fulfillment is still processing.");
+          return;
+        }
+        activeClickCardAttempt.state = "pending_confirmation";
+        persistClickCardAttempt();
+        renderClickPendingPanel(status === 1 ? "Payment is being processed." : "Payment created. Waiting for confirmation.");
+        beginClickCardPolling(telegramId);
+      });
+      watchClickWidgetClose(telegramId);
+      beginClickCardPolling(telegramId);
+    }
+
+    async function resumeActiveClickCardPayment() {
+      if (clickCheckoutPending || !activeClickCardAttempt?.order_ref) return;
+      try {
+        const id = await resolveTelegramId();
+        if (!id) {
+          alert("Please log in with Telegram before buying V-Coins.");
+          return;
+        }
+        const status = await fetchOrderStatus(activeClickCardAttempt.order_ref, id);
+        if (await handleClickStatusResult(status, "Payment is still pending. You can resume or check again.")) return;
+        await openClickCardWidgetForAttempt(id);
+      } catch (error) {
+        clickCheckoutPending = false;
+        setClickChoiceDisabled(false);
+        renderClickPendingPanel(`Could not resume Click payment: ${backendErrorMessage(error, "Please try again.")}`);
+      }
+    }
+
+    async function checkActiveClickCardPayment() {
+      if (!activeClickCardAttempt?.order_ref) return;
+      try {
+        const id = await resolveTelegramId();
+        if (!id) {
+          alert("Please log in with Telegram before buying V-Coins.");
+          return;
+        }
+        showPaymentStatus("Checking Click payment status...");
+        const status = await fetchOrderStatus(activeClickCardAttempt.order_ref, id);
+        await handleClickStatusResult(status, "Payment is still pending. You can resume or check again.");
+      } catch (error) {
+        renderClickPendingPanel(`Could not check payment status: ${backendErrorMessage(error, "Please try again.")}`);
+      }
+    }
+
+    async function restorePendingClickCardAttemptForUser() {
+      const attempt = restoreClickCardAttempt();
+      if (!attempt) return;
+      try {
+        const id = await resolveTelegramId();
+        if (!id) {
+          renderClickPendingPanel("Payment is still pending. Log in with Telegram to resume or check status.");
+          return;
+        }
+        const status = await fetchOrderStatus(attempt.order_ref, id);
+        if (!(await handleClickStatusResult(status, "Payment is still pending. You can resume or check again."))) {
+          beginClickCardPolling(id, 15000);
+        }
+      } catch (_) {
+        renderClickPendingPanel("Payment is still pending. You can resume or check again.");
+      }
+    }
 
     async function refreshQuote() {
       const coins = Math.max(1, Number(amountInput?.value || DEFAULT_PURCHASE_AMOUNT));
@@ -850,6 +1154,10 @@ window.VCoinUI = window.VCoinUI || {};
       await refreshQuote();
     });
     document.getElementById("vcoin-back-to-wallet-btn")?.addEventListener("click", () => {
+      if (isClickCardAttemptPending()) {
+        renderClickPendingPanel("Payment is still pending. You can resume or check again.");
+        return;
+      }
       window.VCoinUI.openBalanceSheet();
     });
     document.getElementById("vcoin-create-payment-btn")?.addEventListener("click", async () => {
@@ -887,6 +1195,10 @@ window.VCoinUI = window.VCoinUI || {};
     });
     document.getElementById("vcoin-create-click-payment-btn")?.addEventListener("click", async () => {
       if (clickCheckoutPending) return;
+      if (isClickCardAttemptPending()) {
+        renderClickPendingPanel("Payment is still pending. You can resume or check again.");
+        return;
+      }
       clearPaymentFallback();
       const button = document.getElementById("vcoin-create-click-payment-btn");
       const useTestWindow = Boolean(window.CLICK_TEST_MODE && window.ClickTestUI?.open);
@@ -980,43 +1292,31 @@ window.VCoinUI = window.VCoinUI || {};
         const checkout = await createClickCheckout(id, coins, appliedPromo);
         const params = checkout?.click_payment;
         if (!params?.service_id || !params?.merchant_id || !params?.transaction_param) throw new Error("missing_click_payment_params");
-        const createPaymentRequest = await loadClickCheckoutScript();
-        showPaymentStatus("Opening Click card payment...");
-        createPaymentRequest({
-          service_id: params.service_id,
-          merchant_id: params.merchant_id,
+        const clickPayment = safeClickPaymentParams(params, cardType);
+        if (!clickPayment) throw new Error("missing_click_payment_params");
+        activeClickCardAttempt = {
+          order_ref: checkout.order_ref,
           amount: params.amount || checkout.amount,
-          transaction_param: params.transaction_param || checkout.order_ref,
-          ...(params.merchant_user_id ? { merchant_user_id: params.merchant_user_id } : {}),
-          card_type: cardType
-        }, async (result) => {
-          const status = Number(typeof result === "object" ? result?.status : result);
-          if (status < 0) {
-            showPaymentStatus("Click payment failed. Please try again.", true);
-            clickCheckoutPending = false;
-            setClickChoiceDisabled(false);
-            return;
-          }
-          if (status === 0) showPaymentStatus("Payment created. Waiting for confirmation...");
-          if (status === 1) showPaymentStatus("Payment is being processed...");
-          if (status === 2) {
-            showPaymentStatus("Payment successful. Confirming V-Coin fulfillment...");
-            const finalStatus = await waitForFulfillment(checkout.order_ref, id);
-            if (finalStatus?.status === "fulfilled" && finalStatus?.fulfillment_status === "fulfilled") {
-              await refreshBalanceAfterPayment();
-              showPaymentStatus("V-Coins added successfully.");
-              window.setTimeout(closeSheet, 900);
-            } else {
-              showPaymentStatus("Payment received. V-Coin fulfillment is still processing.");
-            }
-            clickCheckoutPending = false;
-            setClickChoiceDisabled(false);
-          }
-        });
+          card_type: cardType,
+          created_at: new Date().toISOString(),
+          click_payment: clickPayment,
+          state: "creating_order",
+          widget_open: false,
+          latest_status: null
+        };
+        persistClickCardAttempt();
+        await openClickCardWidgetForAttempt(id);
       } catch (error) {
-        showPaymentStatus(`Could not open Click card payment: ${backendErrorMessage(error, "Please try again.")}`, true);
         clickCheckoutPending = false;
         setClickChoiceDisabled(false);
+        if (activeClickCardAttempt?.order_ref) {
+          activeClickCardAttempt.state = "pending_confirmation";
+          activeClickCardAttempt.widget_open = false;
+          persistClickCardAttempt();
+          renderClickPendingPanel(`Could not open Click card payment: ${backendErrorMessage(error, "Please try again.")}`);
+        } else {
+          showPaymentStatus(`Could not open Click card payment: ${backendErrorMessage(error, "Please try again.")}`, true);
+        }
       }
     }
 
@@ -1024,6 +1324,9 @@ window.VCoinUI = window.VCoinUI || {};
       document.getElementById("vcoin-click-uzcard-btn")?.toggleAttribute("disabled", disabled);
       document.getElementById("vcoin-click-humo-btn")?.toggleAttribute("disabled", disabled);
       document.getElementById("vcoin-click-app-btn")?.toggleAttribute("disabled", disabled);
+      document.getElementById("vcoin-click-resume-btn")?.toggleAttribute("disabled", disabled);
+      document.getElementById("vcoin-click-check-btn")?.toggleAttribute("disabled", disabled);
+      document.getElementById("vcoin-click-new-attempt-btn")?.toggleAttribute("disabled", disabled);
       document.getElementById("vcoin-create-click-payment-btn")?.toggleAttribute("disabled", disabled);
     }
 
@@ -1034,6 +1337,7 @@ window.VCoinUI = window.VCoinUI || {};
       currentRate = 5000;
     }
     await refreshQuote();
+    await restorePendingClickCardAttemptForUser();
   };
 
   window.VCoinUI.openBalanceSheet = async function () {
