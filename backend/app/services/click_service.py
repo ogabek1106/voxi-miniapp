@@ -610,7 +610,6 @@ def build_public_payment_params(order_ref: str, amount_tiyin: int) -> dict[str, 
         "merchant_id": merchant_id,
         "amount": format(amount, ".2f"),
         "transaction_param": order_ref,
-        "card_type": "uzcard_humo",
     }
     merchant_user_id = _clean(CLICK_MERCHANT_USER_ID)
     if merchant_user_id:

@@ -239,8 +239,9 @@ def test_checkout_returns_safe_public_data():
         "merchant_id": "123",
         "amount": "10000.00",
         "transaction_param": result["order_ref"],
-        "card_type": "uzcard_humo",
     }
+    assert "card_type" not in result["click_payment"]
+    assert "uzcard_humo" not in str(result).lower()
     assert "secret" not in str(result).lower()
     assert db.query(PaymentOrder).count() == 1
 

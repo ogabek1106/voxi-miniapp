@@ -921,12 +921,14 @@ window.VCoinUI = window.VCoinUI || {};
         <div class="vcoin-click-choice">
           <strong>Pay with Click</strong>
           <div class="vcoin-click-choice-row">
-            <button type="button" class="vcoin-click-option" id="vcoin-click-card-btn">Pay by card<span>Pay with Uzcard or Humo in the browser.</span></button>
+            <button type="button" class="vcoin-click-option" id="vcoin-click-uzcard-btn">Pay by Uzcard<span>Pay with Uzcard in the browser.</span></button>
+            <button type="button" class="vcoin-click-option" id="vcoin-click-humo-btn">Pay by Humo<span>Pay with Humo in the browser.</span></button>
             <button type="button" class="vcoin-click-option" id="vcoin-click-app-btn">Open Click app<span>Continue in the Click application.</span></button>
           </div>
         </div>
       `;
-      document.getElementById("vcoin-click-card-btn")?.addEventListener("click", startClickCardPayment);
+      document.getElementById("vcoin-click-uzcard-btn")?.addEventListener("click", () => startClickCardPayment("uzcard"));
+      document.getElementById("vcoin-click-humo-btn")?.addEventListener("click", () => startClickCardPayment("humo"));
       document.getElementById("vcoin-click-app-btn")?.addEventListener("click", startClickAppPayment);
     }
 
@@ -957,8 +959,12 @@ window.VCoinUI = window.VCoinUI || {};
       }
     }
 
-    async function startClickCardPayment() {
+    async function startClickCardPayment(cardType) {
       if (clickCheckoutPending) return;
+      if (cardType !== "uzcard" && cardType !== "humo") {
+        showPaymentStatus("Please choose Uzcard or Humo for browser payment.", true);
+        return;
+      }
       clickCheckoutPending = true;
       setClickChoiceDisabled(true);
       showPaymentStatus("Creating Click payment...");
@@ -982,7 +988,7 @@ window.VCoinUI = window.VCoinUI || {};
           amount: params.amount || checkout.amount,
           transaction_param: params.transaction_param || checkout.order_ref,
           ...(params.merchant_user_id ? { merchant_user_id: params.merchant_user_id } : {}),
-          card_type: params.card_type || "uzcard_humo"
+          card_type: cardType
         }, async (result) => {
           const status = Number(typeof result === "object" ? result?.status : result);
           if (status < 0) {
@@ -1015,7 +1021,8 @@ window.VCoinUI = window.VCoinUI || {};
     }
 
     function setClickChoiceDisabled(disabled) {
-      document.getElementById("vcoin-click-card-btn")?.toggleAttribute("disabled", disabled);
+      document.getElementById("vcoin-click-uzcard-btn")?.toggleAttribute("disabled", disabled);
+      document.getElementById("vcoin-click-humo-btn")?.toggleAttribute("disabled", disabled);
       document.getElementById("vcoin-click-app-btn")?.toggleAttribute("disabled", disabled);
       document.getElementById("vcoin-create-click-payment-btn")?.toggleAttribute("disabled", disabled);
     }
