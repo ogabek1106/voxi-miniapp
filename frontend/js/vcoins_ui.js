@@ -356,6 +356,19 @@ window.VCoinUI = window.VCoinUI || {};
         color: #008fc4 !important;
       }
 
+      .vcoin-payment-fallback {
+        display: grid;
+        gap: 8px;
+      }
+
+      .vcoin-payment-fallback-message {
+        color: #dc2626;
+        font-size: 13px;
+        font-weight: 800;
+        line-height: 1.35;
+        text-align: center;
+      }
+
       .vcoin-cancel-btn {
         background: #eef2f7 !important;
         color: #17212B !important;
@@ -534,6 +547,96 @@ window.VCoinUI = window.VCoinUI || {};
     });
   }
 
+  function isTelegramMiniApp() {
+    return Boolean(window.AppViewMode?.isMiniApp?.() && window.Telegram?.WebApp);
+  }
+
+  function openPaymentPlaceholder(providerName) {
+    const paymentWindow = window.open("", "_blank");
+    if (!paymentWindow) return null;
+
+    try {
+      paymentWindow.document.open();
+      paymentWindow.document.write(`<!doctype html>
+        <html>
+          <head>
+            <title>Opening ${providerName} payment</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <style>
+              body {
+                margin: 0;
+                min-height: 100vh;
+                display: grid;
+                place-items: center;
+                font: 700 18px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                color: #17212B;
+                background: #F5F9FC;
+              }
+            </style>
+          </head>
+          <body>Opening ${providerName} payment&hellip;</body>
+        </html>`);
+      paymentWindow.document.close();
+    } catch (_) {
+      // Some browsers restrict placeholder access, but the reserved window can still be redirected.
+    }
+
+    return paymentWindow;
+  }
+
+  function openExternalCheckoutUrl(checkoutUrl, paymentWindow) {
+    if (!checkoutUrl) throw new Error("missing_checkout_url");
+
+    const tg = window.Telegram?.WebApp;
+    if (isTelegramMiniApp() && typeof tg?.openLink === "function") {
+      closePaymentWindow(paymentWindow);
+      tg.openLink(checkoutUrl, { try_instant_view: false });
+      return true;
+    }
+
+    if (paymentWindow && !paymentWindow.closed) {
+      paymentWindow.location.replace(checkoutUrl);
+      return true;
+    }
+
+    return false;
+  }
+
+  function closePaymentWindow(paymentWindow) {
+    try {
+      if (paymentWindow && !paymentWindow.closed) paymentWindow.close();
+    } catch (_) {}
+  }
+
+  function backendErrorMessage(error, fallback) {
+    const detail = error?.data?.detail ?? parseApiError(error)?.detail;
+    if (typeof detail === "string" && detail) return detail;
+    if (detail && typeof detail === "object") return JSON.stringify(detail);
+    if (error?.message) return error.message;
+    return fallback;
+  }
+
+  function showPaymentFallback(providerName, checkoutUrl) {
+    const fallback = document.getElementById("vcoin-payment-fallback");
+    if (!fallback || !checkoutUrl) return;
+    fallback.innerHTML = `
+      <div class="vcoin-payment-fallback-message">${providerName} popup was blocked. Open it manually to continue.</div>
+      <button type="button" class="vcoin-buy-btn" id="vcoin-open-blocked-payment-btn">Open ${providerName} payment</button>
+    `;
+    document.getElementById("vcoin-open-blocked-payment-btn")?.addEventListener("click", () => {
+      if (isTelegramMiniApp() && typeof window.Telegram?.WebApp?.openLink === "function") {
+        window.Telegram.WebApp.openLink(checkoutUrl, { try_instant_view: false });
+        return;
+      }
+      window.open(checkoutUrl, "_blank", "noopener,noreferrer");
+    });
+  }
+
+  function clearPaymentFallback() {
+    const fallback = document.getElementById("vcoin-payment-fallback");
+    if (fallback) fallback.innerHTML = "";
+  }
+
   function renderQuote(quote, fallbackRate) {
     const rate = Number(quote?.exchange_rate_uzs || fallbackRate || 5000);
     const coins = Number(quote?.coins || DEFAULT_PURCHASE_AMOUNT);
@@ -575,6 +678,7 @@ window.VCoinUI = window.VCoinUI || {};
             <button type="button" class="vcoin-apply-promo-btn" id="vcoin-apply-promo">Apply</button>
           </div>
           <div id="vcoin-quote-box">${renderQuote(null, 5000)}</div>
+          <div class="vcoin-payment-fallback" id="vcoin-payment-fallback"></div>
         </div>
 
         <div class="vcoin-history-section"></div>
@@ -596,6 +700,8 @@ window.VCoinUI = window.VCoinUI || {};
     let appliedPromo = "";
     let currentQuote = null;
     let currentRate = 5000;
+    let paymeCheckoutPending = false;
+    let clickCheckoutPending = false;
     const amountInput = document.getElementById("vcoin-buy-amount");
     const quoteBox = document.getElementById("vcoin-quote-box");
 
@@ -631,48 +737,68 @@ window.VCoinUI = window.VCoinUI || {};
       window.VCoinUI.openBalanceSheet();
     });
     document.getElementById("vcoin-create-payment-btn")?.addEventListener("click", async () => {
-      const id = await resolveTelegramId();
-      if (!id) {
-        alert("Please log in with Telegram before buying V-Coins.");
-        return;
-      }
+      if (paymeCheckoutPending) return;
+      clearPaymentFallback();
       const button = document.getElementById("vcoin-create-payment-btn");
+      const useTestWindow = Boolean(window.PAYME_TEST_MODE && window.PaymeTestUI?.open);
+      const paymentWindow = useTestWindow || isTelegramMiniApp() ? null : openPaymentPlaceholder("Payme");
+      paymeCheckoutPending = true;
       if (button) button.disabled = true;
       try {
+        const id = await resolveTelegramId();
+        if (!id) {
+          closePaymentWindow(paymentWindow);
+          alert("Please log in with Telegram before buying V-Coins.");
+          return;
+        }
         const coins = Number(amountInput?.value || DEFAULT_PURCHASE_AMOUNT);
         const checkout = await createPaymeCheckout(id, coins, appliedPromo);
         if (!checkout?.checkout_url) throw new Error("missing_checkout_url");
-        if (window.PAYME_TEST_MODE && window.PaymeTestUI?.open) {
+        if (useTestWindow) {
           await window.PaymeTestUI.open({ checkout, telegramId: id });
           return;
         }
-        window.open(checkout.checkout_url, "_blank", "noopener");
+        if (!openExternalCheckoutUrl(checkout.checkout_url, paymentWindow)) {
+          showPaymentFallback("Payme", checkout.checkout_url);
+        }
       } catch (error) {
-        alert("Could not create payment. Please try again.");
+        closePaymentWindow(paymentWindow);
+        alert(`Could not create payment: ${backendErrorMessage(error, "Please try again.")}`);
       } finally {
+        paymeCheckoutPending = false;
         if (button) button.disabled = false;
       }
     });
     document.getElementById("vcoin-create-click-payment-btn")?.addEventListener("click", async () => {
-      const id = await resolveTelegramId();
-      if (!id) {
-        alert("Please log in with Telegram before buying V-Coins.");
-        return;
-      }
+      if (clickCheckoutPending) return;
+      clearPaymentFallback();
       const button = document.getElementById("vcoin-create-click-payment-btn");
+      const useTestWindow = Boolean(window.CLICK_TEST_MODE && window.ClickTestUI?.open);
+      const paymentWindow = useTestWindow || isTelegramMiniApp() ? null : openPaymentPlaceholder("Click");
+      clickCheckoutPending = true;
       if (button) button.disabled = true;
       try {
+        const id = await resolveTelegramId();
+        if (!id) {
+          closePaymentWindow(paymentWindow);
+          alert("Please log in with Telegram before buying V-Coins.");
+          return;
+        }
         const coins = Number(amountInput?.value || DEFAULT_PURCHASE_AMOUNT);
         const checkout = await createClickCheckout(id, coins, appliedPromo);
         if (!checkout?.checkout_url) throw new Error("missing_checkout_url");
-        if (window.CLICK_TEST_MODE && window.ClickTestUI?.open) {
+        if (useTestWindow) {
           await window.ClickTestUI.open({ checkout, telegramId: id });
           return;
         }
-        window.open(checkout.checkout_url, "_blank", "noopener");
+        if (!openExternalCheckoutUrl(checkout.checkout_url, paymentWindow)) {
+          showPaymentFallback("Click", checkout.checkout_url);
+        }
       } catch (error) {
-        alert("Could not create Click payment. Please try again.");
+        closePaymentWindow(paymentWindow);
+        alert(`Could not create Click payment: ${backendErrorMessage(error, "Please try again.")}`);
       } finally {
+        clickCheckoutPending = false;
         if (button) button.disabled = false;
       }
     });
