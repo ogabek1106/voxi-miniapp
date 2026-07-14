@@ -21,11 +21,11 @@ Base = declarative_base()
 
 
 def _admin_id_sql_list() -> str | None:
-    ids: list[str] = []
-    for raw in (os.getenv("ADMIN_IDS") or "").split(","):
-        cleaned = raw.strip()
-        if cleaned.isdigit():
-            ids.append(cleaned)
+    try:
+        from app.config import ADMIN_IDS
+    except Exception:
+        ADMIN_IDS = set()
+    ids = [str(int(admin_id)) for admin_id in ADMIN_IDS if str(admin_id).strip().lstrip("-").isdigit()]
     return ", ".join(ids) if ids else None
 
 
