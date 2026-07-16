@@ -3,15 +3,30 @@ window.VPayGate = window.VPayGate || {};
 (function () {
   const DEFAULT_TOPUP_UZS = 50000;
   const STORAGE_KEY = "voxi_vpaygate_order";
-  const POLL_LIMIT = 8;
-  let state = {
-    product: null,
-    provider: "click",
-    status: "preparing_order",
-    checkout: null,
-    message: "Preparing checkout...",
-    polling: false,
-  };
+  const POLL_LIMIT = 10;
+  const TERMINAL_STATES = new Set([
+    "payment_successful",
+    "payment_failed",
+    "payment_cancelled",
+    "order_expired",
+    "order_invalid",
+    "order_already_paid",
+    "purchase_already_fulfilled",
+  ]);
+  let clickScriptPromise = null;
+  let state = initialState();
+
+  function initialState() {
+    return {
+      product: null,
+      method: null,
+      status: "ready_for_payment",
+      checkout: null,
+      message: "",
+      polling: false,
+      busy: false,
+    };
+  }
 
   function escapeHtml(value) {
     return String(value ?? "")
@@ -23,7 +38,9 @@ window.VPayGate = window.VPayGate || {};
   }
 
   function formatUzs(amount) {
-    return window.UzsBalance?.formatUzs?.(amount) || `${Number(amount || 0).toLocaleString("en-US")} UZS`;
+    const parsed = Number(amount);
+    const value = Number.isFinite(parsed) ? Math.max(0, Math.floor(parsed)) : 0;
+    return `${value.toLocaleString("ru-RU").replace(/\u00a0/g, " ")} UZS`;
   }
 
   function normalizeAmount(value) {
@@ -33,8 +50,8 @@ window.VPayGate = window.VPayGate || {};
   }
 
   function coinsForTopup(amountUzs) {
-    // Temporary bridge: payment providers still fulfill the existing V-Coin engine.
-    // Change this adapter when the real stored UZS wallet/order source is implemented.
+    // Temporary bridge: Click still fulfills the existing V-Coin engine.
+    // Replace this adapter when the real stored UZS wallet/order source lands.
     const rate = Number(window.UzsBalance?.convertVCoinsToUzs?.(1) || 5000);
     return Math.max(1, Math.floor(normalizeAmount(amountUzs) / rate));
   }
@@ -48,8 +65,8 @@ window.VPayGate = window.VPayGate || {};
     const coins = coinsForTopup(amountUzs);
     return {
       type: "wallet_topup",
-      title: "Wallet top-up",
-      description: "Add balance for paid platform features.",
+      title: "Balansni to‘ldirish",
+      description: "Pulli xizmatlar uchun balansingizni to‘ldiring.",
       amount_uzs: topupAmountForCoins(coins),
       coins,
       promo_code: overrides.promo_code || null,
@@ -88,7 +105,7 @@ window.VPayGate = window.VPayGate || {};
     return node;
   }
 
-  function hideNormalScreens() {
+  function showPage() {
     window.hideAllScreens?.();
     document.body.classList.add("vpaygate-active");
     document.documentElement.classList.add("vpaygate-active");
@@ -118,78 +135,117 @@ window.VPayGate = window.VPayGate || {};
   }
 
   function statusText() {
+    if (state.message) return state.message;
     const map = {
-      preparing_order: "Preparing checkout...",
-      ready_for_payment: "Choose a payment method to continue.",
-      payment_provider_selected: "Payment method selected. Continue when ready.",
-      redirecting_to_provider: "Redirecting to the payment provider...",
-      payment_processing: "Payment is processing.",
-      payment_confirmation_pending: "Payment confirmation is pending. You can refresh this page safely.",
-      payment_successful: "Payment successful.",
-      payment_failed: "Payment failed. You can try again.",
-      payment_cancelled: "Payment was cancelled.",
-      order_expired: "This order expired. Start a new checkout when you are ready.",
-      order_invalid: "This checkout is invalid or unavailable.",
-      order_already_paid: "This order is already paid.",
-      purchase_already_fulfilled: "Purchase already fulfilled.",
+      preparing_order: "Buyurtma tayyorlanmoqda...",
+      ready_for_payment: "To‘lov usulini tanlang",
+      payment_provider_selected: "To‘lov usulini tanlang",
+      redirecting_to_provider: "To‘lov sahifasiga yo‘naltirilmoqda...",
+      payment_processing: "To‘lov tekshirilmoqda...",
+      payment_confirmation_pending: "To‘lov tasdiqlanishi kutilmoqda",
+      payment_successful: "To‘lov muvaffaqiyatli amalga oshirildi",
+      payment_failed: "To‘lov amalga oshmadi",
+      payment_cancelled: "To‘lov bekor qilindi",
+      order_expired: "Buyurtma muddati tugagan",
+      order_invalid: "Buyurtma topilmadi",
+      order_already_paid: "Bu buyurtma allaqachon to‘langan",
+      purchase_already_fulfilled: "Xarid faollashtirildi",
     };
-    return state.message || map[state.status] || "Checkout is ready.";
+    return map[state.status] || "To‘lov usulini tanlang";
+  }
+
+  function methodTitle(method) {
+    return method === "click_app" ? "Click ilovasi orqali" : "Bank kartasi orqali";
+  }
+
+  function primaryText(product) {
+    if (state.busy || state.status === "preparing_order" || state.status === "redirecting_to_provider") {
+      return "To‘lovga yo‘naltirilmoqda...";
+    }
+    if (state.status === "payment_processing") return "To‘lov tekshirilmoqda...";
+    return `${formatUzs(product.amount_uzs)} to‘lash`;
+  }
+
+  function canPay() {
+    const payableStatus = ["ready_for_payment", "payment_provider_selected", "payment_failed"].includes(state.status);
+    return Boolean(state.method)
+      && !state.busy
+      && payableStatus
+      && !TERMINAL_STATES.has(state.status)
+      && state.status !== "payment_processing";
+  }
+
+  function shouldShowStatusAction() {
+    return state.status === "payment_confirmation_pending";
+  }
+
+  function shouldShowContinueAction() {
+    return ["payment_successful", "order_already_paid", "purchase_already_fulfilled"].includes(state.status);
+  }
+
+  function renderMethod(method, title, subtitle) {
+    const selected = state.method === method;
+    return `
+      <button type="button"
+        class="vpaygate-method ${selected ? "is-selected" : ""}"
+        data-vpay-method="${method}"
+        aria-pressed="${selected ? "true" : "false"}"
+        ${state.busy ? "disabled" : ""}>
+        <span class="vpaygate-method-copy">
+          <strong>${escapeHtml(title)}</strong>
+          <small>${escapeHtml(subtitle)}</small>
+        </span>
+        <span class="vpaygate-method-mark" aria-hidden="true">${selected ? "Tanlandi" : "Tanlash"}</span>
+      </button>
+    `;
   }
 
   function render() {
     const product = state.product || defaultProduct();
-    const selected = state.provider;
-    const disabled = ["redirecting_to_provider", "payment_processing"].includes(state.status);
-    const canPay = Boolean(selected) && !disabled && !["payment_successful", "purchase_already_fulfilled", "order_expired", "order_invalid"].includes(state.status);
-    const node = hideNormalScreens();
+    const node = showPage();
     node.innerHTML = `
       <div class="vpaygate-shell">
-        <div class="vpaygate-top">
-          <div class="vpaygate-brand">
-            <div class="vpaygate-kicker">V-PayGate</div>
-            <h1 class="vpaygate-title">Payment checkout</h1>
-          </div>
-          <button type="button" class="vpaygate-cancel" id="vpaygate-cancel">Cancel</button>
-        </div>
-
-        <section class="vpaygate-panel" aria-label="V-PayGate checkout">
-          <div class="vpaygate-product">
-            <div>
-              <p class="vpaygate-section-title">You are buying</p>
-              <h2>${escapeHtml(product.title)}</h2>
-              <p>${escapeHtml(product.description)}</p>
-            </div>
-            <div class="vpaygate-price">${escapeHtml(formatUzs(product.amount_uzs))}</div>
-          </div>
-
-          <div class="vpaygate-details">
-            <div class="vpaygate-row"><span>Order type</span><strong>${escapeHtml(product.title)}</strong></div>
-            <div class="vpaygate-row"><span>Amount</span><strong>${escapeHtml(formatUzs(product.amount_uzs))}</strong></div>
-            <div class="vpaygate-row"><span>Currency</span><strong>UZS</strong></div>
-            ${state.checkout?.order_ref ? `<div class="vpaygate-row"><span>Order</span><strong>${escapeHtml(state.checkout.order_ref)}</strong></div>` : ""}
-          </div>
-
+        <header class="vpaygate-header">
           <div>
-            <p class="vpaygate-section-title">Payment method</p>
+            <div class="vpaygate-kicker">V-PayGate</div>
+            <h1 class="vpaygate-title">To‘lov</h1>
+            <p class="vpaygate-lead">To‘lov usulini tanlang</p>
+          </div>
+        </header>
+
+        <div class="vpaygate-layout">
+          <section class="vpaygate-section vpaygate-method-section" aria-labelledby="vpaygate-method-title">
+            <h2 class="vpaygate-section-title" id="vpaygate-method-title">To‘lov usuli</h2>
             <div class="vpaygate-methods">
-              <button type="button" class="vpaygate-method ${selected === "click" ? "is-selected" : ""}" data-vpay-provider="click" ${disabled ? "disabled" : ""}>
-                <strong>Click<span>Pay through Click</span></strong>
-                <span aria-hidden="true">→</span>
-              </button>
-              <button type="button" class="vpaygate-method ${selected === "payme" ? "is-selected" : ""}" data-vpay-provider="payme" ${disabled ? "disabled" : ""}>
-                <strong>Payme<span>Pay through Payme</span></strong>
-                <span aria-hidden="true">→</span>
-              </button>
+              ${renderMethod("bank_card", "Bank kartasi orqali", "Uzcard yoki Humo kartasi bilan to‘lang")}
+              ${renderMethod("click_app", "Click ilovasi orqali", "Click ilovasida to‘lovni tasdiqlang")}
             </div>
-          </div>
+          </section>
 
-          <div class="vpaygate-status ${statusClass()}" role="status">${escapeHtml(statusText())}</div>
+          <aside class="vpaygate-section vpaygate-summary" aria-labelledby="vpaygate-summary-title">
+            <h2 class="vpaygate-section-title" id="vpaygate-summary-title">Buyurtma ma’lumotlari</h2>
+            <div class="vpaygate-summary-list">
+              <div class="vpaygate-summary-row">
+                <span>Xizmat</span>
+                <strong>${escapeHtml(product.title)}</strong>
+              </div>
+              <div class="vpaygate-summary-row vpaygate-summary-total">
+                <span>To‘lov summasi</span>
+                <strong>${escapeHtml(formatUzs(product.amount_uzs))}</strong>
+              </div>
+            </div>
 
-          <div class="vpaygate-actions">
-            <button type="button" class="vpaygate-pay" id="vpaygate-pay" ${canPay ? "" : "disabled"}>${state.checkout?.checkout_url ? "Open payment" : "Continue to payment"}</button>
-            <button type="button" class="vpaygate-secondary" id="vpaygate-refresh">Refresh status</button>
-          </div>
-        </section>
+            <div class="vpaygate-status ${statusClass()}" role="status">${escapeHtml(statusText())}</div>
+
+            <button type="button" class="vpaygate-pay" id="vpaygate-pay" ${canPay() ? "" : "disabled"}>
+              ${escapeHtml(primaryText(product))}
+            </button>
+
+            ${shouldShowStatusAction() ? `<button type="button" class="vpaygate-status-action" id="vpaygate-refresh">To‘lov holatini tekshirish</button>` : ""}
+            ${shouldShowContinueAction() ? `<button type="button" class="vpaygate-status-action" id="vpaygate-continue">Davom etish</button>` : ""}
+            <button type="button" class="vpaygate-cancel-link" id="vpaygate-cancel">To‘lovni bekor qilish</button>
+          </aside>
+        </div>
       </div>
     `;
     bind();
@@ -198,23 +254,30 @@ window.VPayGate = window.VPayGate || {};
   function bind() {
     document.getElementById("vpaygate-cancel")?.addEventListener("click", leavePage);
     document.getElementById("vpaygate-refresh")?.addEventListener("click", () => refreshStatus({ userInitiated: true }));
+    document.getElementById("vpaygate-continue")?.addEventListener("click", leavePage);
     document.getElementById("vpaygate-pay")?.addEventListener("click", continuePayment);
-    document.querySelectorAll("[data-vpay-provider]").forEach((button) => {
+    document.querySelectorAll("[data-vpay-method]").forEach((button) => {
       button.addEventListener("click", () => {
-        state.provider = button.getAttribute("data-vpay-provider") || "click";
-        state.checkout = restoreStoredOrder(state.product, state.provider);
+        state.method = button.getAttribute("data-vpay-method") || null;
+        const restored = restoreStoredOrder(state.product, state.method);
+        state.checkout = restored?.checkout || null;
         state.status = "payment_provider_selected";
-        state.message = `${state.provider === "payme" ? "Payme" : "Click"} selected. Continue when ready.`;
+        state.message = "To‘lov usulini tanlang";
         render();
       });
     });
   }
 
+  function storedProductMatches(stored, product) {
+    return stored?.product?.type === product?.type
+      && Number(stored?.product?.amount_uzs || 0) === Number(product?.amount_uzs || 0);
+  }
+
   function storeOrder() {
     try {
-      if (!state.checkout?.order_ref) return;
+      if (!state.checkout?.order_ref || !state.method) return;
       window.sessionStorage?.setItem(STORAGE_KEY, JSON.stringify({
-        provider: state.provider,
+        method: state.method,
         product: state.product,
         checkout: state.checkout,
         saved_at: new Date().toISOString(),
@@ -222,37 +285,36 @@ window.VPayGate = window.VPayGate || {};
     } catch (_) {}
   }
 
-  function restoreStoredOrder(product = state.product, provider = state.provider) {
+  function restoreStoredOrder(product = state.product, method = state.method) {
     try {
       const stored = JSON.parse(window.sessionStorage?.getItem(STORAGE_KEY) || "null");
-      if (!stored?.checkout?.order_ref) return null;
-      if (stored.provider !== provider) return null;
-      if (stored.product?.type !== product?.type) return null;
-      if (Number(stored.product?.amount_uzs || 0) !== Number(product?.amount_uzs || 0)) return null;
-      return stored.checkout;
+      if (!stored?.checkout?.order_ref || !storedProductMatches(stored, product)) return null;
+      if (method && stored.method !== method) return null;
+      return stored;
     } catch (_) {
       return null;
     }
   }
 
-  function clearStoredOrder() {
-    try {
-      window.sessionStorage?.removeItem(STORAGE_KEY);
-    } catch (_) {}
-  }
-
-  async function createCheckout(provider) {
+  async function createCheckout() {
     const telegramId = await resolveTelegramId();
-    if (!telegramId) throw new Error("Please log in with Telegram before payment.");
-    const body = {
+    if (!telegramId) throw new Error("telegram_required");
+    return await window.apiPost("/payments/click/vcoins/checkout", {
       telegram_id: Number(telegramId),
       coins: Number(state.product?.coins || coinsForTopup(state.product?.amount_uzs)),
       promo_code: state.product?.promo_code || null,
-    };
-    if (provider === "payme") {
-      return await window.apiPost("/payments/payme/vcoins/checkout", body);
+    });
+  }
+
+  async function ensureCheckout() {
+    const restored = restoreStoredOrder(state.product, state.method);
+    if (restored?.checkout?.order_ref) {
+      state.checkout = restored.checkout;
+      return state.checkout;
     }
-    return await window.apiPost("/payments/click/vcoins/checkout", body);
+    state.checkout = await createCheckout();
+    storeOrder();
+    return state.checkout;
   }
 
   async function fetchOrderStatus(orderRef) {
@@ -271,25 +333,26 @@ window.VPayGate = window.VPayGate || {};
     return "payment_confirmation_pending";
   }
 
-  async function refreshStatus({ userInitiated = false } = {}) {
+  async function refreshStatus() {
     if (!state.checkout?.order_ref) {
-      state.status = userInitiated ? "ready_for_payment" : state.status;
-      state.message = userInitiated ? "No payment order has been started yet." : state.message;
+      state.status = "ready_for_payment";
+      state.message = "To‘lov usulini tanlang";
       render();
       return null;
     }
+    state.status = "payment_processing";
+    state.message = "";
+    render();
     try {
       const result = await fetchOrderStatus(state.checkout.order_ref);
       state.status = mapBackendStatus(result);
       state.message = "";
-      if (["purchase_already_fulfilled", "order_already_paid", "payment_cancelled", "order_expired", "payment_failed"].includes(state.status)) {
-        clearPoll();
-      }
+      if (TERMINAL_STATES.has(state.status)) clearPoll();
       render();
       return result;
-    } catch (error) {
+    } catch (_) {
       state.status = "order_invalid";
-      state.message = "Could not load the real payment state for this order.";
+      state.message = "";
       render();
       return null;
     }
@@ -310,6 +373,7 @@ window.VPayGate = window.VPayGate || {};
     const tick = async () => {
       if (!state.polling || count >= POLL_LIMIT) {
         state.polling = false;
+        if (state.status === "payment_confirmation_pending") render();
         return;
       }
       count += 1;
@@ -318,6 +382,48 @@ window.VPayGate = window.VPayGate || {};
       window.VPayGate._pollTimer = window.setTimeout(tick, 2500);
     };
     window.VPayGate._pollTimer = window.setTimeout(tick, 1800);
+  }
+
+  function loadClickCheckoutScript() {
+    if (typeof window.createPaymentRequest === "function") return Promise.resolve(window.createPaymentRequest);
+    if (clickScriptPromise) return clickScriptPromise;
+    clickScriptPromise = new Promise((resolve, reject) => {
+      const existing = document.querySelector("script[data-click-checkout='1']");
+      if (existing) {
+        existing.addEventListener("load", () => {
+          if (typeof window.createPaymentRequest === "function") resolve(window.createPaymentRequest);
+          else reject(new Error("click_checkout_unavailable"));
+        }, { once: true });
+        existing.addEventListener("error", () => reject(new Error("click_checkout_load_failed")), { once: true });
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = "https://my.click.uz/pay/checkout.js";
+      script.async = true;
+      script.dataset.clickCheckout = "1";
+      script.onload = () => {
+        if (typeof window.createPaymentRequest === "function") resolve(window.createPaymentRequest);
+        else reject(new Error("click_checkout_unavailable"));
+      };
+      script.onerror = () => reject(new Error("click_checkout_load_failed"));
+      document.head.appendChild(script);
+    }).catch((error) => {
+      clickScriptPromise = null;
+      throw error;
+    });
+    return clickScriptPromise;
+  }
+
+  function clickCardParams(checkout) {
+    const params = checkout?.click_payment || {};
+    if (!params.service_id || !params.merchant_id || !params.transaction_param) return null;
+    return {
+      service_id: params.service_id,
+      merchant_id: params.merchant_id,
+      amount: params.amount || checkout.amount,
+      transaction_param: params.transaction_param,
+      ...(params.merchant_user_id ? { merchant_user_id: params.merchant_user_id } : {}),
+    };
   }
 
   function openCheckoutUrl(url) {
@@ -330,35 +436,66 @@ window.VPayGate = window.VPayGate || {};
     return Boolean(opened);
   }
 
-  async function continuePayment() {
-    if (!state.provider) return;
-    try {
-      state.status = state.checkout?.checkout_url ? "redirecting_to_provider" : "preparing_order";
-      state.message = state.checkout?.checkout_url ? "Opening existing payment order..." : "Creating payment order...";
-      render();
-      if (!state.checkout?.checkout_url) {
-        const restored = restoreStoredOrder(state.product, state.provider);
-        state.checkout = restored || await createCheckout(state.provider);
-        storeOrder();
-      }
-      if (!state.checkout?.checkout_url) throw new Error("Payment provider did not return a checkout URL.");
-      state.status = "redirecting_to_provider";
-      state.message = "Redirecting to the payment provider...";
-      render();
-      const opened = openCheckoutUrl(state.checkout.checkout_url);
-      if (!opened) {
-        state.status = "payment_provider_selected";
-        state.message = "Popup was blocked. Use Open payment again or allow popups for this site.";
+  async function startCardPayment(checkout) {
+    const params = clickCardParams(checkout);
+    if (!params) throw new Error("missing_click_card_params");
+    const createPaymentRequest = await loadClickCheckoutScript();
+    state.status = "redirecting_to_provider";
+    state.message = "";
+    render();
+    createPaymentRequest(params, async (result) => {
+      const code = Number(typeof result === "object" ? result?.status : result);
+      if (code === 2) {
+        state.status = "payment_processing";
+        state.message = "";
         render();
+        await refreshStatus();
+        beginPolling();
         return;
       }
       state.status = "payment_confirmation_pending";
-      state.message = "Payment opened. Return here after paying; this page will check the real order status.";
+      state.message = "";
       render();
       beginPolling();
-    } catch (error) {
+    });
+  }
+
+  async function startClickAppPayment(checkout) {
+    if (!checkout?.checkout_url) throw new Error("missing_checkout_url");
+    state.status = "redirecting_to_provider";
+    state.message = "";
+    render();
+    if (!openCheckoutUrl(checkout.checkout_url)) {
       state.status = "payment_failed";
-      state.message = error?.data?.detail || error?.message || "Could not start payment.";
+      state.message = "To‘lov sahifasi ochilmadi";
+      render();
+      return;
+    }
+    state.status = "payment_confirmation_pending";
+    state.message = "";
+    render();
+    beginPolling();
+  }
+
+  async function continuePayment() {
+    if (!state.method || state.busy) return;
+    state.busy = true;
+    state.status = "preparing_order";
+    state.message = "";
+    render();
+    try {
+      const checkout = await ensureCheckout();
+      if (state.method === "bank_card") {
+        await startCardPayment(checkout);
+      } else {
+        await startClickAppPayment(checkout);
+      }
+    } catch (_) {
+      state.status = "payment_failed";
+      state.message = "";
+      render();
+    } finally {
+      state.busy = false;
       render();
     }
   }
@@ -373,17 +510,28 @@ window.VPayGate = window.VPayGate || {};
     history.pushState({ page: "v-paygate" }, "", `${url.pathname}?${url.searchParams.toString()}`);
   }
 
-  window.VPayGate.start = function (options = {}) {
-    state = {
-      product: defaultProduct(options),
-      provider: options.provider || "click",
-      status: "ready_for_payment",
-      checkout: null,
-      message: "Choose a payment method to continue.",
-      polling: false,
+  function applyStoredOrder(product) {
+    const restored = restoreStoredOrder(product, null);
+    if (!restored) return {};
+    return {
+      method: restored.method || null,
+      checkout: restored.checkout || null,
+      status: restored.checkout?.order_ref ? "payment_confirmation_pending" : "ready_for_payment",
     };
-    state.checkout = restoreStoredOrder(state.product, state.provider);
-    updateRoute(state.product);
+  }
+
+  window.VPayGate.start = function (options = {}) {
+    const product = defaultProduct(options);
+    const restored = applyStoredOrder(product);
+    state = {
+      ...initialState(),
+      product,
+      method: restored.method || null,
+      checkout: restored.checkout || null,
+      status: restored.status || "ready_for_payment",
+      message: "",
+    };
+    updateRoute(product);
     render();
     if (state.checkout?.order_ref) refreshStatus();
   };
@@ -395,15 +543,15 @@ window.VPayGate = window.VPayGate || {};
       origin: params.get("origin") || "route",
       return_page: params.get("return") || "",
     });
+    const restored = applyStoredOrder(product);
     state = {
+      ...initialState(),
       product,
-      provider: params.get("provider") || "click",
-      status: "ready_for_payment",
-      checkout: null,
-      message: "Choose a payment method to continue.",
-      polling: false,
+      method: restored.method || null,
+      checkout: restored.checkout || null,
+      status: restored.status || "ready_for_payment",
+      message: "",
     };
-    state.checkout = restoreStoredOrder(state.product, state.provider);
     render();
     if (state.checkout?.order_ref) refreshStatus();
     return true;

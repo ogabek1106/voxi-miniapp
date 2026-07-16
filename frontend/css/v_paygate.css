@@ -11,187 +11,217 @@ body.vpaygate-active .home-announcement {
 .vpaygate-screen {
   width: 100%;
   min-height: 100dvh;
-  background:
-    linear-gradient(180deg, rgba(234, 247, 255, 0.72) 0%, rgba(244, 248, 251, 0) 260px),
-    #f4f8fb;
+  background: #f4f8fb;
   color: #17212b;
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
   box-sizing: border-box;
-  padding: max(18px, env(safe-area-inset-top, 0px)) 16px max(24px, env(safe-area-inset-bottom, 0px));
+  padding: clamp(22px, 3vw, 40px) clamp(18px, 4vw, 56px);
 }
 
 .vpaygate-shell {
-  width: min(760px, 100%);
+  width: min(1180px, 100%);
+  min-height: calc(100dvh - clamp(44px, 6vw, 80px));
   margin: 0 auto;
   display: grid;
-  gap: 16px;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: clamp(22px, 3vw, 36px);
 }
 
-.vpaygate-top {
+.vpaygate-header {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 12px;
-  padding: 10px 0 4px;
-}
-
-.vpaygate-brand {
-  display: grid;
-  gap: 2px;
+  gap: 20px;
+  padding-bottom: clamp(12px, 2vw, 20px);
+  border-bottom: 1px solid rgba(20, 40, 60, 0.1);
 }
 
 .vpaygate-kicker {
   color: #00a6e6;
-  font-size: 13px;
-  font-weight: 900;
+  font-size: 14px;
+  line-height: 1;
+  font-weight: 950;
   letter-spacing: 0;
 }
 
 .vpaygate-title {
-  margin: 0;
-  font-size: clamp(28px, 5vw, 42px);
-  line-height: 1.02;
-  font-weight: 950;
-  letter-spacing: 0;
-}
-
-.vpaygate-cancel {
-  border: 0;
-  border-radius: 15px;
-  background: #ffffff;
-  color: #526273;
-  box-shadow: 0 12px 30px rgba(20, 40, 60, 0.08);
-  min-width: 88px;
-  height: 42px;
-  padding: 0 16px;
-  font-weight: 900;
-  cursor: pointer;
-}
-
-.vpaygate-panel {
-  background: #ffffff;
-  border: 1px solid rgba(20, 40, 60, 0.08);
-  border-radius: 22px;
-  box-shadow: 0 20px 60px rgba(20, 40, 60, 0.12);
-  padding: clamp(18px, 4vw, 28px);
-  display: grid;
-  gap: 18px;
-}
-
-.vpaygate-section-title {
-  margin: 0 0 8px;
-  color: #607080;
-  font-size: 13px;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0;
-}
-
-.vpaygate-product {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 14px;
-  align-items: start;
-}
-
-.vpaygate-product h2 {
-  margin: 0;
-  font-size: clamp(24px, 5vw, 34px);
-  line-height: 1.08;
-  font-weight: 950;
-  letter-spacing: 0;
-}
-
-.vpaygate-product p,
-.vpaygate-muted {
-  margin: 6px 0 0;
-  color: #607080;
-  font-size: 15px;
-  line-height: 1.45;
-  font-weight: 750;
-}
-
-.vpaygate-price {
+  margin: 8px 0 0;
   color: #17212b;
-  font-size: clamp(24px, 5vw, 34px);
-  line-height: 1;
+  font-size: clamp(34px, 4vw, 52px);
+  line-height: 0.98;
   font-weight: 950;
-  text-align: right;
-  white-space: nowrap;
+  letter-spacing: 0;
 }
 
-.vpaygate-details {
-  display: grid;
-  gap: 8px;
-  padding: 14px;
-  border-radius: 16px;
-  background: #f7fbfe;
-}
-
-.vpaygate-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+.vpaygate-lead {
+  margin: 10px 0 0;
   color: #607080;
-  font-size: 14px;
+  font-size: clamp(16px, 1.5vw, 19px);
+  line-height: 1.35;
   font-weight: 800;
 }
 
-.vpaygate-row strong {
+.vpaygate-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(360px, 0.85fr);
+  align-items: start;
+  gap: clamp(22px, 4vw, 52px);
+}
+
+.vpaygate-section {
+  min-width: 0;
+}
+
+.vpaygate-section-title {
+  margin: 0 0 16px;
   color: #17212b;
-  font-size: 15px;
+  font-size: 22px;
+  line-height: 1.15;
   font-weight: 950;
-  text-align: right;
+  letter-spacing: 0;
+}
+
+.vpaygate-method-section {
+  display: grid;
+  align-content: start;
 }
 
 .vpaygate-methods {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 14px;
 }
 
 .vpaygate-method {
-  min-height: 74px;
-  border: 2px solid rgba(20, 40, 60, 0.08);
+  width: 100%;
+  min-height: 108px;
+  border: 2px solid rgba(20, 40, 60, 0.12);
   border-radius: 18px;
   background: #ffffff;
   color: #17212b;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 14px;
-  font-weight: 950;
-  cursor: pointer;
+  gap: 18px;
+  padding: 20px 22px;
   text-align: left;
+  cursor: pointer;
+  box-shadow: none;
+  transition: border-color 140ms ease, background-color 140ms ease, box-shadow 140ms ease;
 }
 
-.vpaygate-method span {
-  display: block;
-  margin-top: 3px;
+.vpaygate-method:hover {
+  border-color: rgba(0, 166, 230, 0.38);
+}
+
+.vpaygate-method:focus-visible,
+.vpaygate-pay:focus-visible,
+.vpaygate-status-action:focus-visible,
+.vpaygate-cancel-link:focus-visible {
+  outline: 3px solid rgba(0, 186, 255, 0.38);
+  outline-offset: 3px;
+}
+
+.vpaygate-method-copy {
+  display: grid;
+  gap: 7px;
+}
+
+.vpaygate-method-copy strong {
+  color: #17212b;
+  font-size: clamp(20px, 2vw, 26px);
+  line-height: 1.08;
+  font-weight: 950;
+}
+
+.vpaygate-method-copy small {
   color: #607080;
-  font-size: 12px;
+  font-size: 15px;
+  line-height: 1.4;
   font-weight: 800;
 }
 
+.vpaygate-method-mark {
+  min-width: 86px;
+  border-radius: 999px;
+  background: #edf3f7;
+  color: #526273;
+  padding: 8px 12px;
+  font-size: 13px;
+  line-height: 1;
+  font-weight: 950;
+  text-align: center;
+}
+
 .vpaygate-method.is-selected {
-  border-color: #00baff;
-  background: #eaf8ff;
-  box-shadow: 0 14px 34px rgba(0, 186, 255, 0.14);
+  border-color: #00a6e6;
+  background: #effaff;
+  box-shadow: inset 0 0 0 2px rgba(0, 166, 230, 0.1);
+}
+
+.vpaygate-method.is-selected .vpaygate-method-mark {
+  background: #00a6e6;
+  color: #ffffff;
 }
 
 .vpaygate-method[disabled] {
-  opacity: 0.48;
-  cursor: not-allowed;
+  opacity: 0.62;
+  cursor: wait;
+}
+
+.vpaygate-summary {
+  position: sticky;
+  top: 28px;
+  border: 1px solid rgba(20, 40, 60, 0.1);
+  border-radius: 20px;
+  background: #ffffff;
+  padding: clamp(20px, 3vw, 28px);
+  display: grid;
+  gap: 18px;
+  box-shadow: 0 18px 50px rgba(20, 40, 60, 0.08);
+}
+
+.vpaygate-summary-list {
+  display: grid;
+  gap: 14px;
+}
+
+.vpaygate-summary-row {
+  display: grid;
+  gap: 6px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(20, 40, 60, 0.1);
+}
+
+.vpaygate-summary-row span {
+  color: #607080;
+  font-size: 14px;
+  line-height: 1.2;
+  font-weight: 850;
+}
+
+.vpaygate-summary-row strong {
+  color: #17212b;
+  font-size: 18px;
+  line-height: 1.25;
+  font-weight: 950;
+}
+
+.vpaygate-summary-total {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.vpaygate-summary-total strong {
+  font-size: clamp(30px, 3.2vw, 42px);
+  line-height: 1.02;
 }
 
 .vpaygate-status {
-  min-height: 44px;
+  min-height: 46px;
   border-radius: 14px;
-  background: #f4f8fb;
+  background: #f3f7fa;
   color: #526273;
-  padding: 12px 14px;
+  padding: 13px 14px;
   font-size: 14px;
   font-weight: 850;
   line-height: 1.4;
@@ -207,77 +237,90 @@ body.vpaygate-active .home-announcement {
   color: #c5322d;
 }
 
-.vpaygate-actions {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 10px;
-}
-
 .vpaygate-pay {
-  min-height: 52px;
+  width: 100%;
+  min-height: 58px;
   border: 0;
-  border-radius: 17px;
-  background: #00baff;
+  border-radius: 16px;
+  background: #00a6e6;
   color: #ffffff;
-  font-size: 16px;
+  font-size: 18px;
+  line-height: 1.15;
   font-weight: 950;
   cursor: pointer;
-  box-shadow: 0 16px 36px rgba(0, 186, 255, 0.24);
+  box-shadow: 0 14px 30px rgba(0, 166, 230, 0.2);
 }
 
 .vpaygate-pay[disabled] {
-  opacity: 0.58;
-  cursor: not-allowed;
+  background: #c8d5df;
+  color: #ffffff;
   box-shadow: none;
+  cursor: not-allowed;
 }
 
-.vpaygate-secondary {
-  min-height: 52px;
+.vpaygate-status-action,
+.vpaygate-cancel-link {
+  width: 100%;
+  min-height: 42px;
   border: 0;
-  border-radius: 17px;
-  background: #eaf0f5;
-  color: #17212b;
-  padding: 0 18px;
+  background: transparent;
   font-size: 15px;
+  line-height: 1.2;
   font-weight: 950;
   cursor: pointer;
 }
 
-.vpaygate-manual-link {
+.vpaygate-status-action {
   color: #007eb4;
-  font-weight: 950;
-  text-decoration: none;
+}
+
+.vpaygate-cancel-link {
+  color: #607080;
+}
+
+@media (max-width: 920px) {
+  .vpaygate-layout {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+
+  .vpaygate-summary {
+    position: static;
+  }
 }
 
 @media (max-width: 620px) {
   .vpaygate-screen {
-    padding-left: 14px;
-    padding-right: 14px;
+    padding: max(18px, env(safe-area-inset-top, 0px)) 14px max(24px, env(safe-area-inset-bottom, 0px));
   }
 
-  .vpaygate-top,
-  .vpaygate-product,
-  .vpaygate-actions {
+  .vpaygate-shell {
+    min-height: auto;
+    gap: 20px;
+  }
+
+  .vpaygate-header {
+    padding-bottom: 14px;
+  }
+
+  .vpaygate-method {
+    min-height: 96px;
     grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 18px;
   }
 
-  .vpaygate-top {
-    display: grid;
+  .vpaygate-method-mark {
+    justify-self: start;
   }
 
-  .vpaygate-cancel {
-    width: 100%;
+  .vpaygate-summary {
+    padding: 18px;
   }
+}
 
-  .vpaygate-product {
-    display: grid;
-  }
-
-  .vpaygate-price {
-    text-align: left;
-  }
-
-  .vpaygate-methods {
-    grid-template-columns: 1fr;
+@media (prefers-reduced-motion: reduce) {
+  .vpaygate-method {
+    transition: none;
   }
 }

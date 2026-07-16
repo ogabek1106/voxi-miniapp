@@ -237,7 +237,6 @@ function testVPayGateRendersFullScreenCheckout() {
         removeItem: () => {}
       },
       UzsBalance: {
-        formatUzs: (amount) => `${Number(amount).toLocaleString("en-US")} UZS`,
         convertVCoinsToUzs: (coins) => Number(coins || 0) * 5000
       }
     }
@@ -250,11 +249,14 @@ function testVPayGateRendersFullScreenCheckout() {
 
   assert.ok(pushedUrl.includes("page=v-paygate"));
   assert.ok(classes.has("vpaygate-active"));
-  assert.ok(ids["screen-v-paygate"].innerHTML.includes("V-PayGate"));
-  assert.ok(ids["screen-v-paygate"].innerHTML.includes("Wallet top-up"));
-  assert.ok(ids["screen-v-paygate"].innerHTML.includes("50,000 UZS"));
-  assert.ok(ids["screen-v-paygate"].innerHTML.includes("Click"));
-  assert.ok(ids["screen-v-paygate"].innerHTML.includes("Payme"));
+  const html = ids["screen-v-paygate"].innerHTML;
+  assert.ok(html.includes("V-PayGate"));
+  assert.ok(html.includes("To‘lov"));
+  assert.ok(html.includes("Balansni to‘ldirish"));
+  assert.ok(html.includes("50 000 UZS"));
+  assert.ok(html.includes("Bank kartasi orqali"));
+  assert.ok(html.includes("Click ilovasi orqali"));
+  assert.ok(!html.includes("Payme"));
 }
 
 testUzsFormatterAndConversion();
