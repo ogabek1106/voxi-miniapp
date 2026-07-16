@@ -88,6 +88,44 @@ window.VCoinUI = window.VCoinUI || {};
         grid-template-rows: auto auto minmax(0, 1fr) auto;
       }
 
+      .uzs-wallet-sheet .vcoin-sheet-title {
+        margin-top: 4px;
+      }
+
+      .uzs-wallet-sheet .vcoin-sheet-balance {
+        min-height: 104px;
+        margin-top: 14px;
+        padding: 16px 18px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+      }
+
+      .uzs-wallet-sheet .vcoin-sheet-balance-label {
+        display: grid;
+        grid-template-columns: 30px minmax(0, 1fr);
+        align-items: center;
+        gap: 10px;
+        margin-top: 8px;
+      }
+
+      .uzs-wallet-sheet .wallet-balance-icon {
+        width: 28px;
+        height: 28px;
+      }
+
+      .uzs-wallet-sheet #uzs-sheet-balance-value {
+        min-width: 0;
+        font-size: clamp(26px, 6.2vw, 34px);
+        line-height: 1.05;
+        white-space: nowrap;
+      }
+
+      .uzs-wallet-sheet .uzs-wallet-currency {
+        align-self: center;
+        padding-left: 12px;
+      }
+
       @media (min-width: 700px) {
         .vcoin-sheet-backdrop {
           align-items: flex-end;
@@ -336,6 +374,18 @@ window.VCoinUI = window.VCoinUI || {};
         min-height: 0;
         overflow: hidden;
         margin-top: 14px;
+      }
+
+      .uzs-wallet-sheet .vcoin-history-section {
+        margin-top: 18px;
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+      }
+
+      .uzs-wallet-history-title {
+        font-size: 15px;
+        font-weight: 900;
+        margin: 0 0 8px;
       }
 
       @media (max-width: 380px) {
@@ -1510,11 +1560,11 @@ window.VCoinUI = window.VCoinUI || {};
               <strong id="uzs-sheet-balance-value">...</strong>
             </div>
           </div>
-          <div class="vcoin-muted">UZS</div>
+          <div class="vcoin-muted uzs-wallet-currency">UZS</div>
         </div>
 
         <div class="vcoin-history-section">
-          <div style="font-size:15px; font-weight:900; margin-bottom:2px;">Balance history</div>
+          <div class="uzs-wallet-history-title">Balance history</div>
           <div class="vcoin-history-list" id="uzs-ledger-list">${renderHistorySkeleton()}</div>
         </div>
 
