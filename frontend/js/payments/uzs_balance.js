@@ -44,6 +44,14 @@ window.UzsBalance = window.UzsBalance || {};
   };
 
   window.UzsBalance.showGatewayPlaceholder = function () {
-    alert("Payment gateway coming soon");
+    if (window.VPayGate?.start) {
+      window.VPayGate.start({
+        product: "wallet_topup",
+        amount_uzs: 50000,
+        origin: "wallet",
+      });
+      return;
+    }
+    alert("V-PayGate is not available yet");
   };
 })();

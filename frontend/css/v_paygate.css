@@ -1,0 +1,283 @@
+.vpaygate-active {
+  background: #f4f8fb;
+}
+
+body.vpaygate-active #website-header,
+body.vpaygate-active .bottom-nav,
+body.vpaygate-active .home-announcement {
+  display: none !important;
+}
+
+.vpaygate-screen {
+  width: 100%;
+  min-height: 100dvh;
+  background:
+    linear-gradient(180deg, rgba(234, 247, 255, 0.72) 0%, rgba(244, 248, 251, 0) 260px),
+    #f4f8fb;
+  color: #17212b;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  box-sizing: border-box;
+  padding: max(18px, env(safe-area-inset-top, 0px)) 16px max(24px, env(safe-area-inset-bottom, 0px));
+}
+
+.vpaygate-shell {
+  width: min(760px, 100%);
+  margin: 0 auto;
+  display: grid;
+  gap: 16px;
+}
+
+.vpaygate-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0 4px;
+}
+
+.vpaygate-brand {
+  display: grid;
+  gap: 2px;
+}
+
+.vpaygate-kicker {
+  color: #00a6e6;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.vpaygate-title {
+  margin: 0;
+  font-size: clamp(28px, 5vw, 42px);
+  line-height: 1.02;
+  font-weight: 950;
+  letter-spacing: 0;
+}
+
+.vpaygate-cancel {
+  border: 0;
+  border-radius: 15px;
+  background: #ffffff;
+  color: #526273;
+  box-shadow: 0 12px 30px rgba(20, 40, 60, 0.08);
+  min-width: 88px;
+  height: 42px;
+  padding: 0 16px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.vpaygate-panel {
+  background: #ffffff;
+  border: 1px solid rgba(20, 40, 60, 0.08);
+  border-radius: 22px;
+  box-shadow: 0 20px 60px rgba(20, 40, 60, 0.12);
+  padding: clamp(18px, 4vw, 28px);
+  display: grid;
+  gap: 18px;
+}
+
+.vpaygate-section-title {
+  margin: 0 0 8px;
+  color: #607080;
+  font-size: 13px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+.vpaygate-product {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: start;
+}
+
+.vpaygate-product h2 {
+  margin: 0;
+  font-size: clamp(24px, 5vw, 34px);
+  line-height: 1.08;
+  font-weight: 950;
+  letter-spacing: 0;
+}
+
+.vpaygate-product p,
+.vpaygate-muted {
+  margin: 6px 0 0;
+  color: #607080;
+  font-size: 15px;
+  line-height: 1.45;
+  font-weight: 750;
+}
+
+.vpaygate-price {
+  color: #17212b;
+  font-size: clamp(24px, 5vw, 34px);
+  line-height: 1;
+  font-weight: 950;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.vpaygate-details {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 16px;
+  background: #f7fbfe;
+}
+
+.vpaygate-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #607080;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.vpaygate-row strong {
+  color: #17212b;
+  font-size: 15px;
+  font-weight: 950;
+  text-align: right;
+}
+
+.vpaygate-methods {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.vpaygate-method {
+  min-height: 74px;
+  border: 2px solid rgba(20, 40, 60, 0.08);
+  border-radius: 18px;
+  background: #ffffff;
+  color: #17212b;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px;
+  font-weight: 950;
+  cursor: pointer;
+  text-align: left;
+}
+
+.vpaygate-method span {
+  display: block;
+  margin-top: 3px;
+  color: #607080;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.vpaygate-method.is-selected {
+  border-color: #00baff;
+  background: #eaf8ff;
+  box-shadow: 0 14px 34px rgba(0, 186, 255, 0.14);
+}
+
+.vpaygate-method[disabled] {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
+
+.vpaygate-status {
+  min-height: 44px;
+  border-radius: 14px;
+  background: #f4f8fb;
+  color: #526273;
+  padding: 12px 14px;
+  font-size: 14px;
+  font-weight: 850;
+  line-height: 1.4;
+}
+
+.vpaygate-status.is-success {
+  background: #ecfdf3;
+  color: #167246;
+}
+
+.vpaygate-status.is-error {
+  background: #fff1f0;
+  color: #c5322d;
+}
+
+.vpaygate-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+}
+
+.vpaygate-pay {
+  min-height: 52px;
+  border: 0;
+  border-radius: 17px;
+  background: #00baff;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 950;
+  cursor: pointer;
+  box-shadow: 0 16px 36px rgba(0, 186, 255, 0.24);
+}
+
+.vpaygate-pay[disabled] {
+  opacity: 0.58;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.vpaygate-secondary {
+  min-height: 52px;
+  border: 0;
+  border-radius: 17px;
+  background: #eaf0f5;
+  color: #17212b;
+  padding: 0 18px;
+  font-size: 15px;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.vpaygate-manual-link {
+  color: #007eb4;
+  font-weight: 950;
+  text-decoration: none;
+}
+
+@media (max-width: 620px) {
+  .vpaygate-screen {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .vpaygate-top,
+  .vpaygate-product,
+  .vpaygate-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .vpaygate-top {
+    display: grid;
+  }
+
+  .vpaygate-cancel {
+    width: 100%;
+  }
+
+  .vpaygate-product {
+    display: grid;
+  }
+
+  .vpaygate-price {
+    text-align: left;
+  }
+
+  .vpaygate-methods {
+    grid-template-columns: 1fr;
+  }
+}

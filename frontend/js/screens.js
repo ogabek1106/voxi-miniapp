@@ -36,6 +36,7 @@ const FEATURE_ROUTES = {
   "word-shuffle": () => window.showWordShuffleEntry?.(),
   "match-words": () => window.showMatchWordsEntry?.(),
   profile: () => window.goProfile?.(),
+  "v-paygate": () => window.VPayGate?.openFromRoute?.(),
 };
 
 function routeKey(value) {
@@ -119,6 +120,9 @@ function hideAllScreens() {
   if (screenReading) screenReading.style.display = "none";
   if (screenWriting) screenWriting.style.display = "none";
   if (screenSpeaking) screenSpeaking.style.display = "none";
+  document.getElementById("screen-v-paygate")?.style.setProperty("display", "none");
+  document.body.classList.remove("vpaygate-active");
+  document.documentElement.classList.remove("vpaygate-active");
   if (screenMocks) screenMocks.classList.remove("shadow-writing-host");
   if (screenMocks) screenMocks.classList.remove("vocab-ooo-host");
   if (screenMocks) screenMocks.classList.remove("admin-live-host");

@@ -190,10 +190,78 @@ async function testUzsBalanceSheetShowsConvertedHistory() {
   assert.ok(!ids["uzs-ledger-list"].innerHTML.includes("V-Coin"));
 }
 
+function testVPayGateRendersFullScreenCheckout() {
+  const ids = {};
+  const classes = new Set();
+  let pushedUrl = "";
+  const app = { appendChild: (node) => { ids[node.id] = node; } };
+  const { context } = createContext({
+    history: {
+      pushState: (_state, _title, url) => {
+        pushedUrl = url;
+      }
+    },
+    URL,
+    URLSearchParams,
+    document: {
+      addEventListener: () => {},
+      querySelector: (selector) => selector === ".app" ? app : null,
+      querySelectorAll: () => [],
+      getElementById: (id) => ids[id] || null,
+      createElement: (tag) => ({
+        tagName: tag.toUpperCase(),
+        id: "",
+        className: "",
+        style: { setProperty: function (name, value) { this[name] = value; } },
+        addEventListener: () => {},
+        querySelectorAll: () => [],
+        querySelector: () => null,
+        set innerHTML(value) { this._innerHTML = value; },
+        get innerHTML() { return this._innerHTML || ""; }
+      }),
+      documentElement: { classList: { add: () => {}, remove: () => {} } },
+      body: {
+        classList: {
+          add: (name) => classes.add(name),
+          remove: (name) => classes.delete(name)
+        }
+      }
+    },
+    window: {
+      location: { href: "https://ebaiacademy.com/" },
+      hideAllScreens: () => {},
+      addEventListener: () => {},
+      sessionStorage: {
+        getItem: () => null,
+        setItem: () => {},
+        removeItem: () => {}
+      },
+      UzsBalance: {
+        formatUzs: (amount) => `${Number(amount).toLocaleString("en-US")} UZS`,
+        convertVCoinsToUzs: (coins) => Number(coins || 0) * 5000
+      }
+    }
+  });
+  context.history = context.history;
+  context.window.history = context.history;
+
+  runBrowserScript("js/payments/v_paygate.js", context);
+  context.window.VPayGate.start({ amount_uzs: 50000, origin: "wallet" });
+
+  assert.ok(pushedUrl.includes("page=v-paygate"));
+  assert.ok(classes.has("vpaygate-active"));
+  assert.ok(ids["screen-v-paygate"].innerHTML.includes("V-PayGate"));
+  assert.ok(ids["screen-v-paygate"].innerHTML.includes("Wallet top-up"));
+  assert.ok(ids["screen-v-paygate"].innerHTML.includes("50,000 UZS"));
+  assert.ok(ids["screen-v-paygate"].innerHTML.includes("Click"));
+  assert.ok(ids["screen-v-paygate"].innerHTML.includes("Payme"));
+}
+
 testUzsFormatterAndConversion();
 testCountUpReachesFinalAmount();
 testCountUpReducedMotionSkipsAnimation();
 testVcoinModalGuardWhenDisabled();
+testVPayGateRendersFullScreenCheckout();
 testUzsBalanceSheetShowsConvertedHistory().then(() => {
   console.log("payment_ui tests passed");
 });

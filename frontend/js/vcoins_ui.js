@@ -1574,7 +1574,7 @@ window.VCoinUI = window.VCoinUI || {};
         </div>
 
         <div class="vcoin-sheet-actions uzs-wallet-actions">
-          <button class="vcoin-buy-btn" id="uzs-open-payment-gateway-btn">Payment gateway coming soon</button>
+          <button class="vcoin-buy-btn" id="uzs-open-payment-gateway-btn">Open V-PayGate</button>
           <button class="vcoin-cancel-btn" id="vcoin-close-btn">Close</button>
         </div>
       </div>
@@ -1587,7 +1587,10 @@ window.VCoinUI = window.VCoinUI || {};
     bindSheetDragToClose(backdrop.querySelector(".vcoin-sheet"));
 
     document.getElementById("vcoin-close-btn").onclick = closeSheet;
-    document.getElementById("uzs-open-payment-gateway-btn").onclick = window.UzsBalance.showGatewayPlaceholder;
+    document.getElementById("uzs-open-payment-gateway-btn").onclick = () => {
+      closeSheet();
+      window.UzsBalance.showGatewayPlaceholder();
+    };
 
     try {
       const [balance, ledger] = await Promise.all([fetchBalance(), fetchLedger()]);
@@ -1604,7 +1607,11 @@ window.VCoinUI = window.VCoinUI || {};
 
   window.VCoinUI.ensureAccess = async function ({ contentType, referenceId, serviceName }) {
     if (!isVcoinEnabled()) {
-      window.UzsBalance?.showGatewayPlaceholder?.();
+      window.VPayGate?.start?.({
+        product: "wallet_topup",
+        amount_uzs: Number(window.UzsBalance?.convertVCoinsToUzs?.(COSTS[contentType] || DEFAULT_PURCHASE_AMOUNT) || 50000),
+        origin: contentType || "paid_content",
+      });
       return false;
     }
     const id = await resolveTelegramId();
