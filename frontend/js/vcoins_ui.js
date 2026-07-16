@@ -1513,6 +1513,79 @@ window.VCoinUI = window.VCoinUI || {};
     }
   }
 
+  function formatUzsSpaces(amount) {
+    const value = Math.max(0, Math.floor(Number(amount || 0)));
+    return `${value.toLocaleString("ru-RU").replace(/\u00a0/g, " ")} UZS`;
+  }
+
+  function uzsFromCoins(coins) {
+    const amount = window.UzsBalance?.convertVCoinsToUzs?.(Number(coins || 0));
+    return Number.isFinite(Number(amount)) ? Number(amount) : Number(coins || 0) * 5000;
+  }
+
+  function showWalletInsufficient({ required, balance, contentType, referenceId, serviceName }) {
+    ensureStyles();
+    closeSheet();
+    document.body.classList.add("reward-vcoin-open");
+
+    const requiredCoins = Math.max(0, Number(required || COSTS[contentType] || 0));
+    const balanceCoins = Math.max(0, Number(balance || 0));
+    const missingCoins = Math.max(0, requiredCoins - balanceCoins);
+    const requiredUzs = uzsFromCoins(requiredCoins);
+    const balanceUzs = uzsFromCoins(balanceCoins);
+    const missingUzs = uzsFromCoins(missingCoins);
+
+    const backdrop = document.createElement("div");
+    backdrop.id = "vcoin-sheet-backdrop";
+    backdrop.className = "vcoin-sheet-backdrop";
+    backdrop.innerHTML = `
+      <div class="vcoin-sheet uzs-wallet-sheet" role="dialog" aria-modal="true" aria-labelledby="uzs-insufficient-title">
+        <div class="vcoin-sheet-handle"></div>
+        <h3 class="vcoin-sheet-title" id="uzs-insufficient-title">Hisobda mablag' yetarli emas</h3>
+        <p class="vcoin-muted" style="font-size:15px; line-height:1.45; margin:10px 0 14px;">
+          Ushbu testni boshlash uchun hisobingizda yetarli mablag' mavjud emas.
+        </p>
+        <div style="display:grid; gap:10px; margin:2px 0 16px;">
+          <div class="vcoin-price-row" style="min-height:44px; padding:8px 0;">
+            <span>Test narxi</span>
+            <strong>${formatUzsSpaces(requiredUzs)}</strong>
+          </div>
+          <div class="vcoin-price-row" style="min-height:44px; padding:8px 0;">
+            <span>Hisobingizda</span>
+            <strong>${formatUzsSpaces(balanceUzs)}</strong>
+          </div>
+          <div class="vcoin-price-row" style="min-height:44px; padding:8px 0; border-bottom:0;">
+            <span>Yetishmayotgan summa</span>
+            <strong>${formatUzsSpaces(missingUzs)}</strong>
+          </div>
+        </div>
+        <div class="vcoin-sheet-actions uzs-wallet-actions" style="margin-top:auto;">
+          <button class="vcoin-buy-btn" id="uzs-top-up-missing-btn">Hisobni to'ldirish</button>
+          <button class="vcoin-cancel-btn" id="vcoin-close-btn">Bekor qilish</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(backdrop);
+    bindSheetDragToClose(backdrop.querySelector(".vcoin-sheet"));
+    backdrop.addEventListener("click", (event) => {
+      if (event.target === backdrop) closeSheet();
+    });
+    document.getElementById("vcoin-close-btn").onclick = closeSheet;
+    document.getElementById("uzs-top-up-missing-btn").onclick = () => {
+      closeSheet();
+      window.VPayGate?.start?.({
+        product: "wallet_topup",
+        amount_uzs: missingUzs,
+        origin: contentType || "paid_content",
+        service: {
+          content_type: contentType || "",
+          reference_id: String(referenceId ?? ""),
+          service_name: serviceName || "",
+        },
+      });
+    };
+  }
+
   window.VCoinUI.showInsufficient = function ({ required, balance, serviceName }) {
     if (!isVcoinEnabled()) return;
     ensureStyles();
@@ -1545,6 +1618,9 @@ window.VCoinUI = window.VCoinUI || {};
   };
 
   window.UzsBalance = window.UzsBalance || {};
+  window.UzsBalance.formatUzsSpaces = formatUzsSpaces;
+  window.UzsBalance.showInsufficientFunds = showWalletInsufficient;
+
   window.UzsBalance.openBalanceSheet = async function () {
     ensureStyles();
     closeSheet();
@@ -1606,18 +1682,10 @@ window.VCoinUI = window.VCoinUI || {};
   };
 
   window.VCoinUI.ensureAccess = async function ({ contentType, referenceId, serviceName }) {
-    if (!isVcoinEnabled()) {
-      window.VPayGate?.start?.({
-        product: "wallet_topup",
-        amount_uzs: Number(window.UzsBalance?.convertVCoinsToUzs?.(COSTS[contentType] || DEFAULT_PURCHASE_AMOUNT) || 50000),
-        origin: contentType || "paid_content",
-      });
-      return false;
-    }
     const id = await resolveTelegramId();
     if (!id) {
       if (window.AppViewMode?.isWebsite?.()) {
-        alert("Please log in with Telegram to use V-Coin paid content.");
+        alert(isVcoinEnabled() ? "Please log in with Telegram to use V-Coin paid content." : "Iltimos, avval Telegram orqali kiring.");
       } else {
         alert("Open this mini app inside Telegram.");
       }
@@ -1637,14 +1705,21 @@ window.VCoinUI = window.VCoinUI || {};
     } catch (error) {
       const detail = parseApiError(error);
       if (detail?.error === "insufficient_vcoins") {
-        window.VCoinUI.showInsufficient({
+        const payload = {
           required: Number(detail.required || COSTS[contentType] || 0),
           balance: Number(detail.balance || 0),
+          contentType,
+          referenceId,
           serviceName
-        });
+        };
+        if (isVcoinEnabled()) {
+          window.VCoinUI.showInsufficient(payload);
+        } else {
+          showWalletInsufficient(payload);
+        }
         return false;
       }
-      alert("Could not check V-Coin balance. Please try again.");
+      alert(isVcoinEnabled() ? "Could not check V-Coin balance. Please try again." : "Balansni tekshirib bo'lmadi. Iltimos, qayta urinib ko'ring.");
       return false;
     }
   };

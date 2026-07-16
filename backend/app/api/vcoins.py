@@ -438,7 +438,8 @@ def spend_vcoins(payload: VCoinSpendIn, db: Session = Depends(get_db)):
         "reference_id": str(payload.reference_id),
         "required": result.required,
         "balance": result.balance,
-        "already_spent": False,
+        "already_spent": result.reason == "already_paid",
+        "reason": result.reason,
     }
 
 

@@ -60,9 +60,27 @@ window.VPayGate = window.VPayGate || {};
     return window.UzsBalance?.convertVCoinsToUzs?.(coins) || (Number(coins || 0) * 5000);
   }
 
+  function normalizeService(service) {
+    if (!service || typeof service !== "object") return null;
+    const contentType = String(service.content_type || service.contentType || "").trim();
+    const referenceId = String(service.reference_id ?? service.referenceId ?? "").trim();
+    if (!contentType || !referenceId) return null;
+    return {
+      content_type: contentType,
+      reference_id: referenceId,
+      service_name: String(service.service_name || service.serviceName || "").trim(),
+    };
+  }
+
+  function serviceKey(service) {
+    const normalized = normalizeService(service);
+    return normalized ? `${normalized.content_type}:${normalized.reference_id}` : "";
+  }
+
   function defaultProduct(overrides = {}) {
     const amountUzs = normalizeAmount(overrides.amount_uzs ?? overrides.amountUzs ?? DEFAULT_TOPUP_UZS);
     const coins = coinsForTopup(amountUzs);
+    const service = normalizeService(overrides.service);
     return {
       type: "wallet_topup",
       title: "Balansni to‘ldirish",
@@ -72,6 +90,8 @@ window.VPayGate = window.VPayGate || {};
       promo_code: overrides.promo_code || null,
       origin: overrides.origin || "wallet",
       return_page: overrides.return_page || "",
+      service,
+      service_key: serviceKey(service),
     };
   }
 
@@ -115,17 +135,21 @@ window.VPayGate = window.VPayGate || {};
   }
 
   function leavePage() {
-    clearPoll();
-    document.body.classList.remove("vpaygate-active");
-    document.documentElement.classList.remove("vpaygate-active");
-    const node = document.getElementById("screen-v-paygate");
-    if (node) node.style.display = "none";
+    hidePage();
     const returnPage = state.product?.return_page || "";
     if (returnPage && window.navigateToFeature) {
       window.navigateToFeature(returnPage);
       return;
     }
     window.navigateToHome?.();
+  }
+
+  function hidePage() {
+    clearPoll();
+    document.body.classList.remove("vpaygate-active");
+    document.documentElement.classList.remove("vpaygate-active");
+    const node = document.getElementById("screen-v-paygate");
+    if (node) node.style.display = "none";
   }
 
   function statusClass() {
@@ -254,7 +278,7 @@ window.VPayGate = window.VPayGate || {};
   function bind() {
     document.getElementById("vpaygate-cancel")?.addEventListener("click", leavePage);
     document.getElementById("vpaygate-refresh")?.addEventListener("click", () => refreshStatus({ userInitiated: true }));
-    document.getElementById("vpaygate-continue")?.addEventListener("click", leavePage);
+    document.getElementById("vpaygate-continue")?.addEventListener("click", continueAfterSuccess);
     document.getElementById("vpaygate-pay")?.addEventListener("click", continuePayment);
     document.querySelectorAll("[data-vpay-method]").forEach((button) => {
       button.addEventListener("click", () => {
@@ -270,7 +294,8 @@ window.VPayGate = window.VPayGate || {};
 
   function storedProductMatches(stored, product) {
     return stored?.product?.type === product?.type
-      && Number(stored?.product?.amount_uzs || 0) === Number(product?.amount_uzs || 0);
+      && Number(stored?.product?.amount_uzs || 0) === Number(product?.amount_uzs || 0)
+      && String(stored?.product?.service_key || "") === String(product?.service_key || "");
   }
 
   function storeOrder() {
@@ -500,6 +525,49 @@ window.VPayGate = window.VPayGate || {};
     }
   }
 
+  function continueAfterSuccess() {
+    const service = normalizeService(state.product?.service);
+    if (!service) {
+      leavePage();
+      return;
+    }
+
+    hidePage();
+    const reference = String(service.reference_id || "");
+    if (service.content_type === "full_mock") {
+      const mockId = Number(reference);
+      if (Number.isFinite(mockId) && typeof window.startFullMock === "function") {
+        window.startFullMock(mockId);
+        return;
+      }
+    }
+
+    if (service.content_type === "separate_block") {
+      const [section, rawMockId] = reference.split(":");
+      const mockId = Number(rawMockId);
+      if (Number.isFinite(mockId)) {
+        if (section === "reading" && typeof window.startMock === "function") {
+          window.startMock(mockId);
+          return;
+        }
+        if (section === "listening" && typeof window.startListeningMock === "function") {
+          window.startListeningMock(mockId);
+          return;
+        }
+        if (section === "writing" && typeof window.startWritingMock === "function") {
+          window.startWritingMock(mockId);
+          return;
+        }
+        if (section === "speaking" && typeof window.startSpeakingMock === "function") {
+          window.startSpeakingMock(mockId);
+          return;
+        }
+      }
+    }
+
+    leavePage();
+  }
+
   function updateRoute(product) {
     const url = new URL(window.location.href);
     url.pathname = "/";
@@ -507,6 +575,11 @@ window.VPayGate = window.VPayGate || {};
     url.searchParams.set("product", product.type);
     url.searchParams.set("amount", String(product.amount_uzs));
     if (product.origin) url.searchParams.set("origin", product.origin);
+    if (product.service?.content_type && product.service?.reference_id) {
+      url.searchParams.set("service_type", product.service.content_type);
+      url.searchParams.set("service_ref", product.service.reference_id);
+      if (product.service.service_name) url.searchParams.set("service_name", product.service.service_name);
+    }
     history.pushState({ page: "v-paygate" }, "", `${url.pathname}?${url.searchParams.toString()}`);
   }
 
@@ -542,6 +615,11 @@ window.VPayGate = window.VPayGate || {};
       amount_uzs: params.get("amount"),
       origin: params.get("origin") || "route",
       return_page: params.get("return") || "",
+      service: {
+        content_type: params.get("service_type") || "",
+        reference_id: params.get("service_ref") || "",
+        service_name: params.get("service_name") || "",
+      },
     });
     const restored = applyStoredOrder(product);
     state = {

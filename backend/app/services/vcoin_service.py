@@ -205,26 +205,46 @@ def spend_once_for_content(db: Session, telegram_id: int, content_type: str, ref
     cost = cost_for_content(content_type)
     reference = str(reference_id)
     reason = f"{content_type}_spend"
+    user = _get_or_create_user_for_update(db, telegram_id)
+
+    # Wallet-first purchases must be idempotent under double-clicks or refreshes:
+    # lock the balance row, then re-check the ledger before deducting.
     if has_spend_for_content(db, telegram_id, content_type, reference):
         return VCoinSpendResult(
             ok=True,
             telegram_id=int(telegram_id),
-            balance=get_balance(db, telegram_id),
+            balance=int(user.v_coins or 0),
             required=cost,
             reason="already_paid",
         )
-    balance_after = spend_coins(
+
+    current = int(user.v_coins or 0)
+    if current < cost:
+        raise HTTPException(
+            status_code=402,
+            detail={
+                "error": "insufficient_vcoins",
+                "required": cost,
+                "balance": current,
+            },
+        )
+
+    user.v_coins = current - cost
+    db.add(user)
+    db.flush()
+    write_ledger(
         db=db,
         telegram_id=telegram_id,
-        amount=cost,
+        delta=-cost,
         reason=reason,
         reference_type=content_type,
         reference_id=reference,
+        balance_after=user.v_coins,
     )
     return VCoinSpendResult(
         ok=True,
         telegram_id=int(telegram_id),
-        balance=int(balance_after),
+        balance=int(user.v_coins or 0),
         required=cost,
         reason="spent",
     )
