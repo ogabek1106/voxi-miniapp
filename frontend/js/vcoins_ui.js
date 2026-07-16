@@ -85,7 +85,8 @@ window.VCoinUI = window.VCoinUI || {};
       }
 
       .vcoin-sheet.uzs-wallet-sheet {
-        grid-template-rows: auto auto minmax(0, 1fr) auto;
+        display: flex;
+        flex-direction: column;
       }
 
       .uzs-wallet-sheet .vcoin-sheet-title {
@@ -93,6 +94,7 @@ window.VCoinUI = window.VCoinUI || {};
       }
 
       .uzs-wallet-sheet .vcoin-sheet-balance {
+        flex: 0 0 auto;
         min-height: 104px;
         margin-top: 14px;
         padding: 16px 18px;
@@ -377,6 +379,8 @@ window.VCoinUI = window.VCoinUI || {};
       }
 
       .uzs-wallet-sheet .vcoin-history-section {
+        flex: 1 1 auto;
+        min-height: 0;
         margin-top: 18px;
         display: grid;
         grid-template-rows: auto minmax(0, 1fr);
@@ -386,6 +390,7 @@ window.VCoinUI = window.VCoinUI || {};
         font-size: 15px;
         font-weight: 900;
         margin: 0 0 8px;
+        line-height: 1.25;
       }
 
       @media (max-width: 380px) {
