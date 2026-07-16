@@ -85,6 +85,7 @@ from app.api.admin_upload import router as admin_upload_router
 from app.api.result_images import router as result_images_router
 from app.api import admin_mock_packs
 import os
+from app.config import VCOIN_ENABLED, UZS_PAYMENTS_ENABLED
 
 os.makedirs("media", exist_ok=True)
 os.makedirs("static/result_images", exist_ok=True)
@@ -254,6 +255,16 @@ seed_learning_plan_defaults_on_startup()
 @app.get("/")
 async def root():
     return {"status": "ok", "service": "voxi-miniapp-backend"}
+
+
+@app.get("/config")
+async def frontend_config():
+    return {
+        "features": {
+            "vcoin_enabled": bool(VCOIN_ENABLED),
+            "uzs_payments_enabled": bool(UZS_PAYMENTS_ENABLED),
+        }
+    }
 
 class CreateUserIn(BaseModel):
     telegram_id: int

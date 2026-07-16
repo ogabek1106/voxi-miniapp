@@ -216,12 +216,14 @@ body.view-website .website-header.is-compact .website-xp-button {
   font-size: 14px;
 }
 
-body.view-website .website-header.is-compact .website-balance-button .vcoin-icon {
+body.view-website .website-header.is-compact .website-balance-button .vcoin-icon,
+body.view-website .website-header.is-compact .website-balance-button .wallet-balance-icon {
   width: 20px;
   height: 20px;
 }
 
-.website-balance-button .vcoin-icon {
+.website-balance-button .vcoin-icon,
+.website-balance-button .wallet-balance-icon {
   width: 24px;
   height: 24px;
 }
@@ -433,7 +435,8 @@ body.view-website .website-header.is-compact .website-profile-button-avatar svg 
   justify-content: center;
 }
 
-.website-profile-wallet-icon .vcoin-icon {
+.website-profile-wallet-icon .vcoin-icon,
+.website-profile-wallet-icon .wallet-balance-icon {
   width: 32px;
   height: 32px;
 }

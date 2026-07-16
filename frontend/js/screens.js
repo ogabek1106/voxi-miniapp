@@ -725,6 +725,48 @@ async function renderProfile() {
       ? window.ProfileUI.formatLastScore(activityList[0])
       : "-";
     const safeLastScore = window.ProfileUI?.escapeHtml ? window.ProfileUI.escapeHtml(lastScore) : lastScore;
+    const vcoinEnabled = window.AppConfig?.isVcoinEnabled?.() === true;
+    const statsHtml = vcoinEnabled
+      ? `
+          <div class="profile-stat-row">
+            <div class="profile-stat-chip">V-Coins <strong>${vCoins}</strong></div>
+            <div class="profile-stat-chip">Last score <strong>${safeLastScore}</strong></div>
+          </div>
+        `
+      : `
+          <div class="profile-stat-row">
+            <div class="profile-stat-chip">Last score <strong>${safeLastScore}</strong></div>
+          </div>
+        `;
+    const walletHtml = vcoinEnabled
+      ? `
+        <div class="profile-card profile-vcoin-card" data-vcoin-open="1" role="button" tabindex="0">
+          <div class="profile-icon-box" aria-hidden="true">
+            <img class="vcoin-icon" src="./assets/vcoin.png" alt="">
+          </div>
+          <div>
+            <div class="profile-card-title">Wallet</div>
+            <div class="profile-card-subtitle">${vCoins} V-Coins available</div>
+          </div>
+          <svg class="profile-chevron" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
+        </div>
+        `
+      : `
+        <div class="profile-card profile-vcoin-card" data-payment-wallet="1" role="button" tabindex="0">
+          <div class="profile-icon-box" aria-hidden="true">
+            ${window.UzsBalance?.walletIconMarkup?.("wallet-balance-icon") || ""}
+          </div>
+          <div>
+            <div class="profile-card-title">Wallet</div>
+            <div class="profile-card-subtitle">${window.SharedUser?.formatUzsBalance?.(me) || "0 UZS"} available</div>
+          </div>
+          <svg class="profile-chevron" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
+        </div>
+        `;
 
     screenProfile.innerHTML = `
       <div class="profile-shell">
@@ -750,24 +792,10 @@ async function renderProfile() {
             </svg>
             <span>Edit profile</span>
           </button>
-          <div class="profile-stat-row">
-            <div class="profile-stat-chip">V-Coins <strong>${vCoins}</strong></div>
-            <div class="profile-stat-chip">Last score <strong>${safeLastScore}</strong></div>
-          </div>
+          ${statsHtml}
         </div>
 
-        <div class="profile-card profile-vcoin-card" data-vcoin-open="1" role="button" tabindex="0">
-          <div class="profile-icon-box" aria-hidden="true">
-            <img class="vcoin-icon" src="./assets/vcoin.png" alt="">
-          </div>
-          <div>
-            <div class="profile-card-title">Wallet</div>
-            <div class="profile-card-subtitle">${vCoins} V-Coins available</div>
-          </div>
-          <svg class="profile-chevron" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
-          </svg>
-        </div>
+        ${walletHtml}
 
         ${lastActivityHtml}
       </div>

@@ -29,6 +29,16 @@ window.SharedUser = window.SharedUser || {};
     return Number.isFinite(parsed) ? Math.max(0, Math.floor(parsed)) : 0;
   };
 
+  window.SharedUser.getUzsBalance = function (me) {
+    if (window.UzsBalance?.fromUser) return window.UzsBalance.fromUser(me);
+    return 0;
+  };
+
+  window.SharedUser.formatUzsBalance = function (me) {
+    if (window.UzsBalance?.formatFromUser) return window.UzsBalance.formatFromUser(me);
+    return "0 UZS";
+  };
+
   window.SharedUser.getLastScore = function (me) {
     const activityList = Array.isArray(me?.last_activity)
       ? me.last_activity.filter(Boolean)

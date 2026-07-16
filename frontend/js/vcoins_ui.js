@@ -7,6 +7,10 @@ window.VCoinUI = window.VCoinUI || {};
   };
   const DEFAULT_PURCHASE_AMOUNT = 10;
 
+  function isVcoinEnabled() {
+    return window.AppConfig?.isVcoinEnabled?.() === true;
+  }
+
   function normalizeTelegramId(value) {
     const id = Number(value || 0);
     return Number.isFinite(id) && id > 0 ? id : null;
@@ -858,6 +862,7 @@ window.VCoinUI = window.VCoinUI || {};
   }
 
   window.VCoinUI.openPurchaseSheet = async function () {
+    if (!isVcoinEnabled()) return;
     ensureStyles();
     closeSheet();
     document.body.classList.add("reward-vcoin-open");
@@ -1341,6 +1346,8 @@ window.VCoinUI = window.VCoinUI || {};
   };
 
   window.VCoinUI.openBalanceSheet = async function () {
+    // V-Coin UI is intentionally retained for future restoration, but dormant while disabled.
+    if (!isVcoinEnabled()) return;
     ensureStyles();
     closeSheet();
     document.body.classList.add("reward-vcoin-open");
@@ -1411,6 +1418,7 @@ window.VCoinUI = window.VCoinUI || {};
   }
 
   window.VCoinUI.showInsufficient = function ({ required, balance, serviceName }) {
+    if (!isVcoinEnabled()) return;
     ensureStyles();
     closeSheet();
     document.body.classList.add("reward-vcoin-open");
@@ -1441,6 +1449,10 @@ window.VCoinUI = window.VCoinUI || {};
   };
 
   window.VCoinUI.ensureAccess = async function ({ contentType, referenceId, serviceName }) {
+    if (!isVcoinEnabled()) {
+      window.UzsBalance?.showGatewayPlaceholder?.();
+      return false;
+    }
     const id = await resolveTelegramId();
     if (!id) {
       if (window.AppViewMode?.isWebsite?.()) {
@@ -1477,8 +1489,8 @@ window.VCoinUI = window.VCoinUI || {};
   };
 
   document.addEventListener("DOMContentLoaded", () => {
-    ensureStyles();
     document.addEventListener("click", (event) => {
+      if (!isVcoinEnabled()) return;
       const opener = event.target.closest("#screen-home .home-balance, [data-vcoin-open='1']");
       if (!opener) return;
       event.preventDefault();

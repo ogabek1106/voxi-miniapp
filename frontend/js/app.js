@@ -90,9 +90,10 @@ function renderHomeIdentity(me) {
   }
 
   if (homeBalance) {
-    const rawBalance = me?.v_coins ?? me?.v_coin_balance ?? me?.vcoin_balance ?? me?.v_coin ?? me?.balance ?? 0;
-    const parsed = Number(rawBalance);
-    homeBalance.textContent = Number.isFinite(parsed) ? String(Math.max(0, Math.floor(parsed))) : "0";
+    syncHomeBalanceIcon();
+    const vcoins = window.SharedUser?.getBalance?.(me) || 0;
+    const amount = displayBalanceFromVcoins(vcoins);
+    homeBalance.textContent = formatDisplayBalance(amount);
   }
 
   if (window.WebsiteHeader?.update) {
@@ -140,75 +141,96 @@ function ensureListeningHomeButton(visible) {
   btn.style.display = visible ? "block" : "none";
 }
 
-function getVcoinBalanceStorageKey(telegramId) {
-  return `voxi:vcoins:lastSeen:${telegramId}`;
+function isVcoinEnabled() {
+  return window.AppConfig?.isVcoinEnabled?.() === true;
 }
 
-function getDisplayedHomeVcoinBalance() {
+function getBalanceStorageKey(telegramId) {
+  const mode = isVcoinEnabled() ? "vcoins" : "uzs";
+  return `voxi:${mode}:lastSeen:${telegramId}`;
+}
+
+function displayBalanceFromVcoins(vcoins) {
+  const normalized = Math.max(0, Math.floor(Number(vcoins) || 0));
+  if (isVcoinEnabled()) return normalized;
+  return window.UzsBalance?.convertVCoinsToUzs?.(normalized) || 0;
+}
+
+function formatDisplayBalance(value) {
+  if (isVcoinEnabled()) return String(Math.max(0, Math.floor(Number(value) || 0)));
+  return window.UzsBalance?.formatUzs?.(value) || "0 UZS";
+}
+
+function parseDisplayedBalance(text) {
+  const cleaned = String(text || "").replace(/[^\d]/g, "");
+  return Number(cleaned || 0) || 0;
+}
+
+function getDisplayedHomeBalance() {
   const valueEl = document.getElementById("home-balance-value")
     || document.getElementById("home-vcoin-balance-value")
     || document.getElementById("website-balance-value");
   if (!valueEl) return 0;
-  return Number(valueEl.textContent || 0) || 0;
+  return parseDisplayedBalance(valueEl.textContent);
 }
 
-function setHomeVcoinBalance(value) {
-  const normalized = String(Math.max(0, Number(value) || 0));
+function setHomeBalance(value) {
+  const normalized = Math.max(0, Math.floor(Number(value) || 0));
   const valueEls = [
     document.getElementById("home-balance-value"),
     document.getElementById("home-vcoin-balance-value"),
     document.getElementById("website-balance-value")
   ].filter(Boolean);
   valueEls.forEach((valueEl) => {
-    valueEl.textContent = normalized;
+    valueEl.textContent = formatDisplayBalance(normalized);
   });
 }
 
-function animateHomeVcoinBalance(fromValue, toValue) {
+function syncHomeBalanceIcon() {
+  const cards = [
+    document.querySelector("#screen-home .home-balance"),
+    document.querySelector(".website-balance-button")
+  ].filter(Boolean);
+  cards.forEach((card) => {
+    const icon = card.querySelector(".vcoin-icon, .wallet-balance-icon");
+    if (isVcoinEnabled()) {
+      if (!icon || icon.tagName.toLowerCase() !== "img") {
+        card.insertAdjacentHTML("afterbegin", `<img class="vcoin-icon" src="./assets/vcoin.png" alt="" aria-hidden="true">`);
+        icon?.remove();
+      }
+      card.setAttribute("data-vcoin-open", "1");
+      card.removeAttribute("data-payment-wallet");
+      card.setAttribute("aria-label", "Open V-Coin balance");
+      return;
+    }
+    if (!icon || icon.tagName.toLowerCase() !== "svg") {
+      card.insertAdjacentHTML("afterbegin", window.UzsBalance?.walletIconMarkup?.("wallet-balance-icon") || "");
+      icon?.remove();
+    }
+    card.removeAttribute("data-vcoin-open");
+    card.setAttribute("data-payment-wallet", "1");
+    card.setAttribute("aria-label", "Available balance");
+  });
+}
+
+function animateHomeBalance(fromValue, toValue, animate) {
   const card = document.querySelector("#screen-home .home-balance")
     || document.getElementById("home-vcoin-balance")
     || document.querySelector(".website-balance-button");
-  const from = Math.max(0, Number(fromValue) || 0);
-  const to = Math.max(0, Number(toValue) || 0);
-  const distance = Math.abs(to - from);
-
-  if (from === to || typeof window.requestAnimationFrame !== "function") {
-    setHomeVcoinBalance(to);
-    return;
-  }
-
-  if (window.__vcoinBalanceAnimationFrame) {
-    window.cancelAnimationFrame(window.__vcoinBalanceAnimationFrame);
-    window.__vcoinBalanceAnimationFrame = null;
-  }
-
-  const startedAt = performance.now();
-  const duration = Math.max(760, Math.min(1350, 620 + distance * 42));
-  const isIncrease = to > from;
-  if (card) {
-    card.classList.remove("is-growing", "is-spending", "is-changing");
-    card.classList.add("is-changing", isIncrease ? "is-growing" : "is-spending");
-  }
-
-  function tick(now) {
-    const progress = Math.min(1, (now - startedAt) / duration);
-    const eased = progress < 0.5
-      ? 4 * progress * progress * progress
-      : 1 - Math.pow(-2 * progress + 2, 3) / 2;
-    const current = Math.round(from + (to - from) * eased);
-    setHomeVcoinBalance(current);
-
-    if (progress < 1) {
-      window.__vcoinBalanceAnimationFrame = window.requestAnimationFrame(tick);
-      return;
-    }
-
-    setHomeVcoinBalance(to);
-    window.__vcoinBalanceAnimationFrame = null;
-    if (card) card.classList.remove("is-growing", "is-spending", "is-changing");
-  }
-
-  window.__vcoinBalanceAnimationFrame = window.requestAnimationFrame(tick);
+  const valueEls = [
+    document.getElementById("home-balance-value"),
+    document.getElementById("home-vcoin-balance-value"),
+    document.getElementById("website-balance-value")
+  ].filter(Boolean);
+  window.CountUpUI?.animateInteger?.({
+    key: "home-balance",
+    elements: valueEls,
+    card,
+    fromValue,
+    toValue,
+    formatter: formatDisplayBalance,
+    animate
+  });
 }
 
 window.refreshVcoinBalance = async function ({ animate = true } = {}) {
@@ -216,12 +238,14 @@ window.refreshVcoinBalance = async function ({ animate = true } = {}) {
   if (!telegramId) return;
 
   try {
+    syncHomeBalanceIcon();
     const data = await apiGet(`/vcoins/balance?telegram_id=${telegramId}`);
-    const balance = Math.max(0, Number(data?.v_coins || 0));
-    const storageKey = getVcoinBalanceStorageKey(telegramId);
+    const vcoins = Math.max(0, Number(data?.v_coins || 0));
+    const balance = displayBalanceFromVcoins(vcoins);
+    const storageKey = getBalanceStorageKey(telegramId);
     const storedRaw = window.localStorage?.getItem(storageKey);
     const storedBalance = storedRaw === null ? null : Number(storedRaw);
-    const displayedBalance = getDisplayedHomeVcoinBalance();
+    const displayedBalance = getDisplayedHomeBalance();
     const startBalance = animate
       ? displayedBalance
       : (
@@ -231,14 +255,14 @@ window.refreshVcoinBalance = async function ({ animate = true } = {}) {
         );
 
     if (animate && balance !== startBalance) {
-      animateHomeVcoinBalance(startBalance, balance);
+      animateHomeBalance(startBalance, balance, true);
     } else {
-      setHomeVcoinBalance(balance);
+      setHomeBalance(balance);
     }
 
     window.localStorage?.setItem(storageKey, String(balance));
   } catch (e) {
-    console.error("Failed to refresh V-Coin balance", e);
+    console.error("Failed to refresh balance", e);
   }
 };
 
@@ -260,7 +284,21 @@ function resolveInitialScreen() {
   return false;
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  await window.AppConfig?.ready;
+  window.AppConfig?.subscribe?.(() => {
+    syncHomeBalanceIcon();
+    renderHomeIdentity(window.WebsiteAuthState?.getUser?.() || null);
+    window.refreshVcoinBalance({ animate: false });
+    window.WebsiteHeader?.render?.();
+  });
+  document.addEventListener("click", (event) => {
+    const opener = event.target.closest("[data-payment-wallet='1']");
+    if (!opener) return;
+    event.preventDefault();
+    window.UzsBalance?.showGatewayPlaceholder?.();
+  });
+
   if (window.AppViewMode?.isWebsite?.()) {
     window.WebsiteLayout?.init?.();
     markAppReady();

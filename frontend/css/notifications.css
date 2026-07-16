@@ -165,7 +165,8 @@ body.view-miniapp.reward-notifications-open #screen-home .home-notification-slot
   z-index: 100006;
 }
 
-body.view-miniapp #screen-home .home-balance .vcoin-icon {
+body.view-miniapp #screen-home .home-balance .vcoin-icon,
+body.view-miniapp #screen-home .home-balance .wallet-balance-icon {
   width: 25px;
   height: 25px;
 }

@@ -11,6 +11,10 @@ window.WebsiteProfileSheet = window.WebsiteProfileSheet || {};
       .replace(/'/g, "&#039;");
   }
 
+  function isVcoinEnabled() {
+    return window.AppConfig?.isVcoinEnabled?.() === true;
+  }
+
   function close() {
     document.getElementById("website-profile-backdrop")?.remove();
     document.body.classList.remove("website-profile-open");
@@ -22,6 +26,53 @@ window.WebsiteProfileSheet = window.WebsiteProfileSheet || {};
         <div class="website-profile-handle"></div>
         <div class="website-profile-loading">Loading profile...</div>
       </div>
+    `;
+  }
+
+  function renderStats(vCoins, lastScore) {
+    if (isVcoinEnabled()) {
+      return `
+        <div class="website-profile-stats">
+          <div>V-Coins <strong>${vCoins}</strong></div>
+          <div>Last score <strong>${lastScore}</strong></div>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="website-profile-stats">
+        <div>Last score <strong>${lastScore}</strong></div>
+      </div>
+    `;
+  }
+
+  function renderWallet(me, vCoins) {
+    if (isVcoinEnabled()) {
+      return `
+        <button class="website-profile-wallet" data-vcoin-open="1">
+          <span class="website-profile-wallet-icon">
+            <img class="vcoin-icon" src="./assets/vcoin.png" alt="" aria-hidden="true">
+          </span>
+          <span>
+            <strong>Wallet</strong>
+            <small>${vCoins} V-Coins available</small>
+          </span>
+          <span aria-hidden="true">&rsaquo;</span>
+        </button>
+      `;
+    }
+
+    return `
+      <button class="website-profile-wallet" data-payment-wallet="1">
+        <span class="website-profile-wallet-icon">
+          ${window.UzsBalance?.walletIconMarkup?.("wallet-balance-icon") || ""}
+        </span>
+        <span>
+          <strong>Wallet</strong>
+          <small>${window.SharedUser?.formatUzsBalance?.(me) || "0 UZS"} available</small>
+        </span>
+        <span aria-hidden="true">&rsaquo;</span>
+      </button>
     `;
   }
 
@@ -52,23 +103,11 @@ window.WebsiteProfileSheet = window.WebsiteProfileSheet || {};
           <button class="website-profile-close" data-profile-close="1" aria-label="Close profile">Close</button>
         </div>
 
-        <div class="website-profile-stats">
-          <div>V-Coins <strong>${vCoins}</strong></div>
-          <div>Last score <strong>${lastScore}</strong></div>
-        </div>
+        ${renderStats(vCoins, lastScore)}
 
         ${window.GamificationUI?.renderStreakCard?.(gamification) || ""}
 
-        <button class="website-profile-wallet" data-vcoin-open="1">
-          <span class="website-profile-wallet-icon">
-            <img class="vcoin-icon" src="./assets/vcoin.png" alt="" aria-hidden="true">
-          </span>
-          <span>
-            <strong>Wallet</strong>
-            <small>${vCoins} V-Coins available</small>
-          </span>
-          <span aria-hidden="true">›</span>
-        </button>
+        ${renderWallet(me, vCoins)}
 
         <button class="website-profile-edit" id="website-profile-edit">Edit profile</button>
         <button class="website-profile-logout" id="website-profile-logout">Log out</button>

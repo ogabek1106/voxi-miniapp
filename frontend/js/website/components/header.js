@@ -24,6 +24,28 @@ window.WebsiteHeader = window.WebsiteHeader || {};
     `;
   }
 
+  function isVcoinEnabled() {
+    return window.AppConfig?.isVcoinEnabled?.() === true;
+  }
+
+  function balanceButtonMarkup(user) {
+    if (isVcoinEnabled()) {
+      return `
+        <button class="website-balance-button" data-vcoin-open="1" aria-label="Open V-Coin balance">
+          <img class="vcoin-icon" src="./assets/vcoin.png" alt="" aria-hidden="true">
+          <span id="website-balance-value">${window.SharedUser?.getBalance(user) || 0}</span>
+        </button>
+      `;
+    }
+
+    return `
+      <button class="website-balance-button" data-payment-wallet="1" aria-label="Available balance">
+        ${window.UzsBalance?.walletIconMarkup?.("wallet-balance-icon") || ""}
+        <span id="website-balance-value">${window.SharedUser?.formatUzsBalance?.(user) || "0 UZS"}</span>
+      </button>
+    `;
+  }
+
   window.WebsiteHeader.mount = function () {
     if (document.getElementById("website-header")) return;
 
@@ -41,10 +63,7 @@ window.WebsiteHeader = window.WebsiteHeader || {};
 
       <div class="website-header-actions">
         <span class="website-reward-row">
-          <button class="website-balance-button" data-vcoin-open="1" aria-label="Open V-Coin balance">
-            <img class="vcoin-icon" src="./assets/vcoin.png" alt="" aria-hidden="true">
-            <span id="website-balance-value">0</span>
-          </button>
+          ${balanceButtonMarkup(null)}
           <button class="website-xp-button" type="button" data-xp-open="1" aria-label="Open XP">
             <span class="website-xp-label">XP</span>
             <span id="website-xp-value">0</span>
@@ -107,10 +126,7 @@ window.WebsiteHeader = window.WebsiteHeader || {};
 
     actions.innerHTML = `
       <span class="website-reward-row">
-        <button class="website-balance-button" data-vcoin-open="1" aria-label="Open V-Coin balance">
-          <img class="vcoin-icon" src="./assets/vcoin.png" alt="" aria-hidden="true">
-          <span id="website-balance-value">${window.SharedUser?.getBalance(user) || 0}</span>
-        </button>
+        ${balanceButtonMarkup(user)}
         <button class="website-xp-button" type="button" data-xp-open="1" aria-label="Open XP">
           <span class="website-xp-label">XP</span>
           <span id="website-xp-value">0</span>
