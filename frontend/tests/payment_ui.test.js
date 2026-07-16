@@ -126,9 +126,74 @@ function testVcoinModalGuardWhenDisabled() {
   assert.equal(created, false);
 }
 
+async function testUzsBalanceSheetShowsConvertedHistory() {
+  const ids = {};
+  let appended = null;
+  const { context } = createContext({
+    apiGet: async (url) => {
+      if (url.startsWith("/vcoins/balance")) return { v_coins: 3 };
+      if (url.startsWith("/vcoins/ledger")) {
+        return {
+          items: [
+            { reason: "payment_confirmed", delta: 3, created_at: "2026-07-16T10:00:00Z" },
+            { reason: "separate_block_spend", delta: -1, created_at: "2026-07-16T11:00:00Z" }
+          ]
+        };
+      }
+      return {};
+    },
+    document: {
+      addEventListener: () => {},
+      getElementById: (id) => ids[id] || null,
+      querySelector: () => null,
+      createElement: (tag) => {
+        const element = {
+          tagName: tag.toUpperCase(),
+          style: {},
+          classList: { add: () => {}, remove: () => {} },
+          addEventListener: () => {},
+          querySelector: () => null,
+          remove: () => {},
+          set innerHTML(value) { this._innerHTML = value; },
+          get innerHTML() { return this._innerHTML || ""; }
+        };
+        if (tag === "style") ids["vcoin-ui-styles"] = element;
+        return element;
+      },
+      head: { appendChild: () => {} },
+      body: {
+        classList: { add: () => {}, remove: () => {} },
+        appendChild: (element) => {
+          appended = element;
+          ids["uzs-sheet-balance-value"] = { textContent: "" };
+          ids["uzs-ledger-list"] = { innerHTML: "" };
+          ids["vcoin-close-btn"] = {};
+          ids["uzs-open-payment-gateway-btn"] = {};
+        }
+      }
+    },
+    window: {
+      AppConfig: { isVcoinEnabled: () => false },
+      getTelegramId: () => 1001
+    }
+  });
+
+  runBrowserScript("js/payments/uzs_balance.js", context);
+  runBrowserScript("js/vcoins_ui.js", context);
+
+  await context.window.UzsBalance.openBalanceSheet();
+
+  assert.ok(appended.innerHTML.includes("Wallet"));
+  assert.equal(ids["uzs-sheet-balance-value"].textContent, "15,000 UZS");
+  assert.ok(ids["uzs-ledger-list"].innerHTML.includes("+15,000 UZS"));
+  assert.ok(ids["uzs-ledger-list"].innerHTML.includes("-5,000 UZS"));
+  assert.ok(!ids["uzs-ledger-list"].innerHTML.includes("V-Coin"));
+}
+
 testUzsFormatterAndConversion();
 testCountUpReachesFinalAmount();
 testCountUpReducedMotionSkipsAnimation();
 testVcoinModalGuardWhenDisabled();
-
-console.log("payment_ui tests passed");
+testUzsBalanceSheetShowsConvertedHistory().then(() => {
+  console.log("payment_ui tests passed");
+});

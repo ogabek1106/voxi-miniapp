@@ -296,6 +296,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     const opener = event.target.closest("[data-payment-wallet='1']");
     if (!opener) return;
     event.preventDefault();
+    if (typeof window.UzsBalance?.openBalanceSheet === "function") {
+      window.UzsBalance.openBalanceSheet();
+      return;
+    }
     window.UzsBalance?.showGatewayPlaceholder?.();
   });
 

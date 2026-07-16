@@ -84,6 +84,10 @@ window.VCoinUI = window.VCoinUI || {};
         font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
       }
 
+      .vcoin-sheet.uzs-wallet-sheet {
+        grid-template-rows: auto auto minmax(0, 1fr) auto;
+      }
+
       @media (min-width: 700px) {
         .vcoin-sheet-backdrop {
           align-items: flex-end;
@@ -324,6 +328,10 @@ window.VCoinUI = window.VCoinUI || {};
         z-index: 2;
       }
 
+      .vcoin-sheet-actions.uzs-wallet-actions {
+        grid-template-columns: 1fr 1fr;
+      }
+
       .vcoin-history-section {
         min-height: 0;
         overflow: hidden;
@@ -503,6 +511,39 @@ window.VCoinUI = window.VCoinUI || {};
             <div class="vcoin-muted">${formatLedgerTime(item?.created_at)}</div>
           </div>
           <div class="${klass}">${sign}${delta}</div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function formatUzsReason(reason) {
+    const labels = {
+      payment_confirmed: "Wallet top-up",
+      full_mock_spend: "Full Mock spent",
+      separate_block_spend: "Single section spent",
+      refund: "Refund",
+      admin_adjustment: "Admin adjustment"
+    };
+    return labels[reason] || String(reason || "Balance update").replaceAll("_", " ");
+  }
+
+  function renderUzsLedger(items) {
+    if (!items.length) {
+      return `<div class="vcoin-history-empty vcoin-muted">No balance actions yet.</div>`;
+    }
+
+    return items.map((item) => {
+      const delta = Number(item?.delta || 0);
+      const amount = window.UzsBalance?.convertVCoinsToUzs?.(Math.abs(delta)) || 0;
+      const sign = delta > 0 ? "+" : (delta < 0 ? "-" : "");
+      const klass = delta >= 0 ? "vcoin-delta-plus" : "vcoin-delta-minus";
+      return `
+        <div class="vcoin-ledger-row">
+          <div>
+            <div style="font-weight:800;">${formatUzsReason(item?.reason)}</div>
+            <div class="vcoin-muted">${formatLedgerTime(item?.created_at)}</div>
+          </div>
+          <div class="${klass}">${sign}${window.UzsBalance?.formatUzs?.(amount) || "0 UZS"}</div>
         </div>
       `;
     }).join("");
@@ -1446,6 +1487,64 @@ window.VCoinUI = window.VCoinUI || {};
     });
     document.getElementById("vcoin-close-btn").onclick = closeSheet;
     document.getElementById("vcoin-open-wallet-buy").onclick = window.VCoinUI.openPurchaseSheet;
+  };
+
+  window.UzsBalance = window.UzsBalance || {};
+  window.UzsBalance.openBalanceSheet = async function () {
+    ensureStyles();
+    closeSheet();
+    document.body.classList.add("reward-vcoin-open");
+
+    const backdrop = document.createElement("div");
+    backdrop.id = "vcoin-sheet-backdrop";
+    backdrop.className = "vcoin-sheet-backdrop";
+    backdrop.innerHTML = `
+      <div class="vcoin-sheet uzs-wallet-sheet" role="dialog" aria-modal="true">
+        <div class="vcoin-sheet-handle"></div>
+        <h3 class="vcoin-sheet-title">Wallet</h3>
+        <div class="vcoin-sheet-balance">
+          <div>
+            <div class="vcoin-muted">Available balance</div>
+            <div class="vcoin-sheet-balance-label">
+              ${window.UzsBalance?.walletIconMarkup?.("wallet-balance-icon") || ""}
+              <strong id="uzs-sheet-balance-value">...</strong>
+            </div>
+          </div>
+          <div class="vcoin-muted">UZS</div>
+        </div>
+
+        <div class="vcoin-history-section">
+          <div style="font-size:15px; font-weight:900; margin-bottom:2px;">Balance history</div>
+          <div class="vcoin-history-list" id="uzs-ledger-list">${renderHistorySkeleton()}</div>
+        </div>
+
+        <div class="vcoin-sheet-actions uzs-wallet-actions">
+          <button class="vcoin-buy-btn" id="uzs-open-payment-gateway-btn">Payment gateway coming soon</button>
+          <button class="vcoin-cancel-btn" id="vcoin-close-btn">Close</button>
+        </div>
+      </div>
+    `;
+
+    backdrop.addEventListener("click", (event) => {
+      if (event.target === backdrop) closeSheet();
+    });
+    document.body.appendChild(backdrop);
+    bindSheetDragToClose(backdrop.querySelector(".vcoin-sheet"));
+
+    document.getElementById("vcoin-close-btn").onclick = closeSheet;
+    document.getElementById("uzs-open-payment-gateway-btn").onclick = window.UzsBalance.showGatewayPlaceholder;
+
+    try {
+      const [balance, ledger] = await Promise.all([fetchBalance(), fetchLedger()]);
+      const balanceEl = document.getElementById("uzs-sheet-balance-value");
+      const ledgerEl = document.getElementById("uzs-ledger-list");
+      const uzsBalance = window.UzsBalance?.convertVCoinsToUzs?.(balance) || 0;
+      if (balanceEl) balanceEl.textContent = window.UzsBalance?.formatUzs?.(uzsBalance) || "0 UZS";
+      if (ledgerEl) ledgerEl.innerHTML = renderUzsLedger(ledger);
+    } catch (error) {
+      const ledgerEl = document.getElementById("uzs-ledger-list");
+      if (ledgerEl) ledgerEl.innerHTML = `<div class="vcoin-muted" style="padding:10px 0;">Could not load balance details.</div>`;
+    }
   };
 
   window.VCoinUI.ensureAccess = async function ({ contentType, referenceId, serviceName }) {
