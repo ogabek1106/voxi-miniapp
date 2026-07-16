@@ -115,6 +115,7 @@ body.mobile-browser-view .website-header-actions {
   flex: 1 1 auto;
   min-width: 0;
   gap: 6px;
+  justify-content: flex-end;
 }
 
 body.mobile-browser-view .website-header.is-compact {
@@ -140,13 +141,14 @@ body.mobile-browser-view .website-header.is-compact .website-header-actions {
   flex: 1 1 auto;
   min-width: 0;
   gap: 6px;
+  justify-content: flex-end;
 }
 
 body.mobile-browser-view .website-header.is-compact .website-reward-row {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  flex: 0 1 auto;
+  flex: 0 0 auto;
   min-width: 0;
 }
 
@@ -154,7 +156,7 @@ body.mobile-browser-view .website-reward-row {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  flex: 0 1 auto;
+  flex: 0 0 auto;
   min-width: 0;
 }
 
@@ -167,12 +169,36 @@ body.mobile-browser-view .website-header-actions .voxi-notification-bell {
 
 body.mobile-browser-view .website-balance-button,
 body.mobile-browser-view .website-xp-button {
+  position: relative;
+  width: 38px;
   height: 38px;
-  min-width: 0;
-  padding-left: 8px;
-  padding-right: 8px;
-  gap: 6px;
-  flex: 0 0 auto;
+  min-width: 38px;
+  max-width: 38px;
+  padding: 0;
+  gap: 0;
+  justify-content: center;
+  flex: 0 0 38px;
+}
+
+body.mobile-browser-view .website-balance-button #website-balance-value,
+body.mobile-browser-view .website-xp-button #website-xp-value {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+body.mobile-browser-view .website-balance-button .vcoin-icon,
+body.mobile-browser-view .website-balance-button .wallet-balance-icon {
+  width: 23px;
+  height: 23px;
+}
+
+body.mobile-browser-view .website-xp-button .website-xp-label {
+  font-size: 15px;
+  line-height: 1;
 }
 
 body.mobile-browser-view .website-profile-button {
@@ -196,13 +222,23 @@ body.mobile-browser-view #website-profile-name {
 
 body.mobile-browser-view .website-header.is-compact .website-balance-button,
 body.mobile-browser-view .website-header.is-compact .website-xp-button {
+  width: 34px;
   height: 34px;
-  min-width: 0;
-  padding-left: 8px;
-  padding-right: 8px;
-  gap: 6px;
-  flex: 0 0 auto;
-  font-size: 14px;
+  min-width: 34px;
+  max-width: 34px;
+  padding: 0;
+  gap: 0;
+  flex: 0 0 34px;
+}
+
+body.mobile-browser-view .website-header.is-compact .website-balance-button .vcoin-icon,
+body.mobile-browser-view .website-header.is-compact .website-balance-button .wallet-balance-icon {
+  width: 20px;
+  height: 20px;
+}
+
+body.mobile-browser-view .website-header.is-compact .website-xp-button .website-xp-label {
+  font-size: 13px;
 }
 
 body.mobile-browser-view .website-header.is-compact .website-header-actions .voxi-notification-bell {
@@ -229,6 +265,11 @@ body.mobile-browser-view .website-header.is-compact .website-profile-button-avat
 
 body.mobile-browser-view .website-header.is-compact #website-profile-name {
   display: none;
+}
+
+body.mobile-browser-view .website-profile-backdrop {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 @supports (-webkit-touch-callout: none) {
