@@ -1,9 +1,11 @@
-from fastapi import APIRouter, Depends, Form, HTTPException
+from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from app.config import ADMIN_IDS, CLICK_TEST_MODE
 from app.deps import get_db
+from app.models import User
 from app.schemas.click import ClickTestSimulateRequest, VCoinClickCheckoutRequest
+from app.services.auth_service import get_session_user
 from app.services.click_service import (
     create_vcoin_checkout_order,
     handle_complete,
@@ -50,11 +52,23 @@ def click_complete(
     return handle_complete(db, locals())
 
 
+def _resolve_checkout_user(db: Session, request: Request, telegram_id: int | None) -> User:
+    session_user = get_session_user(db, request)
+    if session_user:
+        return session_user
+    if telegram_id:
+        user = db.query(User).filter(User.telegram_id == int(telegram_id)).first()
+        if user:
+            return user
+    raise HTTPException(status_code=401, detail="authenticated_user_required")
+
+
 @router.post("/vcoins/checkout")
-def create_vcoin_click_checkout(payload: VCoinClickCheckoutRequest, db: Session = Depends(get_db)):
+def create_vcoin_click_checkout(payload: VCoinClickCheckoutRequest, request: Request, db: Session = Depends(get_db)):
+    user = _resolve_checkout_user(db, request, payload.telegram_id)
     return create_vcoin_checkout_order(
         db,
-        telegram_id=payload.telegram_id,
+        user=user,
         coins=payload.coins,
         promo_code=payload.promo_code,
     )

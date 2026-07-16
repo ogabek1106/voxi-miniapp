@@ -235,14 +235,15 @@ function animateHomeBalance(fromValue, toValue, animate) {
 
 window.refreshVcoinBalance = async function ({ animate = true } = {}) {
   const telegramId = window.getTelegramId();
-  if (!telegramId) return;
+  const websiteUserId = window.AppViewMode?.isWebsite?.() ? Number(window.WebsiteAuthState?.getUser?.()?.id || 0) : 0;
+  if (!telegramId && !websiteUserId) return;
 
   try {
     syncHomeBalanceIcon();
-    const data = await apiGet(`/vcoins/balance?telegram_id=${telegramId}`);
+    const data = await apiGet(telegramId ? `/vcoins/balance?telegram_id=${telegramId}` : "/vcoins/balance");
     const vcoins = Math.max(0, Number(data?.v_coins || 0));
     const balance = displayBalanceFromVcoins(vcoins);
-    const storageKey = getBalanceStorageKey(telegramId);
+    const storageKey = getBalanceStorageKey(telegramId || `user:${websiteUserId}`);
     const storedRaw = window.localStorage?.getItem(storageKey);
     const storedBalance = storedRaw === null ? null : Number(storedRaw);
     const displayedBalance = getDisplayedHomeBalance();

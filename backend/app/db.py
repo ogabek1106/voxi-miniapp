@@ -1347,7 +1347,8 @@ def ensure_vcoin_schema():
         conn.execute(text(
             "CREATE TABLE IF NOT EXISTS coin_ledger ("
             "id SERIAL PRIMARY KEY, "
-            "telegram_id BIGINT NOT NULL, "
+            "user_id INTEGER NULL REFERENCES users(id) ON DELETE SET NULL, "
+            "telegram_id BIGINT NULL, "
             "delta INTEGER NOT NULL, "
             "reason VARCHAR NOT NULL, "
             "reference_type VARCHAR NULL, "
@@ -1355,6 +1356,21 @@ def ensure_vcoin_schema():
             "balance_after INTEGER NOT NULL, "
             "created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()"
             ");"
+        ))
+        conn.execute(text("ALTER TABLE coin_ledger ADD COLUMN IF NOT EXISTS user_id INTEGER;"))
+        conn.execute(text("ALTER TABLE coin_ledger ADD COLUMN IF NOT EXISTS telegram_id BIGINT;"))
+        conn.execute(text("ALTER TABLE coin_ledger ALTER COLUMN telegram_id DROP NOT NULL;"))
+        conn.execute(text(
+            "UPDATE coin_ledger cl "
+            "SET user_id = u.id "
+            "FROM users u "
+            "WHERE cl.user_id IS NULL "
+            "AND cl.telegram_id IS NOT NULL "
+            "AND u.telegram_id = cl.telegram_id;"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_coin_ledger_user_id "
+            "ON coin_ledger (user_id);"
         ))
         conn.execute(text(
             "CREATE INDEX IF NOT EXISTS ix_coin_ledger_telegram_id "
@@ -1412,7 +1428,7 @@ def ensure_payme_schema():
             "id SERIAL PRIMARY KEY, "
             "order_ref VARCHAR(48) NOT NULL, "
             "user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE RESTRICT, "
-            "telegram_id BIGINT NOT NULL, "
+            "telegram_id BIGINT NULL, "
             "product_type VARCHAR(32) NOT NULL, "
             "product_data JSON NOT NULL, "
             "quote_snapshot JSON NOT NULL, "
@@ -1435,6 +1451,7 @@ def ensure_payme_schema():
         conn.execute(text("ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS order_ref VARCHAR(48);"))
         conn.execute(text("ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS user_id INTEGER;"))
         conn.execute(text("ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS telegram_id BIGINT;"))
+        conn.execute(text("ALTER TABLE payment_orders ALTER COLUMN telegram_id DROP NOT NULL;"))
         conn.execute(text("ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS product_type VARCHAR(32);"))
         conn.execute(text("ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS product_data JSON;"))
         conn.execute(text("ALTER TABLE payment_orders ADD COLUMN IF NOT EXISTS quote_snapshot JSON;"))

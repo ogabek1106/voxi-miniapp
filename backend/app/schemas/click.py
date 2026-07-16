@@ -4,7 +4,7 @@ from pydantic import BaseModel
 
 
 class VCoinClickCheckoutRequest(BaseModel):
-    telegram_id: int
+    telegram_id: Optional[int] = None
     coins: int
     promo_code: Optional[str] = None
 

@@ -2,7 +2,7 @@ import os
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, Body, Depends, Header, HTTPException, Query
+from fastapi import APIRouter, Body, Depends, Header, HTTPException, Query, Request
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -22,8 +22,16 @@ from app.services.payment_service import (
     create_payment_request,
     reject_payment,
 )
-from app.services.vcoin_service import get_balance
-from app.services.vcoin_service import get_recent_ledger, spend_once_for_content
+from app.models import User
+from app.services.auth_service import get_session_user
+from app.services.vcoin_service import (
+    get_balance,
+    get_balance_for_user,
+    get_recent_ledger,
+    get_recent_ledger_for_user,
+    spend_once_for_content,
+    spend_once_for_content_for_user,
+)
 from app.services.vcoin_admin_service import (
     apply_manual_balance_adjustment,
     search_users_for_manual_balance,
@@ -55,7 +63,7 @@ class PaymentActionIn(BaseModel):
 
 
 class VCoinSpendIn(BaseModel):
-    telegram_id: int
+    telegram_id: Optional[int] = None
     content_type: str
     reference_id: str
 
@@ -131,6 +139,17 @@ def require_backend_token(authorization: str = Header(default="")):
 def require_admin_id(admin_id: int):
     if int(admin_id) not in ADMIN_IDS:
         raise HTTPException(status_code=403, detail="Admin only")
+
+
+def _resolve_wallet_user(db: Session, request: Request, telegram_id: int | None = None) -> User:
+    session_user = get_session_user(db, request)
+    if session_user:
+        return session_user
+    if telegram_id:
+        user = db.query(User).filter(User.telegram_id == int(telegram_id)).first()
+        if user:
+            return user
+    raise HTTPException(status_code=401, detail="authenticated_user_required")
 
 
 def _serialize_datetime(value):
@@ -275,10 +294,16 @@ def reject_vcoin_payment(
 
 
 @router.get("/balance")
-def get_vcoin_balance(telegram_id: int = Query(...), db: Session = Depends(get_db)):
+def get_vcoin_balance(
+    request: Request,
+    telegram_id: Optional[int] = Query(None),
+    db: Session = Depends(get_db),
+):
+    user = _resolve_wallet_user(db, request, telegram_id)
     return {
-        "telegram_id": int(telegram_id),
-        "v_coins": get_balance(db, telegram_id),
+        "user_id": user.id,
+        "telegram_id": user.telegram_id,
+        "v_coins": get_balance_for_user(db, user.id),
     }
 
 
@@ -400,13 +425,16 @@ def create_manual_vcoin_adjustment(payload: ManualBalanceAdjustmentIn, db: Sessi
 
 @router.get("/ledger")
 def get_vcoin_ledger(
-    telegram_id: int = Query(...),
+    request: Request,
+    telegram_id: Optional[int] = Query(None),
     limit: Optional[int] = Query(None),
     db: Session = Depends(get_db),
 ):
-    entries = get_recent_ledger(db, telegram_id, limit=limit)
+    user = _resolve_wallet_user(db, request, telegram_id)
+    entries = get_recent_ledger_for_user(db, user.id, limit=limit)
     return {
-        "telegram_id": int(telegram_id),
+        "user_id": user.id,
+        "telegram_id": user.telegram_id,
         "items": [
             {
                 "id": item.id,
@@ -423,16 +451,13 @@ def get_vcoin_ledger(
 
 
 @router.post("/spend")
-def spend_vcoins(payload: VCoinSpendIn, db: Session = Depends(get_db)):
-    result = spend_once_for_content(
-        db=db,
-        telegram_id=payload.telegram_id,
-        content_type=payload.content_type,
-        reference_id=payload.reference_id,
-    )
+def spend_vcoins(payload: VCoinSpendIn, request: Request, db: Session = Depends(get_db)):
+    user = _resolve_wallet_user(db, request, payload.telegram_id)
+    result = spend_once_for_content_for_user(db, user, payload.content_type, payload.reference_id)
     db.commit()
     return {
         "ok": True,
+        "user_id": result.user_id,
         "telegram_id": result.telegram_id,
         "content_type": payload.content_type,
         "reference_id": str(payload.reference_id),

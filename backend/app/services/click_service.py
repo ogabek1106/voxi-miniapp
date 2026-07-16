@@ -30,7 +30,7 @@ from app.models_click import ClickTransaction
 from app.models_payments import PaymentOrder
 from app.models_vcoins import CoinLedger
 from app.services.payment_pricing_service import build_quote
-from app.services.vcoin_service import add_coins
+from app.services.vcoin_service import add_coins_to_user
 
 
 ORDER_EXPIRY_HOURS = 12
@@ -307,7 +307,7 @@ def _validate_order_for_prepare(order: PaymentOrder | None, amount: Decimal) -> 
     if _is_expired(order):
         order.status = "expired"
         raise ClickError(CLICK_TRANSACTION_CANCELLED)
-    if not order.telegram_id or int(order.telegram_id) <= 0 or not order.user_id:
+    if not order.user_id:
         raise ClickError(CLICK_USER_NOT_FOUND)
     return order
 
@@ -352,9 +352,16 @@ def _fulfill_vcoins_once(db: Session, order: PaymentOrder) -> None:
 
     order.fulfillment_status = "processing"
     db.flush()
-    add_coins(
+    user = db.query(User).filter(User.id == int(order.user_id)).with_for_update().first()
+    if not user:
+        order.fulfillment_status = "failed"
+        order.status = "fulfillment_failed"
+        order.fulfillment_error = "user_not_found"
+        raise ClickError(CLICK_FAILED_TO_UPDATE_USER)
+
+    add_coins_to_user(
         db=db,
-        telegram_id=int(order.telegram_id),
+        user=user,
         amount=coins,
         reason="click_vcoin_purchase",
         reference_type="payment_order",
@@ -363,7 +370,7 @@ def _fulfill_vcoins_once(db: Session, order: PaymentOrder) -> None:
     ledger = (
         db.query(CoinLedger)
         .filter(
-            CoinLedger.telegram_id == int(order.telegram_id),
+            CoinLedger.user_id == int(order.user_id),
             CoinLedger.delta == coins,
             CoinLedger.reason == "click_vcoin_purchase",
             CoinLedger.reference_type == "payment_order",
@@ -620,16 +627,17 @@ def build_public_payment_params(order_ref: str, amount_tiyin: int) -> dict[str, 
 def create_vcoin_checkout_order(
     db: Session,
     *,
-    telegram_id: int,
+    user: User | None = None,
+    user_id: int | None = None,
+    telegram_id: int | None = None,
     coins: int,
     promo_code: str | None = None,
 ) -> dict[str, Any]:
-    telegram_id = int(telegram_id or 0)
-    if telegram_id <= 0:
-        raise HTTPException(status_code=422, detail="telegram_id_required")
-
-    user = db.query(User).filter(User.telegram_id == telegram_id).first()
-    if not user or not user.telegram_id:
+    if user is None and user_id:
+        user = db.query(User).filter(User.id == int(user_id)).first()
+    if user is None and telegram_id:
+        user = db.query(User).filter(User.telegram_id == int(telegram_id)).first()
+    if not user:
         raise HTTPException(status_code=404, detail="user_not_found")
 
     quote = build_quote(db, coins, promo_code)
@@ -641,7 +649,7 @@ def create_vcoin_checkout_order(
     order = PaymentOrder(
         order_ref=generate_order_ref(db),
         user_id=int(user.id),
-        telegram_id=int(user.telegram_id),
+        telegram_id=int(user.telegram_id) if user.telegram_id else None,
         product_type="vcoin",
         product_data={
             "type": "vcoin",

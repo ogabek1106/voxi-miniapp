@@ -50,7 +50,7 @@ class PaymentOrder(Base):
     id = Column(Integer, primary_key=True, index=True)
     order_ref = Column(String(48), nullable=False, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, index=True)
-    telegram_id = Column(BigInteger, nullable=False, index=True)
+    telegram_id = Column(BigInteger, nullable=True, index=True)
     product_type = Column(String(32), nullable=False, index=True)
     product_data = Column(JSON, nullable=False)
     quote_snapshot = Column(JSON, nullable=False)

@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import BigInteger, Boolean, Column, DateTime, Integer, JSON, String, Text
+from sqlalchemy import BigInteger, Boolean, Column, DateTime, ForeignKey, Integer, JSON, String, Text
 
 from app.db import Base
 
@@ -65,7 +65,8 @@ class CoinLedger(Base):
     __tablename__ = "coin_ledger"
 
     id = Column(Integer, primary_key=True, index=True)
-    telegram_id = Column(BigInteger, nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    telegram_id = Column(BigInteger, nullable=True, index=True)
     delta = Column(Integer, nullable=False)
     reason = Column(String, nullable=False, index=True)
     reference_type = Column(String, nullable=True)

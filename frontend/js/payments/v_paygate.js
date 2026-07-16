@@ -323,9 +323,9 @@ window.VPayGate = window.VPayGate || {};
 
   async function createCheckout() {
     const telegramId = await resolveTelegramId();
-    if (!telegramId) throw new Error("telegram_required");
+    if (!telegramId && !window.AppViewMode?.isWebsite?.()) throw new Error("telegram_required");
     return await window.apiPost("/payments/click/vcoins/checkout", {
-      telegram_id: Number(telegramId),
+      ...(telegramId ? { telegram_id: Number(telegramId) } : {}),
       coins: Number(state.product?.coins || coinsForTopup(state.product?.amount_uzs)),
       promo_code: state.product?.promo_code || null,
     });
@@ -344,8 +344,10 @@ window.VPayGate = window.VPayGate || {};
 
   async function fetchOrderStatus(orderRef) {
     const telegramId = await resolveTelegramId();
-    if (!telegramId || !orderRef) return null;
-    return await window.apiGet(`/payments/orders/${encodeURIComponent(orderRef)}/status?telegram_id=${encodeURIComponent(telegramId)}`);
+    if (!orderRef) return null;
+    if (!telegramId && !window.AppViewMode?.isWebsite?.()) return null;
+    const query = telegramId ? `?telegram_id=${encodeURIComponent(telegramId)}` : "";
+    return await window.apiGet(`/payments/orders/${encodeURIComponent(orderRef)}/status${query}`);
   }
 
   function mapBackendStatus(status) {

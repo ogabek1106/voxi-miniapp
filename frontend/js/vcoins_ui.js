@@ -624,8 +624,8 @@ window.VCoinUI = window.VCoinUI || {};
   async function fetchBalance() {
     const id = telegramId();
     if (!id && window.AppViewMode?.isWebsite?.()) {
-      const user = window.WebsiteAuthState?.getUser?.();
-      return Number(user?.v_coins || 0);
+      const data = await apiGet("/vcoins/balance");
+      return Number(data?.v_coins || 0);
     }
     if (!id) return 0;
     const data = await apiGet(`/vcoins/balance?telegram_id=${id}`);
@@ -635,10 +635,7 @@ window.VCoinUI = window.VCoinUI || {};
   async function fetchLedger() {
     const id = telegramId();
     if (!id && window.AppViewMode?.isWebsite?.()) {
-      const user = window.WebsiteAuthState?.getUser?.();
-      const websiteTelegramId = Number(user?.telegram_id || 0);
-      if (!websiteTelegramId) return [];
-      const data = await apiGet(`/vcoins/ledger?telegram_id=${websiteTelegramId}`);
+      const data = await apiGet("/vcoins/ledger");
       return Array.isArray(data?.items) ? data.items : [];
     }
     if (!id) return [];
@@ -686,14 +683,15 @@ window.VCoinUI = window.VCoinUI || {};
 
   async function createClickCheckout(telegramId, coins, promoCode) {
     return await apiPost("/payments/click/vcoins/checkout", {
-      telegram_id: Number(telegramId),
+      ...(telegramId ? { telegram_id: Number(telegramId) } : {}),
       coins: Number(coins || 0),
       promo_code: promoCode || null
     });
   }
 
   async function fetchOrderStatus(orderRef, telegramId) {
-    return await apiGet(`/payments/orders/${encodeURIComponent(orderRef)}/status?telegram_id=${encodeURIComponent(Number(telegramId || 0))}`);
+    const query = telegramId ? `?telegram_id=${encodeURIComponent(Number(telegramId || 0))}` : "";
+    return await apiGet(`/payments/orders/${encodeURIComponent(orderRef)}/status${query}`);
   }
 
   function isTelegramMiniApp() {
@@ -1178,7 +1176,7 @@ window.VCoinUI = window.VCoinUI || {};
       if (clickCheckoutPending || !activeClickCardAttempt?.order_ref) return;
       try {
         const id = await resolveTelegramId();
-        if (!id) {
+        if (!id && !window.AppViewMode?.isWebsite?.()) {
           alert("Please log in with Telegram before buying V-Coins.");
           return;
         }
@@ -1196,7 +1194,7 @@ window.VCoinUI = window.VCoinUI || {};
       if (!activeClickCardAttempt?.order_ref) return;
       try {
         const id = await resolveTelegramId();
-        if (!id) {
+        if (!id && !window.AppViewMode?.isWebsite?.()) {
           alert("Please log in with Telegram before buying V-Coins.");
           return;
         }
@@ -1213,7 +1211,7 @@ window.VCoinUI = window.VCoinUI || {};
       if (!attempt) return;
       try {
         const id = await resolveTelegramId();
-        if (!id) {
+        if (!id && !window.AppViewMode?.isWebsite?.()) {
           renderClickPendingPanel("Payment is still pending. Log in with Telegram to resume or check status.");
           return;
         }
@@ -1271,7 +1269,7 @@ window.VCoinUI = window.VCoinUI || {};
       if (button) button.disabled = true;
       try {
         const id = await resolveTelegramId();
-        if (!id) {
+        if (!id && !window.AppViewMode?.isWebsite?.()) {
           closePaymentWindow(paymentWindow);
           alert("Please log in with Telegram before buying V-Coins.");
           return;
@@ -1308,7 +1306,7 @@ window.VCoinUI = window.VCoinUI || {};
         if (button) button.disabled = true;
         try {
           const id = await resolveTelegramId();
-          if (!id) {
+          if (!id && !window.AppViewMode?.isWebsite?.()) {
             alert("Please log in with Telegram before buying V-Coins.");
             return;
           }
@@ -1352,7 +1350,7 @@ window.VCoinUI = window.VCoinUI || {};
       setClickChoiceDisabled(true);
       try {
         const id = await resolveTelegramId();
-        if (!id) {
+        if (!id && !window.AppViewMode?.isWebsite?.()) {
           closePaymentWindow(paymentWindow);
           alert("Please log in with Telegram before buying V-Coins.");
           return;
@@ -1383,7 +1381,7 @@ window.VCoinUI = window.VCoinUI || {};
       showPaymentStatus("Creating Click payment...");
       try {
         const id = await resolveTelegramId();
-        if (!id) {
+        if (!id && !window.AppViewMode?.isWebsite?.()) {
           alert("Please log in with Telegram before buying V-Coins.");
           clickCheckoutPending = false;
           setClickChoiceDisabled(false);
@@ -1683,7 +1681,7 @@ window.VCoinUI = window.VCoinUI || {};
 
   window.VCoinUI.ensureAccess = async function ({ contentType, referenceId, serviceName }) {
     const id = await resolveTelegramId();
-    if (!id) {
+    if (!id && !window.AppViewMode?.isWebsite?.()) {
       if (window.AppViewMode?.isWebsite?.()) {
         alert(isVcoinEnabled() ? "Please log in with Telegram to use V-Coin paid content." : "Iltimos, avval Telegram orqali kiring.");
       } else {
@@ -1694,7 +1692,7 @@ window.VCoinUI = window.VCoinUI || {};
 
     try {
       const result = await apiPost("/vcoins/spend", {
-        telegram_id: id,
+        ...(id ? { telegram_id: id } : {}),
         content_type: contentType,
         reference_id: String(referenceId)
       });
