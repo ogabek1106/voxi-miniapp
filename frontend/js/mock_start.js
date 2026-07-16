@@ -100,6 +100,19 @@ async function fetchReadingStartWithRetry(url, attempts = 3) {
   throw lastError;
 }
 
+const FULL_MOCK_VCOIN_COST = 10;
+
+function formatMockUzs(amount) {
+  const parsed = Number(amount);
+  const normalized = Number.isFinite(parsed) ? Math.max(0, Math.floor(parsed)) : 0;
+  return `${normalized.toLocaleString("ru-RU").replace(/\u00a0/g, " ")} UZS`;
+}
+
+function fullMockPriceUzs() {
+  const converted = window.UzsBalance?.convertVCoinsToUzs?.(FULL_MOCK_VCOIN_COST);
+  return Number.isFinite(Number(converted)) ? Number(converted) : 50000;
+}
+
 function examTelegramId() {
   if (typeof window.getExamTelegramId === "function") return window.getExamTelegramId();
   return typeof window.getTelegramId === "function" ? window.getTelegramId() : null;
@@ -179,59 +192,99 @@ MockFlow.showFinalTransition = function (mockId, container, onDone) {
 window.openMockWarning = function (packId, title) {
 
   if (!screenMocks) return;
+  const fullMockPrice = formatMockUzs(fullMockPriceUzs());
+  const primaryLabel = window.AppConfig?.isVcoinEnabled?.() ? "Start Full Mock" : "Proceed to payment";
 
   screenMocks.innerHTML = `
     <div style="
       width:100%;
+      max-width:920px;
+      margin:28px auto;
       box-sizing:border-box;
       text-align:left;
       background: var(--card-bg, #f4f4f6);
-      border-radius:16px;
-      padding:16px 14px;
+      border-radius:22px;
+      padding:clamp(24px, 4vw, 38px);
       box-shadow: 0 6px 18px rgba(0,0,0,0.08);
     ">
       <div style="
-        font-size:20px;
-        font-weight:800;
+        font-size:clamp(26px, 3vw, 32px);
+        line-height:1.1;
+        font-weight:900;
         color:#111827;
-        margin-bottom:4px;
+        margin-bottom:12px;
       ">${title}</div>
 
       <div style="
-        font-size:14px;
-        font-weight:700;
+        font-size:clamp(19px, 2vw, 22px);
+        line-height:1.25;
+        font-weight:850;
         color:#111827;
-        margin-bottom:10px;
+        margin-bottom:14px;
       ">Full IELTS Mock Test Warning</div>
 
       <div style="
-        font-size:13px;
-        line-height:1.55;
+        font-size:clamp(16px, 1.4vw, 18px);
+        line-height:1.65;
         color:#374151;
       ">
         This full mock simulates real exam pressure. Please read before you start:
       </div>
 
       <ul style="
-        margin:10px 0 0 18px;
+        margin:14px 0 0 22px;
         padding:0;
         color:#374151;
-        font-size:13px;
-        line-height:1.6;
+        font-size:clamp(16px, 1.35vw, 18px);
+        line-height:1.7;
       ">
         <li>The test starts from Listening and continues in fixed order: Reading, Writing, Speaking.</li>
         <li>After each part, you get a short transition timer to prepare for the next part.</li>
-        <li>Starting this Full Mock will cost you 10 V-Coins.</li>
         <li>Do not refresh or close the app during the test.</li>
         <li>If you leave, your timer does not pause and exam pressure is preserved.</li>
         <li>You should not exit the test until all parts are completed.</li>
       </ul>
 
-      <button onclick="startFullMock(${packId})" style="margin-top:14px;">
-        Start Full Mock
+      <div style="
+        margin-top:22px;
+        padding:16px 18px;
+        border-radius:16px;
+        background:#eef8ff;
+        border:1px solid rgba(0, 166, 230, 0.16);
+      ">
+        <div style="
+          color:#526273;
+          font-size:16px;
+          font-weight:800;
+          margin-bottom:4px;
+        ">Full Mock price</div>
+        <div style="
+          color:#111827;
+          font-size:clamp(20px, 2vw, 24px);
+          line-height:1.15;
+          font-weight:950;
+        ">${fullMockPrice}</div>
+      </div>
+
+      <button onclick="startFullMock(${packId})" style="
+        width:100%;
+        min-height:52px;
+        margin-top:22px;
+        font-size:clamp(16px, 1.5vw, 18px);
+        font-weight:900;
+      ">
+        ${primaryLabel}
       </button>
 
-      <button onclick="showMockList()" style="margin-top:8px; background:#e5e7eb; color:#111827;">
+      <button onclick="showMockList()" style="
+        width:100%;
+        min-height:48px;
+        margin-top:10px;
+        background:#e5e7eb;
+        color:#111827;
+        font-size:clamp(16px, 1.4vw, 17px);
+        font-weight:850;
+      ">
         Back
       </button>
     </div>
