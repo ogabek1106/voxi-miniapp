@@ -1758,6 +1758,7 @@ window.VCoinUI = window.VCoinUI || {};
         product: "wallet_topup",
         amount_uzs: missingUzs,
         origin: contentType || "paid_content",
+        return_page: window.IeltsEntryReturn?.resolve?.() || "",
         service: {
           content_type: contentType || "",
           reference_id: String(referenceId ?? ""),

@@ -225,6 +225,10 @@ UserReading.exitToHome = async function () {
 
   window.MockFlow?.deactivate?.();
   window.__activeExamPart = null;
+  if (window.IeltsEntryReturn?.goBack) {
+    window.IeltsEntryReturn.goBack();
+    return;
+  }
   if (typeof window.goHome === "function") {
     window.goHome();
     return;

@@ -119,8 +119,88 @@ function examTelegramId() {
 }
 
 window.VWarningGateway = window.VWarningGateway || {};
+window.IeltsEntryReturn = window.IeltsEntryReturn || {};
 
 (function () {
+  const RETURN_STORAGE_KEY = "ielts_entry_return_to";
+
+  function normalizeReturnTarget(value) {
+    const raw = String(value || "").trim().toLowerCase();
+    if (["mock", "mocks", "mock-list", "ielts-mock-test", "ielts_mock_test"].includes(raw)) return "mocks";
+    if (["profile", "purchase-history", "history"].includes(raw)) return "profile";
+    if (raw === "home" || raw === "homepage" || raw === "single-block") return "home";
+    return "";
+  }
+
+  function inferReturnTarget(feature) {
+    const params = new URLSearchParams(window.location.search);
+    const origin = normalizeReturnTarget(params.get("origin"));
+    if (origin) return origin;
+    const returnPage = normalizeReturnTarget(params.get("return") || params.get("return_page"));
+    if (returnPage) return returnPage;
+    const page = String(params.get("page") || "").trim().toLowerCase();
+    if (page === "ielts-mock-test") return "mocks";
+    if (["reading", "listening", "writing", "speaking"].includes(page)) return "home";
+    if (page === "profile") return "profile";
+    return feature === "full_mock" ? "mocks" : "home";
+  }
+
+  function rememberReturnTarget(value) {
+    const normalized = normalizeReturnTarget(value) || "home";
+    window.IeltsEntryReturn.current = normalized;
+    try {
+      window.sessionStorage?.setItem?.(RETURN_STORAGE_KEY, normalized);
+    } catch (_) {}
+    return normalized;
+  }
+
+  function resolveReturnTarget() {
+    const current = normalizeReturnTarget(window.IeltsEntryReturn.current);
+    if (current) return current;
+    try {
+      const stored = normalizeReturnTarget(window.sessionStorage?.getItem?.(RETURN_STORAGE_KEY));
+      if (stored) return stored;
+    } catch (_) {}
+    return "home";
+  }
+
+  function clearReturnTarget() {
+    window.IeltsEntryReturn.current = "";
+    try {
+      window.sessionStorage?.removeItem?.(RETURN_STORAGE_KEY);
+    } catch (_) {}
+  }
+
+  window.IeltsEntryReturn.remember = rememberReturnTarget;
+  window.IeltsEntryReturn.resolve = resolveReturnTarget;
+  window.IeltsEntryReturn.clear = clearReturnTarget;
+  window.IeltsEntryReturn.goBack = function () {
+    const target = resolveReturnTarget();
+    clearReturnTarget();
+    if (target === "mocks") {
+      try {
+        window.history?.replaceState?.({ page: "ielts-mock-test" }, "", "/?page=ielts-mock-test");
+      } catch (_) {}
+      if (typeof window.showMocksEntry === "function") {
+        window.showMocksEntry();
+        return;
+      }
+      if (typeof window.showMocksScreen === "function") {
+        window.showMocksScreen();
+        return;
+      }
+    }
+    if (target === "profile" && typeof window.goProfile === "function") {
+      window.goProfile();
+      return;
+    }
+    if (typeof window.goHome === "function") {
+      window.goHome();
+      return;
+    }
+    if (window.history.length > 1) window.history.back();
+  };
+
   const FEATURE_CONFIG = {
     full_mock: {
       label: "To'liq IELTS Mock testi",
@@ -535,8 +615,7 @@ window.VWarningGateway = window.VWarningGateway || {};
   }
 
   function startFeature(feature, mockId, mode, meta = {}) {
-    releaseHost();
-    const options = { fromGateway: true };
+    const options = { fromGateway: true, returnTo: meta.returnTo || window.IeltsEntryReturn.resolve?.() || "home" };
     if (mode === "full_mock" && feature !== "full_mock") options.fromFlow = true;
     if (feature === "full_mock") return window.startFullMock?.(mockId, options);
     if (feature === "listening") return window.startListeningMock?.(mockId, options);
@@ -598,8 +677,7 @@ window.VWarningGateway = window.VWarningGateway || {};
     `;
     document.getElementById("ielts-warning-back").onclick = () => {
       releaseHost();
-      if (typeof showMockList === "function") showMockList();
-      else if (typeof showHome === "function") showHome();
+      window.IeltsEntryReturn?.goBack?.();
     };
     document.getElementById("ielts-warning-primary").onclick = async () => {
       const button = document.getElementById("ielts-warning-primary");
@@ -629,11 +707,12 @@ window.VWarningGateway = window.VWarningGateway || {};
     };
   }
 
-  window.VWarningGateway.open = async function ({ feature, mockId, title = "", mode = "single_block" } = {}) {
+  window.VWarningGateway.open = async function ({ feature, mockId, title = "", mode = "single_block", returnTo = "", origin = "" } = {}) {
     const normalizedFeature = FEATURE_CONFIG[feature] ? feature : "reading";
     const safeMockId = Number(mockId || 0);
     if (!safeMockId) return;
     const normalizedMode = mode === "full_mock" ? "full_mock" : "single_block";
+    rememberReturnTarget(returnTo || origin || inferReturnTarget(normalizedFeature));
     render({ feature: normalizedFeature, mockId: safeMockId, title, mode: normalizedMode, status: null });
     try {
       const status = await loadAccessStatus(normalizedFeature, safeMockId, normalizedMode);
@@ -721,7 +800,8 @@ window.openMockWarning = function (packId, title) {
   window.VWarningGateway?.open?.({
     feature: "full_mock",
     mockId: packId,
-    title
+    title,
+    returnTo: "mocks"
   });
 };
 
@@ -769,10 +849,12 @@ window.startFullMock = async function (mockId, options = {}) {
     window.VWarningGateway?.open?.({
       feature: "full_mock",
       mockId,
-      title: options.title || `IELTS Mock №${String(mockId).padStart(2, "0")}`
+      title: options.title || `IELTS Mock №${String(mockId).padStart(2, "0")}`,
+      returnTo: options.returnTo
     });
     return;
   }
+  window.IeltsEntryReturn?.remember?.(options.returnTo || "mocks");
   if (await window.PremiereUi?.interceptIfPremiere?.(mockId)) {
     return;
   }
@@ -796,7 +878,7 @@ window.startFullMock = async function (mockId, options = {}) {
   if (!allowed) return;
 
   MockFlow.activate(mockId);
-  await window.startListeningMock(mockId, { fromFlow: true });
+  await window.startListeningMock(mockId, { fromFlow: true, returnTo: options.returnTo || window.IeltsEntryReturn?.resolve?.() });
 };
 
 window.startMock = async function (mockId, options = {}) {
@@ -805,10 +887,12 @@ window.startMock = async function (mockId, options = {}) {
     window.VWarningGateway?.open?.({
       feature: "reading",
       mockId,
-      title: options.title || "IELTS Reading"
+      title: options.title || "IELTS Reading",
+      returnTo: options.returnTo
     });
     return;
   }
+  if (!options.fromFlow) window.IeltsEntryReturn?.remember?.(options.returnTo || "home");
   if (!options.fromFlow) {
     if (await window.PremiereUi?.interceptIfPremiere?.(mockId)) {
       return;
@@ -894,10 +978,12 @@ window.startWritingMock = async function (mockId, options = {}) {
     window.VWarningGateway?.open?.({
       feature: "writing",
       mockId,
-      title: options.title || "IELTS Writing"
+      title: options.title || "IELTS Writing",
+      returnTo: options.returnTo
     });
     return;
   }
+  if (!options.fromFlow) window.IeltsEntryReturn?.remember?.(options.returnTo || "home");
   if (!options.fromFlow) {
     if (await window.PremiereUi?.interceptIfPremiere?.(mockId)) {
       return;
@@ -953,10 +1039,12 @@ window.startListeningMock = async function (mockId, options = {}) {
     window.VWarningGateway?.open?.({
       feature: "listening",
       mockId,
-      title: options.title || "IELTS Listening"
+      title: options.title || "IELTS Listening",
+      returnTo: options.returnTo
     });
     return;
   }
+  if (!options.fromFlow) window.IeltsEntryReturn?.remember?.(options.returnTo || "home");
   if (!options.fromFlow) {
     if (await window.PremiereUi?.interceptIfPremiere?.(mockId)) {
       return;
@@ -1134,10 +1222,12 @@ window.startSpeakingMock = async function (mockId, options = {}) {
     window.VWarningGateway?.open?.({
       feature: "speaking",
       mockId,
-      title: options.title || "IELTS Speaking"
+      title: options.title || "IELTS Speaking",
+      returnTo: options.returnTo
     });
     return;
   }
+  if (!options.fromFlow) window.IeltsEntryReturn?.remember?.(options.returnTo || "home");
   if (!options.fromFlow) {
     if (await window.PremiereUi?.interceptIfPremiere?.(mockId)) {
       return;

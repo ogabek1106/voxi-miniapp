@@ -539,7 +539,7 @@ window.VPayGate = window.VPayGate || {};
     if (service.content_type === "full_mock") {
       const mockId = Number(reference);
       if (Number.isFinite(mockId) && typeof window.startFullMock === "function") {
-        window.startFullMock(mockId);
+        window.startFullMock(mockId, { returnTo: state.product?.return_page || window.IeltsEntryReturn?.resolve?.() || "home" });
         return;
       }
     }
@@ -549,19 +549,19 @@ window.VPayGate = window.VPayGate || {};
       const mockId = Number(rawMockId);
       if (Number.isFinite(mockId)) {
         if (section === "reading" && typeof window.startMock === "function") {
-          window.startMock(mockId);
+          window.startMock(mockId, { returnTo: state.product?.return_page || window.IeltsEntryReturn?.resolve?.() || "home" });
           return;
         }
         if (section === "listening" && typeof window.startListeningMock === "function") {
-          window.startListeningMock(mockId);
+          window.startListeningMock(mockId, { returnTo: state.product?.return_page || window.IeltsEntryReturn?.resolve?.() || "home" });
           return;
         }
         if (section === "writing" && typeof window.startWritingMock === "function") {
-          window.startWritingMock(mockId);
+          window.startWritingMock(mockId, { returnTo: state.product?.return_page || window.IeltsEntryReturn?.resolve?.() || "home" });
           return;
         }
         if (section === "speaking" && typeof window.startSpeakingMock === "function") {
-          window.startSpeakingMock(mockId);
+          window.startSpeakingMock(mockId, { returnTo: state.product?.return_page || window.IeltsEntryReturn?.resolve?.() || "home" });
           return;
         }
       }
