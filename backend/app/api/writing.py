@@ -100,15 +100,29 @@ def _session_mode(value: str | None) -> str:
     return "full_mock" if str(value or "").strip().lower() == "full_mock" else "single_block"
 
 
-def _require_writing_paid_access(db: Session, telegram_id: int, mock_id: int, progress: WritingProgress | None, is_admin: bool) -> None:
-    if is_admin:
-        return
+def _require_writing_paid_access(
+    db: Session,
+    telegram_id: int,
+    mock_id: int,
+    progress: WritingProgress | None,
+    is_admin: bool,
+    session_mode: str = "single_block",
+) -> None:
     if progress and not progress.is_submitted:
         return
     if has_active_premiere_access(db, telegram_id, mock_id):
         return
     if is_active_premiere_pack(db, mock_id):
         raise HTTPException(status_code=402, detail="premiere_access_required")
+    mode = _session_mode(session_mode)
+    if mode == "full_mock":
+        require_paid_access_or_spend(
+            db=db,
+            telegram_id=telegram_id,
+            content_type="full_mock",
+            reference_id=mock_id,
+        )
+        return
     require_paid_access_or_spend(
         db=db,
         telegram_id=telegram_id,
@@ -200,7 +214,7 @@ def start_writing(mock_id: int, payload: WritingStartIn, db: Session = Depends(g
             "progress": _serialize_progress(progress)
         }
 
-    _require_writing_paid_access(db, payload.telegram_id, mock_id, progress, is_admin)
+    _require_writing_paid_access(db, payload.telegram_id, mock_id, progress, is_admin, payload.session_mode)
 
     if not progress:
         progress = WritingProgress(
@@ -293,7 +307,7 @@ def save_writing(mock_id: int, payload: WritingSaveIn, db: Session = Depends(get
     )
 
     if not progress:
-        _require_writing_paid_access(db, payload.telegram_id, mock_id, progress, is_admin)
+        _require_writing_paid_access(db, payload.telegram_id, mock_id, progress, is_admin, payload.session_mode)
         progress = WritingProgress(
             test_id=test.id,
             telegram_id=payload.telegram_id,
@@ -352,7 +366,7 @@ def submit_writing(mock_id: int, payload: WritingSubmitIn, db: Session = Depends
         .first()
     )
     if not progress:
-        _require_writing_paid_access(db, payload.telegram_id, mock_id, progress, is_admin)
+        _require_writing_paid_access(db, payload.telegram_id, mock_id, progress, is_admin, payload.session_mode)
         progress = WritingProgress(
             test_id=test.id,
             telegram_id=payload.telegram_id,

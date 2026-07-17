@@ -815,6 +815,7 @@ class FullMockResult(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     mock_pack_id = Column(Integer, ForeignKey("mock_packs.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(Integer, nullable=True, index=True)
     telegram_id = Column(BigInteger, nullable=False, index=True)
     listening_band = Column(Float, nullable=True)
     reading_band = Column(Float, nullable=True)

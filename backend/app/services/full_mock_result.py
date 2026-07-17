@@ -5,6 +5,7 @@ from decimal import Decimal, ROUND_FLOOR
 from typing import Any, Dict, List
 
 from fastapi import HTTPException
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.models import (
@@ -82,11 +83,23 @@ def calculate_overall_band(
     }
 
 
+def _get_user_by_exam_identity(db: Session, telegram_id: int) -> User | None:
+    if int(telegram_id) < 0:
+        return db.query(User).filter(User.id == abs(int(telegram_id))).first()
+    return db.query(User).filter(User.telegram_id == int(telegram_id)).first()
+
+
+def _progress_identity_for_user(user: User, fallback_telegram_id: int) -> int:
+    if user.telegram_id:
+        return int(user.telegram_id)
+    return -int(user.id)
+
+
 def _get_reading_band(db: Session, mock_id: int, telegram_id: int) -> float | None:
     test = db.query(ReadingTest).filter(ReadingTest.mock_pack_id == mock_id).first()
     if not test:
         return None
-    user = db.query(User).filter(User.telegram_id == telegram_id).first()
+    user = _get_user_by_exam_identity(db, telegram_id)
     if not user:
         return None
     progress = (
@@ -195,6 +208,7 @@ def _get_listening_band(db: Session, mock_id: int, telegram_id: int) -> float | 
 def _upsert_result_row(
     db: Session,
     mock_id: int,
+    user_id: int | None,
     telegram_id: int,
     listening_band: float | None,
     reading_band: float | None,
@@ -204,17 +218,21 @@ def _upsert_result_row(
     overall_band: float | None,
     status: str,
 ) -> FullMockResult:
+    filters = [FullMockResult.telegram_id == telegram_id]
+    if user_id:
+        filters.append(FullMockResult.user_id == int(user_id))
     row = (
         db.query(FullMockResult)
         .filter(
             FullMockResult.mock_pack_id == mock_id,
-            FullMockResult.telegram_id == telegram_id,
+            or_(*filters),
         )
         .first()
     )
     if not row:
         row = FullMockResult(mock_pack_id=mock_id, telegram_id=telegram_id)
 
+    row.user_id = int(user_id) if user_id else None
     row.listening_band = listening_band
     row.reading_band = reading_band
     row.writing_band = writing_band
@@ -235,10 +253,15 @@ def build_full_mock_result(db: Session, mock_id: int, telegram_id: int) -> Dict[
     if not mock_pack:
         raise HTTPException(status_code=404, detail="Mock pack not found")
 
-    listening_band = _get_listening_band(db, mock_id, telegram_id)
-    reading_band = _get_reading_band(db, mock_id, telegram_id)
-    writing_band = _get_writing_band(db, mock_id, telegram_id)
-    speaking_band = _get_speaking_band(db, mock_id, telegram_id)
+    user = _get_user_by_exam_identity(db, telegram_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    progress_telegram_id = _progress_identity_for_user(user, telegram_id)
+
+    listening_band = _get_listening_band(db, mock_id, progress_telegram_id)
+    reading_band = _get_reading_band(db, mock_id, progress_telegram_id)
+    writing_band = _get_writing_band(db, mock_id, progress_telegram_id)
+    speaking_band = _get_speaking_band(db, mock_id, progress_telegram_id)
 
     pending_parts: List[str] = []
     if listening_band is None:
@@ -254,7 +277,8 @@ def build_full_mock_result(db: Session, mock_id: int, telegram_id: int) -> Dict[
         row = _upsert_result_row(
             db=db,
             mock_id=mock_id,
-            telegram_id=telegram_id,
+            user_id=user.id,
+            telegram_id=progress_telegram_id,
             listening_band=listening_band,
             reading_band=reading_band,
             writing_band=writing_band,
@@ -284,7 +308,8 @@ def build_full_mock_result(db: Session, mock_id: int, telegram_id: int) -> Dict[
     row = _upsert_result_row(
         db=db,
         mock_id=mock_id,
-        telegram_id=telegram_id,
+        user_id=user.id,
+        telegram_id=progress_telegram_id,
         listening_band=listening_band,
         reading_band=reading_band,
         writing_band=writing_band,

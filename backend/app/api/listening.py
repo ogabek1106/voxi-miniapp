@@ -43,15 +43,28 @@ def _resolve_test_for_mock(db: Session, mock_id: int) -> ListeningTest:
     return test
 
 
-def _require_listening_paid_access(db: Session, telegram_id: int, mock_id: int, progress: ListeningProgress | None = None) -> None:
-    if int(telegram_id) in ADMIN_IDS:
-        return
+def _require_listening_paid_access(
+    db: Session,
+    telegram_id: int,
+    mock_id: int,
+    progress: ListeningProgress | None = None,
+    session_mode: str = "single_block",
+) -> None:
     if progress and not progress.is_submitted:
         return
     if has_active_premiere_access(db, telegram_id, mock_id):
         return
     if is_active_premiere_pack(db, mock_id):
         raise HTTPException(status_code=402, detail="premiere_access_required")
+    mode = _session_mode(session_mode)
+    if mode == "full_mock":
+        require_paid_access_or_spend(
+            db=db,
+            telegram_id=telegram_id,
+            content_type="full_mock",
+            reference_id=mock_id,
+        )
+        return
     require_paid_access_or_spend(
         db=db,
         telegram_id=telegram_id,
@@ -247,7 +260,7 @@ def start_listening(
         db.add(progress)
         db.commit()
 
-    _require_listening_paid_access(db, telegram_id, mock_id, progress)
+    _require_listening_paid_access(db, telegram_id, mock_id, progress, mode)
     return _serialize_test(db, test)
 
 
@@ -257,7 +270,7 @@ def save_listening(mock_id: int, payload: ListeningSaveIn, db: Session = Depends
     now = _utcnow()
     mode = _session_mode(payload.session_mode)
     progress = _get_progress(db, test.id, payload.telegram_id, mode)
-    _require_listening_paid_access(db, payload.telegram_id, mock_id, progress)
+    _require_listening_paid_access(db, payload.telegram_id, mock_id, progress, mode)
 
     if not progress:
         progress = ListeningProgress(
@@ -295,7 +308,7 @@ def save_listening(mock_id: int, payload: ListeningSaveIn, db: Session = Depends
 def resume_listening(mock_id: int, telegram_id: int, session_mode: str = "single_block", db: Session = Depends(get_db)):
     test = _resolve_test_for_mock(db, mock_id)
     progress = _get_progress(db, test.id, telegram_id, session_mode)
-    _require_listening_paid_access(db, telegram_id, mock_id, progress)
+    _require_listening_paid_access(db, telegram_id, mock_id, progress, session_mode)
     if not progress:
         return {"answers": {}, "is_submitted": False}
     return {
@@ -316,7 +329,7 @@ def submit_listening(mock_id: int, payload: ListeningSubmitIn, db: Session = Dep
     now = _utcnow()
     mode = _session_mode(payload.session_mode)
     progress = _get_progress(db, test.id, payload.telegram_id, mode)
-    _require_listening_paid_access(db, payload.telegram_id, mock_id, progress)
+    _require_listening_paid_access(db, payload.telegram_id, mock_id, progress, mode)
 
     if not progress:
         progress = ListeningProgress(

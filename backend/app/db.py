@@ -912,6 +912,7 @@ def ensure_full_mock_results_schema():
             "CREATE TABLE IF NOT EXISTS full_mock_results ("
             "id SERIAL PRIMARY KEY, "
             "mock_pack_id INTEGER NOT NULL, "
+            "user_id INTEGER NULL, "
             "telegram_id BIGINT NOT NULL, "
             "listening_band DOUBLE PRECISION NULL, "
             "reading_band DOUBLE PRECISION NULL, "
@@ -928,6 +929,10 @@ def ensure_full_mock_results_schema():
         conn.execute(text(
             "ALTER TABLE full_mock_results "
             "ADD COLUMN IF NOT EXISTS mock_pack_id INTEGER;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE full_mock_results "
+            "ADD COLUMN IF NOT EXISTS user_id INTEGER;"
         ))
         conn.execute(text(
             "ALTER TABLE full_mock_results "
@@ -977,6 +982,10 @@ def ensure_full_mock_results_schema():
         conn.execute(text(
             "CREATE INDEX IF NOT EXISTS ix_full_mock_results_mock_pack_id "
             "ON full_mock_results (mock_pack_id);"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_full_mock_results_user_id "
+            "ON full_mock_results (user_id);"
         ))
         conn.execute(text(
             "CREATE INDEX IF NOT EXISTS ix_full_mock_results_telegram_id "

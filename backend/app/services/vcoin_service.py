@@ -31,6 +31,9 @@ def _positive_amount(amount: int) -> int:
 
 
 def _get_or_create_user_for_update(db: Session, telegram_id: int) -> User:
+    if int(telegram_id) < 0:
+        return _get_user_for_update(db, abs(int(telegram_id)))
+
     user = (
         db.query(User)
         .filter(User.telegram_id == int(telegram_id))
@@ -70,6 +73,8 @@ def _legacy_telegram_filter(user: User):
 
 
 def get_balance(db: Session, telegram_id: int) -> int:
+    if int(telegram_id) < 0:
+        return get_balance_for_user(db, abs(int(telegram_id)))
     user = db.query(User).filter(User.telegram_id == int(telegram_id)).first()
     if not user:
         return 0

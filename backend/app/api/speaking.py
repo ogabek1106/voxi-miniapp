@@ -77,15 +77,29 @@ def _session_mode(value: str | None) -> str:
     return "full_mock" if str(value or "").strip().lower() == "full_mock" else "single_block"
 
 
-def _require_speaking_paid_access(db: Session, telegram_id: int, mock_id: int, progress: SpeakingProgress | None, is_admin: bool) -> None:
-    if is_admin:
-        return
+def _require_speaking_paid_access(
+    db: Session,
+    telegram_id: int,
+    mock_id: int,
+    progress: SpeakingProgress | None,
+    is_admin: bool,
+    session_mode: str = "single_block",
+) -> None:
     if progress and not progress.is_submitted:
         return
     if has_active_premiere_access(db, telegram_id, mock_id):
         return
     if is_active_premiere_pack(db, mock_id):
         raise HTTPException(status_code=402, detail="premiere_access_required")
+    mode = _session_mode(session_mode)
+    if mode == "full_mock":
+        require_paid_access_or_spend(
+            db=db,
+            telegram_id=telegram_id,
+            content_type="full_mock",
+            reference_id=mock_id,
+        )
+        return
     require_paid_access_or_spend(
         db=db,
         telegram_id=telegram_id,
@@ -226,7 +240,7 @@ def start_speaking(mock_id: int, payload: SpeakingStartIn, db: Session = Depends
             "is_admin": bool(is_admin),
         }
 
-    _require_speaking_paid_access(db, payload.telegram_id, mock_id, progress, is_admin)
+    _require_speaking_paid_access(db, payload.telegram_id, mock_id, progress, is_admin, payload.session_mode)
 
     if not progress:
         progress = SpeakingProgress(
@@ -292,7 +306,7 @@ def save_speaking(mock_id: int, payload: SpeakingSaveIn, db: Session = Depends(g
     )
 
     if not progress:
-        _require_speaking_paid_access(db, payload.telegram_id, mock_id, progress, is_admin)
+        _require_speaking_paid_access(db, payload.telegram_id, mock_id, progress, is_admin, payload.session_mode)
         progress = SpeakingProgress(
             test_id=test.id,
             telegram_id=payload.telegram_id,
@@ -340,7 +354,7 @@ def submit_speaking(mock_id: int, payload: SpeakingSubmitIn, db: Session = Depen
         .first()
     )
     if not progress:
-        _require_speaking_paid_access(db, payload.telegram_id, mock_id, progress, is_admin)
+        _require_speaking_paid_access(db, payload.telegram_id, mock_id, progress, is_admin, payload.session_mode)
         progress = SpeakingProgress(
             test_id=test.id,
             telegram_id=payload.telegram_id,
