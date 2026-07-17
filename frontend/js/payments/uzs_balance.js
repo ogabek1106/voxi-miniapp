@@ -44,6 +44,10 @@ window.UzsBalance = window.UzsBalance || {};
   };
 
   window.UzsBalance.showGatewayPlaceholder = function () {
+    if (window.UzsBalance?.startWalletTopUp) {
+      window.UzsBalance.startWalletTopUp(50000);
+      return;
+    }
     if (window.VPayGate?.start) {
       window.VPayGate.start({
         product: "wallet_topup",
@@ -52,6 +56,6 @@ window.UzsBalance = window.UzsBalance || {};
       });
       return;
     }
-    alert("V-PayGate is not available yet");
+    alert("To'lov sahifasi hozircha mavjud emas");
   };
 })();

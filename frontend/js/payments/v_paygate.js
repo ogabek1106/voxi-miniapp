@@ -231,7 +231,7 @@ window.VPayGate = window.VPayGate || {};
       <div class="vpaygate-shell">
         <header class="vpaygate-header">
           <div>
-            <div class="vpaygate-kicker">V-PayGate</div>
+            <div class="vpaygate-kicker">Wallet</div>
             <h1 class="vpaygate-title">To‘lov</h1>
             <p class="vpaygate-lead">To‘lov usulini tanlang</p>
           </div>
