@@ -136,20 +136,19 @@ def apply_manual_balance_adjustment(
     db.add(adjustment)
     db.flush()
 
-    ledger = None
-    if user.telegram_id is not None:
-        ledger = write_ledger(
-            db=db,
-            telegram_id=int(user.telegram_id),
-            delta=delta,
-            reason=f"manual_{action}",
-            reference_type="manual_balance_adjustment",
-            reference_id=adjustment.id,
-            balance_after=after,
-        )
-        adjustment.ledger_id = ledger.id
-        db.add(adjustment)
-        db.flush()
+    ledger = write_ledger(
+        db=db,
+        user_id=int(user.id),
+        telegram_id=int(user.telegram_id) if user.telegram_id is not None else None,
+        delta=delta,
+        reason=f"manual_{action}",
+        reference_type="manual_balance_adjustment",
+        reference_id=adjustment.id,
+        balance_after=after,
+    )
+    adjustment.ledger_id = ledger.id
+    db.add(adjustment)
+    db.flush()
 
     return {
         "ok": True,

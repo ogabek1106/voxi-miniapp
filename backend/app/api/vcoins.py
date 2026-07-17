@@ -4,11 +4,12 @@ from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Body, Depends, Header, HTTPException, Query, Request
 from pydantic import BaseModel
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.config import ADMIN_IDS
 from app.deps import get_db
-from app.models_vcoins import PaymentRequest, VCoinPromoCode
+from app.models_vcoins import ManualBalanceAdjustment, PaymentRequest, VCoinPromoCode
 from app.services.payment_pricing_service import (
     build_quote,
     create_payment_intent,
@@ -432,6 +433,27 @@ def get_vcoin_ledger(
 ):
     user = _resolve_wallet_user(db, request, telegram_id)
     entries = get_recent_ledger_for_user(db, user.id, limit=limit)
+    manual_ledger_ids = [int(item.id) for item in entries if item.reference_type == "manual_balance_adjustment"]
+    manual_reference_ids = [
+        int(item.reference_id)
+        for item in entries
+        if item.reference_type == "manual_balance_adjustment" and str(item.reference_id or "").isdigit()
+    ]
+    manual_notes_by_ledger_id = {}
+    manual_notes_by_adjustment_id = {}
+    if manual_ledger_ids or manual_reference_ids:
+        adjustments = (
+            db.query(ManualBalanceAdjustment)
+            .filter(
+                or_(
+                    ManualBalanceAdjustment.ledger_id.in_(manual_ledger_ids or [-1]),
+                    ManualBalanceAdjustment.id.in_(manual_reference_ids or [-1]),
+                )
+            )
+            .all()
+        )
+        manual_notes_by_ledger_id = {int(item.ledger_id): item.note for item in adjustments if item.ledger_id and item.note}
+        manual_notes_by_adjustment_id = {int(item.id): item.note for item in adjustments if item.id and item.note}
     return {
         "user_id": user.id,
         "telegram_id": user.telegram_id,
@@ -444,6 +466,11 @@ def get_vcoin_ledger(
                 "reference_id": item.reference_id,
                 "balance_after": item.balance_after,
                 "created_at": _serialize_datetime(item.created_at),
+                "note": manual_notes_by_ledger_id.get(int(item.id)) or (
+                    manual_notes_by_adjustment_id.get(int(item.reference_id))
+                    if item.reference_type == "manual_balance_adjustment" and str(item.reference_id or "").isdigit()
+                    else None
+                ),
             }
             for item in entries
         ],

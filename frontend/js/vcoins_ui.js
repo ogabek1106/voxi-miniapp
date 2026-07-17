@@ -654,7 +654,9 @@ window.VCoinUI = window.VCoinUI || {};
       full_mock_spend: "Full Mock spent",
       separate_block_spend: "Single section spent",
       refund: "Refund",
-      admin_adjustment: "Admin adjustment"
+      admin_adjustment: "Admin adjustment",
+      manual_add: "Admin xabari",
+      manual_remove: "Admin xabari"
     };
     return labels[reason] || String(reason || "Balance update").replaceAll("_", " ");
   }
@@ -669,10 +671,12 @@ window.VCoinUI = window.VCoinUI || {};
       const amount = window.UzsBalance?.convertVCoinsToUzs?.(Math.abs(delta)) || 0;
       const sign = delta > 0 ? "+" : (delta < 0 ? "-" : "");
       const klass = delta >= 0 ? "vcoin-delta-plus" : "vcoin-delta-minus";
+      const note = String(item?.note || "").trim();
       return `
         <div class="vcoin-ledger-row">
           <div>
             <div style="font-weight:800;">${formatUzsReason(item?.reason)}</div>
+            ${note ? `<div class="vcoin-muted" style="margin-top:3px; line-height:1.25;">${escapeHtml(note)}</div>` : ""}
             <div class="vcoin-muted">${formatLedgerTime(item?.created_at)}</div>
           </div>
           <div class="${klass}">${sign}${window.UzsBalance?.formatUzs?.(amount) || "0 UZS"}</div>
@@ -1637,7 +1641,7 @@ window.VCoinUI = window.VCoinUI || {};
         </div>
         <div class="vcoin-sheet-actions uzs-wallet-primary-actions" style="margin-top:auto;">
           <button class="vcoin-buy-btn" id="uzs-continue-topup-btn">Davom etish</button>
-          <button class="vcoin-cancel-btn" id="vcoin-close-btn">Yopish</button>
+          <button class="vcoin-cancel-btn" id="uzs-back-to-wallet-btn">Ortga</button>
         </div>
       </div>
     `;
@@ -1677,7 +1681,7 @@ window.VCoinUI = window.VCoinUI || {};
       presetButtons.forEach((button) => button.classList.remove("is-selected"));
     });
 
-    document.getElementById("vcoin-close-btn").onclick = closeSheet;
+    document.getElementById("uzs-back-to-wallet-btn").onclick = window.UzsBalance.openBalanceSheet;
     document.getElementById("uzs-continue-topup-btn").onclick = () => {
       const customAmount = parseUzsInput(customInput?.value);
       const amount = customAmount || selectedTopupAmount;
