@@ -44,8 +44,8 @@ window.UzsBalance = window.UzsBalance || {};
   };
 
   window.UzsBalance.showGatewayPlaceholder = function () {
-    if (window.UzsBalance?.startWalletTopUp) {
-      window.UzsBalance.startWalletTopUp(50000);
+    if (window.UzsBalance?.openTopUpSheet) {
+      window.UzsBalance.openTopUpSheet();
       return;
     }
     if (window.VPayGate?.start) {

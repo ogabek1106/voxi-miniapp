@@ -1609,6 +1609,92 @@ window.VCoinUI = window.VCoinUI || {};
     });
   }
 
+  function openTopUpSheet(defaultAmount = 50000) {
+    ensureStyles();
+    closeSheet();
+    document.body.classList.add("reward-vcoin-open");
+
+    const initialAmount = Math.max(0, Math.floor(Number(defaultAmount || 50000)));
+    const backdrop = document.createElement("div");
+    backdrop.id = "vcoin-sheet-backdrop";
+    backdrop.className = "vcoin-sheet-backdrop";
+    backdrop.innerHTML = `
+      <div class="vcoin-sheet uzs-wallet-sheet uzs-topup-sheet" role="dialog" aria-modal="true" aria-labelledby="uzs-topup-title">
+        <div class="vcoin-sheet-handle"></div>
+        <h3 class="vcoin-sheet-title" id="uzs-topup-title">Balansni to'ldirish</h3>
+        <div class="uzs-topup-panel">
+          <div class="uzs-topup-presets" role="group" aria-label="Top-up amount presets">
+            <button type="button" class="uzs-topup-preset" data-uzs-topup="10000">10 000</button>
+            <button type="button" class="uzs-topup-preset" data-uzs-topup="20000">20 000</button>
+            <button type="button" class="uzs-topup-preset" data-uzs-topup="50000">50 000</button>
+            <button type="button" class="uzs-topup-preset" data-uzs-topup="100000">100 000</button>
+          </div>
+          <div class="uzs-topup-custom">
+            <label for="uzs-topup-custom-input">Boshqa summa</label>
+            <input class="uzs-topup-input" id="uzs-topup-custom-input" inputmode="numeric" autocomplete="off" placeholder="Masalan, 75 000">
+            <div class="uzs-topup-error" id="uzs-topup-error" aria-live="polite"></div>
+          </div>
+        </div>
+        <div class="vcoin-sheet-actions uzs-wallet-primary-actions" style="margin-top:auto;">
+          <button class="vcoin-buy-btn" id="uzs-continue-topup-btn">Davom etish</button>
+          <button class="vcoin-cancel-btn" id="vcoin-close-btn">Yopish</button>
+        </div>
+      </div>
+    `;
+
+    backdrop.addEventListener("click", (event) => {
+      if (event.target === backdrop) closeSheet();
+    });
+    document.body.appendChild(backdrop);
+    bindSheetDragToClose(backdrop.querySelector(".vcoin-sheet"));
+
+    let selectedTopupAmount = initialAmount;
+    const customInput = document.getElementById("uzs-topup-custom-input");
+    const errorEl = document.getElementById("uzs-topup-error");
+    const presetButtons = Array.from(backdrop.querySelectorAll("[data-uzs-topup]"));
+
+    function setError(message = "") {
+      if (errorEl) errorEl.textContent = message;
+    }
+
+    function selectAmount(amount) {
+      selectedTopupAmount = Math.max(0, Math.floor(Number(amount || 0)));
+      presetButtons.forEach((button) => {
+        button.classList.toggle("is-selected", Number(button.dataset.uzsTopup || 0) === selectedTopupAmount);
+      });
+      setError("");
+    }
+
+    presetButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        if (customInput) customInput.value = "";
+        selectAmount(Number(button.dataset.uzsTopup || 0));
+      });
+    });
+
+    customInput?.addEventListener("input", () => {
+      selectAmount(parseUzsInput(customInput.value));
+      presetButtons.forEach((button) => button.classList.remove("is-selected"));
+    });
+
+    document.getElementById("vcoin-close-btn").onclick = closeSheet;
+    document.getElementById("uzs-continue-topup-btn").onclick = () => {
+      const customAmount = parseUzsInput(customInput?.value);
+      const amount = customAmount || selectedTopupAmount;
+      if (amount < 5000) {
+        setError("Eng kam summa 5 000 UZS.");
+        return;
+      }
+      if (amount % 5000 !== 0) {
+        setError("Summa 5 000 UZS qadam bilan kiritilishi kerak.");
+        return;
+      }
+      startWalletTopUp(amount);
+    };
+
+    selectAmount(initialAmount);
+  }
+
   function uzsFromCoins(coins) {
     const amount = window.UzsBalance?.convertVCoinsToUzs?.(Number(coins || 0));
     return Number.isFinite(Number(amount)) ? Number(amount) : Number(coins || 0) * 5000;
@@ -1712,6 +1798,7 @@ window.VCoinUI = window.VCoinUI || {};
   window.UzsBalance.formatUzsSpaces = formatUzsSpaces;
   window.UzsBalance.showInsufficientFunds = showWalletInsufficient;
   window.UzsBalance.startWalletTopUp = startWalletTopUp;
+  window.UzsBalance.openTopUpSheet = openTopUpSheet;
 
   window.UzsBalance.openBalanceSheet = async function () {
     ensureStyles();
@@ -1736,28 +1823,13 @@ window.VCoinUI = window.VCoinUI || {};
           <div class="vcoin-muted uzs-wallet-currency">UZS</div>
         </div>
 
-        <div class="uzs-topup-panel" aria-labelledby="uzs-topup-title">
-          <h4 class="uzs-topup-title" id="uzs-topup-title">Balansni to'ldirish</h4>
-          <div class="uzs-topup-presets" role="group" aria-label="Top-up amount presets">
-            <button type="button" class="uzs-topup-preset" data-uzs-topup="10000">10 000</button>
-            <button type="button" class="uzs-topup-preset" data-uzs-topup="20000">20 000</button>
-            <button type="button" class="uzs-topup-preset is-selected" data-uzs-topup="50000">50 000</button>
-            <button type="button" class="uzs-topup-preset" data-uzs-topup="100000">100 000</button>
-          </div>
-          <div class="uzs-topup-custom">
-            <label for="uzs-topup-custom-input">Boshqa summa</label>
-            <input class="uzs-topup-input" id="uzs-topup-custom-input" inputmode="numeric" autocomplete="off" placeholder="Masalan, 75 000">
-            <div class="uzs-topup-error" id="uzs-topup-error" aria-live="polite"></div>
-          </div>
-        </div>
-
         <div class="vcoin-history-section">
           <div class="uzs-wallet-history-title">Balans tarixi</div>
           <div class="vcoin-history-list" id="uzs-ledger-list">${renderHistorySkeleton()}</div>
         </div>
 
         <div class="vcoin-sheet-actions uzs-wallet-primary-actions">
-          <button class="vcoin-buy-btn" id="uzs-open-payment-gateway-btn">Davom etish</button>
+          <button class="vcoin-buy-btn" id="uzs-open-payment-gateway-btn">Balansni to'ldirish</button>
           <button class="vcoin-cancel-btn" id="vcoin-close-btn">Yopish</button>
         </div>
       </div>
@@ -1770,47 +1842,8 @@ window.VCoinUI = window.VCoinUI || {};
     bindSheetDragToClose(backdrop.querySelector(".vcoin-sheet"));
 
     document.getElementById("vcoin-close-btn").onclick = closeSheet;
-    let selectedTopupAmount = 50000;
-    const customInput = document.getElementById("uzs-topup-custom-input");
-    const errorEl = document.getElementById("uzs-topup-error");
-    const presetButtons = Array.from(backdrop.querySelectorAll("[data-uzs-topup]"));
-
-    function setError(message = "") {
-      if (errorEl) errorEl.textContent = message;
-    }
-
-    function selectAmount(amount) {
-      selectedTopupAmount = Math.max(0, Math.floor(Number(amount || 0)));
-      presetButtons.forEach((button) => {
-        button.classList.toggle("is-selected", Number(button.dataset.uzsTopup || 0) === selectedTopupAmount);
-      });
-      setError("");
-    }
-
-    presetButtons.forEach((button) => {
-      button.addEventListener("click", () => {
-        if (customInput) customInput.value = "";
-        selectAmount(Number(button.dataset.uzsTopup || 0));
-      });
-    });
-
-    customInput?.addEventListener("input", () => {
-      selectAmount(parseUzsInput(customInput.value));
-      presetButtons.forEach((button) => button.classList.remove("is-selected"));
-    });
-
     document.getElementById("uzs-open-payment-gateway-btn").onclick = () => {
-      const customAmount = parseUzsInput(customInput?.value);
-      const amount = customAmount || selectedTopupAmount;
-      if (amount < 5000) {
-        setError("Eng kam summa 5 000 UZS.");
-        return;
-      }
-      if (amount % 5000 !== 0) {
-        setError("Summa 5 000 UZS qadam bilan kiritilishi kerak.");
-        return;
-      }
-      startWalletTopUp(amount);
+      openTopUpSheet();
     };
 
     try {
