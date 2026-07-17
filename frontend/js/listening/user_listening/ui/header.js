@@ -158,11 +158,8 @@ UserListening.exitToHome = async function () {
       if (typeof UserListening.saveProgress === "function") {
         await UserListening.saveProgress(UserListening.__mockId);
       }
-      if (typeof UserListening.submitProgress === "function") {
-        await UserListening.submitProgress(UserListening.__mockId);
-      }
     } catch (error) {
-      console.error("Listening exit submit failed:", error);
+      console.error("Listening exit save failed:", error);
     }
   }
 

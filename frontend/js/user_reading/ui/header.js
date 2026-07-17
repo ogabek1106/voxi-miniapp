@@ -215,11 +215,8 @@ UserReading.exitToHome = async function () {
       if (typeof UserReading.saveProgress === "function") {
         await UserReading.saveProgress(UserReading.__mockId);
       }
-      if (typeof UserReading.submitProgress === "function") {
-        await UserReading.submitProgress(UserReading.__mockId);
-      }
     } catch (error) {
-      console.error("Reading exit submit failed:", error);
+      console.error("Reading exit save failed:", error);
     }
   }
 

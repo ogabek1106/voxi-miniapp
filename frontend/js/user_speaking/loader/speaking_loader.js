@@ -60,14 +60,8 @@ UserSpeakingLoader.exitToHome = async function () {
           nextProgress[`part${partNumber}_audio_url`] = audioUrl;
         }
       }
-
-      await UserSpeakingApi.submit(state.mockId, {
-        part1_audio_url: nextProgress.part1_audio_url || null,
-        part2_audio_url: nextProgress.part2_audio_url || null,
-        part3_audio_url: nextProgress.part3_audio_url || null
-      }, "exit");
     } catch (error) {
-      console.error("Speaking exit submit failed:", error);
+      console.error("Speaking exit save failed:", error);
     }
   }
 
@@ -82,7 +76,6 @@ UserSpeakingLoader.exitToHome = async function () {
   }
 
   UserSpeakingState.set({
-    isSubmitted: true,
     recorder: null,
     audioContext: null,
     stream: null,

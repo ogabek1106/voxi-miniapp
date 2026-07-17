@@ -569,16 +569,29 @@ window.IeltsEntryReturn = window.IeltsEntryReturn || {};
         value: "Tekshirilmoqda...",
         button: "Tekshirilmoqda...",
         disabled: true,
-        insufficient: false
+        insufficient: false,
+        completed: false
+      };
+    }
+    if (status.attempt_state === "completed") {
+      return {
+        title: "Siz ushbu testni avval topshirgansiz.",
+        value: "Natijani ko'rishingiz yoki qayta topshirishingiz mumkin.",
+        button: "Natijani ko'rish",
+        secondary: "Qayta topshirish",
+        disabled: false,
+        insufficient: false,
+        completed: true
       };
     }
     if (status.has_access) {
       return {
         title: "Kirish holati",
-        value: isFullMockSection ? "To'liq Mock uchun kirish tasdiqlangan" : "Kirish tasdiqlangan",
-        button: "Testni boshlash",
+        value: status.attempt_state === "active" ? "Faol urinish davom etmoqda" : (isFullMockSection ? "To'liq Mock uchun kirish tasdiqlangan" : "Kirish tasdiqlangan"),
+        button: status.attempt_state === "active" ? "Testni davom ettirish" : "Testni boshlash",
         disabled: false,
-        insufficient: false
+        insufficient: false,
+        completed: false
       };
     }
     if (Number(status.balance || 0) < Number(status.required || 0)) {
@@ -587,7 +600,8 @@ window.IeltsEntryReturn = window.IeltsEntryReturn || {};
         value: `Yetishmayotgan summa: ${formatUzsFromCoins(status.missing || 0)}`,
         button: "Hisobni to'ldirish",
         disabled: false,
-        insufficient: true
+        insufficient: true,
+        completed: false
       };
     }
     return {
@@ -595,7 +609,8 @@ window.IeltsEntryReturn = window.IeltsEntryReturn || {};
       value: "Balansingiz yetarli. To'lov bir marta yechiladi.",
       button: "To'lovga o'tish",
       disabled: false,
-      insufficient: false
+      insufficient: false,
+      completed: false
     };
   }
 
@@ -615,7 +630,12 @@ window.IeltsEntryReturn = window.IeltsEntryReturn || {};
   }
 
   function startFeature(feature, mockId, mode, meta = {}) {
-    const options = { fromGateway: true, returnTo: meta.returnTo || window.IeltsEntryReturn.resolve?.() || "home" };
+    const options = {
+      fromGateway: true,
+      returnTo: meta.returnTo || window.IeltsEntryReturn.resolve?.() || "home",
+      resumeActive: !!meta.resumeActive,
+      retakePaymentReferenceId: meta.retakePaymentReferenceId || null
+    };
     if (mode === "full_mock" && feature !== "full_mock") options.fromFlow = true;
     if (feature === "full_mock") return window.startFullMock?.(mockId, options);
     if (feature === "listening") return window.startListeningMock?.(mockId, options);
@@ -667,7 +687,7 @@ window.IeltsEntryReturn = window.IeltsEntryReturn || {};
               </div>
               <div class="ielts-warning-actions">
                 <button class="ielts-warning-primary" id="ielts-warning-primary" ${view.disabled ? "disabled" : ""}>${escapeHtml(view.button)}</button>
-                <button class="ielts-warning-secondary" id="ielts-warning-back">Orqaga</button>
+                <button class="ielts-warning-secondary" id="ielts-warning-back">${escapeHtml(view.secondary || "Orqaga")}</button>
                 <div class="ielts-warning-message" id="ielts-warning-message"></div>
               </div>
             </aside>
@@ -676,6 +696,20 @@ window.IeltsEntryReturn = window.IeltsEntryReturn || {};
       </div>
     `;
     document.getElementById("ielts-warning-back").onclick = () => {
+      if (view.completed) {
+        (async function () {
+          const paidRef = await confirmPaidRetake({
+            mode: feature === "full_mock" ? "full_mock" : "single_block",
+            section: feature === "full_mock" ? "full" : feature,
+            mockId,
+            serviceName: config.serviceName
+          });
+          if (paidRef) {
+            await startFeature(feature, mockId, mode, { title, retakePaymentReferenceId: paidRef });
+          }
+        })();
+        return;
+      }
       releaseHost();
       window.IeltsEntryReturn?.goBack?.();
     };
@@ -722,6 +756,13 @@ window.IeltsEntryReturn = window.IeltsEntryReturn || {};
       const messageEl = document.getElementById("ielts-warning-message");
       if (messageEl) messageEl.textContent = "Kirish holatini tekshirib bo'lmadi. Iltimos, qayta urinib ko'ring.";
     }
+  };
+  window.VWarningGateway.loadStatus = async function ({ feature, mockId, mode = "single_block" } = {}) {
+    const normalizedFeature = FEATURE_CONFIG[feature] ? feature : "reading";
+    const safeMockId = Number(mockId || 0);
+    if (!safeMockId) return null;
+    const normalizedMode = mode === "full_mock" ? "full_mock" : "single_block";
+    return loadAccessStatus(normalizedFeature, safeMockId, normalizedMode);
   };
 })();
 
@@ -846,6 +887,10 @@ async function showCompletedFullMock(mockId, existingResult) {
 window.startFullMock = async function (mockId, options = {}) {
   MockDebug.log("startFullMock.enter", { mockId });
   if (!options.fromGateway) {
+    const status = await window.VWarningGateway?.loadStatus?.({ feature: "full_mock", mockId, mode: "single_block" });
+    if (status?.attempt_state === "active") {
+      return window.startFullMock(mockId, { ...options, fromGateway: true, resumeActive: true });
+    }
     window.VWarningGateway?.open?.({
       feature: "full_mock",
       mockId,
@@ -859,7 +904,7 @@ window.startFullMock = async function (mockId, options = {}) {
     return;
   }
   const telegramId = examTelegramId();
-  if (telegramId && !window.__isAdmin) {
+  if (telegramId && !window.__isAdmin && !options.retakePaymentReferenceId) {
     try {
       const existing = await apiPost(`/mock-tests/${mockId}/full-result`, { telegram_id: telegramId });
       if (existing?.status === "completed") {
@@ -870,20 +915,26 @@ window.startFullMock = async function (mockId, options = {}) {
       // If the full-result endpoint is pending or incomplete, keep the normal start flow.
     }
   }
-  const allowed = await requirePaidAccess({
-    contentType: "full_mock",
-    referenceId: mockId,
-    serviceName: "Full Mock Test"
-  });
-  if (!allowed) return;
+  if (!options.resumeActive) {
+    const allowed = await requirePaidAccess({
+      contentType: "full_mock",
+      referenceId: options.retakePaymentReferenceId || mockId,
+      serviceName: "Full Mock Test"
+    });
+    if (!allowed) return;
+  }
 
-  MockFlow.activate(mockId);
-  await window.startListeningMock(mockId, { fromFlow: true, returnTo: options.returnTo || window.IeltsEntryReturn?.resolve?.() });
+  MockFlow.activate(mockId, { retakePaymentReferenceId: options.retakePaymentReferenceId || null });
+  await window.startListeningMock(mockId, { fromFlow: true, returnTo: options.returnTo || window.IeltsEntryReturn?.resolve?.(), retakePaymentReferenceId: options.retakePaymentReferenceId || null });
 };
 
 window.startMock = async function (mockId, options = {}) {
   MockDebug.log("startMock.enter", { mockId, options });
   if (!options.fromGateway && !options.fromFlow) {
+    const status = await window.VWarningGateway?.loadStatus?.({ feature: "reading", mockId, mode: "single_block" });
+    if (status?.attempt_state === "active") {
+      return window.startMock(mockId, { ...options, fromGateway: true, resumeActive: true });
+    }
     window.VWarningGateway?.open?.({
       feature: "reading",
       mockId,
@@ -897,12 +948,14 @@ window.startMock = async function (mockId, options = {}) {
     if (await window.PremiereUi?.interceptIfPremiere?.(mockId)) {
       return;
     }
-    const allowed = await requirePaidAccess({
-      contentType: "separate_block",
-      referenceId: `reading:${mockId}`,
-      serviceName: "Reading section"
-    });
-    if (!allowed) return;
+    if (!options.resumeActive) {
+      const allowed = await requirePaidAccess({
+        contentType: "separate_block",
+        referenceId: options.retakePaymentReferenceId || `reading:${mockId}`,
+        serviceName: "Reading section"
+      });
+      if (!allowed) return;
+    }
 
     MockFlow.deactivate();
   }
@@ -975,6 +1028,10 @@ window.startMock = async function (mockId, options = {}) {
 window.startWritingMock = async function (mockId, options = {}) {
   MockDebug.log("startWritingMock.enter", { mockId, options });
   if (!options.fromGateway && !options.fromFlow) {
+    const status = await window.VWarningGateway?.loadStatus?.({ feature: "writing", mockId, mode: "single_block" });
+    if (status?.attempt_state === "active") {
+      return window.startWritingMock(mockId, { ...options, fromGateway: true, resumeActive: true });
+    }
     window.VWarningGateway?.open?.({
       feature: "writing",
       mockId,
@@ -988,12 +1045,14 @@ window.startWritingMock = async function (mockId, options = {}) {
     if (await window.PremiereUi?.interceptIfPremiere?.(mockId)) {
       return;
     }
-    const allowed = await requirePaidAccess({
-      contentType: "separate_block",
-      referenceId: `writing:${mockId}`,
-      serviceName: "Writing section"
-    });
-    if (!allowed) return;
+    if (!options.resumeActive) {
+      const allowed = await requirePaidAccess({
+        contentType: "separate_block",
+        referenceId: options.retakePaymentReferenceId || `writing:${mockId}`,
+        serviceName: "Writing section"
+      });
+      if (!allowed) return;
+    }
 
     MockFlow.deactivate();
   }
@@ -1036,6 +1095,10 @@ window.startWritingMock = async function (mockId, options = {}) {
 window.startListeningMock = async function (mockId, options = {}) {
   MockDebug.log("startListeningMock.enter", { mockId, options });
   if (!options.fromGateway && !options.fromFlow) {
+    const status = await window.VWarningGateway?.loadStatus?.({ feature: "listening", mockId, mode: "single_block" });
+    if (status?.attempt_state === "active") {
+      return window.startListeningMock(mockId, { ...options, fromGateway: true, resumeActive: true });
+    }
     window.VWarningGateway?.open?.({
       feature: "listening",
       mockId,
@@ -1049,12 +1112,14 @@ window.startListeningMock = async function (mockId, options = {}) {
     if (await window.PremiereUi?.interceptIfPremiere?.(mockId)) {
       return;
     }
-    const allowed = await requirePaidAccess({
-      contentType: "separate_block",
-      referenceId: `listening:${mockId}`,
-      serviceName: "Listening section"
-    });
-    if (!allowed) return;
+    if (!options.resumeActive) {
+      const allowed = await requirePaidAccess({
+        contentType: "separate_block",
+        referenceId: options.retakePaymentReferenceId || `listening:${mockId}`,
+        serviceName: "Listening section"
+      });
+      if (!allowed) return;
+    }
 
     MockFlow.deactivate();
   }
@@ -1219,6 +1284,10 @@ window.startListeningMock = async function (mockId, options = {}) {
 window.startSpeakingMock = async function (mockId, options = {}) {
   MockDebug.log("startSpeakingMock.enter", { mockId, options });
   if (!options.fromGateway && !options.fromFlow) {
+    const status = await window.VWarningGateway?.loadStatus?.({ feature: "speaking", mockId, mode: "single_block" });
+    if (status?.attempt_state === "active") {
+      return window.startSpeakingMock(mockId, { ...options, fromGateway: true, resumeActive: true });
+    }
     window.VWarningGateway?.open?.({
       feature: "speaking",
       mockId,
@@ -1232,12 +1301,14 @@ window.startSpeakingMock = async function (mockId, options = {}) {
     if (await window.PremiereUi?.interceptIfPremiere?.(mockId)) {
       return;
     }
-    const allowed = await requirePaidAccess({
-      contentType: "separate_block",
-      referenceId: `speaking:${mockId}`,
-      serviceName: "Speaking section"
-    });
-    if (!allowed) return;
+    if (!options.resumeActive) {
+      const allowed = await requirePaidAccess({
+        contentType: "separate_block",
+        referenceId: options.retakePaymentReferenceId || `speaking:${mockId}`,
+        serviceName: "Speaking section"
+      });
+      if (!allowed) return;
+    }
 
     MockFlow.deactivate();
   }

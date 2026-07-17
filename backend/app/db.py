@@ -783,6 +783,7 @@ def ensure_listening_progress_schema():
             "session_mode VARCHAR NOT NULL DEFAULT 'single_block', "
             "answers JSONB NOT NULL DEFAULT '{}'::jsonb, "
             "started_at TIMESTAMPTZ NULL, "
+            "ends_at TIMESTAMPTZ NULL, "
             "updated_at TIMESTAMPTZ NULL, "
             "submitted_at TIMESTAMPTZ NULL, "
             "is_submitted BOOLEAN NOT NULL DEFAULT FALSE, "
@@ -796,6 +797,7 @@ def ensure_listening_progress_schema():
         conn.execute(text("ALTER TABLE listening_progress ADD COLUMN IF NOT EXISTS session_mode VARCHAR NOT NULL DEFAULT 'single_block';"))
         conn.execute(text("ALTER TABLE listening_progress ADD COLUMN IF NOT EXISTS answers JSONB NOT NULL DEFAULT '{}'::jsonb;"))
         conn.execute(text("ALTER TABLE listening_progress ADD COLUMN IF NOT EXISTS started_at TIMESTAMPTZ;"))
+        conn.execute(text("ALTER TABLE listening_progress ADD COLUMN IF NOT EXISTS ends_at TIMESTAMPTZ;"))
         conn.execute(text("ALTER TABLE listening_progress ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ;"))
         conn.execute(text("ALTER TABLE listening_progress ADD COLUMN IF NOT EXISTS submitted_at TIMESTAMPTZ;"))
         conn.execute(text("ALTER TABLE listening_progress ADD COLUMN IF NOT EXISTS is_submitted BOOLEAN NOT NULL DEFAULT FALSE;"))

@@ -196,7 +196,7 @@ def start_speaking(mock_id: int, payload: SpeakingStartIn, db: Session = Depends
         .first()
     )
 
-    if payload.retake and progress and progress.is_submitted and not is_admin:
+    if (payload.retake or is_admin) and progress and progress.is_submitted:
         require_paid_access_or_spend(
             db=db,
             telegram_id=payload.telegram_id,

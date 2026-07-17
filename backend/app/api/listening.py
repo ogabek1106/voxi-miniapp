@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -34,6 +34,39 @@ def _utcnow() -> datetime:
 
 def _session_mode(value: str | None) -> str:
     return "full_mock" if str(value or "").strip().lower() == "full_mock" else "single_block"
+
+
+def _to_utc(value: datetime | None) -> datetime | None:
+    if value is None:
+        return None
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
+
+
+def _deadline(progress: ListeningProgress, test: ListeningTest) -> datetime | None:
+    if progress.ends_at:
+        return _to_utc(progress.ends_at)
+    if not progress.started_at:
+        return None
+    return _to_utc(progress.started_at) + timedelta(minutes=max(int(test.time_limit_minutes or 60), 1))
+
+
+def _is_time_up(progress: ListeningProgress, test: ListeningTest, now: datetime | None = None) -> bool:
+    deadline = _deadline(progress, test)
+    return bool(deadline and _to_utc(now or _utcnow()) >= deadline)
+
+
+def _finalize(db: Session, progress: ListeningProgress, test: ListeningTest, now: datetime | None = None):
+    result = _evaluate(db, test.id, progress.answers or {})
+    submitted_at = _deadline(progress, test) or now or _utcnow()
+    progress.raw_score = int(result["score"])
+    progress.max_score = int(result["total"])
+    progress.band_score = float(result["band"])
+    progress.is_submitted = True
+    progress.submitted_at = submitted_at
+    progress.updated_at = submitted_at
+    return result
 
 
 def _resolve_test_for_mock(db: Session, mock_id: int) -> ListeningTest:
@@ -242,25 +275,33 @@ def start_listening(
     is_admin = int(telegram_id) in ADMIN_IDS
 
     if progress and progress.is_submitted and (is_admin or retake):
-        if retake and not is_admin:
-            require_paid_access_or_spend(
-                db=db,
-                telegram_id=telegram_id,
-                content_type="full_mock" if mode == "full_mock" else "separate_block",
-                reference_id=retake_payment_reference_id or f"{mode}:listening:{mock_id}:retake",
-            )
-        progress.answers = {}
-        progress.started_at = _utcnow()
-        progress.updated_at = progress.started_at
-        progress.submitted_at = None
-        progress.is_submitted = False
-        progress.raw_score = None
-        progress.max_score = None
-        progress.band_score = None
-        db.add(progress)
-        db.commit()
+        require_paid_access_or_spend(
+            db=db,
+            telegram_id=telegram_id,
+            content_type="full_mock" if mode == "full_mock" else "separate_block",
+            reference_id=retake_payment_reference_id or f"{mode}:listening:{mock_id}:retake",
+        )
+        progress = None
 
     _require_listening_paid_access(db, telegram_id, mock_id, progress, mode)
+    if not progress:
+        now = _utcnow()
+        progress = ListeningProgress(
+            test_id=test.id,
+            telegram_id=telegram_id,
+            session_mode=mode,
+            answers={},
+            started_at=now,
+            ends_at=now + timedelta(minutes=max(int(test.time_limit_minutes or 60), 1)),
+            updated_at=now,
+            is_submitted=False,
+        )
+        db.add(progress)
+        db.commit()
+    elif not progress.is_submitted and _is_time_up(progress, test):
+        _finalize(db, progress, test)
+        db.add(progress)
+        db.commit()
     return _serialize_test(db, test)
 
 
@@ -279,6 +320,7 @@ def save_listening(mock_id: int, payload: ListeningSaveIn, db: Session = Depends
             session_mode=mode,
             answers=payload.answers or {},
             started_at=now,
+            ends_at=now + timedelta(minutes=max(int(test.time_limit_minutes or 60), 1)),
             updated_at=now,
             is_submitted=False,
         )
@@ -296,6 +338,13 @@ def save_listening(mock_id: int, payload: ListeningSaveIn, db: Session = Depends
         progress.max_score = None
         progress.band_score = None
         progress.started_at = now
+        progress.ends_at = now + timedelta(minutes=max(int(test.time_limit_minutes or 60), 1))
+
+    if not progress.is_submitted and _is_time_up(progress, test, now):
+        _finalize(db, progress, test, now)
+        db.add(progress)
+        db.commit()
+        return {"status": "auto_submitted"}
 
     progress.answers = payload.answers or {}
     progress.updated_at = now
@@ -311,9 +360,15 @@ def resume_listening(mock_id: int, telegram_id: int, session_mode: str = "single
     _require_listening_paid_access(db, telegram_id, mock_id, progress, session_mode)
     if not progress:
         return {"answers": {}, "is_submitted": False}
+    if not progress.is_submitted and _is_time_up(progress, test):
+        _finalize(db, progress, test)
+        db.add(progress)
+        db.commit()
+        db.refresh(progress)
     return {
         "answers": progress.answers or {},
         "started_at": progress.started_at,
+        "ends_at": progress.ends_at,
         "updated_at": progress.updated_at,
         "submitted_at": progress.submitted_at,
         "is_submitted": bool(progress.is_submitted),
@@ -338,6 +393,7 @@ def submit_listening(mock_id: int, payload: ListeningSubmitIn, db: Session = Dep
             session_mode=mode,
             answers={},
             started_at=now,
+            ends_at=now + timedelta(minutes=max(int(test.time_limit_minutes or 60), 1)),
             is_submitted=False,
         )
 
@@ -351,13 +407,19 @@ def submit_listening(mock_id: int, payload: ListeningSubmitIn, db: Session = Dep
     if payload.answers:
         progress.answers = payload.answers
 
-    result = _evaluate(db, test.id, progress.answers or {})
-    progress.raw_score = int(result["score"])
-    progress.max_score = int(result["total"])
-    progress.band_score = float(result["band"])
-    progress.is_submitted = True
-    progress.submitted_at = now
-    progress.updated_at = now
+    if not progress.ends_at:
+        progress.ends_at = (progress.started_at or now) + timedelta(minutes=max(int(test.time_limit_minutes or 60), 1))
+
+    if _is_time_up(progress, test, now):
+        result = _finalize(db, progress, test, now)
+    else:
+        result = _evaluate(db, test.id, progress.answers or {})
+        progress.raw_score = int(result["score"])
+        progress.max_score = int(result["total"])
+        progress.band_score = float(result["band"])
+        progress.is_submitted = True
+        progress.submitted_at = now
+        progress.updated_at = now
     db.add(progress)
     db.commit()
     db.refresh(progress)

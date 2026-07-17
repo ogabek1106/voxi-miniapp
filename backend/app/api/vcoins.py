@@ -23,7 +23,18 @@ from app.services.payment_service import (
     create_payment_request,
     reject_payment,
 )
-from app.models import User
+from app.models import (
+    ListeningProgress,
+    ListeningTest,
+    FullMockResult,
+    ReadingProgress,
+    ReadingTest,
+    SpeakingProgress,
+    SpeakingTest,
+    User,
+    WritingProgress,
+    WritingTest,
+)
 from app.services.auth_service import get_session_user
 from app.services.vcoin_service import (
     cost_for_content,
@@ -168,6 +179,124 @@ def _serialize_datetime(value):
     if value.tzinfo is None:
         value = value.replace(tzinfo=timezone.utc)
     return value.astimezone(timezone.utc).isoformat()
+
+
+def _latest_attempt_state(db: Session, user: User, content_type: str, reference_id: str, full_mock_reference_id: str | None = None) -> dict:
+    section = ""
+    raw_id = str(reference_id or "").strip()
+    if content_type == "separate_block" and ":" in raw_id:
+        section, raw_id = raw_id.split(":", 1)
+    try:
+        mock_id = int(full_mock_reference_id or raw_id)
+    except Exception:
+        return {"state": "payment_required"}
+
+    telegram_id = int(user.telegram_id) if user.telegram_id else None
+    mode = "full_mock" if content_type == "full_mock" or full_mock_reference_id else "single_block"
+    progress = None
+
+    if content_type == "full_mock":
+        full_result = (
+            db.query(FullMockResult)
+            .filter(FullMockResult.mock_pack_id == mock_id, FullMockResult.user_id == user.id, FullMockResult.status == "completed")
+            .order_by(FullMockResult.id.desc())
+            .first()
+        )
+        if full_result:
+            return {
+                "state": "completed",
+                "progress_id": full_result.id,
+                "started_at": None,
+                "submitted_at": _serialize_datetime(full_result.completed_at),
+            }
+        full_progress_rows = []
+        reading_test = db.query(ReadingTest).filter(ReadingTest.mock_pack_id == mock_id).first()
+        if reading_test:
+            row = (
+                db.query(ReadingProgress)
+                .filter(ReadingProgress.user_id == user.id, ReadingProgress.test_id == reading_test.id, ReadingProgress.session_mode == "full_mock")
+                .order_by(ReadingProgress.id.desc())
+                .first()
+            )
+            if row:
+                full_progress_rows.append(row)
+        if telegram_id:
+            for model, test_model in (
+                (ListeningProgress, ListeningTest),
+                (WritingProgress, WritingTest),
+                (SpeakingProgress, SpeakingTest),
+            ):
+                test_query = db.query(test_model)
+                if hasattr(test_model, "mock_pack_id"):
+                    test = test_query.filter(test_model.mock_pack_id == mock_id).first()
+                else:
+                    test = test_query.filter(test_model.id == mock_id).first()
+                if not test:
+                    continue
+                row = (
+                    db.query(model)
+                    .filter(model.telegram_id == telegram_id, model.test_id == test.id, model.session_mode == "full_mock")
+                    .order_by(model.id.desc())
+                    .first()
+                )
+                if row:
+                    full_progress_rows.append(row)
+        if full_progress_rows:
+            active = next((row for row in full_progress_rows if not row.is_submitted), None)
+            progress = active or sorted(full_progress_rows, key=lambda row: row.id, reverse=True)[0]
+            if progress and progress.is_submitted:
+                return {
+                    "state": "active",
+                    "progress_id": progress.id,
+                    "started_at": _serialize_datetime(progress.started_at),
+                    "submitted_at": _serialize_datetime(progress.submitted_at),
+                }
+    elif section == "reading":
+        test = db.query(ReadingTest).filter(ReadingTest.mock_pack_id == mock_id).first()
+        if test:
+            progress = (
+                db.query(ReadingProgress)
+                .filter(ReadingProgress.user_id == user.id, ReadingProgress.test_id == test.id, ReadingProgress.session_mode == mode)
+                .order_by(ReadingProgress.id.desc())
+                .first()
+            )
+    elif section == "listening" and telegram_id:
+        test = db.query(ListeningTest).filter(ListeningTest.id == mock_id).first()
+        if test:
+            progress = (
+                db.query(ListeningProgress)
+                .filter(ListeningProgress.telegram_id == telegram_id, ListeningProgress.test_id == test.id, ListeningProgress.session_mode == mode)
+                .order_by(ListeningProgress.id.desc())
+                .first()
+            )
+    elif section == "writing" and telegram_id:
+        test = db.query(WritingTest).filter(WritingTest.mock_pack_id == mock_id).first()
+        if test:
+            progress = (
+                db.query(WritingProgress)
+                .filter(WritingProgress.telegram_id == telegram_id, WritingProgress.test_id == test.id, WritingProgress.session_mode == mode)
+                .order_by(WritingProgress.id.desc())
+                .first()
+            )
+    elif section == "speaking" and telegram_id:
+        test = db.query(SpeakingTest).filter(SpeakingTest.mock_pack_id == mock_id).first()
+        if test:
+            progress = (
+                db.query(SpeakingProgress)
+                .filter(SpeakingProgress.telegram_id == telegram_id, SpeakingProgress.test_id == test.id, SpeakingProgress.session_mode == mode)
+                .order_by(SpeakingProgress.id.desc())
+                .first()
+            )
+
+    if not progress:
+        return {"state": "payment_required"}
+
+    return {
+        "state": "completed" if bool(progress.is_submitted) else "active",
+        "progress_id": progress.id,
+        "started_at": _serialize_datetime(progress.started_at),
+        "submitted_at": _serialize_datetime(progress.submitted_at),
+    }
 
 
 def _parse_datetime(value: str | None):
@@ -496,13 +625,14 @@ def get_vcoin_access_status(payload: VCoinAccessStatusIn, request: Request, db: 
 
     required = cost_for_content(content_type)
     balance = get_balance_for_user(db, user.id)
-    has_access = has_spend_for_content_for_user(db, user, content_type, reference_id)
-    access_reason = "already_paid" if has_access else ""
-
     full_mock_reference_id = str(payload.full_mock_reference_id or "").strip()
-    if not has_access and full_mock_reference_id:
-        has_access = has_spend_for_content_for_user(db, user, "full_mock", full_mock_reference_id)
-        access_reason = "full_mock_paid" if has_access else ""
+    attempt = _latest_attempt_state(db, user, content_type, reference_id, full_mock_reference_id or None)
+    has_paid_not_started = has_spend_for_content_for_user(db, user, content_type, reference_id)
+    if not has_paid_not_started and content_type == "full_mock":
+        has_paid_not_started = has_spend_for_content_for_user(db, user, "full_mock", reference_id)
+    attempt_state = attempt.get("state") or "payment_required"
+    has_access = attempt_state in {"active", "completed"} or bool(has_paid_not_started)
+    access_reason = attempt_state if attempt_state in {"active", "completed"} else ("paid_not_started" if has_paid_not_started else "")
 
     return {
         "ok": True,
@@ -515,6 +645,10 @@ def get_vcoin_access_status(payload: VCoinAccessStatusIn, request: Request, db: 
         "missing": max(0, required - balance),
         "has_access": bool(has_access),
         "access_reason": access_reason,
+        "attempt_state": attempt_state,
+        "progress_id": attempt.get("progress_id"),
+        "started_at": attempt.get("started_at"),
+        "submitted_at": attempt.get("submitted_at"),
         "can_purchase": bool(has_access or balance >= required),
     }
 

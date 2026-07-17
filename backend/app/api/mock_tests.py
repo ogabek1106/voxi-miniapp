@@ -76,8 +76,6 @@ def _is_admin_user(user: User) -> bool:
 
 
 def _require_reading_paid_access(db: Session, telegram_id: int, mock_id: int, progress: ReadingProgress | None, is_admin: bool) -> None:
-    if is_admin:
-        return
     if progress and not progress.is_submitted:
         return
     if has_active_premiere_access(db, telegram_id, mock_id):
@@ -94,8 +92,6 @@ def _require_reading_paid_access(db: Session, telegram_id: int, mock_id: int, pr
 
 
 def _require_reading_entry_access(db: Session, telegram_id: int, mock_id: int, progress: ReadingProgress | None, is_admin: bool, mode: str) -> None:
-    if is_admin:
-        return
     if progress and not progress.is_submitted:
         return
     if has_active_premiere_access(db, telegram_id, mock_id):
@@ -392,7 +388,7 @@ def start_reading_test(
             "session_mode": progress.session_mode if progress else None,
         })
 
-        if retake and progress and progress.is_submitted and not is_admin:
+        if (retake or is_admin) and progress and progress.is_submitted:
             last_step = "retake_payment"
             _reading_start_debug("DECISION", {
                 "action": "retake_payment_then_new_progress",
@@ -458,29 +454,7 @@ def start_reading_test(
                 "duration_minutes": duration_minutes,
                 "reason": "existing_progress",
             })
-            if is_admin:
-                if progress.is_submitted:
-                    last_step = "admin_reset_submitted_progress"
-                    calculated_ends_at = now + timedelta(minutes=duration_minutes)
-                    _reading_start_debug("DECISION", {
-                        "action": "admin_reset_submitted_progress",
-                        "progress_id": progress.id,
-                        "started_at": now.isoformat(),
-                        "ends_at": calculated_ends_at.isoformat(),
-                    })
-                    progress.answers = {}
-                    progress.started_at = now
-                    progress.ends_at = calculated_ends_at
-                    progress.is_submitted = False
-                    progress.submitted_at = None
-                    progress.raw_score = None
-                    progress.max_score = None
-                    progress.band_score = None
-                    progress.updated_at = now
-                    db.add(progress)
-                    db.commit()
-                    db.refresh(progress)
-            else:
+            if not is_admin:
                 if not progress.started_at:
                     progress.started_at = now
                     _reading_start_debug("PROGRESS_UPDATE", {"field": "started_at", "value": now.isoformat()})

@@ -33,12 +33,11 @@ UserWritingLoader.exitToHome = async function () {
         clearInterval(state.autoSaveInterval);
       }
       const answers = UserWritingUI.readAnswers();
-      UserWritingState.set({ isSubmitted: true, autoSaveInterval: null });
+      UserWritingState.set({ autoSaveInterval: null });
       await UserWritingApi.save(state.mockId, answers);
-      await UserWritingApi.submit(state.mockId, answers, "exit");
     }
   } catch (error) {
-    console.error("Writing exit submit failed:", error);
+    console.error("Writing exit save failed:", error);
   }
 
   window.MockFlow?.deactivate?.();

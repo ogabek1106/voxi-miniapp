@@ -674,6 +674,7 @@ class ListeningProgress(Base):
     session_mode = Column(String, nullable=False, default="single_block")
     answers = Column(JSON, nullable=False, default=dict)
     started_at = Column(DateTime(timezone=True), nullable=True)
+    ends_at = Column(DateTime(timezone=True), nullable=True)
     updated_at = Column(DateTime(timezone=True), nullable=True)
     submitted_at = Column(DateTime(timezone=True), nullable=True)
     is_submitted = Column(Boolean, nullable=False, default=False)

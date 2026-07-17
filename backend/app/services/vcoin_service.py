@@ -420,15 +420,6 @@ def require_paid_access_or_spend_for_user(
             reason="active_attempt",
         )
 
-    if full_mock_reference_id is not None and has_spend_for_content_for_user(db, user, "full_mock", full_mock_reference_id):
-        return VCoinSpendResult(
-            ok=True,
-            telegram_id=user.telegram_id,
-            user_id=user.id,
-            balance=int(user.v_coins or 0),
-            reason="full_mock_paid",
-        )
-
     if has_spend_for_content_for_user(db, user, content_type, reference_id):
         return VCoinSpendResult(
             ok=True,

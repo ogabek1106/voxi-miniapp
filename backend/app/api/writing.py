@@ -188,7 +188,7 @@ def start_writing(mock_id: int, payload: WritingStartIn, db: Session = Depends(g
         .first()
     )
 
-    if payload.retake and progress and progress.is_submitted and not is_admin:
+    if (payload.retake or is_admin) and progress and progress.is_submitted:
         require_paid_access_or_spend(
             db=db,
             telegram_id=payload.telegram_id,
@@ -236,39 +236,18 @@ def start_writing(mock_id: int, payload: WritingStartIn, db: Session = Depends(g
         db.commit()
         db.refresh(progress)
     else:
-        if is_admin:
-            if progress.is_submitted:
-                progress.task1_text = ""
-                progress.task1_image_url = None
-                progress.task2_text = ""
-                progress.task2_image_url = None
-                progress.started_at = now
-                progress.updated_at = now
-                progress.submitted_at = None
-                progress.is_submitted = False
-                progress.finish_type = None
-                progress.ai_checked_at = None
-                progress.ai_overall_band = None
-                progress.ai_task1_band = None
-                progress.ai_task2_band = None
-                progress.ai_task1_result = None
-                progress.ai_task2_result = None
-                db.add(progress)
-                db.commit()
-                db.refresh(progress)
+        if not progress.started_at:
+            progress.started_at = now
+        if _is_time_up(progress, test, now):
+            _finalize(progress, test, "auto", now)
+            db.add(progress)
+            db.commit()
+            db.refresh(progress)
         else:
-            if not progress.started_at:
-                progress.started_at = now
-            if _is_time_up(progress, test, now):
-                _finalize(progress, test, "auto", now)
-                db.add(progress)
-                db.commit()
-                db.refresh(progress)
-            else:
-                progress.updated_at = now
-                db.add(progress)
-                db.commit()
-                db.refresh(progress)
+            progress.updated_at = now
+            db.add(progress)
+            db.commit()
+            db.refresh(progress)
 
     deadline = _writing_deadline(progress, test)
     duration_seconds = max(int(test.time_limit_minutes or 60), 1) * 60
