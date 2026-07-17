@@ -240,19 +240,27 @@ window.VWarningGateway = window.VWarningGateway || {};
       .ielts-warning-page {
         width: 100%;
         min-height: calc(100vh - 96px);
-        padding: clamp(18px, 4vw, 42px) 16px;
+        padding: clamp(24px, 4vw, 46px) clamp(18px, 4vw, 40px);
         box-sizing: border-box;
         display: grid;
         place-items: start center;
+        text-align: left;
+      }
+      #screen-mocks.container.ielts-warning-host {
+        width: 100%;
+        max-width: none;
+        padding-left: 0;
+        padding-right: 0;
       }
       .ielts-warning-card {
-        width: min(920px, 100%);
+        width: min(1080px, 100%);
         border-radius: 22px;
         background: #ffffff;
         border: 1px solid rgba(20,40,60,0.10);
         box-shadow: 0 10px 30px rgba(15,23,42,0.08);
-        padding: clamp(22px, 4vw, 38px);
+        padding: clamp(28px, 4vw, 44px);
         box-sizing: border-box;
+        text-align: left;
       }
       .ielts-warning-kicker {
         margin: 0 0 8px;
@@ -279,12 +287,13 @@ window.VWarningGateway = window.VWarningGateway || {};
         font-size: clamp(16px, 1.4vw, 18px);
         line-height: 1.6;
         font-weight: 650;
+        max-width: 860px;
       }
       .ielts-warning-grid {
         display: grid;
-        grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.65fr);
-        gap: 24px;
-        margin-top: 24px;
+        grid-template-columns: minmax(0, 1.65fr) minmax(320px, 0.95fr);
+        gap: clamp(26px, 3.5vw, 42px);
+        margin-top: 28px;
         align-items: start;
       }
       .ielts-warning-section-title {
@@ -295,16 +304,21 @@ window.VWarningGateway = window.VWarningGateway || {};
       }
       .ielts-warning-list {
         margin: 0;
-        padding-left: 20px;
+        padding-left: 22px;
         color: #334155;
         font-size: 16px;
         line-height: 1.65;
         font-weight: 650;
+        text-align: left;
       }
-      .ielts-warning-list li { margin: 0 0 8px; }
+      .ielts-warning-list li {
+        margin: 0 0 9px;
+        padding-left: 4px;
+      }
       .ielts-warning-side {
         display: grid;
         gap: 12px;
+        align-self: start;
       }
       .ielts-warning-info {
         border-radius: 16px;
@@ -381,10 +395,53 @@ window.VWarningGateway = window.VWarningGateway || {};
         font-weight: 800;
         line-height: 1.35;
       }
-      @media (max-width: 760px) {
-        .ielts-warning-page { min-height: auto; padding: 14px; }
-        .ielts-warning-card { border-radius: 18px; padding: 20px; }
-        .ielts-warning-grid { grid-template-columns: 1fr; gap: 18px; }
+      @media (max-width: 980px) {
+        .ielts-warning-card {
+          width: min(940px, 100%);
+        }
+        .ielts-warning-grid {
+          grid-template-columns: minmax(0, 1.35fr) minmax(290px, 0.9fr);
+          gap: 24px;
+        }
+      }
+      @media (max-width: 820px) {
+        .ielts-warning-page {
+          padding: 20px 16px 30px;
+        }
+        .ielts-warning-card {
+          width: min(720px, 100%);
+          border-radius: 20px;
+          padding: 24px;
+        }
+        .ielts-warning-grid {
+          grid-template-columns: 1fr;
+          gap: 20px;
+        }
+        .ielts-warning-side {
+          max-width: none;
+        }
+      }
+      @media (max-width: 520px) {
+        .ielts-warning-page {
+          min-height: auto;
+          padding: 14px 12px 24px;
+        }
+        .ielts-warning-card {
+          border-radius: 18px;
+          padding: 20px;
+        }
+        .ielts-warning-kicker,
+        .ielts-warning-title,
+        .ielts-warning-label {
+          text-align: center;
+        }
+        .ielts-warning-intro {
+          margin-top: 18px;
+          text-align: left;
+        }
+        .ielts-warning-list {
+          padding-left: 20px;
+        }
       }
     `;
     document.head.appendChild(style);
@@ -393,8 +450,16 @@ window.VWarningGateway = window.VWarningGateway || {};
   function getHost() {
     const host = screenMocks || document.getElementById("screen-mocks") || document.getElementById("content");
     if (typeof hideAllScreens === "function") hideAllScreens();
-    if (host) host.style.display = "block";
+    if (host) {
+      host.style.display = "block";
+      host.classList.add("ielts-warning-host");
+    }
     return host;
+  }
+
+  function releaseHost() {
+    const host = screenMocks || document.getElementById("screen-mocks") || document.getElementById("content");
+    host?.classList?.remove("ielts-warning-host");
   }
 
   function buildAccessPayload(feature, mockId, mode) {
@@ -470,6 +535,7 @@ window.VWarningGateway = window.VWarningGateway || {};
   }
 
   function startFeature(feature, mockId, mode, meta = {}) {
+    releaseHost();
     const options = { fromGateway: true };
     if (mode === "full_mock" && feature !== "full_mock") options.fromFlow = true;
     if (feature === "full_mock") return window.startFullMock?.(mockId, options);
@@ -531,6 +597,7 @@ window.VWarningGateway = window.VWarningGateway || {};
       </div>
     `;
     document.getElementById("ielts-warning-back").onclick = () => {
+      releaseHost();
       if (typeof showMockList === "function") showMockList();
       else if (typeof showHome === "function") showHome();
     };
