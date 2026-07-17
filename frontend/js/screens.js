@@ -231,7 +231,7 @@ window.showReadingEntry = async function () {
       return;
     }
 
-    startMock(mockId);
+    startMock(mockId, { title: latestPublishedMock.title || "IELTS Reading" });
   } catch (error) {
     console.error("Reading quick entry error:", error);
     alert("Failed to open reading.");
@@ -268,7 +268,7 @@ window.showWritingEntry = async function () {
     }
 
     if (typeof window.startWritingMock === "function") {
-      window.startWritingMock(mockId);
+      window.startWritingMock(mockId, { title: latestPublishedMock.title || "IELTS Writing" });
       return;
     }
 
@@ -309,7 +309,7 @@ window.showSpeakingEntry = async function () {
     }
 
     if (typeof window.startSpeakingMock === "function") {
-      window.startSpeakingMock(mockId);
+      window.startSpeakingMock(mockId, { title: latestPublishedMock.title || "IELTS Speaking" });
       return;
     }
 
@@ -342,7 +342,7 @@ window.showListeningEntry = async function () {
     }
 
     if (typeof window.startListeningMock === "function") {
-      window.startListeningMock(mockId);
+      window.startListeningMock(mockId, { title: mocks[0]?.title || "IELTS Listening" });
       return;
     }
   } catch (error) {

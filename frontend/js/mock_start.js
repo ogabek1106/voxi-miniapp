@@ -118,6 +118,467 @@ function examTelegramId() {
   return typeof window.getTelegramId === "function" ? window.getTelegramId() : null;
 }
 
+window.VWarningGateway = window.VWarningGateway || {};
+
+(function () {
+  const FEATURE_CONFIG = {
+    full_mock: {
+      label: "To'liq IELTS Mock testi",
+      defaultTitle: "IELTS Mock",
+      intro: "Ushbu test haqiqiy IELTS imtihoniga yaqin sharoitda o'tkaziladi. Boshlashdan oldin quyidagi ko'rsatmalarni diqqat bilan o'qing.",
+      contentType: "full_mock",
+      referenceId: (mockId) => String(mockId),
+      duration: "Taxminan 2 soat 45 daqiqa",
+      serviceName: "Full Mock Test",
+      instructions: [
+        "Test Listening bo'limidan boshlanadi va quyidagi qat'iy tartibda davom etadi: Listening, Reading, Writing, Speaking.",
+        "Har bir bo'limdan keyin keyingi bo'limga tayyorlanish uchun qisqa o'tish vaqti beriladi.",
+        "Test davomida sahifani yangilamang va ilovani yopmang.",
+        "Testdan chiqib ketsangiz, vaqt to'xtamaydi.",
+        "Barcha bo'limlarni tugatmaguningizcha testni tark etmaslik tavsiya etiladi.",
+        "Testni boshlashdan oldin yetarli bo'sh vaqt, barqaror internet, quloqchin va ishlaydigan mikrofon tayyorlang.",
+        "To'liq Mock uchun to'lov bir marta amalga oshiriladi. Ichki bo'limlar uchun qayta to'lov olinmaydi."
+      ]
+    },
+    listening: {
+      label: "IELTS Listening",
+      defaultTitle: "Listening",
+      intro: "Listening testi boshlangandan so'ng audio faqat bir marta ijro etiladi.",
+      contentType: "separate_block",
+      referenceId: (mockId) => `listening:${mockId}`,
+      duration: "Taxminan 30 daqiqa",
+      serviceName: "Listening section",
+      instructions: [
+        "Audio faqat bir marta ijro etiladi.",
+        "Audioni pauza qilish, orqaga qaytarish yoki qayta eshitish mumkin emas.",
+        "Boshlashdan oldin qurilma ovozini tekshiring.",
+        "Quloqchin ishlatish tavsiya etiladi.",
+        "Tinch joyda o'tiring va internet aloqasi barqaror ekanini tekshiring.",
+        "Test davomida sahifani yangilamang va ilovani yopmang.",
+        "Testdan chiqib ketsangiz, vaqt va audio jarayoni to'xtamasligi mumkin.",
+        "Javoblarni belgilangan vaqt ichida yakunlang."
+      ]
+    },
+    reading: {
+      label: "IELTS Reading",
+      defaultTitle: "Reading",
+      intro: "Reading testi vaqt cheklovi asosida o'tkaziladi. Test boshlanishi bilan vaqt hisoblanadi.",
+      contentType: "separate_block",
+      referenceId: (mockId) => `reading:${mockId}`,
+      duration: "60 daqiqa",
+      serviceName: "Reading section",
+      instructions: [
+        "Test boshlanishi bilan taymer darhol ishga tushadi.",
+        "Matn va savollarni diqqat bilan o'qing.",
+        "Javoblarni vaqt tugashidan oldin yakunlang.",
+        "Nusxa olish yoki ayrim brauzer amallari cheklangan bo'lishi mumkin.",
+        "Test davomida sahifani yangilamang va ilovani yopmang.",
+        "Testdan chiqib ketsangiz, vaqt to'xtamaydi.",
+        "Vaqt tugaganda mavjud javoblar avtomatik tarzda topshirilishi mumkin."
+      ]
+    },
+    writing: {
+      label: "IELTS Writing",
+      defaultTitle: "Writing",
+      intro: "Writing testi Task 1 va Task 2 topshiriqlaridan iborat bo'lib, umumiy vaqt cheklovi asosida o'tkaziladi.",
+      contentType: "separate_block",
+      referenceId: (mockId) => `writing:${mockId}`,
+      duration: "60 daqiqa",
+      serviceName: "Writing section",
+      instructions: [
+        "Umumiy vaqt Task 1 va Task 2 uchun birgalikda beriladi.",
+        "Har ikkala topshiriqni bajarishga vaqtni to'g'ri taqsimlang.",
+        "Javoblarni vaqt tugashidan oldin yakunlang.",
+        "Matn yozish yoki mavjud ruxsat etilgan yuklash usullaridan foydalaning.",
+        "Yuklanadigan fayl yoki surat aniq va to'liq bo'lishi kerak.",
+        "Test davomida sahifani yangilamang va ilovani yopmang.",
+        "Testdan chiqib ketsangiz, vaqt to'xtamaydi.",
+        "Vaqt tugaganda tugallanmagan javoblar mavjud holatida topshirilishi mumkin."
+      ]
+    },
+    speaking: {
+      label: "IELTS Speaking",
+      defaultTitle: "Speaking",
+      intro: "Speaking testi davomida javoblaringiz mikrofon orqali yozib olinadi.",
+      contentType: "separate_block",
+      referenceId: (mockId) => `speaking:${mockId}`,
+      duration: "Taxminan 11-14 daqiqa",
+      serviceName: "Speaking section",
+      instructions: [
+        "Testni boshlash uchun mikrofon ruxsati talab qilinadi.",
+        "Boshlashdan oldin mikrofon ishlayotganini tekshiring.",
+        "Tinch va shovqinsiz joyda o'tiring.",
+        "Har bir qismda tayyorgarlik va javob berish vaqti cheklangan.",
+        "Yozib olingan javobni qayta yozish yoki takrorlash imkoniyati bo'lmasligi mumkin.",
+        "Test davomida sahifani yangilamang va ilovani yopmang.",
+        "Ilovadan chiqish yozuv jarayonini buzishi mumkin.",
+        "Qurilmani almashtirmang va boshqa ilovalarga o'tmang.",
+        "Gapirishni boshlashdan oldin mikrofon ko'rsatkichi ishlayotganini tekshiring."
+      ]
+    }
+  };
+
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function formatUzsFromCoins(coins) {
+    const amount = window.UzsBalance?.convertVCoinsToUzs?.(Number(coins || 0)) || (Number(coins || 0) * 5000);
+    return window.UzsBalance?.formatUzsSpaces?.(amount) || formatMockUzs(amount);
+  }
+
+  function ensureStyles() {
+    if (document.getElementById("v-warning-gateway-styles")) return;
+    const style = document.createElement("style");
+    style.id = "v-warning-gateway-styles";
+    style.textContent = `
+      .ielts-warning-page {
+        width: 100%;
+        min-height: calc(100vh - 96px);
+        padding: clamp(18px, 4vw, 42px) 16px;
+        box-sizing: border-box;
+        display: grid;
+        place-items: start center;
+      }
+      .ielts-warning-card {
+        width: min(920px, 100%);
+        border-radius: 22px;
+        background: #ffffff;
+        border: 1px solid rgba(20,40,60,0.10);
+        box-shadow: 0 10px 30px rgba(15,23,42,0.08);
+        padding: clamp(22px, 4vw, 38px);
+        box-sizing: border-box;
+      }
+      .ielts-warning-kicker {
+        margin: 0 0 8px;
+        color: #00a7df;
+        font-size: 14px;
+        font-weight: 900;
+      }
+      .ielts-warning-title {
+        margin: 0;
+        color: #111827;
+        font-size: clamp(26px, 3vw, 34px);
+        line-height: 1.12;
+        font-weight: 950;
+      }
+      .ielts-warning-label {
+        margin: 10px 0 0;
+        color: #516173;
+        font-size: clamp(16px, 1.6vw, 18px);
+        font-weight: 850;
+      }
+      .ielts-warning-intro {
+        margin: 20px 0 0;
+        color: #334155;
+        font-size: clamp(16px, 1.4vw, 18px);
+        line-height: 1.6;
+        font-weight: 650;
+      }
+      .ielts-warning-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.65fr);
+        gap: 24px;
+        margin-top: 24px;
+        align-items: start;
+      }
+      .ielts-warning-section-title {
+        margin: 0 0 12px;
+        color: #111827;
+        font-size: 20px;
+        font-weight: 950;
+      }
+      .ielts-warning-list {
+        margin: 0;
+        padding-left: 20px;
+        color: #334155;
+        font-size: 16px;
+        line-height: 1.65;
+        font-weight: 650;
+      }
+      .ielts-warning-list li { margin: 0 0 8px; }
+      .ielts-warning-side {
+        display: grid;
+        gap: 12px;
+      }
+      .ielts-warning-info {
+        border-radius: 16px;
+        background: #f5f8fb;
+        border: 1px solid rgba(20,40,60,0.08);
+        padding: 15px 16px;
+      }
+      .ielts-warning-info span {
+        display: block;
+        color: #64748b;
+        font-size: 13px;
+        font-weight: 900;
+        margin-bottom: 5px;
+      }
+      .ielts-warning-info strong {
+        color: #111827;
+        font-size: 20px;
+        line-height: 1.2;
+        font-weight: 950;
+      }
+      .ielts-warning-status {
+        border-radius: 16px;
+        background: #eef8ff;
+        border: 1px solid rgba(0,186,255,0.16);
+        padding: 15px 16px;
+        color: #111827;
+      }
+      .ielts-warning-status.is-error {
+        background: #fff7ed;
+        border-color: rgba(249,115,22,0.2);
+      }
+      .ielts-warning-status-title {
+        font-size: 14px;
+        color: #64748b;
+        font-weight: 900;
+        margin-bottom: 4px;
+      }
+      .ielts-warning-status-value {
+        font-size: 20px;
+        line-height: 1.25;
+        font-weight: 950;
+      }
+      .ielts-warning-actions {
+        display: grid;
+        gap: 10px;
+        margin-top: 2px;
+      }
+      .ielts-warning-primary,
+      .ielts-warning-secondary {
+        width: 100%;
+        min-height: 50px;
+        border-radius: 14px;
+        border: 0;
+        font-size: 16px;
+        font-weight: 950;
+        cursor: pointer;
+      }
+      .ielts-warning-primary {
+        background: #4bb7f4;
+        color: #ffffff;
+      }
+      .ielts-warning-primary:disabled {
+        opacity: 0.65;
+        cursor: wait;
+      }
+      .ielts-warning-secondary {
+        background: #eef2f7;
+        color: #111827;
+      }
+      .ielts-warning-message {
+        min-height: 18px;
+        color: #c2410c;
+        font-size: 14px;
+        font-weight: 800;
+        line-height: 1.35;
+      }
+      @media (max-width: 760px) {
+        .ielts-warning-page { min-height: auto; padding: 14px; }
+        .ielts-warning-card { border-radius: 18px; padding: 20px; }
+        .ielts-warning-grid { grid-template-columns: 1fr; gap: 18px; }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function getHost() {
+    const host = screenMocks || document.getElementById("screen-mocks") || document.getElementById("content");
+    if (typeof hideAllScreens === "function") hideAllScreens();
+    if (host) host.style.display = "block";
+    return host;
+  }
+
+  function buildAccessPayload(feature, mockId, mode) {
+    const config = FEATURE_CONFIG[feature] || FEATURE_CONFIG.reading;
+    const isFullMockSection = mode === "full_mock" && feature !== "full_mock";
+    return {
+      content_type: isFullMockSection ? "separate_block" : config.contentType,
+      reference_id: isFullMockSection ? config.referenceId(mockId) : config.referenceId(mockId),
+      full_mock_reference_id: isFullMockSection ? String(mockId) : null
+    };
+  }
+
+  async function loadAccessStatus(feature, mockId, mode) {
+    const telegramId = examTelegramId();
+    const payload = buildAccessPayload(feature, mockId, mode);
+    return apiPost("/vcoins/access-status", {
+      ...(telegramId ? { telegram_id: telegramId } : {}),
+      ...payload
+    });
+  }
+
+  function statusView(status, feature, mode) {
+    const isFullMockSection = mode === "full_mock" && feature !== "full_mock";
+    if (!status) {
+      return {
+        title: "Holat",
+        value: "Tekshirilmoqda...",
+        button: "Tekshirilmoqda...",
+        disabled: true,
+        insufficient: false
+      };
+    }
+    if (status.has_access) {
+      return {
+        title: "Kirish holati",
+        value: isFullMockSection ? "To'liq Mock uchun kirish tasdiqlangan" : "Kirish tasdiqlangan",
+        button: "Testni boshlash",
+        disabled: false,
+        insufficient: false
+      };
+    }
+    if (Number(status.balance || 0) < Number(status.required || 0)) {
+      return {
+        title: "Hisobda mablag' yetarli emas",
+        value: `Yetishmayotgan summa: ${formatUzsFromCoins(status.missing || 0)}`,
+        button: "Hisobni to'ldirish",
+        disabled: false,
+        insufficient: true
+      };
+    }
+    return {
+      title: "To'lov holati",
+      value: "Balansingiz yetarli. To'lov bir marta yechiladi.",
+      button: "To'lovga o'tish",
+      disabled: false,
+      insufficient: false
+    };
+  }
+
+  async function ensureSpeakingPermission(messageEl) {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      if (messageEl) messageEl.textContent = "Brauzer mikrofon ruxsatini tekshira olmadi.";
+      return false;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach((track) => track.stop());
+      return true;
+    } catch (_) {
+      if (messageEl) messageEl.textContent = "Mikrofonga ruxsat berilmadi. Speaking testini boshlash uchun mikrofonni yoqing.";
+      return false;
+    }
+  }
+
+  function startFeature(feature, mockId, mode, meta = {}) {
+    const options = { fromGateway: true };
+    if (mode === "full_mock" && feature !== "full_mock") options.fromFlow = true;
+    if (feature === "full_mock") return window.startFullMock?.(mockId, options);
+    if (feature === "listening") return window.startListeningMock?.(mockId, options);
+    if (feature === "reading") return window.startMock?.(mockId, options);
+    if (feature === "writing") return window.startWritingMock?.(mockId, options);
+    if (feature === "speaking") return window.startSpeakingMock?.(mockId, options);
+  }
+
+  function render({ feature, mockId, title, mode, status }) {
+    ensureStyles();
+    const config = FEATURE_CONFIG[feature] || FEATURE_CONFIG.reading;
+    const host = getHost();
+    if (!host) return;
+    const view = statusView(status, feature, mode);
+    const price = formatUzsFromCoins(status?.required ?? (feature === "full_mock" ? FULL_MOCK_VCOIN_COST : 3));
+    const balance = formatUzsFromCoins(status?.balance || 0);
+    host.innerHTML = `
+      <div class="ielts-warning-page">
+        <section class="ielts-warning-card" aria-labelledby="ielts-warning-title">
+          <p class="ielts-warning-kicker">Testni boshlashdan oldin</p>
+          <h1 class="ielts-warning-title" id="ielts-warning-title">${escapeHtml(title || config.defaultTitle)}</h1>
+          <p class="ielts-warning-label">${escapeHtml(config.label)}</p>
+          <p class="ielts-warning-intro">${escapeHtml(config.intro)}</p>
+          <div class="ielts-warning-grid">
+            <div>
+              <h2 class="ielts-warning-section-title">Muhim ko'rsatmalar</h2>
+              <ul class="ielts-warning-list">
+                ${config.instructions.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
+              </ul>
+            </div>
+            <aside class="ielts-warning-side">
+              <div class="ielts-warning-info">
+                <span>Davomiyligi</span>
+                <strong>${escapeHtml(config.duration)}</strong>
+              </div>
+              <div class="ielts-warning-info">
+                <span>Test narxi</span>
+                <strong>${price}</strong>
+              </div>
+              ${view.insufficient ? `
+                <div class="ielts-warning-info">
+                  <span>Hisobingizda</span>
+                  <strong>${balance}</strong>
+                </div>
+              ` : ""}
+              <div class="ielts-warning-status ${view.insufficient ? "is-error" : ""}">
+                <div class="ielts-warning-status-title">${escapeHtml(view.title)}</div>
+                <div class="ielts-warning-status-value">${escapeHtml(view.value)}</div>
+              </div>
+              <div class="ielts-warning-actions">
+                <button class="ielts-warning-primary" id="ielts-warning-primary" ${view.disabled ? "disabled" : ""}>${escapeHtml(view.button)}</button>
+                <button class="ielts-warning-secondary" id="ielts-warning-back">Orqaga</button>
+                <div class="ielts-warning-message" id="ielts-warning-message"></div>
+              </div>
+            </aside>
+          </div>
+        </section>
+      </div>
+    `;
+    document.getElementById("ielts-warning-back").onclick = () => {
+      if (typeof showMockList === "function") showMockList();
+      else if (typeof showHome === "function") showHome();
+    };
+    document.getElementById("ielts-warning-primary").onclick = async () => {
+      const button = document.getElementById("ielts-warning-primary");
+      const messageEl = document.getElementById("ielts-warning-message");
+      if (!button) return;
+      button.disabled = true;
+      if (messageEl) messageEl.textContent = "";
+      try {
+        if (view.insufficient) {
+          window.UzsBalance?.showInsufficientFunds?.({
+            required: Number(status?.required || 0),
+            balance: Number(status?.balance || 0),
+            contentType: status?.content_type || buildAccessPayload(feature, mockId, mode).content_type,
+            referenceId: status?.reference_id || buildAccessPayload(feature, mockId, mode).reference_id,
+            serviceName: config.serviceName
+          });
+          return;
+        }
+        if (feature === "speaking") {
+          const allowed = await ensureSpeakingPermission(messageEl);
+          if (!allowed) return;
+        }
+        await startFeature(feature, mockId, mode, { title });
+      } finally {
+        button.disabled = false;
+      }
+    };
+  }
+
+  window.VWarningGateway.open = async function ({ feature, mockId, title = "", mode = "single_block" } = {}) {
+    const normalizedFeature = FEATURE_CONFIG[feature] ? feature : "reading";
+    const safeMockId = Number(mockId || 0);
+    if (!safeMockId) return;
+    const normalizedMode = mode === "full_mock" ? "full_mock" : "single_block";
+    render({ feature: normalizedFeature, mockId: safeMockId, title, mode: normalizedMode, status: null });
+    try {
+      const status = await loadAccessStatus(normalizedFeature, safeMockId, normalizedMode);
+      render({ feature: normalizedFeature, mockId: safeMockId, title, mode: normalizedMode, status });
+    } catch (error) {
+      render({ feature: normalizedFeature, mockId: safeMockId, title, mode: normalizedMode, status: null });
+      const messageEl = document.getElementById("ielts-warning-message");
+      if (messageEl) messageEl.textContent = "Kirish holatini tekshirib bo'lmadi. Iltimos, qayta urinib ko'ring.";
+    }
+  };
+})();
+
 MockFlow.goToNextPart = function (currentPart, mockId, container) {
   MockDebug.log("MockFlow.goToNextPart.enter", { currentPart, mockId, active: MockFlow.active, flowMockId: MockFlow.mockId });
   if (!MockFlow.isActive(mockId) || !window.MockTransitionPage?.show) {
@@ -190,105 +651,11 @@ MockFlow.showFinalTransition = function (mockId, container, onDone) {
 };
 
 window.openMockWarning = function (packId, title) {
-
-  if (!screenMocks) return;
-  const fullMockPrice = formatMockUzs(fullMockPriceUzs());
-  const primaryLabel = window.AppConfig?.isVcoinEnabled?.() ? "Start Full Mock" : "Proceed to payment";
-
-  screenMocks.innerHTML = `
-    <div style="
-      width:100%;
-      max-width:920px;
-      margin:28px auto;
-      box-sizing:border-box;
-      text-align:left;
-      background: var(--card-bg, #f4f4f6);
-      border-radius:22px;
-      padding:clamp(24px, 4vw, 38px);
-      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-    ">
-      <div style="
-        font-size:clamp(26px, 3vw, 32px);
-        line-height:1.1;
-        font-weight:900;
-        color:#111827;
-        margin-bottom:12px;
-      ">${title}</div>
-
-      <div style="
-        font-size:clamp(19px, 2vw, 22px);
-        line-height:1.25;
-        font-weight:850;
-        color:#111827;
-        margin-bottom:14px;
-      ">Full IELTS Mock Test Warning</div>
-
-      <div style="
-        font-size:clamp(16px, 1.4vw, 18px);
-        line-height:1.65;
-        color:#374151;
-      ">
-        This full mock simulates real exam pressure. Please read before you start:
-      </div>
-
-      <ul style="
-        margin:14px 0 0 22px;
-        padding:0;
-        color:#374151;
-        font-size:clamp(16px, 1.35vw, 18px);
-        line-height:1.7;
-      ">
-        <li>The test starts from Listening and continues in fixed order: Reading, Writing, Speaking.</li>
-        <li>After each part, you get a short transition timer to prepare for the next part.</li>
-        <li>Do not refresh or close the app during the test.</li>
-        <li>If you leave, your timer does not pause and exam pressure is preserved.</li>
-        <li>You should not exit the test until all parts are completed.</li>
-      </ul>
-
-      <div style="
-        margin-top:22px;
-        padding:16px 18px;
-        border-radius:16px;
-        background:#eef8ff;
-        border:1px solid rgba(0, 166, 230, 0.16);
-      ">
-        <div style="
-          color:#526273;
-          font-size:16px;
-          font-weight:800;
-          margin-bottom:4px;
-        ">Full Mock price</div>
-        <div style="
-          color:#111827;
-          font-size:clamp(20px, 2vw, 24px);
-          line-height:1.15;
-          font-weight:950;
-        ">${fullMockPrice}</div>
-      </div>
-
-      <button onclick="startFullMock(${packId})" style="
-        width:100%;
-        min-height:52px;
-        margin-top:22px;
-        font-size:clamp(16px, 1.5vw, 18px);
-        font-weight:900;
-      ">
-        ${primaryLabel}
-      </button>
-
-      <button onclick="showMockList()" style="
-        width:100%;
-        min-height:48px;
-        margin-top:10px;
-        background:#e5e7eb;
-        color:#111827;
-        font-size:clamp(16px, 1.4vw, 17px);
-        font-weight:850;
-      ">
-        Back
-      </button>
-    </div>
-  `;
+  window.VWarningGateway?.open?.({
+    feature: "full_mock",
+    mockId: packId,
+    title
+  });
 };
 
 async function showCompletedFullMock(mockId, existingResult) {
@@ -329,8 +696,16 @@ async function showCompletedFullMock(mockId, existingResult) {
   });
 }
 
-window.startFullMock = async function (mockId) {
+window.startFullMock = async function (mockId, options = {}) {
   MockDebug.log("startFullMock.enter", { mockId });
+  if (!options.fromGateway) {
+    window.VWarningGateway?.open?.({
+      feature: "full_mock",
+      mockId,
+      title: options.title || `IELTS Mock №${String(mockId).padStart(2, "0")}`
+    });
+    return;
+  }
   if (await window.PremiereUi?.interceptIfPremiere?.(mockId)) {
     return;
   }
@@ -359,6 +734,14 @@ window.startFullMock = async function (mockId) {
 
 window.startMock = async function (mockId, options = {}) {
   MockDebug.log("startMock.enter", { mockId, options });
+  if (!options.fromGateway && !options.fromFlow) {
+    window.VWarningGateway?.open?.({
+      feature: "reading",
+      mockId,
+      title: options.title || "IELTS Reading"
+    });
+    return;
+  }
   if (!options.fromFlow) {
     if (await window.PremiereUi?.interceptIfPremiere?.(mockId)) {
       return;
@@ -440,6 +823,14 @@ window.startMock = async function (mockId, options = {}) {
 
 window.startWritingMock = async function (mockId, options = {}) {
   MockDebug.log("startWritingMock.enter", { mockId, options });
+  if (!options.fromGateway && !options.fromFlow) {
+    window.VWarningGateway?.open?.({
+      feature: "writing",
+      mockId,
+      title: options.title || "IELTS Writing"
+    });
+    return;
+  }
   if (!options.fromFlow) {
     if (await window.PremiereUi?.interceptIfPremiere?.(mockId)) {
       return;
@@ -491,6 +882,14 @@ window.startWritingMock = async function (mockId, options = {}) {
 
 window.startListeningMock = async function (mockId, options = {}) {
   MockDebug.log("startListeningMock.enter", { mockId, options });
+  if (!options.fromGateway && !options.fromFlow) {
+    window.VWarningGateway?.open?.({
+      feature: "listening",
+      mockId,
+      title: options.title || "IELTS Listening"
+    });
+    return;
+  }
   if (!options.fromFlow) {
     if (await window.PremiereUi?.interceptIfPremiere?.(mockId)) {
       return;
@@ -664,6 +1063,14 @@ window.startListeningMock = async function (mockId, options = {}) {
 
 window.startSpeakingMock = async function (mockId, options = {}) {
   MockDebug.log("startSpeakingMock.enter", { mockId, options });
+  if (!options.fromGateway && !options.fromFlow) {
+    window.VWarningGateway?.open?.({
+      feature: "speaking",
+      mockId,
+      title: options.title || "IELTS Speaking"
+    });
+    return;
+  }
   if (!options.fromFlow) {
     if (await window.PremiereUi?.interceptIfPremiere?.(mockId)) {
       return;

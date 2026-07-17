@@ -26,10 +26,12 @@ from app.services.payment_service import (
 from app.models import User
 from app.services.auth_service import get_session_user
 from app.services.vcoin_service import (
+    cost_for_content,
     get_balance,
     get_balance_for_user,
     get_recent_ledger,
     get_recent_ledger_for_user,
+    has_spend_for_content_for_user,
     spend_once_for_content,
     spend_once_for_content_for_user,
 )
@@ -67,6 +69,13 @@ class VCoinSpendIn(BaseModel):
     telegram_id: Optional[int] = None
     content_type: str
     reference_id: str
+
+
+class VCoinAccessStatusIn(BaseModel):
+    telegram_id: Optional[int] = None
+    content_type: str
+    reference_id: str
+    full_mock_reference_id: Optional[str] = None
 
 
 class PaymentQuoteIn(BaseModel):
@@ -474,6 +483,39 @@ def get_vcoin_ledger(
             }
             for item in entries
         ],
+    }
+
+
+@router.post("/access-status")
+def get_vcoin_access_status(payload: VCoinAccessStatusIn, request: Request, db: Session = Depends(get_db)):
+    user = _resolve_wallet_user(db, request, payload.telegram_id)
+    content_type = str(payload.content_type or "").strip()
+    reference_id = str(payload.reference_id or "").strip()
+    if not content_type or not reference_id:
+        raise HTTPException(status_code=422, detail="content_type_and_reference_required")
+
+    required = cost_for_content(content_type)
+    balance = get_balance_for_user(db, user.id)
+    has_access = has_spend_for_content_for_user(db, user, content_type, reference_id)
+    access_reason = "already_paid" if has_access else ""
+
+    full_mock_reference_id = str(payload.full_mock_reference_id or "").strip()
+    if not has_access and full_mock_reference_id:
+        has_access = has_spend_for_content_for_user(db, user, "full_mock", full_mock_reference_id)
+        access_reason = "full_mock_paid" if has_access else ""
+
+    return {
+        "ok": True,
+        "user_id": user.id,
+        "telegram_id": user.telegram_id,
+        "content_type": content_type,
+        "reference_id": reference_id,
+        "required": required,
+        "balance": balance,
+        "missing": max(0, required - balance),
+        "has_access": bool(has_access),
+        "access_reason": access_reason,
+        "can_purchase": bool(has_access or balance >= required),
     }
 
 
