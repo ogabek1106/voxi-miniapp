@@ -34,6 +34,8 @@ from app.services.vcoin_service import add_coins_to_user
 
 
 ORDER_EXPIRY_HOURS = 12
+DONATION_MIN_AMOUNT_UZS = 2000
+DONATION_MAX_AMOUNT_UZS = 10000000
 
 CLICK_SUCCESS = 0
 CLICK_SIGN_CHECK_FAILED = -1
@@ -296,7 +298,7 @@ def _validate_order_for_prepare(order: PaymentOrder | None, amount: Decimal) -> 
         raise ClickError(CLICK_USER_NOT_FOUND)
     if order.payment_provider != "click":
         raise ClickError(CLICK_USER_NOT_FOUND)
-    if str(order.product_type or "").lower() != "vcoin":
+    if str(order.product_type or "").lower() not in {"vcoin", "donation"}:
         raise ClickError(CLICK_ERROR_IN_REQUEST)
     if _order_amount_decimal(order) != amount:
         raise ClickError(CLICK_INCORRECT_AMOUNT)
@@ -386,6 +388,30 @@ def _fulfill_vcoins_once(db: Session, order: PaymentOrder) -> None:
     order.status = "fulfilled"
     order.fulfilled_at = now
     order.fulfillment_error = None
+
+
+def _fulfill_donation_once(db: Session, order: PaymentOrder) -> None:
+    if order.fulfillment_status == "fulfilled":
+        return
+    now = utcnow()
+    order.fulfillment_status = "fulfilled"
+    order.status = "fulfilled"
+    order.fulfilled_at = now
+    order.fulfillment_error = None
+
+
+def _fulfill_order_once(db: Session, order: PaymentOrder) -> None:
+    product_type = str(order.product_type or "").lower()
+    if product_type == "vcoin":
+        _fulfill_vcoins_once(db, order)
+        return
+    if product_type == "donation":
+        _fulfill_donation_once(db, order)
+        return
+    order.fulfillment_status = "failed"
+    order.status = "fulfillment_failed"
+    order.fulfillment_error = "unsupported_product_type"
+    raise ClickError(CLICK_FAILED_TO_UPDATE_USER)
 
 
 def handle_prepare(db: Session, fields: dict[str, Any]) -> dict[str, Any]:
@@ -552,7 +578,7 @@ def handle_complete(db: Session, fields: dict[str, Any]) -> dict[str, Any]:
             tx.merchant_confirm_id = tx.merchant_confirm_id or tx.id
             order.status = "paid"
             order.payment_completed_at = order.payment_completed_at or utcnow()
-            _fulfill_vcoins_once(db, order)
+            _fulfill_order_once(db, order)
             return complete_response(
                 code=CLICK_SUCCESS,
                 click_trans_id=tx.click_trans_id,
@@ -683,6 +709,60 @@ def create_vcoin_checkout_order(
     return {
         "order_ref": order.order_ref,
         "amount": format(Decimal(int(order.amount_tiyin)) / Decimal("100"), ".2f"),
+        "checkout_url": build_checkout_url(order.order_ref, int(order.amount_tiyin)),
+        "expires_at": order.expires_at.isoformat(),
+        "click_payment": build_public_payment_params(order.order_ref, int(order.amount_tiyin)),
+    }
+
+
+def create_donation_checkout_order(
+    db: Session,
+    *,
+    user: User,
+    amount_uzs: int,
+) -> dict[str, Any]:
+    try:
+        normalized_amount = int(amount_uzs)
+    except Exception:
+        raise HTTPException(status_code=422, detail="invalid_donation_amount")
+    if normalized_amount < DONATION_MIN_AMOUNT_UZS:
+        raise HTTPException(status_code=422, detail="donation_amount_too_low")
+    if normalized_amount > DONATION_MAX_AMOUNT_UZS:
+        raise HTTPException(status_code=422, detail="donation_amount_too_high")
+
+    amount_tiyin = normalized_amount * 100
+    now = utcnow()
+    order = PaymentOrder(
+        order_ref=generate_order_ref(db),
+        user_id=int(user.id),
+        telegram_id=int(user.telegram_id) if user.telegram_id else None,
+        product_type="donation",
+        product_data={
+            "type": "donation",
+            "label": "Voxi uchun ko'mak",
+        },
+        quote_snapshot={
+            "amount_uzs": normalized_amount,
+            "amount_tiyin": amount_tiyin,
+            "quoted_at": now.isoformat(),
+        },
+        amount_tiyin=amount_tiyin,
+        currency="UZS",
+        payment_provider="click",
+        environment="production",
+        status="pending",
+        fulfillment_status="not_started",
+        expires_at=now + timedelta(hours=ORDER_EXPIRY_HOURS),
+        created_at=now,
+        updated_at=now,
+    )
+    db.add(order)
+    db.commit()
+    db.refresh(order)
+    return {
+        "order_ref": order.order_ref,
+        "amount": format(Decimal(int(order.amount_tiyin)) / Decimal("100"), ".2f"),
+        "amount_tiyin": int(order.amount_tiyin),
         "checkout_url": build_checkout_url(order.order_ref, int(order.amount_tiyin)),
         "expires_at": order.expires_at.isoformat(),
         "click_payment": build_public_payment_params(order.order_ref, int(order.amount_tiyin)),

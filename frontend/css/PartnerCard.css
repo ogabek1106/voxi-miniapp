@@ -13,11 +13,11 @@
 }
 
 #screen-home .partners-section-list {
-  width: min(100%, 880px);
+  width: min(100%, 1040px);
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 420px);
   gap: 18px;
-  align-items: stretch;
+  align-items: center;
 }
 
 #screen-home .partner-card {
@@ -38,11 +38,14 @@
 }
 
 #screen-home .support-voxi-card {
-  justify-content: flex-start;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(260px, 0.9fr);
+  column-gap: 20px;
+  row-gap: 8px;
+  align-content: center;
   align-items: stretch;
   text-align: left;
-  padding-top: 58px;
-  padding-bottom: 20px;
+  padding: 46px 24px 18px;
 }
 
 #screen-home .support-voxi-badge {
@@ -95,9 +98,10 @@
 }
 
 #screen-home .support-voxi-copy {
+  grid-column: 1;
   max-width: none;
   margin-top: 0;
-  padding-right: 112px;
+  padding-right: 0;
 }
 
 #screen-home .partner-card-name {
@@ -117,10 +121,11 @@
 }
 
 #screen-home .support-voxi-impact {
-  margin-top: 16px;
+  grid-column: 1;
+  margin-top: 0;
   border-radius: 18px;
   background: rgba(0,186,255,0.07);
-  padding: 14px;
+  padding: 13px 14px;
   color: #17212B;
 }
 
@@ -136,7 +141,8 @@
   margin: 10px 0 0;
   padding: 0;
   display: grid;
-  gap: 7px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 10px;
 }
 
 #screen-home .support-voxi-impact li {
@@ -159,35 +165,47 @@
   background: #00BAFF;
 }
 
-#screen-home .support-voxi-amounts {
-  margin-top: 16px;
+#screen-home .support-voxi-control {
+  grid-column: 2;
+  grid-row: 1;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  gap: 12px;
+  align-self: end;
 }
 
-#screen-home .support-voxi-amount {
-  min-width: 0;
-  height: 38px;
-  border: 1px solid rgba(96,112,128,0.18);
-  border-radius: 14px;
-  background: #FFFFFF;
-  color: #17212B;
-  font-size: 13px;
+#screen-home .support-voxi-amount-view {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: baseline;
+}
+
+#screen-home .support-voxi-amount-view span {
+  color: #607080;
+  font-size: 12px;
   font-weight: 900;
-  line-height: 1;
+  line-height: 1.2;
+}
+
+#screen-home .support-voxi-amount-view strong {
+  color: #17212B;
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+#screen-home .support-voxi-slider {
+  width: 100%;
+  accent-color: #00BAFF;
   cursor: pointer;
 }
 
-#screen-home .support-voxi-amount.is-selected {
-  border-color: rgba(0,186,255,0.75);
-  background: rgba(0,186,255,0.10);
-}
-
 #screen-home .support-voxi-custom {
-  margin-top: 12px;
+  grid-column: 2;
+  margin-top: 0;
   display: grid;
-  gap: 7px;
+  gap: 6px;
   color: #607080;
   font-size: 12px;
   font-weight: 900;
@@ -195,7 +213,7 @@
 
 #screen-home .support-voxi-custom input {
   width: 100%;
-  height: 44px;
+  height: 40px;
   box-sizing: border-box;
   border: 1px solid rgba(96,112,128,0.18);
   border-radius: 16px;
@@ -219,7 +237,8 @@
 }
 
 #screen-home .support-voxi-community {
-  margin-top: 14px;
+  grid-column: 1;
+  margin-top: 0;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
@@ -229,7 +248,7 @@
   min-width: 0;
   border-radius: 16px;
   background: rgba(23,33,43,0.04);
-  padding: 11px 12px;
+  padding: 10px 11px;
 }
 
 #screen-home .support-voxi-community span,
@@ -253,13 +272,17 @@
 }
 
 #screen-home .support-voxi-button {
-  align-self: center;
-  margin-top: 16px;
+  grid-column: 2;
+  align-self: end;
+  justify-self: center;
+  margin-top: 0;
+  height: 46px;
 }
 
 #screen-home .support-voxi-message {
-  min-height: 28px;
-  margin: 9px 0 0;
+  grid-column: 2;
+  min-height: 16px;
+  margin: 0;
   color: #607080;
   font-size: 12px;
   font-weight: 800;
@@ -289,11 +312,14 @@
   transform: scale(0.98);
 }
 
-@media (max-width: 640px) {
+@media (max-width: 860px) {
   #screen-home .partners-section-list {
     width: 100%;
     grid-template-columns: 1fr;
   }
+}
+
+@media (max-width: 640px) {
 
   #screen-home .partner-card {
     min-height: 246px;
@@ -320,10 +346,22 @@
   }
 
   #screen-home .support-voxi-card {
+    display: flex;
     text-align: center;
+    padding: 42px 20px 18px;
   }
 
   #screen-home .support-voxi-impact {
+    text-align: left;
+  }
+
+  #screen-home .support-voxi-impact ul {
+    grid-template-columns: 1fr;
+  }
+
+  #screen-home .support-voxi-amount-view {
+    display: grid;
+    justify-content: stretch;
     text-align: left;
   }
 }

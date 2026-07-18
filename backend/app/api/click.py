@@ -4,9 +4,10 @@ from sqlalchemy.orm import Session
 from app.config import ADMIN_IDS, CLICK_TEST_MODE
 from app.deps import get_db
 from app.models import User
-from app.schemas.click import ClickTestSimulateRequest, VCoinClickCheckoutRequest
+from app.schemas.click import ClickTestSimulateRequest, DonationClickCheckoutRequest, VCoinClickCheckoutRequest
 from app.services.auth_service import get_session_user
 from app.services.click_service import (
+    create_donation_checkout_order,
     create_vcoin_checkout_order,
     handle_complete,
     handle_prepare,
@@ -71,6 +72,16 @@ def create_vcoin_click_checkout(payload: VCoinClickCheckoutRequest, request: Req
         user=user,
         coins=payload.coins,
         promo_code=payload.promo_code,
+    )
+
+
+@router.post("/donations/checkout")
+def create_donation_click_checkout(payload: DonationClickCheckoutRequest, request: Request, db: Session = Depends(get_db)):
+    user = _resolve_checkout_user(db, request, payload.telegram_id)
+    return create_donation_checkout_order(
+        db,
+        user=user,
+        amount_uzs=payload.amount_uzs,
     )
 
 

@@ -9,6 +9,11 @@ class VCoinClickCheckoutRequest(BaseModel):
     promo_code: Optional[str] = None
 
 
+class DonationClickCheckoutRequest(BaseModel):
+    telegram_id: Optional[int] = None
+    amount_uzs: int
+
+
 class ClickTestSimulateRequest(BaseModel):
     telegram_id: int
     action: str

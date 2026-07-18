@@ -2,7 +2,8 @@ window.PartnerCard = window.PartnerCard || {};
 
 (function () {
   const SUPPORT_MIN_AMOUNT = 2000;
-  const SUPPORT_AMOUNTS = [2000, 5000, 10000, 25000, 50000];
+  const SUPPORT_MAX_AMOUNT = 10000000;
+  const SUPPORT_DEFAULT_AMOUNT = 50000;
   const PARTNERS = [
     {
       id: "yandex-browser",
@@ -33,7 +34,7 @@ window.PartnerCard = window.PartnerCard || {};
   function normalizeSupportAmount(value) {
     const parsed = Number(value);
     if (!Number.isFinite(parsed)) return SUPPORT_MIN_AMOUNT;
-    return Math.max(SUPPORT_MIN_AMOUNT, Math.floor(parsed));
+    return Math.min(SUPPORT_MAX_AMOUNT, Math.max(SUPPORT_MIN_AMOUNT, Math.floor(parsed)));
   }
 
   function openPartnerUrl(url) {
@@ -68,62 +69,67 @@ window.PartnerCard = window.PartnerCard || {};
   function renderSupportCard() {
     return `
       <article class="partner-card support-voxi-card" data-support-voxi-card>
-        <span class="partner-card-badge support-voxi-badge">Community Support</span>
+        <span class="partner-card-badge support-voxi-badge">Jamoa ko'magi</span>
         <div class="partner-card-copy support-voxi-copy">
-          <h3 class="partner-card-name support-voxi-title">&#10084;&#65039; Support Voxi</h3>
+          <h3 class="partner-card-name support-voxi-title">&#10084;&#65039; Voxi'ni qo'llab-quvvatlash</h3>
           <p class="partner-card-description">
-            Every contribution helps us build better IELTS tools and keep high-quality learning accessible for everyone.
+            Har bir hissangiz yaxshiroq IELTS vositalarini yaratishimizga va sifatli ta'limni hammaga yaqinroq qilishimizga yordam beradi.
           </p>
         </div>
 
-        <div class="support-voxi-impact" aria-label="Your support helps us">
-          <strong>Your support helps us</strong>
+        <div class="support-voxi-impact" aria-label="Ko'magingiz nimalarga yordam beradi">
+          <strong>Ko'magingiz orqali biz</strong>
           <ul>
-            <li>Create more IELTS Mock Tests</li>
-            <li>Improve AI Writing &amp; Speaking feedback</li>
-            <li>Develop new learning features</li>
-            <li>Keep Voxi growing</li>
+            <li>Ko'proq IELTS Mock testlar yaratamiz</li>
+            <li>AI Writing va Speaking fikrlarini yaxshilaymiz</li>
+            <li>Yangi o'quv funksiyalarini ishlab chiqamiz</li>
+            <li>Voxi barqaror rivojlanishiga yordam beramiz</li>
           </ul>
         </div>
 
-        <div class="support-voxi-amounts" aria-label="Quick support amounts">
-          ${SUPPORT_AMOUNTS.map((amount) => `
-            <button
-              class="support-voxi-amount ${amount === 5000 ? "is-selected" : ""}"
-              type="button"
-              data-support-amount="${amount}"
-              aria-pressed="${amount === 5000 ? "true" : "false"}">
-              ${formatUzs(amount).replace(" UZS", "")}
-            </button>
-          `).join("")}
+        <div class="support-voxi-control" aria-label="Ko'mak summasi">
+          <div class="support-voxi-amount-view">
+            <span>Ko'mak summasi</span>
+            <strong data-support-amount-label>${formatUzs(SUPPORT_DEFAULT_AMOUNT)}</strong>
+          </div>
+          <input
+            class="support-voxi-slider"
+            type="range"
+            min="${SUPPORT_MIN_AMOUNT}"
+            max="${SUPPORT_MAX_AMOUNT}"
+            step="1000"
+            value="${SUPPORT_DEFAULT_AMOUNT}"
+            data-support-amount-slider
+            aria-label="Ko'mak summasini tanlash">
         </div>
 
         <label class="support-voxi-custom">
-          <span>Custom amount</span>
+          <span>Summani qo'lda kiriting</span>
           <input
             type="number"
             inputmode="numeric"
             min="${SUPPORT_MIN_AMOUNT}"
+            max="${SUPPORT_MAX_AMOUNT}"
             step="1000"
-            value="5000"
+            value="${SUPPORT_DEFAULT_AMOUNT}"
             data-support-custom-amount
-            aria-label="Custom support amount in UZS">
-          <small>Minimum ${formatUzs(SUPPORT_MIN_AMOUNT)}</small>
+            aria-label="Ko'mak summasini qo'lda kiritish">
+          <small>Minimal summa ${formatUzs(SUPPORT_MIN_AMOUNT)}</small>
         </label>
 
-        <div class="support-voxi-community" aria-label="Community support">
+        <div class="support-voxi-community" aria-label="Jamoa ko'magi">
           <div>
-            <span>Community Support</span>
-            <strong>Coming soon</strong>
+            <span>Jamoa ko'magi</span>
+            <strong>Tez orada</strong>
           </div>
           <div>
-            <span>Voxi Supporter badge</span>
-            <strong>Planned</strong>
+            <span>Voxi ko'makchisi belgisi</span>
+            <strong>Rejada</strong>
           </div>
         </div>
 
         <button class="partner-card-button support-voxi-button" type="button" data-support-voxi-action>
-          Support Voxi
+          Voxi'ni qo'llab-quvvatlash
         </button>
         <p class="support-voxi-message" data-support-voxi-message aria-live="polite"></p>
       </article>
@@ -135,41 +141,62 @@ window.PartnerCard = window.PartnerCard || {};
     if (!card) return;
 
     const input = card.querySelector("[data-support-custom-amount]");
+    const slider = card.querySelector("[data-support-amount-slider]");
+    const amountLabel = card.querySelector("[data-support-amount-label]");
     const message = card.querySelector("[data-support-voxi-message]");
-    const amountButtons = Array.from(card.querySelectorAll("[data-support-amount]"));
 
-    function setSelectedAmount(amount) {
+    function setAmount(amount, { commit = false, updateInput = true } = {}) {
       const normalized = normalizeSupportAmount(amount);
-      if (input) input.value = String(normalized);
-      amountButtons.forEach((button) => {
-        const selected = Number(button.dataset.supportAmount || 0) === normalized;
-        button.classList.toggle("is-selected", selected);
-        button.setAttribute("aria-pressed", selected ? "true" : "false");
-      });
+      if (input && updateInput) input.value = String(normalized);
+      if (slider) slider.value = String(normalized);
+      if (amountLabel) amountLabel.textContent = formatUzs(normalized);
       if (message) message.textContent = "";
+      if (commit && input) input.value = String(normalized);
     }
 
-    amountButtons.forEach((button) => {
-      button.addEventListener("click", () => setSelectedAmount(button.dataset.supportAmount));
-    });
+    function inputAmount() {
+      const parsed = Number(input?.value);
+      return Number.isFinite(parsed) ? Math.floor(parsed) : 0;
+    }
 
-    input?.addEventListener("input", () => {
-      const normalized = normalizeSupportAmount(input.value);
-      amountButtons.forEach((button) => {
-        const selected = Number(button.dataset.supportAmount || 0) === normalized;
-        button.classList.toggle("is-selected", selected);
-        button.setAttribute("aria-pressed", selected ? "true" : "false");
-      });
-      if (message) message.textContent = "";
-    });
-
-    card.querySelector("[data-support-voxi-action]")?.addEventListener("click", () => {
-      const amount = normalizeSupportAmount(input?.value);
-      if (input) input.value = String(amount);
-      if (message) {
-        message.textContent = `${formatUzs(amount)} selected. Support payments will be connected in the next update.`;
+    function syncFromInput() {
+      const rawAmount = inputAmount();
+      if (rawAmount > 0 && rawAmount < SUPPORT_MIN_AMOUNT) {
+        if (slider) slider.value = String(SUPPORT_MIN_AMOUNT);
+        if (amountLabel) amountLabel.textContent = formatUzs(SUPPORT_MIN_AMOUNT);
+        if (message) message.textContent = `Minimal ko'mak summasi ${formatUzs(SUPPORT_MIN_AMOUNT)}.`;
+        return;
       }
+      setAmount(rawAmount || SUPPORT_MIN_AMOUNT, { updateInput: false });
+    }
+
+    slider?.addEventListener("input", () => setAmount(slider.value));
+    input?.addEventListener("input", syncFromInput);
+    input?.addEventListener("blur", () => setAmount(input.value, { commit: true }));
+
+    card.querySelector("[data-support-voxi-action]")?.addEventListener("click", async () => {
+      const rawAmount = inputAmount();
+      if (rawAmount < SUPPORT_MIN_AMOUNT) {
+        if (message) message.textContent = `Minimal ko'mak summasi ${formatUzs(SUPPORT_MIN_AMOUNT)}.`;
+        return;
+      }
+      const amount = normalizeSupportAmount(rawAmount);
+      setAmount(amount, { commit: true });
+      if (!window.VPayGate?.start) {
+        if (message) message.textContent = "To'lov oynasi hozircha yuklanmadi. Iltimos, birozdan keyin urinib ko'ring.";
+        return;
+      }
+      window.VPayGate.start({
+        type: "donation",
+        title: "Voxi uchun ko'mak",
+        description: "Voxi ta'lim vositalarini rivojlantirish uchun jamoaviy ko'mak.",
+        amount_uzs: amount,
+        origin: "support_voxi",
+        return_page: "home",
+      });
     });
+
+    setAmount(SUPPORT_DEFAULT_AMOUNT, { commit: true });
   }
 
   window.PartnerCard.render = renderPartnerCard;

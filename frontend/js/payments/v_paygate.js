@@ -2,6 +2,8 @@ window.VPayGate = window.VPayGate || {};
 
 (function () {
   const DEFAULT_TOPUP_UZS = 50000;
+  const DONATION_MIN_AMOUNT_UZS = 2000;
+  const DONATION_MAX_AMOUNT_UZS = 10000000;
   const STORAGE_KEY = "voxi_vpaygate_order";
   const POLL_LIMIT = 10;
   const TERMINAL_STATES = new Set([
@@ -49,6 +51,12 @@ window.VPayGate = window.VPayGate || {};
     return Math.max(5000, Math.floor(parsed / 5000) * 5000);
   }
 
+  function normalizeDonationAmount(value) {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return DONATION_MIN_AMOUNT_UZS;
+    return Math.min(DONATION_MAX_AMOUNT_UZS, Math.max(DONATION_MIN_AMOUNT_UZS, Math.floor(parsed)));
+  }
+
   function coinsForTopup(amountUzs) {
     // Temporary bridge: Click still fulfills the existing V-Coin engine.
     // Replace this adapter when the real stored UZS wallet/order source lands.
@@ -78,6 +86,21 @@ window.VPayGate = window.VPayGate || {};
   }
 
   function defaultProduct(overrides = {}) {
+    const requestedType = String(overrides.type || "").trim();
+    if (requestedType === "donation") {
+      const amountUzs = normalizeDonationAmount(overrides.amount_uzs ?? overrides.amountUzs ?? DONATION_MIN_AMOUNT_UZS);
+      return {
+        type: "donation",
+        title: overrides.title || "Voxi uchun ko'mak",
+        description: overrides.description || "Voxi ta'lim vositalarini rivojlantirish uchun jamoaviy ko'mak.",
+        amount_uzs: amountUzs,
+        origin: overrides.origin || "support_voxi",
+        return_page: overrides.return_page || "",
+        service: null,
+        service_key: "",
+      };
+    }
+
     const amountUzs = normalizeAmount(overrides.amount_uzs ?? overrides.amountUzs ?? DEFAULT_TOPUP_UZS);
     const coins = coinsForTopup(amountUzs);
     const service = normalizeService(overrides.service);
@@ -324,6 +347,13 @@ window.VPayGate = window.VPayGate || {};
   async function createCheckout() {
     const telegramId = await resolveTelegramId();
     if (!telegramId && !window.AppViewMode?.isWebsite?.()) throw new Error("telegram_required");
+    if (state.product?.type === "donation") {
+      return await window.apiPost("/payments/click/donations/checkout", {
+        ...(telegramId ? { telegram_id: Number(telegramId) } : {}),
+        amount_uzs: normalizeDonationAmount(state.product?.amount_uzs),
+      });
+    }
+
     return await window.apiPost("/payments/click/vcoins/checkout", {
       ...(telegramId ? { telegram_id: Number(telegramId) } : {}),
       coins: Number(state.product?.coins || coinsForTopup(state.product?.amount_uzs)),
@@ -528,6 +558,11 @@ window.VPayGate = window.VPayGate || {};
   }
 
   function continueAfterSuccess() {
+    if (state.product?.type === "donation") {
+      leavePage();
+      return;
+    }
+
     const service = normalizeService(state.product?.service);
     if (!service) {
       leavePage();
@@ -577,6 +612,7 @@ window.VPayGate = window.VPayGate || {};
     url.searchParams.set("product", product.type);
     url.searchParams.set("amount", String(product.amount_uzs));
     if (product.origin) url.searchParams.set("origin", product.origin);
+    if (product.return_page) url.searchParams.set("return", product.return_page);
     if (product.service?.content_type && product.service?.reference_id) {
       url.searchParams.set("service_type", product.service.content_type);
       url.searchParams.set("service_ref", product.service.reference_id);
@@ -614,6 +650,7 @@ window.VPayGate = window.VPayGate || {};
   window.VPayGate.openFromRoute = function () {
     const params = new URLSearchParams(window.location.search);
     const product = defaultProduct({
+      type: params.get("product") || "",
       amount_uzs: params.get("amount"),
       origin: params.get("origin") || "route",
       return_page: params.get("return") || "",
