@@ -72,7 +72,7 @@ window.PartnerCard = window.PartnerCard || {};
         <div class="partner-card-copy support-voxi-copy">
           <h3 class="partner-card-name support-voxi-title">&#10084;&#65039; Support Voxi</h3>
           <p class="partner-card-description">
-            Har bir hissangiz yangi IELTS sinovlarini yaratishimizga, AI tekshiruvini yaxshilashimizga va platformani rivojlantirishimizga yordam beradi.
+            Sizning ko‘magingiz yangi IELTS sinovlarini yaratishimizga, AI tekshiruvini yaxshilashimizga va platformani rivojlantirishimizga imkon beradi.
           </p>
         </div>
 
@@ -193,7 +193,7 @@ window.PartnerCard = window.PartnerCard || {};
       window.VPayGate.start({
         type: "donation",
         title: "Support Voxi",
-        description: "Har bir hissangiz platformani rivojlantirishga yordam beradi.",
+        description: "Sizning ko‘magingiz yangi IELTS sinovlarini yaratishimizga, AI tekshiruvini yaxshilashimizga va platformani rivojlantirishimizga imkon beradi.",
         amount_uzs: amount,
         origin: "support_voxi",
         return_page: "home",

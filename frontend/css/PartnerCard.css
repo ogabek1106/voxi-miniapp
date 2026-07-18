@@ -8,14 +8,12 @@
 #screen-home .partners-section {
   width: 100%;
   box-sizing: border-box;
-  display: flex;
-  justify-content: center;
 }
 
 #screen-home .partners-section-list {
-  width: min(100%, 1040px);
+  width: 100%;
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  grid-template-columns: minmax(0, 2.12fr) minmax(280px, 1fr);
   gap: 18px;
   align-items: stretch;
 }
