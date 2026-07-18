@@ -69,27 +69,26 @@ window.PartnerCard = window.PartnerCard || {};
   function renderSupportCard() {
     return `
       <article class="partner-card support-voxi-card" data-support-voxi-card>
-        <span class="partner-card-badge support-voxi-badge">Jamoa ko'magi</span>
         <div class="partner-card-copy support-voxi-copy">
-          <h3 class="partner-card-name support-voxi-title">&#10084;&#65039; Voxi'ni qo'llab-quvvatlash</h3>
+          <h3 class="partner-card-name support-voxi-title">&#10084;&#65039; Support Voxi</h3>
           <p class="partner-card-description">
-            Har bir hissangiz yaxshiroq IELTS vositalarini yaratishimizga va sifatli ta'limni hammaga yaqinroq qilishimizga yordam beradi.
+            Har bir hissangiz yangi IELTS sinovlarini yaratishimizga, AI tekshiruvini yaxshilashimizga va platformani rivojlantirishimizga yordam beradi.
           </p>
         </div>
 
-        <div class="support-voxi-impact" aria-label="Ko'magingiz nimalarga yordam beradi">
-          <strong>Ko'magingiz orqali biz</strong>
+        <div class="support-voxi-impact" aria-label="Ko‘magingiz nimaga sarflanadi?">
+          <strong>Ko‘magingiz nimaga sarflanadi?</strong>
           <ul>
-            <li>Ko'proq IELTS Mock testlar yaratamiz</li>
-            <li>AI Writing va Speaking fikrlarini yaxshilaymiz</li>
-            <li>Yangi o'quv funksiyalarini ishlab chiqamiz</li>
-            <li>Voxi barqaror rivojlanishiga yordam beramiz</li>
+            <li>Yangi IELTS mock testlarini yaratish</li>
+            <li>Writing va Speaking uchun AI tekshiruvini yaxshilash</li>
+            <li>Yangi o‘quv funksiyalarini ishlab chiqish</li>
+            <li>Voxi platformasini barqaror rivojlantirish</li>
           </ul>
         </div>
 
-        <div class="support-voxi-control" aria-label="Ko'mak summasi">
+        <div class="support-voxi-control" aria-label="Ko‘mak miqdori">
           <div class="support-voxi-amount-view">
-            <span>Ko'mak summasi</span>
+            <span>Ko‘mak miqdori</span>
             <strong data-support-amount-label>${formatUzs(SUPPORT_DEFAULT_AMOUNT)}</strong>
           </div>
           <input
@@ -100,11 +99,11 @@ window.PartnerCard = window.PartnerCard || {};
             step="1000"
             value="${SUPPORT_DEFAULT_AMOUNT}"
             data-support-amount-slider
-            aria-label="Ko'mak summasini tanlash">
+            aria-label="Ko‘mak miqdorini tanlash">
         </div>
 
         <label class="support-voxi-custom">
-          <span>Summani qo'lda kiriting</span>
+          <span>Summani qo‘lda kiriting</span>
           <input
             type="number"
             inputmode="numeric"
@@ -113,23 +112,12 @@ window.PartnerCard = window.PartnerCard || {};
             step="1000"
             value="${SUPPORT_DEFAULT_AMOUNT}"
             data-support-custom-amount
-            aria-label="Ko'mak summasini qo'lda kiritish">
-          <small>Minimal summa ${formatUzs(SUPPORT_MIN_AMOUNT)}</small>
+            aria-label="Summani qo‘lda kiritish">
+          <small>Eng kam summa: ${formatUzs(SUPPORT_MIN_AMOUNT)}</small>
         </label>
 
-        <div class="support-voxi-community" aria-label="Jamoa ko'magi">
-          <div>
-            <span>Jamoa ko'magi</span>
-            <strong>Tez orada</strong>
-          </div>
-          <div>
-            <span>Voxi ko'makchisi belgisi</span>
-            <strong>Rejada</strong>
-          </div>
-        </div>
-
         <button class="partner-card-button support-voxi-button" type="button" data-support-voxi-action>
-          Voxi'ni qo'llab-quvvatlash
+          Support Voxi
         </button>
         <p class="support-voxi-message" data-support-voxi-message aria-live="polite"></p>
       </article>
@@ -150,6 +138,10 @@ window.PartnerCard = window.PartnerCard || {};
       if (input && updateInput) input.value = String(normalized);
       if (slider) slider.value = String(normalized);
       if (amountLabel) amountLabel.textContent = formatUzs(normalized);
+      if (slider) {
+        const progress = ((normalized - SUPPORT_MIN_AMOUNT) / (SUPPORT_MAX_AMOUNT - SUPPORT_MIN_AMOUNT)) * 100;
+        slider.style.setProperty("--support-progress", `${progress}%`);
+      }
       if (message) message.textContent = "";
       if (commit && input) input.value = String(normalized);
     }
@@ -164,7 +156,15 @@ window.PartnerCard = window.PartnerCard || {};
       if (rawAmount > 0 && rawAmount < SUPPORT_MIN_AMOUNT) {
         if (slider) slider.value = String(SUPPORT_MIN_AMOUNT);
         if (amountLabel) amountLabel.textContent = formatUzs(SUPPORT_MIN_AMOUNT);
-        if (message) message.textContent = `Minimal ko'mak summasi ${formatUzs(SUPPORT_MIN_AMOUNT)}.`;
+        if (slider) slider.style.setProperty("--support-progress", "0%");
+        if (message) message.textContent = `Eng kam ko‘mak miqdori ${formatUzs(SUPPORT_MIN_AMOUNT)}.`;
+        return;
+      }
+      if (rawAmount > SUPPORT_MAX_AMOUNT) {
+        if (slider) slider.value = String(SUPPORT_MAX_AMOUNT);
+        if (amountLabel) amountLabel.textContent = formatUzs(SUPPORT_MAX_AMOUNT);
+        if (slider) slider.style.setProperty("--support-progress", "100%");
+        if (message) message.textContent = `Eng yuqori ko‘mak miqdori ${formatUzs(SUPPORT_MAX_AMOUNT)}.`;
         return;
       }
       setAmount(rawAmount || SUPPORT_MIN_AMOUNT, { updateInput: false });
@@ -177,7 +177,11 @@ window.PartnerCard = window.PartnerCard || {};
     card.querySelector("[data-support-voxi-action]")?.addEventListener("click", async () => {
       const rawAmount = inputAmount();
       if (rawAmount < SUPPORT_MIN_AMOUNT) {
-        if (message) message.textContent = `Minimal ko'mak summasi ${formatUzs(SUPPORT_MIN_AMOUNT)}.`;
+        if (message) message.textContent = `Eng kam ko‘mak miqdori ${formatUzs(SUPPORT_MIN_AMOUNT)}.`;
+        return;
+      }
+      if (rawAmount > SUPPORT_MAX_AMOUNT) {
+        if (message) message.textContent = `Eng yuqori ko‘mak miqdori ${formatUzs(SUPPORT_MAX_AMOUNT)}.`;
         return;
       }
       const amount = normalizeSupportAmount(rawAmount);
@@ -188,11 +192,12 @@ window.PartnerCard = window.PartnerCard || {};
       }
       window.VPayGate.start({
         type: "donation",
-        title: "Voxi uchun ko'mak",
-        description: "Voxi ta'lim vositalarini rivojlantirish uchun jamoaviy ko'mak.",
+        title: "Support Voxi",
+        description: "Har bir hissangiz platformani rivojlantirishga yordam beradi.",
         amount_uzs: amount,
         origin: "support_voxi",
         return_page: "home",
+        prepare_checkout: true,
       });
     });
 

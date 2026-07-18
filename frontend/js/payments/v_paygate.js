@@ -307,7 +307,7 @@ window.VPayGate = window.VPayGate || {};
       button.addEventListener("click", () => {
         state.method = button.getAttribute("data-vpay-method") || null;
         const restored = restoreStoredOrder(state.product, state.method);
-        state.checkout = restored?.checkout || null;
+        state.checkout = restored?.checkout || state.checkout || null;
         state.status = "payment_provider_selected";
         state.message = "To‘lov usulini tanlang";
         render();
@@ -323,9 +323,9 @@ window.VPayGate = window.VPayGate || {};
 
   function storeOrder() {
     try {
-      if (!state.checkout?.order_ref || !state.method) return;
+      if (!state.checkout?.order_ref) return;
       window.sessionStorage?.setItem(STORAGE_KEY, JSON.stringify({
-        method: state.method,
+        method: state.method || "",
         product: state.product,
         checkout: state.checkout,
         saved_at: new Date().toISOString(),
@@ -337,7 +337,7 @@ window.VPayGate = window.VPayGate || {};
     try {
       const stored = JSON.parse(window.sessionStorage?.getItem(STORAGE_KEY) || "null");
       if (!stored?.checkout?.order_ref || !storedProductMatches(stored, product)) return null;
-      if (method && stored.method !== method) return null;
+      if (method && stored.method && stored.method !== method) return null;
       return stored;
     } catch (_) {
       return null;
@@ -627,8 +627,27 @@ window.VPayGate = window.VPayGate || {};
     return {
       method: restored.method || null,
       checkout: restored.checkout || null,
-      status: restored.checkout?.order_ref ? "payment_confirmation_pending" : "ready_for_payment",
+      status: restored.checkout?.order_ref && restored.method ? "payment_confirmation_pending" : "ready_for_payment",
     };
+  }
+
+  async function prepareCheckoutOnStart() {
+    if (state.checkout?.order_ref || state.busy) return;
+    state.busy = true;
+    state.status = "preparing_order";
+    state.message = "";
+    render();
+    try {
+      state.checkout = await ensureCheckout();
+      state.status = "ready_for_payment";
+      state.message = "";
+    } catch (_) {
+      state.status = "payment_failed";
+      state.message = "";
+    } finally {
+      state.busy = false;
+      render();
+    }
   }
 
   window.VPayGate.start = function (options = {}) {
@@ -644,6 +663,7 @@ window.VPayGate = window.VPayGate || {};
     };
     updateRoute(product);
     render();
+    if (options.prepare_checkout) prepareCheckoutOnStart();
     if (state.checkout?.order_ref) refreshStatus();
   };
 
