@@ -91,10 +91,10 @@ window.VPayGate = window.VPayGate || {};
       const amountUzs = normalizeDonationAmount(overrides.amount_uzs ?? overrides.amountUzs ?? DONATION_MIN_AMOUNT_UZS);
       return {
         type: "donation",
-        title: overrides.title || "Voxi uchun ko'mak",
-        description: overrides.description || "Voxi ta'lim vositalarini rivojlantirish uchun jamoaviy ko'mak.",
+        title: overrides.title || "EBAI Academy uchun ko'mak",
+        description: overrides.description || "EBAI Academy ta'lim vositalarini rivojlantirish uchun jamoaviy ko'mak.",
         amount_uzs: amountUzs,
-        origin: overrides.origin || "support_voxi",
+        origin: overrides.origin || "support_ebai_academy",
         return_page: overrides.return_page || "",
         service: null,
         service_key: "",

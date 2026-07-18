@@ -739,7 +739,7 @@ def create_donation_checkout_order(
         product_type="donation",
         product_data={
             "type": "donation",
-            "label": "Voxi uchun ko'mak",
+            "label": "EBAI Academy uchun ko'mak",
         },
         quote_snapshot={
             "amount_uzs": normalized_amount,

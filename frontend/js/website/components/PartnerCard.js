@@ -70,7 +70,7 @@ window.PartnerCard = window.PartnerCard || {};
     return `
       <article class="partner-card support-voxi-card" data-support-voxi-card>
         <div class="partner-card-copy support-voxi-copy">
-          <h3 class="partner-card-name support-voxi-title">&#10084;&#65039; Support Voxi</h3>
+          <h3 class="partner-card-name support-voxi-title">&#10084;&#65039; Support EBAI Academy</h3>
           <p class="partner-card-description">
             Sizning ko‘magingiz yangi IELTS sinovlarini yaratishimizga, AI tekshiruvini yaxshilashimizga va platformani rivojlantirishimizga imkon beradi.
           </p>
@@ -82,7 +82,7 @@ window.PartnerCard = window.PartnerCard || {};
             <li>Yangi IELTS mock testlarini yaratish</li>
             <li>Writing va Speaking uchun AI tekshiruvini yaxshilash</li>
             <li>Yangi o‘quv funksiyalarini ishlab chiqish</li>
-            <li>Voxi platformasini barqaror rivojlantirish</li>
+            <li>EBAI Academy platformasini barqaror rivojlantirish</li>
           </ul>
         </div>
 
@@ -117,7 +117,7 @@ window.PartnerCard = window.PartnerCard || {};
         </label>
 
         <button class="partner-card-button support-voxi-button" type="button" data-support-voxi-action>
-          Support Voxi
+          Support EBAI Academy
         </button>
         <p class="support-voxi-message" data-support-voxi-message aria-live="polite"></p>
       </article>
@@ -192,10 +192,10 @@ window.PartnerCard = window.PartnerCard || {};
       }
       window.VPayGate.start({
         type: "donation",
-        title: "Support Voxi",
+        title: "Support EBAI Academy",
         description: "Sizning ko‘magingiz yangi IELTS sinovlarini yaratishimizga, AI tekshiruvini yaxshilashimizga va platformani rivojlantirishimizga imkon beradi.",
         amount_uzs: amount,
-        origin: "support_voxi",
+        origin: "support_ebai_academy",
         return_page: "home",
         prepare_checkout: true,
       });
