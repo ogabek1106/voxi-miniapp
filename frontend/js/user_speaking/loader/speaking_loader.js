@@ -557,6 +557,12 @@ UserSpeakingLoader.start = async function (mockId, container, options = {}) {
       sessionMode: options.sessionMode || "single_block"
     });
     if (data?.already_submitted) {
+      if (options.fromFlow && window.MockFlow?.isActive?.(mockId)) {
+        const handled = window.MockFlow?.showFinalTransition?.(mockId, target, function () {
+          UserSpeakingLoader.runCheckAndShowResult({ skipCheckingScreen: true });
+        });
+        if (handled) return;
+      }
       const showResult = async () => {
         if (data?.result?.overall_band && window.UserReading?.renderResultPage) {
           target.innerHTML = "";

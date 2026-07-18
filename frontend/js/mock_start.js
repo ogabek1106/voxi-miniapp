@@ -634,6 +634,7 @@ window.IeltsEntryReturn = window.IeltsEntryReturn || {};
       fromGateway: true,
       returnTo: meta.returnTo || window.IeltsEntryReturn.resolve?.() || "home",
       resumeActive: !!meta.resumeActive,
+      resumeSection: meta.resumeSection || meta.currentSection || "",
       retakePaymentReferenceId: meta.retakePaymentReferenceId || null
     };
     if (mode === "full_mock" && feature !== "full_mock") options.fromFlow = true;
@@ -734,7 +735,11 @@ window.IeltsEntryReturn = window.IeltsEntryReturn || {};
           const allowed = await ensureSpeakingPermission(messageEl);
           if (!allowed) return;
         }
-        await startFeature(feature, mockId, mode, { title });
+        await startFeature(feature, mockId, mode, {
+          title,
+          resumeActive: status?.attempt_state === "active",
+          resumeSection: status?.current_section || ""
+        });
       } finally {
         button.disabled = false;
       }
@@ -884,12 +889,35 @@ async function showCompletedFullMock(mockId, existingResult) {
   });
 }
 
+async function startFullMockSection(mockId, section, options = {}) {
+  const normalized = String(section || "listening").toLowerCase();
+  const flowOptions = {
+    fromFlow: true,
+    returnTo: options.returnTo || window.IeltsEntryReturn?.resolve?.(),
+    retakePaymentReferenceId: options.retakePaymentReferenceId || null
+  };
+  if (normalized === "result") {
+    const telegramId = examTelegramId();
+    const result = telegramId ? await apiPost(`/mock-tests/${mockId}/full-result`, { telegram_id: telegramId }) : null;
+    return showCompletedFullMock(mockId, result || {});
+  }
+  if (normalized === "reading") return window.startMock(mockId, flowOptions);
+  if (normalized === "writing") return window.startWritingMock(mockId, flowOptions);
+  if (normalized === "speaking") return window.startSpeakingMock(mockId, flowOptions);
+  return window.startListeningMock(mockId, flowOptions);
+}
+
 window.startFullMock = async function (mockId, options = {}) {
   MockDebug.log("startFullMock.enter", { mockId });
   if (!options.fromGateway) {
     const status = await window.VWarningGateway?.loadStatus?.({ feature: "full_mock", mockId, mode: "single_block" });
     if (status?.attempt_state === "active") {
-      return window.startFullMock(mockId, { ...options, fromGateway: true, resumeActive: true });
+      return window.startFullMock(mockId, {
+        ...options,
+        fromGateway: true,
+        resumeActive: true,
+        resumeSection: status.current_section || "listening"
+      });
     }
     window.VWarningGateway?.open?.({
       feature: "full_mock",
@@ -925,7 +953,7 @@ window.startFullMock = async function (mockId, options = {}) {
   }
 
   MockFlow.activate(mockId, { retakePaymentReferenceId: options.retakePaymentReferenceId || null });
-  await window.startListeningMock(mockId, { fromFlow: true, returnTo: options.returnTo || window.IeltsEntryReturn?.resolve?.(), retakePaymentReferenceId: options.retakePaymentReferenceId || null });
+  await startFullMockSection(mockId, options.resumeSection || "listening", options);
 };
 
 window.startMock = async function (mockId, options = {}) {
@@ -986,6 +1014,10 @@ window.startMock = async function (mockId, options = {}) {
     const data = await fetchReadingStartWithRetry(`/mock-tests/${mockId}/reading/start?telegram_id=${telegramId}&session_mode=${sessionMode}${retakeParam}`);
 
     if (data?.already_submitted) {
+      if (options.fromFlow) {
+        const moved = window.MockFlow?.goToNextPart?.("reading", mockId, screenReading);
+        if (moved) return;
+      }
       const resultPayload = {
         band: data?.result?.band ?? 0,
         correct: data?.result?.score ?? 0,
@@ -1076,6 +1108,7 @@ window.startWritingMock = async function (mockId, options = {}) {
   }
 
   await window.UserWritingLoader.start(mockId, screenWriting, {
+    fromFlow: !!options.fromFlow,
     sessionMode: options.fromFlow ? "full_mock" : "single_block",
     retakePaymentReferenceId: options.retakePaymentReferenceId || null,
     onRetake: async () => {
@@ -1267,6 +1300,11 @@ window.startListeningMock = async function (mockId, options = {}) {
       data.mock_pack_id = mockId;
     }
 
+    if (options.fromFlow && dataRaw?.progress?.is_submitted) {
+      const moved = window.MockFlow?.goToNextPart?.("listening", mockId, screenReading);
+      if (moved) return;
+    }
+
     if (!data || !Array.isArray(data.sections)) {
       UserListening.renderError(screenReading, `Invalid API response\n${JSON.stringify(dataRaw, null, 2)}`);
       return;
@@ -1332,6 +1370,7 @@ window.startSpeakingMock = async function (mockId, options = {}) {
   }
 
   await window.UserSpeakingLoader.start(mockId, screenSpeaking, {
+    fromFlow: !!options.fromFlow,
     sessionMode: options.fromFlow ? "full_mock" : "single_block",
     retakePaymentReferenceId: options.retakePaymentReferenceId || null,
     onRetake: async () => {

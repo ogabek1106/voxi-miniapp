@@ -10,6 +10,7 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
+    public_user_id = Column(String, unique=True, index=True, nullable=True)
     telegram_id = Column(BigInteger, unique=True, index=True, nullable=True)
     email = Column(String, unique=True, index=True, nullable=True)
     google_id = Column(String, unique=True, index=True, nullable=True)
@@ -670,6 +671,7 @@ class ListeningProgress(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     test_id = Column(Integer, ForeignKey("listening_tests.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True)
     telegram_id = Column(BigInteger, index=True, nullable=False)
     session_mode = Column(String, nullable=False, default="single_block")
     answers = Column(JSON, nullable=False, default=dict)
@@ -726,6 +728,7 @@ class WritingProgress(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     test_id = Column(Integer, ForeignKey("writing_tests.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True)
     telegram_id = Column(BigInteger, index=True, nullable=False)
     session_mode = Column(String, nullable=False, default="single_block")
     task1_text = Column(Text, nullable=True)
@@ -787,6 +790,7 @@ class SpeakingProgress(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     test_id = Column(Integer, ForeignKey("speaking_tests.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True)
     telegram_id = Column(BigInteger, index=True, nullable=False)
     session_mode = Column(String, nullable=False, default="single_block")
     part1_audio_url = Column(String, nullable=True)

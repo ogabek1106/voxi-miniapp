@@ -13,6 +13,7 @@ from app.models import MockPack, ReadingPassage, ReadingProgress, ReadingQuestio
 from app.services.telegram_sub_gate import check_reading_access, check_channel_membership
 from app.services.premiere_service import has_active_premiere_access, is_active_premiere_pack
 from app.services.vcoin_service import require_paid_access_or_spend
+from app.services.user_identity import resolve_user_by_exam_identity
 
 router = APIRouter(prefix="/mock-tests", tags=["mock-tests"])
 
@@ -57,14 +58,7 @@ def _get_test_for_mock(db: Session, mock_id: int) -> ReadingTest:
 
 
 def _get_user_by_telegram(db: Session, telegram_id: int) -> User:
-    if int(telegram_id) < 0:
-        user = db.query(User).filter(User.id == abs(int(telegram_id))).first()
-        if user:
-            return user
-    user = db.query(User).filter(User.telegram_id == telegram_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
+    return resolve_user_by_exam_identity(db, telegram_id)
 
 
 def _session_mode(value: str | None) -> str:

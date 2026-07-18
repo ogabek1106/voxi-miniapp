@@ -636,6 +636,10 @@ def ensure_writing_schema():
         ))
         conn.execute(text(
             "ALTER TABLE writing_progress "
+            "ADD COLUMN IF NOT EXISTS user_id INTEGER;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE writing_progress "
             "ADD COLUMN IF NOT EXISTS telegram_id BIGINT;"
         ))
         conn.execute(text(
@@ -705,6 +709,18 @@ def ensure_writing_schema():
         conn.execute(text(
             "CREATE INDEX IF NOT EXISTS ix_writing_progress_mode "
             "ON writing_progress (telegram_id, test_id, session_mode, id);"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_writing_progress_user_mode "
+            "ON writing_progress (user_id, test_id, session_mode, id);"
+        ))
+        conn.execute(text(
+            "UPDATE writing_progress wp "
+            "SET user_id = u.id "
+            "FROM users u "
+            "WHERE wp.user_id IS NULL "
+            "AND wp.telegram_id IS NOT NULL "
+            "AND (u.telegram_id = wp.telegram_id OR (wp.telegram_id < 0 AND u.id = ABS(wp.telegram_id)));"
         ))
         conn.execute(text(
             "DO $$ "
@@ -793,6 +809,7 @@ def ensure_listening_progress_schema():
             ");"
         ))
         conn.execute(text("ALTER TABLE listening_progress ADD COLUMN IF NOT EXISTS test_id INTEGER;"))
+        conn.execute(text("ALTER TABLE listening_progress ADD COLUMN IF NOT EXISTS user_id INTEGER;"))
         conn.execute(text("ALTER TABLE listening_progress ADD COLUMN IF NOT EXISTS telegram_id BIGINT;"))
         conn.execute(text("ALTER TABLE listening_progress ADD COLUMN IF NOT EXISTS session_mode VARCHAR NOT NULL DEFAULT 'single_block';"))
         conn.execute(text("ALTER TABLE listening_progress ADD COLUMN IF NOT EXISTS answers JSONB NOT NULL DEFAULT '{}'::jsonb;"))
@@ -821,6 +838,18 @@ def ensure_listening_progress_schema():
         conn.execute(text(
             "CREATE INDEX IF NOT EXISTS ix_listening_progress_mode "
             "ON listening_progress (telegram_id, test_id, session_mode, id);"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_listening_progress_user_mode "
+            "ON listening_progress (user_id, test_id, session_mode, id);"
+        ))
+        conn.execute(text(
+            "UPDATE listening_progress lp "
+            "SET user_id = u.id "
+            "FROM users u "
+            "WHERE lp.user_id IS NULL "
+            "AND lp.telegram_id IS NOT NULL "
+            "AND (u.telegram_id = lp.telegram_id OR (lp.telegram_id < 0 AND u.id = ABS(lp.telegram_id)));"
         ))
 
 
@@ -1129,6 +1158,10 @@ def ensure_full_mock_results_schema():
         ))
         conn.execute(text(
             "ALTER TABLE speaking_progress "
+            "ADD COLUMN IF NOT EXISTS user_id INTEGER;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE speaking_progress "
             "ADD COLUMN IF NOT EXISTS telegram_id BIGINT;"
         ))
         conn.execute(text(
@@ -1162,6 +1195,18 @@ def ensure_full_mock_results_schema():
         conn.execute(text(
             "CREATE INDEX IF NOT EXISTS ix_speaking_progress_mode "
             "ON speaking_progress (telegram_id, test_id, session_mode, id);"
+        ))
+        conn.execute(text(
+            "CREATE INDEX IF NOT EXISTS ix_speaking_progress_user_mode "
+            "ON speaking_progress (user_id, test_id, session_mode, id);"
+        ))
+        conn.execute(text(
+            "UPDATE speaking_progress sp "
+            "SET user_id = u.id "
+            "FROM users u "
+            "WHERE sp.user_id IS NULL "
+            "AND sp.telegram_id IS NOT NULL "
+            "AND (u.telegram_id = sp.telegram_id OR (sp.telegram_id < 0 AND u.id = ABS(sp.telegram_id)));"
         ))
         conn.execute(text(
             "DO $$ "
@@ -1899,6 +1944,20 @@ def ensure_user_auth_schema():
         conn.execute(text(
             "ALTER TABLE users "
             "ALTER COLUMN telegram_id DROP NOT NULL;"
+        ))
+        conn.execute(text(
+            "ALTER TABLE users "
+            "ADD COLUMN IF NOT EXISTS public_user_id VARCHAR;"
+        ))
+        conn.execute(text(
+            "UPDATE users "
+            "SET public_user_id = 'VX-' || SUBSTRING(UPPER(MD5(id::text || ':' || COALESCE(created_at::text, '') || ':' || random()::text)), 1, 4) "
+            "|| '-' || SUBSTRING(UPPER(MD5(random()::text || ':' || id::text)), 1, 4) "
+            "WHERE public_user_id IS NULL OR public_user_id = '';"
+        ))
+        conn.execute(text(
+            "CREATE UNIQUE INDEX IF NOT EXISTS ix_users_public_user_id_unique "
+            "ON users (public_user_id) WHERE public_user_id IS NOT NULL;"
         ))
         conn.execute(text(
             "ALTER TABLE users "

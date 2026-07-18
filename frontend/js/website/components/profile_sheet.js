@@ -76,6 +76,18 @@ window.WebsiteProfileSheet = window.WebsiteProfileSheet || {};
     `;
   }
 
+  function renderPublicUserId(me) {
+    const publicId = String(me?.public_user_id || "").trim();
+    if (!publicId) return "";
+    return `
+      <div class="website-profile-user-id">
+        <span>User ID</span>
+        <strong>${escapeHtml(publicId)}</strong>
+        <button type="button" id="website-profile-copy-user-id" data-user-id="${escapeHtml(publicId)}">Copy</button>
+      </div>
+    `;
+  }
+
   function renderProfile(me) {
     const fullName = escapeHtml(window.SharedUser?.getFullName(me) || "Profile");
     const photoUrl = String(me?.photo_url || "").trim();
@@ -104,6 +116,8 @@ window.WebsiteProfileSheet = window.WebsiteProfileSheet || {};
         </div>
 
         ${renderStats(vCoins, lastScore)}
+
+        ${renderPublicUserId(me)}
 
         ${window.GamificationUI?.renderStreakCard?.(gamification) || ""}
 
@@ -160,6 +174,20 @@ window.WebsiteProfileSheet = window.WebsiteProfileSheet || {};
       });
       document.getElementById("website-profile-edit")?.addEventListener("click", () => {
         window.WebsiteProfileEditor?.open(me || {});
+      });
+      document.getElementById("website-profile-copy-user-id")?.addEventListener("click", async (event) => {
+        const button = event.currentTarget;
+        const value = button?.getAttribute("data-user-id") || "";
+        if (!value) return;
+        try {
+          await navigator.clipboard?.writeText?.(value);
+          button.textContent = "Copied";
+          setTimeout(() => {
+            button.textContent = "Copy";
+          }, 1400);
+        } catch (_error) {
+          button.textContent = value;
+        }
       });
     } catch (error) {
       console.error("Website profile load failed", error);

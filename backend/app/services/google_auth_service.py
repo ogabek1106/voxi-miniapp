@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.models import User
 from app.services.auth_service import validate_email
+from app.services.user_identity import ensure_public_user_id
 
 
 def get_google_client_id() -> str:
@@ -177,6 +178,9 @@ def login_google_user(db: Session, id_token: str) -> User:
         user.photo_url = (payload.get("picture") or "").strip() or user.photo_url
         user.updated_at = datetime.utcnow()
 
+    db.commit()
+    db.refresh(user)
+    ensure_public_user_id(db, user)
     db.commit()
     db.refresh(user)
     return user

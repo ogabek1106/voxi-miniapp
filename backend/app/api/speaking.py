@@ -3,6 +3,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from pydantic import BaseModel
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.config import ADMIN_IDS
@@ -11,6 +12,7 @@ from app.models import SpeakingPart, SpeakingProgress, SpeakingResult, SpeakingT
 from app.services.premiere_service import has_active_premiere_access, is_active_premiere_pack
 from app.services.vcoin_service import require_paid_access_or_spend
 from app.services.speaking_ai_checker import check_speaking_progress
+from app.services.user_identity import progress_telegram_identity, resolve_user_by_exam_identity
 
 import os
 from uuid import uuid4
@@ -167,6 +169,28 @@ def _apply_part_audio(progress: SpeakingProgress, part_number: int, audio_url: s
         raise HTTPException(status_code=422, detail="part_number must be 1, 2, or 3")
 
 
+def _query_progress(db: Session, test_id: int, user, session_mode: str):
+    legacy_identity = progress_telegram_identity(user)
+    return (
+        db.query(SpeakingProgress)
+        .filter(
+            SpeakingProgress.test_id == test_id,
+            SpeakingProgress.session_mode == _session_mode(session_mode),
+            or_(
+                SpeakingProgress.user_id == user.id,
+                SpeakingProgress.telegram_id == legacy_identity,
+            ),
+        )
+        .order_by(SpeakingProgress.id.desc())
+        .first()
+    )
+
+
+def _stamp_user(progress: SpeakingProgress, user) -> None:
+    progress.user_id = user.id
+    progress.telegram_id = progress_telegram_identity(user)
+
+
 @router.post("/speaking-audio/upload")
 async def upload_speaking_audio(file: UploadFile = File(...)):
     ext = file.filename.split(".")[-1] if file.filename and "." in file.filename else "webm"
@@ -182,24 +206,17 @@ async def upload_speaking_audio(file: UploadFile = File(...)):
 @router.post("/mock-tests/{mock_id}/speaking/start")
 def start_speaking(mock_id: int, payload: SpeakingStartIn, db: Session = Depends(get_db)):
     test = _resolve_test_for_mock(db, mock_id)
-    is_admin = int(payload.telegram_id) in ADMIN_IDS
+    user = resolve_user_by_exam_identity(db, payload.telegram_id)
+    identity = progress_telegram_identity(user)
+    is_admin = bool(user.telegram_id and int(user.telegram_id) in ADMIN_IDS)
     now = _utcnow()
 
-    progress = (
-        db.query(SpeakingProgress)
-        .filter(
-            SpeakingProgress.test_id == test.id,
-            SpeakingProgress.telegram_id == payload.telegram_id,
-            SpeakingProgress.session_mode == _session_mode(payload.session_mode),
-        )
-        .order_by(SpeakingProgress.id.desc())
-        .first()
-    )
+    progress = _query_progress(db, test.id, user, payload.session_mode)
 
     if (payload.retake or is_admin) and progress and progress.is_submitted:
         require_paid_access_or_spend(
             db=db,
-            telegram_id=payload.telegram_id,
+            telegram_id=identity,
             content_type="full_mock" if _session_mode(payload.session_mode) == "full_mock" else "separate_block",
             reference_id=payload.retake_payment_reference_id or f"{_session_mode(payload.session_mode)}:speaking:{mock_id}:retake",
         )
@@ -240,12 +257,13 @@ def start_speaking(mock_id: int, payload: SpeakingStartIn, db: Session = Depends
             "is_admin": bool(is_admin),
         }
 
-    _require_speaking_paid_access(db, payload.telegram_id, mock_id, progress, is_admin, payload.session_mode)
+    _require_speaking_paid_access(db, identity, mock_id, progress, is_admin, payload.session_mode)
 
     if not progress:
         progress = SpeakingProgress(
             test_id=test.id,
-            telegram_id=payload.telegram_id,
+            user_id=user.id,
+            telegram_id=identity,
             session_mode=_session_mode(payload.session_mode),
             started_at=now,
             is_submitted=False,
@@ -265,8 +283,14 @@ def start_speaking(mock_id: int, payload: SpeakingStartIn, db: Session = Depends
             db.commit()
             db.refresh(progress)
         elif _is_time_up(progress, test, now):
+            _stamp_user(progress, user)
             progress.is_submitted = True
             progress.submitted_at = _deadline(progress, test) or now
+            db.add(progress)
+            db.commit()
+            db.refresh(progress)
+        else:
+            _stamp_user(progress, user)
             db.add(progress)
             db.commit()
             db.refresh(progress)
@@ -291,25 +315,19 @@ def start_speaking(mock_id: int, payload: SpeakingStartIn, db: Session = Depends
 @router.post("/mock-tests/{mock_id}/speaking/save")
 def save_speaking(mock_id: int, payload: SpeakingSaveIn, db: Session = Depends(get_db)):
     test = _resolve_test_for_mock(db, mock_id)
-    is_admin = int(payload.telegram_id) in ADMIN_IDS
+    user = resolve_user_by_exam_identity(db, payload.telegram_id)
+    identity = progress_telegram_identity(user)
+    is_admin = bool(user.telegram_id and int(user.telegram_id) in ADMIN_IDS)
     now = _utcnow()
 
-    progress = (
-        db.query(SpeakingProgress)
-        .filter(
-            SpeakingProgress.test_id == test.id,
-            SpeakingProgress.telegram_id == payload.telegram_id,
-            SpeakingProgress.session_mode == _session_mode(payload.session_mode),
-        )
-        .order_by(SpeakingProgress.id.desc())
-        .first()
-    )
+    progress = _query_progress(db, test.id, user, payload.session_mode)
 
     if not progress:
-        _require_speaking_paid_access(db, payload.telegram_id, mock_id, progress, is_admin, payload.session_mode)
+        _require_speaking_paid_access(db, identity, mock_id, progress, is_admin, payload.session_mode)
         progress = SpeakingProgress(
             test_id=test.id,
-            telegram_id=payload.telegram_id,
+            user_id=user.id,
+            telegram_id=identity,
             session_mode=_session_mode(payload.session_mode),
             started_at=now,
             is_submitted=False,
@@ -323,6 +341,7 @@ def save_speaking(mock_id: int, payload: SpeakingSaveIn, db: Session = Depends(g
         progress.submitted_at = None
         progress.started_at = now
 
+    _stamp_user(progress, user)
     _apply_part_audio(progress, payload.part_number, payload.audio_url)
 
     if _is_time_up(progress, test, now):
@@ -340,24 +359,18 @@ def save_speaking(mock_id: int, payload: SpeakingSaveIn, db: Session = Depends(g
 @router.post("/mock-tests/{mock_id}/speaking/submit")
 def submit_speaking(mock_id: int, payload: SpeakingSubmitIn, db: Session = Depends(get_db)):
     test = _resolve_test_for_mock(db, mock_id)
-    is_admin = int(payload.telegram_id) in ADMIN_IDS
+    user = resolve_user_by_exam_identity(db, payload.telegram_id)
+    identity = progress_telegram_identity(user)
+    is_admin = bool(user.telegram_id and int(user.telegram_id) in ADMIN_IDS)
     now = _utcnow()
 
-    progress = (
-        db.query(SpeakingProgress)
-        .filter(
-            SpeakingProgress.test_id == test.id,
-            SpeakingProgress.telegram_id == payload.telegram_id,
-            SpeakingProgress.session_mode == _session_mode(payload.session_mode),
-        )
-        .order_by(SpeakingProgress.id.desc())
-        .first()
-    )
+    progress = _query_progress(db, test.id, user, payload.session_mode)
     if not progress:
-        _require_speaking_paid_access(db, payload.telegram_id, mock_id, progress, is_admin, payload.session_mode)
+        _require_speaking_paid_access(db, identity, mock_id, progress, is_admin, payload.session_mode)
         progress = SpeakingProgress(
             test_id=test.id,
-            telegram_id=payload.telegram_id,
+            user_id=user.id,
+            telegram_id=identity,
             session_mode=_session_mode(payload.session_mode),
             started_at=now,
             is_submitted=False,
@@ -365,6 +378,8 @@ def submit_speaking(mock_id: int, payload: SpeakingSubmitIn, db: Session = Depen
 
     if progress.is_submitted and not is_admin:
         return {"status": "already_submitted", "progress": _serialize_progress(progress)}
+
+    _stamp_user(progress, user)
 
     if payload.part1_audio_url is not None:
         progress.part1_audio_url = str(payload.part1_audio_url or "").strip() or None
@@ -388,16 +403,8 @@ def submit_speaking(mock_id: int, payload: SpeakingSubmitIn, db: Session = Depen
 @router.post("/mock-tests/{mock_id}/speaking/check")
 def check_speaking(mock_id: int, payload: SpeakingCheckIn, db: Session = Depends(get_db)):
     test = _resolve_test_for_mock(db, mock_id)
-    progress = (
-        db.query(SpeakingProgress)
-        .filter(
-            SpeakingProgress.test_id == test.id,
-            SpeakingProgress.telegram_id == payload.telegram_id,
-            SpeakingProgress.session_mode == _session_mode(payload.session_mode),
-        )
-        .order_by(SpeakingProgress.id.desc())
-        .first()
-    )
+    user = resolve_user_by_exam_identity(db, payload.telegram_id)
+    progress = _query_progress(db, test.id, user, payload.session_mode)
     if not progress:
         raise HTTPException(status_code=404, detail="Speaking progress not found")
     if not progress.is_submitted:

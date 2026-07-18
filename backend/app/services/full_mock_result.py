@@ -24,6 +24,7 @@ from app.models import (
     WritingTest,
 )
 from app.services.writing_ai_checker import check_writing_progress
+from app.services.user_identity import progress_telegram_identity
 
 
 def _utcnow() -> datetime:
@@ -117,7 +118,7 @@ def _get_reading_band(db: Session, mock_id: int, telegram_id: int) -> float | No
     return _to_valid_band(progress.band_score)
 
 
-def _get_writing_band(db: Session, mock_id: int, telegram_id: int) -> float | None:
+def _get_writing_band(db: Session, mock_id: int, user: User, telegram_id: int) -> float | None:
     test = db.query(WritingTest).filter(WritingTest.mock_pack_id == mock_id).first()
     if not test:
         return None
@@ -125,8 +126,11 @@ def _get_writing_band(db: Session, mock_id: int, telegram_id: int) -> float | No
         db.query(WritingProgress)
         .filter(
             WritingProgress.test_id == test.id,
-            WritingProgress.telegram_id == telegram_id,
             WritingProgress.session_mode == "full_mock",
+            or_(
+                WritingProgress.user_id == user.id,
+                WritingProgress.telegram_id == telegram_id,
+            ),
         )
         .order_by(WritingProgress.id.desc())
         .first()
@@ -159,7 +163,7 @@ def _get_writing_band(db: Session, mock_id: int, telegram_id: int) -> float | No
     return _to_valid_band(progress.ai_overall_band)
 
 
-def _get_speaking_band(db: Session, mock_id: int, telegram_id: int) -> float | None:
+def _get_speaking_band(db: Session, mock_id: int, user: User, telegram_id: int) -> float | None:
     test = db.query(SpeakingTest).filter(SpeakingTest.mock_pack_id == mock_id).first()
     if not test:
         return None
@@ -167,8 +171,11 @@ def _get_speaking_band(db: Session, mock_id: int, telegram_id: int) -> float | N
         db.query(SpeakingProgress)
         .filter(
             SpeakingProgress.test_id == test.id,
-            SpeakingProgress.telegram_id == telegram_id,
             SpeakingProgress.session_mode == "full_mock",
+            or_(
+                SpeakingProgress.user_id == user.id,
+                SpeakingProgress.telegram_id == telegram_id,
+            ),
         )
         .order_by(SpeakingProgress.id.desc())
         .first()
@@ -185,7 +192,7 @@ def _get_speaking_band(db: Session, mock_id: int, telegram_id: int) -> float | N
     return _to_valid_band(result.overall_band)
 
 
-def _get_listening_band(db: Session, mock_id: int, telegram_id: int) -> float | None:
+def _get_listening_band(db: Session, mock_id: int, user: User, telegram_id: int) -> float | None:
     test = db.query(ListeningTest).filter(ListeningTest.id == mock_id).first()
     if not test:
         return None
@@ -193,9 +200,12 @@ def _get_listening_band(db: Session, mock_id: int, telegram_id: int) -> float | 
         db.query(ListeningProgress)
         .filter(
             ListeningProgress.test_id == test.id,
-            ListeningProgress.telegram_id == telegram_id,
             ListeningProgress.session_mode == "full_mock",
             ListeningProgress.is_submitted == True,  # noqa: E712
+            or_(
+                ListeningProgress.user_id == user.id,
+                ListeningProgress.telegram_id == telegram_id,
+            ),
         )
         .order_by(ListeningProgress.id.desc())
         .first()
@@ -256,12 +266,12 @@ def build_full_mock_result(db: Session, mock_id: int, telegram_id: int) -> Dict[
     user = _get_user_by_exam_identity(db, telegram_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    progress_telegram_id = _progress_identity_for_user(user, telegram_id)
+    progress_telegram_id = progress_telegram_identity(user)
 
-    listening_band = _get_listening_band(db, mock_id, progress_telegram_id)
     reading_band = _get_reading_band(db, mock_id, progress_telegram_id)
-    writing_band = _get_writing_band(db, mock_id, progress_telegram_id)
-    speaking_band = _get_speaking_band(db, mock_id, progress_telegram_id)
+    listening_band = _get_listening_band(db, mock_id, user, progress_telegram_id)
+    writing_band = _get_writing_band(db, mock_id, user, progress_telegram_id)
+    speaking_band = _get_speaking_band(db, mock_id, user, progress_telegram_id)
 
     pending_parts: List[str] = []
     if listening_band is None:

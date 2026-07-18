@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from app.config import ADMIN_IDS
 from app.models import ReadingProgress, ReadingTest, User
 from app.services.password_service import hash_password, verify_password
+from app.services.user_identity import ensure_public_user_id
 
 SESSION_COOKIE = "ebai_session"
 SESSION_MAX_AGE = 60 * 60 * 24 * 30
@@ -129,6 +130,9 @@ def signup_email(db: Session, name: str, surname: str | None, email: str, passwo
     db.add(user)
     db.commit()
     db.refresh(user)
+    ensure_public_user_id(db, user)
+    db.commit()
+    db.refresh(user)
     return user
 
 
@@ -164,6 +168,9 @@ def login_telegram(db: Session, payload: dict) -> User:
         user.updated_at = datetime.utcnow()
     db.commit()
     db.refresh(user)
+    ensure_public_user_id(db, user)
+    db.commit()
+    db.refresh(user)
     return user
 
 
@@ -191,8 +198,12 @@ def get_last_activity(db: Session, user: User):
 
 
 def safe_user(db: Session, user: User) -> dict:
+    ensure_public_user_id(db, user)
+    db.commit()
+    db.refresh(user)
     return {
         "id": user.id,
+        "public_user_id": user.public_user_id,
         "telegram_id": user.telegram_id,
         "email": user.email,
         "name": user.name,

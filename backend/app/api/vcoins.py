@@ -191,14 +191,18 @@ def _latest_attempt_state(db: Session, user: User, content_type: str, reference_
     except Exception:
         return {"state": "payment_required"}
 
-    telegram_id = int(user.telegram_id) if user.telegram_id else None
+    telegram_id = int(user.telegram_id) if user.telegram_id else -int(user.id)
     mode = "full_mock" if content_type == "full_mock" or full_mock_reference_id else "single_block"
     progress = None
 
     if content_type == "full_mock":
         full_result = (
             db.query(FullMockResult)
-            .filter(FullMockResult.mock_pack_id == mock_id, FullMockResult.user_id == user.id, FullMockResult.status == "completed")
+            .filter(
+                FullMockResult.mock_pack_id == mock_id,
+                FullMockResult.status == "completed",
+                or_(FullMockResult.user_id == user.id, FullMockResult.telegram_id == telegram_id),
+            )
             .order_by(FullMockResult.id.desc())
             .first()
         )
@@ -209,7 +213,7 @@ def _latest_attempt_state(db: Session, user: User, content_type: str, reference_
                 "started_at": None,
                 "submitted_at": _serialize_datetime(full_result.completed_at),
             }
-        full_progress_rows = []
+        section_rows: dict[str, Any] = {}
         reading_test = db.query(ReadingTest).filter(ReadingTest.mock_pack_id == mock_id).first()
         if reading_test:
             row = (
@@ -219,38 +223,62 @@ def _latest_attempt_state(db: Session, user: User, content_type: str, reference_
                 .first()
             )
             if row:
-                full_progress_rows.append(row)
-        if telegram_id:
-            for model, test_model in (
-                (ListeningProgress, ListeningTest),
-                (WritingProgress, WritingTest),
-                (SpeakingProgress, SpeakingTest),
-            ):
-                test_query = db.query(test_model)
-                if hasattr(test_model, "mock_pack_id"):
-                    test = test_query.filter(test_model.mock_pack_id == mock_id).first()
-                else:
-                    test = test_query.filter(test_model.id == mock_id).first()
-                if not test:
-                    continue
-                row = (
-                    db.query(model)
-                    .filter(model.telegram_id == telegram_id, model.test_id == test.id, model.session_mode == "full_mock")
-                    .order_by(model.id.desc())
-                    .first()
+                section_rows["reading"] = row
+        for section_name, model, test_model in (
+            ("listening", ListeningProgress, ListeningTest),
+            ("writing", WritingProgress, WritingTest),
+            ("speaking", SpeakingProgress, SpeakingTest),
+        ):
+            test_query = db.query(test_model)
+            if hasattr(test_model, "mock_pack_id"):
+                test = test_query.filter(test_model.mock_pack_id == mock_id).first()
+            else:
+                test = test_query.filter(test_model.id == mock_id).first()
+            if not test:
+                continue
+            row = (
+                db.query(model)
+                .filter(
+                    model.test_id == test.id,
+                    model.session_mode == "full_mock",
+                    or_(model.user_id == user.id, model.telegram_id == telegram_id),
                 )
-                if row:
-                    full_progress_rows.append(row)
-        if full_progress_rows:
-            active = next((row for row in full_progress_rows if not row.is_submitted), None)
-            progress = active or sorted(full_progress_rows, key=lambda row: row.id, reverse=True)[0]
-            if progress and progress.is_submitted:
+                .order_by(model.id.desc())
+                .first()
+            )
+            if row:
+                section_rows[section_name] = row
+        for section_name in ("listening", "reading", "writing", "speaking"):
+            row = section_rows.get(section_name)
+            if row and not row.is_submitted:
                 return {
                     "state": "active",
-                    "progress_id": progress.id,
-                    "started_at": _serialize_datetime(progress.started_at),
-                    "submitted_at": _serialize_datetime(progress.submitted_at),
+                    "section": section_name,
+                    "progress_id": row.id,
+                    "started_at": _serialize_datetime(row.started_at),
+                    "submitted_at": _serialize_datetime(row.submitted_at),
                 }
+            if not row:
+                previous_sections = ("listening", "reading", "writing", "speaking")[:("listening", "reading", "writing", "speaking").index(section_name)]
+                if any(section_rows.get(previous) for previous in previous_sections):
+                    return {
+                        "state": "active",
+                        "section": section_name,
+                        "progress_id": None,
+                        "started_at": None,
+                        "submitted_at": None,
+                    }
+                break
+        if section_rows:
+            last_section = next((name for name in ("speaking", "writing", "reading", "listening") if name in section_rows), None)
+            progress = section_rows.get(last_section) if last_section else None
+            return {
+                "state": "active",
+                "section": "result" if last_section == "speaking" and progress and progress.is_submitted else (last_section or "listening"),
+                "progress_id": progress.id if progress else None,
+                "started_at": _serialize_datetime(progress.started_at) if progress else None,
+                "submitted_at": _serialize_datetime(progress.submitted_at) if progress else None,
+            }
     elif section == "reading":
         test = db.query(ReadingTest).filter(ReadingTest.mock_pack_id == mock_id).first()
         if test:
@@ -265,7 +293,11 @@ def _latest_attempt_state(db: Session, user: User, content_type: str, reference_
         if test:
             progress = (
                 db.query(ListeningProgress)
-                .filter(ListeningProgress.telegram_id == telegram_id, ListeningProgress.test_id == test.id, ListeningProgress.session_mode == mode)
+                .filter(
+                    ListeningProgress.test_id == test.id,
+                    ListeningProgress.session_mode == mode,
+                    or_(ListeningProgress.user_id == user.id, ListeningProgress.telegram_id == telegram_id),
+                )
                 .order_by(ListeningProgress.id.desc())
                 .first()
             )
@@ -274,7 +306,11 @@ def _latest_attempt_state(db: Session, user: User, content_type: str, reference_
         if test:
             progress = (
                 db.query(WritingProgress)
-                .filter(WritingProgress.telegram_id == telegram_id, WritingProgress.test_id == test.id, WritingProgress.session_mode == mode)
+                .filter(
+                    WritingProgress.test_id == test.id,
+                    WritingProgress.session_mode == mode,
+                    or_(WritingProgress.user_id == user.id, WritingProgress.telegram_id == telegram_id),
+                )
                 .order_by(WritingProgress.id.desc())
                 .first()
             )
@@ -283,7 +319,11 @@ def _latest_attempt_state(db: Session, user: User, content_type: str, reference_
         if test:
             progress = (
                 db.query(SpeakingProgress)
-                .filter(SpeakingProgress.telegram_id == telegram_id, SpeakingProgress.test_id == test.id, SpeakingProgress.session_mode == mode)
+                .filter(
+                    SpeakingProgress.test_id == test.id,
+                    SpeakingProgress.session_mode == mode,
+                    or_(SpeakingProgress.user_id == user.id, SpeakingProgress.telegram_id == telegram_id),
+                )
                 .order_by(SpeakingProgress.id.desc())
                 .first()
             )
@@ -646,6 +686,7 @@ def get_vcoin_access_status(payload: VCoinAccessStatusIn, request: Request, db: 
         "has_access": bool(has_access),
         "access_reason": access_reason,
         "attempt_state": attempt_state,
+        "current_section": attempt.get("section"),
         "progress_id": attempt.get("progress_id"),
         "started_at": attempt.get("started_at"),
         "submitted_at": attempt.get("submitted_at"),

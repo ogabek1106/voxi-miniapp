@@ -315,6 +315,10 @@ UserWritingLoader.start = async function (mockId, container, options = {}) {
       autoSaveInFlight: false
     });
     if (data?.already_submitted) {
+      if (options.fromFlow && window.MockFlow?.isActive?.(mockId)) {
+        const moved = window.MockFlow?.goToNextPart?.("writing", mockId, target);
+        if (moved) return;
+      }
       window.TestReentry?.showCompleted?.({
         container: target,
         onSeeResult: () => UserWritingLoader.runAiCheckAndShowResult(Number(mockId)),

@@ -3,6 +3,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.config import ADMIN_IDS
@@ -11,6 +12,7 @@ from app.models import WritingProgress, WritingTask, WritingTest
 from app.services.premiere_service import has_active_premiere_access, is_active_premiere_pack
 from app.services.vcoin_service import require_paid_access_or_spend
 from app.services.writing_ai_checker import check_writing_progress
+from app.services.user_identity import progress_telegram_identity, resolve_user_by_exam_identity
 
 router = APIRouter(prefix="/mock-tests", tags=["writing"])
 
@@ -171,27 +173,42 @@ def _serialize_progress(progress: WritingProgress | None):
     }
 
 
-@router.post("/{mock_id}/writing/start")
-def start_writing(mock_id: int, payload: WritingStartIn, db: Session = Depends(get_db)):
-    test = _resolve_test_for_mock(db, mock_id, payload.telegram_id)
-    now = _utcnow()
-    is_admin = int(payload.telegram_id) in ADMIN_IDS
-
-    progress = (
+def _query_progress(db: Session, test_id: int, user, session_mode: str):
+    legacy_identity = progress_telegram_identity(user)
+    return (
         db.query(WritingProgress)
         .filter(
-            WritingProgress.test_id == test.id,
-            WritingProgress.telegram_id == payload.telegram_id,
-            WritingProgress.session_mode == _session_mode(payload.session_mode)
+            WritingProgress.test_id == test_id,
+            WritingProgress.session_mode == _session_mode(session_mode),
+            or_(
+                WritingProgress.user_id == user.id,
+                WritingProgress.telegram_id == legacy_identity,
+            ),
         )
         .order_by(WritingProgress.id.desc())
         .first()
     )
 
+
+def _stamp_user(progress: WritingProgress, user) -> None:
+    progress.user_id = user.id
+    progress.telegram_id = progress_telegram_identity(user)
+
+
+@router.post("/{mock_id}/writing/start")
+def start_writing(mock_id: int, payload: WritingStartIn, db: Session = Depends(get_db)):
+    test = _resolve_test_for_mock(db, mock_id, payload.telegram_id)
+    now = _utcnow()
+    user = resolve_user_by_exam_identity(db, payload.telegram_id)
+    identity = progress_telegram_identity(user)
+    is_admin = bool(user.telegram_id and int(user.telegram_id) in ADMIN_IDS)
+
+    progress = _query_progress(db, test.id, user, payload.session_mode)
+
     if (payload.retake or is_admin) and progress and progress.is_submitted:
         require_paid_access_or_spend(
             db=db,
-            telegram_id=payload.telegram_id,
+            telegram_id=identity,
             content_type="full_mock" if _session_mode(payload.session_mode) == "full_mock" else "separate_block",
             reference_id=payload.retake_payment_reference_id or f"{_session_mode(payload.session_mode)}:writing:{mock_id}:retake",
         )
@@ -214,12 +231,13 @@ def start_writing(mock_id: int, payload: WritingStartIn, db: Session = Depends(g
             "progress": _serialize_progress(progress)
         }
 
-    _require_writing_paid_access(db, payload.telegram_id, mock_id, progress, is_admin, payload.session_mode)
+    _require_writing_paid_access(db, identity, mock_id, progress, is_admin, payload.session_mode)
 
     if not progress:
         progress = WritingProgress(
             test_id=test.id,
-            telegram_id=payload.telegram_id,
+            user_id=user.id,
+            telegram_id=identity,
             session_mode=_session_mode(payload.session_mode),
             started_at=now,
             updated_at=now,
@@ -236,6 +254,7 @@ def start_writing(mock_id: int, payload: WritingStartIn, db: Session = Depends(g
         db.commit()
         db.refresh(progress)
     else:
+        _stamp_user(progress, user)
         if not progress.started_at:
             progress.started_at = now
         if _is_time_up(progress, test, now):
@@ -272,24 +291,18 @@ def start_writing(mock_id: int, payload: WritingStartIn, db: Session = Depends(g
 def save_writing(mock_id: int, payload: WritingSaveIn, db: Session = Depends(get_db)):
     test = _resolve_test_for_mock(db, mock_id, payload.telegram_id)
     now = _utcnow()
-    is_admin = int(payload.telegram_id) in ADMIN_IDS
+    user = resolve_user_by_exam_identity(db, payload.telegram_id)
+    identity = progress_telegram_identity(user)
+    is_admin = bool(user.telegram_id and int(user.telegram_id) in ADMIN_IDS)
 
-    progress = (
-        db.query(WritingProgress)
-        .filter(
-            WritingProgress.test_id == test.id,
-            WritingProgress.telegram_id == payload.telegram_id,
-            WritingProgress.session_mode == _session_mode(payload.session_mode)
-        )
-        .order_by(WritingProgress.id.desc())
-        .first()
-    )
+    progress = _query_progress(db, test.id, user, payload.session_mode)
 
     if not progress:
-        _require_writing_paid_access(db, payload.telegram_id, mock_id, progress, is_admin, payload.session_mode)
+        _require_writing_paid_access(db, identity, mock_id, progress, is_admin, payload.session_mode)
         progress = WritingProgress(
             test_id=test.id,
-            telegram_id=payload.telegram_id,
+            user_id=user.id,
+            telegram_id=identity,
             session_mode=_session_mode(payload.session_mode),
             started_at=now,
             updated_at=now,
@@ -310,6 +323,8 @@ def save_writing(mock_id: int, payload: WritingSaveIn, db: Session = Depends(get
         progress.ai_task2_band = None
         progress.ai_task1_result = None
         progress.ai_task2_result = None
+
+    _stamp_user(progress, user)
 
     progress.task1_text = payload.task1_text
     progress.task1_image_url = payload.task1_image_url
@@ -332,23 +347,17 @@ def save_writing(mock_id: int, payload: WritingSaveIn, db: Session = Depends(get
 def submit_writing(mock_id: int, payload: WritingSubmitIn, db: Session = Depends(get_db)):
     test = _resolve_test_for_mock(db, mock_id, payload.telegram_id)
     now = _utcnow()
-    is_admin = int(payload.telegram_id) in ADMIN_IDS
+    user = resolve_user_by_exam_identity(db, payload.telegram_id)
+    identity = progress_telegram_identity(user)
+    is_admin = bool(user.telegram_id and int(user.telegram_id) in ADMIN_IDS)
 
-    progress = (
-        db.query(WritingProgress)
-        .filter(
-            WritingProgress.test_id == test.id,
-            WritingProgress.telegram_id == payload.telegram_id,
-            WritingProgress.session_mode == _session_mode(payload.session_mode)
-        )
-        .order_by(WritingProgress.id.desc())
-        .first()
-    )
+    progress = _query_progress(db, test.id, user, payload.session_mode)
     if not progress:
-        _require_writing_paid_access(db, payload.telegram_id, mock_id, progress, is_admin, payload.session_mode)
+        _require_writing_paid_access(db, identity, mock_id, progress, is_admin, payload.session_mode)
         progress = WritingProgress(
             test_id=test.id,
-            telegram_id=payload.telegram_id,
+            user_id=user.id,
+            telegram_id=identity,
             session_mode=_session_mode(payload.session_mode),
             started_at=now,
             updated_at=now,
@@ -369,6 +378,8 @@ def submit_writing(mock_id: int, payload: WritingSubmitIn, db: Session = Depends
         progress.ai_task2_band = None
         progress.ai_task1_result = None
         progress.ai_task2_result = None
+
+    _stamp_user(progress, user)
 
     progress.task1_text = payload.task1_text
     progress.task1_image_url = payload.task1_image_url
@@ -395,19 +406,12 @@ def submit_writing(mock_id: int, payload: WritingSubmitIn, db: Session = Depends
 def resume_writing(mock_id: int, telegram_id: int, session_mode: str = "single_block", db: Session = Depends(get_db)):
     test = _resolve_test_for_mock(db, mock_id, telegram_id)
     now = _utcnow()
+    user = resolve_user_by_exam_identity(db, telegram_id)
 
-    progress = (
-        db.query(WritingProgress)
-        .filter(
-            WritingProgress.test_id == test.id,
-            WritingProgress.telegram_id == telegram_id,
-            WritingProgress.session_mode == _session_mode(session_mode)
-        )
-        .order_by(WritingProgress.id.desc())
-        .first()
-    )
+    progress = _query_progress(db, test.id, user, session_mode)
 
     if progress and not progress.is_submitted and _is_time_up(progress, test, now):
+        _stamp_user(progress, user)
         _finalize(progress, test, "auto", now)
         db.add(progress)
         db.commit()
@@ -430,16 +434,8 @@ def resume_writing(mock_id: int, telegram_id: int, session_mode: str = "single_b
 @router.post("/{mock_id}/writing/check")
 def check_writing(mock_id: int, payload: WritingCheckIn, db: Session = Depends(get_db)):
     test = _resolve_test_for_mock(db, mock_id, payload.telegram_id)
-    progress = (
-        db.query(WritingProgress)
-        .filter(
-            WritingProgress.test_id == test.id,
-            WritingProgress.telegram_id == payload.telegram_id,
-            WritingProgress.session_mode == _session_mode(payload.session_mode)
-        )
-        .order_by(WritingProgress.id.desc())
-        .first()
-    )
+    user = resolve_user_by_exam_identity(db, payload.telegram_id)
+    progress = _query_progress(db, test.id, user, payload.session_mode)
     if not progress:
         raise HTTPException(status_code=404, detail="Writing progress not found")
     if not progress.is_submitted:

@@ -3,6 +3,7 @@ from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.config import ADMIN_IDS
@@ -10,6 +11,7 @@ from app.deps import get_db
 from app.models import ListeningBlock, ListeningProgress, ListeningQuestion, ListeningSection, ListeningTest
 from app.services.premiere_service import has_active_premiere_access, is_active_premiere_pack
 from app.services.vcoin_service import require_paid_access_or_spend
+from app.services.user_identity import progress_telegram_identity, resolve_user_by_exam_identity
 
 router = APIRouter(prefix="/mock-tests", tags=["listening"])
 
@@ -107,7 +109,7 @@ def _require_listening_paid_access(
     )
 
 
-def _serialize_test(db: Session, test: ListeningTest) -> dict:
+def _serialize_test(db: Session, test: ListeningTest, progress: ListeningProgress | None = None) -> dict:
     sections = (
         db.query(ListeningSection)
         .filter(ListeningSection.test_id == test.id)
@@ -167,7 +169,8 @@ def _serialize_test(db: Session, test: ListeningTest) -> dict:
             "blocks": out_blocks,
         })
 
-    started_at = _utcnow()
+    started_at = _to_utc(progress.started_at) if progress and progress.started_at else _utcnow()
+    ends_at = _deadline(progress, test) if progress else None
     return {
         "id": test.id,
         "mock_id": test.id,
@@ -179,10 +182,18 @@ def _serialize_test(db: Session, test: ListeningTest) -> dict:
         "time_limit_minutes": test.time_limit_minutes or 60,
         "timer": {
             "started_at": started_at.isoformat(),
-            "ends_at": None,
+            "ends_at": ends_at.isoformat() if ends_at else None,
             "duration_seconds": max(int(test.time_limit_minutes or 60), 1) * 60,
         },
         "sections": output_sections,
+        "progress": {
+            "answers": progress.answers or {},
+            "is_submitted": bool(progress.is_submitted),
+            "submitted_at": _to_utc(progress.submitted_at).isoformat() if progress and progress.submitted_at else None,
+            "raw_score": progress.raw_score,
+            "max_score": progress.max_score,
+            "band_score": float(progress.band_score) if progress and progress.band_score is not None else None,
+        } if progress else None,
     }
 
 
@@ -224,17 +235,26 @@ def _calculate_listening_band(score: int) -> float:
     return 0.0
 
 
-def _get_progress(db: Session, test_id: int, telegram_id: int, session_mode: str) -> ListeningProgress | None:
+def _get_progress(db: Session, test_id: int, user, session_mode: str) -> ListeningProgress | None:
+    legacy_identity = progress_telegram_identity(user)
     return (
         db.query(ListeningProgress)
         .filter(
-            ListeningProgress.telegram_id == int(telegram_id),
             ListeningProgress.test_id == int(test_id),
             ListeningProgress.session_mode == _session_mode(session_mode),
+            or_(
+                ListeningProgress.user_id == user.id,
+                ListeningProgress.telegram_id == legacy_identity,
+            ),
         )
         .order_by(ListeningProgress.id.desc())
         .first()
     )
+
+
+def _stamp_user(progress: ListeningProgress, user) -> None:
+    progress.user_id = user.id
+    progress.telegram_id = progress_telegram_identity(user)
 
 
 def _evaluate(db: Session, test_id: int, answers: Dict[str, Any]) -> dict:
@@ -271,24 +291,27 @@ def start_listening(
 ):
     test = _resolve_test_for_mock(db, mock_id)
     mode = _session_mode(session_mode)
-    progress = _get_progress(db, test.id, telegram_id, mode)
-    is_admin = int(telegram_id) in ADMIN_IDS
+    user = resolve_user_by_exam_identity(db, telegram_id)
+    identity = progress_telegram_identity(user)
+    progress = _get_progress(db, test.id, user, mode)
+    is_admin = bool(user.telegram_id and int(user.telegram_id) in ADMIN_IDS)
 
     if progress and progress.is_submitted and (is_admin or retake):
         require_paid_access_or_spend(
             db=db,
-            telegram_id=telegram_id,
+            telegram_id=identity,
             content_type="full_mock" if mode == "full_mock" else "separate_block",
             reference_id=retake_payment_reference_id or f"{mode}:listening:{mock_id}:retake",
         )
         progress = None
 
-    _require_listening_paid_access(db, telegram_id, mock_id, progress, mode)
+    _require_listening_paid_access(db, identity, mock_id, progress, mode)
     if not progress:
         now = _utcnow()
         progress = ListeningProgress(
             test_id=test.id,
-            telegram_id=telegram_id,
+            user_id=user.id,
+            telegram_id=identity,
             session_mode=mode,
             answers={},
             started_at=now,
@@ -299,10 +322,15 @@ def start_listening(
         db.add(progress)
         db.commit()
     elif not progress.is_submitted and _is_time_up(progress, test):
+        _stamp_user(progress, user)
         _finalize(db, progress, test)
         db.add(progress)
         db.commit()
-    return _serialize_test(db, test)
+    elif progress:
+        _stamp_user(progress, user)
+        db.add(progress)
+        db.commit()
+    return _serialize_test(db, test, progress)
 
 
 @router.post("/{mock_id}/listening/save")
@@ -310,13 +338,16 @@ def save_listening(mock_id: int, payload: ListeningSaveIn, db: Session = Depends
     test = _resolve_test_for_mock(db, mock_id)
     now = _utcnow()
     mode = _session_mode(payload.session_mode)
-    progress = _get_progress(db, test.id, payload.telegram_id, mode)
-    _require_listening_paid_access(db, payload.telegram_id, mock_id, progress, mode)
+    user = resolve_user_by_exam_identity(db, payload.telegram_id)
+    identity = progress_telegram_identity(user)
+    progress = _get_progress(db, test.id, user, mode)
+    _require_listening_paid_access(db, identity, mock_id, progress, mode)
 
     if not progress:
         progress = ListeningProgress(
             test_id=test.id,
-            telegram_id=int(payload.telegram_id),
+            user_id=user.id,
+            telegram_id=identity,
             session_mode=mode,
             answers=payload.answers or {},
             started_at=now,
@@ -340,6 +371,8 @@ def save_listening(mock_id: int, payload: ListeningSaveIn, db: Session = Depends
         progress.started_at = now
         progress.ends_at = now + timedelta(minutes=max(int(test.time_limit_minutes or 60), 1))
 
+    _stamp_user(progress, user)
+
     if not progress.is_submitted and _is_time_up(progress, test, now):
         _finalize(db, progress, test, now)
         db.add(progress)
@@ -356,10 +389,13 @@ def save_listening(mock_id: int, payload: ListeningSaveIn, db: Session = Depends
 @router.get("/{mock_id}/listening/resume")
 def resume_listening(mock_id: int, telegram_id: int, session_mode: str = "single_block", db: Session = Depends(get_db)):
     test = _resolve_test_for_mock(db, mock_id)
-    progress = _get_progress(db, test.id, telegram_id, session_mode)
-    _require_listening_paid_access(db, telegram_id, mock_id, progress, session_mode)
+    user = resolve_user_by_exam_identity(db, telegram_id)
+    identity = progress_telegram_identity(user)
+    progress = _get_progress(db, test.id, user, session_mode)
+    _require_listening_paid_access(db, identity, mock_id, progress, session_mode)
     if not progress:
         return {"answers": {}, "is_submitted": False}
+    _stamp_user(progress, user)
     if not progress.is_submitted and _is_time_up(progress, test):
         _finalize(db, progress, test)
         db.add(progress)
@@ -383,13 +419,16 @@ def submit_listening(mock_id: int, payload: ListeningSubmitIn, db: Session = Dep
     test = _resolve_test_for_mock(db, mock_id)
     now = _utcnow()
     mode = _session_mode(payload.session_mode)
-    progress = _get_progress(db, test.id, payload.telegram_id, mode)
-    _require_listening_paid_access(db, payload.telegram_id, mock_id, progress, mode)
+    user = resolve_user_by_exam_identity(db, payload.telegram_id)
+    identity = progress_telegram_identity(user)
+    progress = _get_progress(db, test.id, user, mode)
+    _require_listening_paid_access(db, identity, mock_id, progress, mode)
 
     if not progress:
         progress = ListeningProgress(
             test_id=test.id,
-            telegram_id=int(payload.telegram_id),
+            user_id=user.id,
+            telegram_id=identity,
             session_mode=mode,
             answers={},
             started_at=now,
@@ -406,6 +445,8 @@ def submit_listening(mock_id: int, payload: ListeningSubmitIn, db: Session = Dep
 
     if payload.answers:
         progress.answers = payload.answers
+
+    _stamp_user(progress, user)
 
     if not progress.ends_at:
         progress.ends_at = (progress.started_at or now) + timedelta(minutes=max(int(test.time_limit_minutes or 60), 1))
