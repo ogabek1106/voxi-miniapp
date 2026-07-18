@@ -367,21 +367,81 @@
 
   #screen-home .support-voxi-card {
     display: flex;
+    gap: 12px;
     text-align: center;
-    padding: 24px 20px 18px;
+    padding: 18px 16px 16px;
+  }
+
+  #screen-home .support-voxi-copy {
+    margin-top: 0;
+  }
+
+  #screen-home .support-voxi-copy .partner-card-description {
+    margin-top: 6px;
+    line-height: 1.3;
   }
 
   #screen-home .support-voxi-impact {
     text-align: left;
+    padding: 11px 12px;
+    border-radius: 16px;
+  }
+
+  #screen-home .support-voxi-impact strong {
+    font-size: 12px;
+  }
+
+  #screen-home .support-voxi-impact li {
+    font-size: 12px;
+    line-height: 1.22;
   }
 
   #screen-home .support-voxi-impact ul {
-    grid-template-columns: 1fr;
+    margin-top: 7px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px 8px;
+  }
+
+  #screen-home .support-voxi-control {
+    gap: 8px;
+    width: 100%;
   }
 
   #screen-home .support-voxi-amount-view {
     display: grid;
+    gap: 2px;
     justify-content: stretch;
+    text-align: center;
+  }
+
+  #screen-home .support-voxi-amount-view strong {
+    font-size: 22px;
+  }
+
+  #screen-home .support-voxi-custom {
+    width: 100%;
+    gap: 5px;
     text-align: left;
+  }
+
+  #screen-home .support-voxi-custom input {
+    height: 42px;
+  }
+
+  #screen-home .support-voxi-button {
+    width: 100%;
+    max-width: none;
+    height: 48px;
+    margin: 0;
+  }
+
+  #screen-home .support-voxi-message {
+    width: 100%;
+  }
+}
+
+@media (max-width: 390px) {
+  #screen-home .support-voxi-impact ul {
+    grid-template-columns: 1fr;
   }
 }
