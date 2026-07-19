@@ -126,6 +126,39 @@ body.vpaygate-active .home-announcement {
   gap: 7px;
 }
 
+.vpaygate-method-logos {
+  display: flex;
+  align-items: center;
+  gap: clamp(8px, 1vw, 10px);
+}
+
+.vpaygate-method-logo {
+  width: clamp(72px, 8vw, 92px);
+  height: clamp(34px, 4vw, 38px);
+  border: 1px solid rgba(20, 40, 60, 0.1);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.86);
+  padding: clamp(6px, 0.8vw, 8px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.vpaygate-method-logo:only-child {
+  width: clamp(88px, 9vw, 108px);
+}
+
+.vpaygate-method-logo img,
+.vpaygate-summary-logo img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
 .vpaygate-method-copy strong {
   color: #17212b;
   font-size: clamp(20px, 2vw, 26px);
@@ -214,6 +247,36 @@ body.vpaygate-active .home-announcement {
 .vpaygate-summary-total strong {
   font-size: clamp(30px, 3.2vw, 42px);
   line-height: 1.02;
+}
+
+.vpaygate-summary-method strong {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.vpaygate-summary-logos {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.vpaygate-summary-logo {
+  width: clamp(34px, 4vw, 40px);
+  height: clamp(24px, 3vw, 28px);
+  border: 1px solid rgba(20, 40, 60, 0.1);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.86);
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.vpaygate-summary-logo:only-child {
+  width: clamp(48px, 5vw, 58px);
 }
 
 .vpaygate-status {

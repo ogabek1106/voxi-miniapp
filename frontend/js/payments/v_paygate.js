@@ -230,6 +230,33 @@ window.VPayGate = window.VPayGate || {};
     return ["payment_successful", "order_already_paid", "purchase_already_fulfilled"].includes(state.status);
   }
 
+  function paymentMethodTitle(method) {
+    if (method === "bank_card") return "Bank kartasi orqali";
+    if (method === "click_app") return "Click ilovasi orqali";
+    return "";
+  }
+
+  function renderPaymentLogos(method, variant = "method") {
+    const klass = variant === "summary" ? "vpaygate-summary-logos" : "vpaygate-method-logos";
+    const logoClass = variant === "summary" ? "vpaygate-summary-logo" : "vpaygate-method-logo";
+    if (method === "bank_card") {
+      return `
+        <span class="${klass}" aria-hidden="true">
+          <span class="${logoClass}"><img src="./assets/payment/uzcard.png" alt=""></span>
+          <span class="${logoClass}"><img src="./assets/payment/humo.png" alt=""></span>
+        </span>
+      `;
+    }
+    if (method === "click_app") {
+      return `
+        <span class="${klass}" aria-hidden="true">
+          <span class="${logoClass}"><img src="./assets/payment/click.png" alt=""></span>
+        </span>
+      `;
+    }
+    return "";
+  }
+
   function renderMethod(method, title, subtitle) {
     const selected = state.method === method;
     return `
@@ -239,6 +266,7 @@ window.VPayGate = window.VPayGate || {};
         aria-pressed="${selected ? "true" : "false"}"
         ${state.busy ? "disabled" : ""}>
         <span class="vpaygate-method-copy">
+          ${renderPaymentLogos(method)}
           <strong>${escapeHtml(title)}</strong>
           <small>${escapeHtml(subtitle)}</small>
         </span>
@@ -280,6 +308,15 @@ window.VPayGate = window.VPayGate || {};
                 <span>To‘lov summasi</span>
                 <strong>${escapeHtml(formatUzs(product.amount_uzs))}</strong>
               </div>
+              ${state.method ? `
+                <div class="vpaygate-summary-row vpaygate-summary-method">
+                  <span>To‘lov usuli</span>
+                  <strong>
+                    ${renderPaymentLogos(state.method, "summary")}
+                    <span>${escapeHtml(paymentMethodTitle(state.method))}</span>
+                  </strong>
+                </div>
+              ` : ""}
             </div>
 
             <div class="vpaygate-status ${statusClass()}" role="status">${escapeHtml(statusText())}</div>
