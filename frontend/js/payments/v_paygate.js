@@ -265,8 +265,8 @@ window.VPayGate = window.VPayGate || {};
         data-vpay-method="${method}"
         aria-pressed="${selected ? "true" : "false"}"
         ${state.busy ? "disabled" : ""}>
+        ${renderPaymentLogos(method)}
         <span class="vpaygate-method-copy">
-          ${renderPaymentLogos(method)}
           <strong>${escapeHtml(title)}</strong>
           <small>${escapeHtml(subtitle)}</small>
         </span>
