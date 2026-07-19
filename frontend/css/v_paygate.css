@@ -129,17 +129,13 @@ body.vpaygate-active .home-announcement {
 .vpaygate-method-logos {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   flex: 0 0 auto;
 }
 
 .vpaygate-method-logo {
-  width: clamp(58px, 5vw, 64px);
-  height: clamp(58px, 5vw, 64px);
-  border: 1px solid rgba(20, 40, 60, 0.1);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.86);
-  padding: 7px;
+  width: clamp(78px, 6.5vw, 96px);
+  height: clamp(46px, 4.8vw, 60px);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -147,7 +143,7 @@ body.vpaygate-active .home-announcement {
 }
 
 .vpaygate-method-logo:only-child {
-  width: clamp(58px, 5vw, 64px);
+  width: clamp(90px, 7.2vw, 112px);
 }
 
 .vpaygate-method-logo img,
@@ -162,7 +158,7 @@ body.vpaygate-active .home-announcement {
 
 .vpaygate-method-copy strong {
   color: #17212b;
-  font-size: clamp(20px, 2vw, 26px);
+  font-size: clamp(20px, 1.85vw, 24px);
   line-height: 1.08;
   font-weight: 950;
 }
