@@ -290,7 +290,25 @@ body.vpaygate-active .home-announcement {
 }
 
 @media (max-width: 620px) {
+  body.vpaygate-active.view-miniapp,
+  body.vpaygate-active.mobile-browser-view {
+    overflow: hidden;
+  }
+
+  body.vpaygate-active.view-miniapp .app,
+  body.vpaygate-active.mobile-browser-view .app {
+    height: 100dvh;
+    overflow: hidden;
+  }
+
   .vpaygate-screen {
+    height: 100dvh;
+    min-height: 100dvh;
+    max-height: 100dvh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
     padding: max(18px, env(safe-area-inset-top, 0px)) 14px max(24px, env(safe-area-inset-bottom, 0px));
   }
 
